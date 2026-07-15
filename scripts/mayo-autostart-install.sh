@@ -43,6 +43,14 @@ fi
 
 mkdir -p "$AGENTS" "$LOGS"
 
+# Resolve node/npx and git locations NOW (this script runs in your interactive
+# shell, so they're on PATH here) and bake them into the agents' PATH — launchd
+# does not load ~/.zshrc, so nvm/brew node would otherwise be missing.
+NODE_PATH_DIR="$(cd "$(dirname "$(command -v node || echo /usr/local/bin/node)")" && pwd)"
+GIT_PATH_DIR="$(cd "$(dirname "$(command -v git || echo /usr/bin/git)")" && pwd)"
+AGENT_PATH="$NODE_PATH_DIR:$GIT_PATH_DIR:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+echo "Using node from: $NODE_PATH_DIR"
+
 write_plist() {
   local file="$1" label="$2" workdir="$3" cmd="$4" log="$5"
   cat > "$file" <<PLIST
@@ -57,6 +65,10 @@ write_plist() {
     <string>-lc</string>
     <string>cd "$workdir" &amp;&amp; exec $cmd</string>
   </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>$AGENT_PATH</string>
+  </dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
   <key>ThrottleInterval</key><integer>10</integer>
