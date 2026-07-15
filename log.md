@@ -28,3 +28,4 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-07-15] service | mayo: DIAGNOSED root cause — App Store Expo Go supports only SDK 54 (SDK 55/57 Expo Go stuck in Apple review), so 55/56/57 all failed. Pinned to SDK 54 (RN 0.81.5, expo-router 6.0.24); fixed use-theme for RN 0.81. tsc + expo export pass.
 ## [2026-07-15] service | MILESTONE — mayo running on physical iPhone via Expo Go (SDK 54) over tunnel. Create screen renders fully (prompt, length/quality chips, 140-credit estimate, 4 tabs). Live dev loop working. Added @expo/ngrok dep (tunnel).
 ## [2026-07-15] query | Explained Expo Go vs development build → concept page expo-go-vs-dev-build
+## [2026-07-15] setup | mayo autostart: scripts/mayo-autostart-install.sh installs launchd agents (expo --tunnel + dev-autopull) that survive Termius close and reboot; runbook updated

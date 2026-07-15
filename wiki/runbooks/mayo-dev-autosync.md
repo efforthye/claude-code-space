@@ -73,8 +73,26 @@ tmux (don't restart)** and the URL never changes — bookmark the `exp://…exp.
 phone and reuse it. `npx expo login` (Expo account) pins it deterministically (subdomain uses the
 account name instead of `anonymous`).
 
-**True permanence across reboots:** wrap expo + autopull in a macOS **launchd** LaunchAgent so they
-auto-start on boot. Not set up yet — ask Claude to add it when wanted.
+### True permanence — launchd (survives Termius close AND reboot)
+`scripts/mayo-autostart-install.sh` installs two macOS **LaunchAgents** (`com.efforthye.mayo.expo`
+and `.autopull`) that run `expo start --tunnel` and `dev-autopull.sh` on login, **auto-restart on
+crash, and come back after a reboot** — no tmux, no Termius session needed.
+
+```bash
+./scripts/mayo-autostart-install.sh              # install
+grep -m1 'exp://' ~/Library/Logs/mayo-expo.log   # get the (stable) tunnel URL, ~15s after install
+tail -f ~/Library/Logs/mayo-expo.log             # watch logs (also mayo-autopull.log)
+./scripts/mayo-autostart-install.sh --uninstall  # remove
+```
+Caveats:
+- LaunchAgents start at **login**. For start-at-boot with no one logged in, enable **automatic
+  login** on the mini (System Settings → Users & Groups).
+- The dev server runs **headless** (no interactive QR) — use the `exp://…` URL from the log
+  (it's stable; bookmark it in Expo Go once).
+- `git pull` uses cached git credentials; if pulls fail for the private repo under launchd, check
+  `~/Library/Logs/mayo-autopull.log`.
+- If both launchd **and** a tmux session run expo, they'll fight over port 8081 — use one or the
+  other (stop the tmux `mayo` session before installing the agents).
 
 ## Option B — GitHub webhook → pull (event-driven, near-instant)
 For zero polling, have GitHub notify the mini on push. Two ways:
