@@ -18,8 +18,8 @@ On the [[home-server]] via Docker (observed 2026-07-15):
 - **[[jenkins]]** — CI server (`:9090` web, `:50000` agent).
 
 Planned:
-- **[[mobile-app]]** — Expo/React Native mobile app (iOS + Android), dev loop on the mini via
-  Expo Go ([[0003-expo-react-native-for-mobile-app]], [[expo-dev-loop]]).
+- **[[mayo]]** — premium AI long-form video generation platform; Expo app (iOS + Android) + web
+  (mayo.im). Client stack [[0003-expo-react-native-for-mobile-app]], dev loop [[expo-dev-loop]].
 
 ## Infrastructure
 - **[[home-server]]** — Apple **M1 Mac mini** (8-core, **16 GB**, **1 TB SSD ~771 GB free**,

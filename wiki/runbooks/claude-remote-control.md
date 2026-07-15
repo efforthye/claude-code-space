@@ -65,4 +65,4 @@ service page and append to `log.md`, all in one place. Clone this repo on the mi
 context is right there.
 
 ## Related
-- Host: [[home-server]] · CI: [[jenkins]] · App workspace: `apps/` ([[mobile-app]])
+- Host: [[home-server]] · CI: [[jenkins]] · App workspace: `apps/` ([[mayo]])

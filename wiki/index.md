@@ -17,7 +17,7 @@ Updated whenever pages are added/renamed or a service's status changes.
 |---------|--------|-----------|------|
 | RichClub (api + front) | live | `home.efforthye.com:8000` (api) / `:3000` (front) | [[richclub]] |
 | Jenkins (CI) | live | `home.efforthye.com:9090` | [[jenkins]] |
-| Mobile App (Expo) | planned | — (dev via Expo Go) | [[mobile-app]] |
+| Mayo (AI video platform) | planned | app + mayo.im (web) | [[mayo]] |
 
 ## Infra
 - [[home-server]] — Apple M1 Mac mini (8-core, 16 GB, 1 TB, macOS 15.4.1, `arm64`; `m1mini` /

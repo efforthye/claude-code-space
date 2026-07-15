@@ -61,10 +61,10 @@ r                         # reload the app ; m → toggle the dev menu
 - **arm64:** native tooling is all arm64 here — no emulation concerns for JS-only development.
 
 ## Toward a real app (later)
-Expo Go is dev-only. As this grows into a service (see [[mobile-app]]):
+Expo Go is dev-only. As this grows into a service (see [[mayo]]):
 - Add a **development build** once you need native modules Expo Go doesn't bundle.
 - Use **EAS Build** for real iOS/Android store binaries and **EAS Update** for OTA JS updates
   (needs a free Expo account). Give these their own runbook when we get there.
 
 ## Related
-- Decision: [[0003-expo-react-native-for-mobile-app]] · Service: [[mobile-app]] · Host: [[home-server]]
+- Decision: [[0003-expo-react-native-for-mobile-app]] · Service: [[mayo]] · Host: [[home-server]]

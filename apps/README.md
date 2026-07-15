@@ -10,4 +10,4 @@ In-house applications built with Claude Code in this workspace. One folder per a
 
 | App | Slug | Wiki page | Status |
 |-----|------|-----------|--------|
-| Mobile App (Expo) | _TBD_ | [[mobile-app]] | planned |
+| Mayo (AI video platform) | `mayo` | [[mayo]] | planned |

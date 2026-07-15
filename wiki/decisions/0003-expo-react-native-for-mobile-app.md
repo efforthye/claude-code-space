@@ -42,4 +42,4 @@ mini** in the project dir so editing + dev server + phone are co-located. See
   later wire EAS Build / EAS Update; decide if/how CI ([[jenkins]]) participates.
 
 ## Related
-- Runbook: [[expo-dev-loop]] · Service: [[mobile-app]] · Host: [[home-server]]
+- Runbook: [[expo-dev-loop]] · Service: [[mayo]] · Host: [[home-server]]
