@@ -6,13 +6,22 @@ created: 2026-07-15
 updated: 2026-07-15
 ---
 
-# Runbook — Deploy to the Home Server via GitHub Actions
+# Runbook — Deploy to the Home Server
 
-The shared deploy path for services on the [[home-server]]. Push-based: a GitHub Actions
-workflow uses the **`HOME_SERVER` Environment** to get credentials, then SSHes in to ship.
+> ⚠️ **The current deploy path is Jenkins + GitHub webhooks, not GitHub Actions.** See
+> [[jenkins]] and [[0002-cicd-via-jenkins-webhook]]. Jenkins builds the arm64 Docker image and
+> redeploys on push. The Jenkinsfile / exact job steps still need documenting here.
+>
+> The GitHub Actions + `HOME_SERVER` environment approach below is **kept for reference only**
+> (superseded, [[0001-github-actions-home-server-deploy]]); use it only if we adopt an
+> Actions-based path later.
 
-> Status: **path defined, not yet exercised.** No deploy workflow or service exists yet. Update
-> this runbook with the real, reproducible steps once the first service ships.
+---
+
+## (Reference, unused) Deploy via GitHub Actions + `HOME_SERVER` environment
+
+Push-based: a GitHub Actions workflow uses the **`HOME_SERVER` Environment** to get credentials,
+then SSHes in to ship. Not currently wired up.
 
 ## Prerequisites
 - Repo Environment **`HOME_SERVER`** exists with secrets `HOME_SERVER_URL`, `HOME_SERVER_USER`,

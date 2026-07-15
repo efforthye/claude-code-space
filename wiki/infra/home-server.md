@@ -9,8 +9,8 @@ updated: 2026-07-15
 
 # Home Server
 
-The machine that hosts self-hosted services. Deployments reach it through GitHub Actions rather
-than manual SSH from a laptop — see [[deploy-home-server]].
+The machine that hosts self-hosted services. Builds & deploys run through [[jenkins]] on the host,
+triggered by GitHub webhooks ([[0002-cicd-via-jenkins-webhook]]).
 
 ## Host
 - **Hardware:** Apple **Mac mini (M1, Apple Silicon)**. Architecture: **`arm64`**.
@@ -43,11 +43,10 @@ docker ps ; docker stats --no-stream ; docker system df
 ```
 
 ## How deploys reach it
-- **Mechanism:** GitHub Actions, gated by the repo **Environment `HOME_SERVER`**.
-- **Connection:** a workflow targeting `environment: HOME_SERVER` gets the environment secrets
-  injected, then connects over SSH (**password auth**) to ship the service.
-- **Runtime:** services run in **Docker** on the host (e.g. `docker compose up -d`).
-- See the runbook: [[deploy-home-server]]. Rationale: [[0001-github-actions-home-server-deploy]].
+- **Mechanism:** GitHub push webhook → **[[jenkins]]** (running on this host) builds & deploys.
+- **Runtime:** services run in **Docker** on the host.
+- Rationale: [[0002-cicd-via-jenkins-webhook]] (supersedes [[0001-github-actions-home-server-deploy]]).
+- The `HOME_SERVER` GitHub environment (SSH deploy) is set up but **unused** — see below.
 
 ## Secrets (pointers only — never values)
 Stored as **GitHub Environment secrets** on `HOME_SERVER` (repo → Settings → Environments →
@@ -74,8 +73,10 @@ The following aren't documented yet — capture them as they're confirmed:
 - DNS: `home.efforthye.com` → the mini (dynamic DNS? router port-forward?).
 - Backup strategy → will get its own [[runbooks]] page.
 - Hardening: SSH currently uses **password** auth — consider moving to key-based auth later.
-- **CI overlap:** [[jenkins]] is running on the host, yet deploys are decided to go via GitHub
-  Actions ([[0001-github-actions-home-server-deploy]]). Clarify the split of responsibilities.
+
+**CI/CD (resolved):** builds & deploys run through [[jenkins]], triggered by GitHub webhooks
+([[0002-cicd-via-jenkins-webhook]]). The `HOME_SERVER` GitHub environment/secrets exist but are
+unused; the GitHub Actions plan ([[0001-github-actions-home-server-deploy]]) is superseded.
 
 ## Related
 - Runbook: [[deploy-home-server]]

@@ -21,15 +21,16 @@ On the [[home-server]] via Docker (observed 2026-07-15):
 - **[[home-server]]** — Apple **M1 Mac mini** (`m1mini`, `home.efforthye.com`, `arm64`), macOS,
   running Docker (status: building). Exact RAM/storage/OS version, reverse proxy, DNS, and
   backups are still TBD on that page.
-- **Deploy path:** GitHub Actions → `HOME_SERVER` environment → SSH (password auth) → run with
-  **Docker** on the host. Credentials live as GitHub Environment secrets, never in git. See
-  [[deploy-home-server]] and [[0001-github-actions-home-server-deploy]].
+- **Deploy path:** GitHub push webhook → **[[jenkins]]** builds the arm64 image & redeploys the
+  Docker container. See [[0002-cicd-via-jenkins-webhook]]. (The `HOME_SERVER` GitHub Actions env
+  exists but is unused — [[0001-github-actions-home-server-deploy]], superseded.)
 
 ## Architecture
 _(A simple diagram or description of how services, the proxy, and data stores connect will go
 here as the system grows.)_
 
 ## Open threads
-- Reconcile CI/CD: [[jenkins]] is running while [[0001-github-actions-home-server-deploy]] picked
-  GitHub Actions — clarify the split.
+- CI/CD is **Jenkins via GitHub webhooks** ([[0002-cicd-via-jenkins-webhook]]); the idle
+  `HOME_SERVER` GitHub Actions env can be kept as backup or removed — decide.
 - Confirm host specs, whether a reverse proxy fronts `home.efforthye.com`, and RichClub's repo(s).
+- Optional: add a secret-scan check to this wiki repo on push.

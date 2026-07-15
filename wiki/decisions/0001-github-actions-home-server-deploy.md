@@ -1,13 +1,19 @@
 ---
 title: "ADR 0001: Deploy to the home server via GitHub Actions + Environment"
 type: decision
-status: accepted
+status: superseded
 tags: [decision, deploy, github-actions, secrets]
 created: 2026-07-15
 updated: 2026-07-15
+superseded_by: 0002-cicd-via-jenkins-webhook
 ---
 
 # ADR 0001 — Deploy to the home server via GitHub Actions + Environment
+
+> ⚠️ **Superseded by [[0002-cicd-via-jenkins-webhook]].** This ADR reflected an assumed plan;
+> the actual CI/CD is Jenkins triggered by GitHub webhooks ([[jenkins]]). The `HOME_SERVER`
+> GitHub environment/secrets described below were created but are **not currently used**. Kept
+> for history and as a possible future option.
 
 ## Context
 Services built in this repo need to reach a self-hosted [[home-server]]. We need a repeatable

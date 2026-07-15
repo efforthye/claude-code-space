@@ -26,8 +26,10 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[deploy-home-server]] — Deploy a service to the home server via GitHub Actions (shared path).
 
 ## Decisions (ADRs)
-- [[0001-github-actions-home-server-deploy]] — Deploy via GitHub Actions + `HOME_SERVER`
-  environment; keeps deploy credentials out of git.
+- [[0002-cicd-via-jenkins-webhook]] — **Current** CI/CD: Jenkins builds & deploys, triggered by
+  GitHub webhooks.
+- [[0001-github-actions-home-server-deploy]] — _(superseded by 0002)_ Deploy via GitHub Actions +
+  `HOME_SERVER` environment.
 
 ## Incidents
 _(none yet — postmortems)_

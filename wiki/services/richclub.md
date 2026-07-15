@@ -38,10 +38,11 @@ _TBD — database, cache, external APIs? None visible in `docker ps`; confirm._
 Pointers only, never values. _TBD — where the containers read env/config from on the host._
 
 ## Deploy
-Currently built as `efforthye/richclub-*:latest` images and run via Docker. How they're
-built/pushed/restarted today (Jenkins? manual? — see [[jenkins]]) vs. the intended GitHub
-Actions path ([[deploy-home-server]], [[0001-github-actions-home-server-deploy]]) needs to be
-reconciled.
+**Current CI/CD: Jenkins via GitHub webhook** (see [[jenkins]], [[0002-cicd-via-jenkins-webhook]]).
+A push to the RichClub repo triggers a GitHub webhook → Jenkins builds the arm64 Docker image and
+redeploys the container on the [[home-server]]. Images are tagged `efforthye/richclub-*:latest`.
+(The earlier GitHub Actions plan, [[0001-github-actions-home-server-deploy]], is superseded and
+not in use.)
 
 ## Related
 - Host: [[home-server]] · CI: [[jenkins]]
