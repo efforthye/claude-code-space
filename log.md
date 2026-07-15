@@ -23,3 +23,4 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-07-15] service | mayo app shell scaffolded in apps/mayo (Expo SDK 57 / RN 0.86 / TS). 4 tabs Create/Jobs/Library/Account with mock data; typechecks clean. status → building
 ## [2026-07-15] service | mayo: confirmed host = M1 mini (the "MacBook" is the same machine); added YouTube-publish feature (Data API v3 OAuth2, pluggable publisher) to plan
 ## [2026-07-15] setup | Dev auto-sync for mayo: scripts/dev-autopull.sh (poll git pull) + runbook mayo-dev-autosync (tunnel for cellular; webhook option documented)
+## [2026-07-15] service | mayo: downgraded Expo SDK 57 → 56 (App Store Expo Go didn't support 57); pinned RN 0.85.3/reanimated 4.3.1 etc., trimmed 57-only template extras. tsc + expo export both pass

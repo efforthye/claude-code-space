@@ -40,7 +40,10 @@ Users pay a premium for high-quality generated video. Output includes **both** t
   backend location are TBD (see open decisions).
 
 ## Current state — app shell scaffolded (2026-07-15)
-UI-only shell (no backend yet), Expo SDK 57 / React Native 0.86 / TypeScript. Typechecks clean.
+UI-only shell (no backend yet), **Expo SDK 56** / React Native 0.85 / TypeScript. Typechecks
+clean **and bundles clean** (`expo export`). Pinned to **SDK 56 (not 57)** because the App Store
+Expo Go didn't yet support SDK 57 — see [[expo-dev-loop]] troubleshooting. Trimmed the template's
+SDK-57-only extras (glass-effect splash, @expo/ui, native-tabs) that the shell didn't use.
 Four tabs built with mock data:
 - **Create** (`src/app/index.tsx`) — prompt, length selector (3m/10m/30m/1hr+), quality & model
   tier (Draft/Standard/Premium), estimated-cost card, Generate button.
