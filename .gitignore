@@ -25,3 +25,21 @@ Thumbs.db
 # Local scratch
 *.tmp
 *.log
+
+# App build artifacts under apps/ (commit source only)
+node_modules/
+apps/**/node_modules/
+.expo/
+apps/**/.expo/
+.expo-shared/
+dist/
+web-build/
+apps/**/dist/
+apps/**/.expo-shared/
+# Expo / React Native / native build junk
+*.jks
+*.keystore
+apps/**/ios/Pods/
+apps/**/android/.gradle/
+apps/**/android/app/build/
+apps/**/ios/build/

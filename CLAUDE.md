@@ -56,12 +56,19 @@ Plus `log.md` at the root: an append-only timeline of everything built, deployed
 
 ## Where the code lives
 
-The wiki *documents* services regardless of where their source lives. Two supported setups —
-note which one applies as it becomes clear, and record each service's actual location on its
-service page:
-- **Companion wiki:** service repos live elsewhere; this repo is pure ops knowledge.
-- **Workspace:** subprojects live in this repo (e.g. under a top-level `projects/` or `apps/`
-  dir); the wiki documents them alongside. If we adopt this, document the convention here.
+This repo uses a **hybrid** model — the wiki documents services wherever their source lives, and
+each service page records its actual location:
+- **Companion (existing services):** [[richclub]] and [[jenkins]] are built/run from their own
+  repos or images on the [[home-server]]; this wiki just documents them.
+- **Workspace (new in-house apps built with Claude here):** live **inside this repo under
+  `apps/<slug>/`**, so cloning this one repo gives you the wiki *and* the app *and* all ops
+  context together. Each app is a self-contained project (its own `package.json`, etc.); the
+  wiki `services/` page documents it and links to its `apps/<slug>/` folder.
+
+**Convention for `apps/`:** one folder per app (`apps/<slug>/`). App build artifacts
+(`node_modules/`, `.expo/`, `dist/`, …) are git-ignored — only source is committed. If an app
+later needs its own CI/CD or release pipeline (e.g. EAS Build), it can be split into a dedicated
+repo; update its service page when that happens.
 
 ## Directory layout
 

@@ -19,8 +19,10 @@ dev-loop steps in [[expo-dev-loop]].
 ## Basics (TBD)
 - **Name:** _TBD_ (placeholder slug `mobile-app`; will rename once chosen).
 - **Purpose:** _TBD._
-- **Repo:** _TBD_ — its own GitHub repo (recommended, since it's a real service), separate from
-  this wiki.
+- **Code location:** **workspace model** — lives in this repo at **`apps/<slug>/`** (see
+  `CLAUDE.md` → "Where the code lives"). Clone this repo on the Mac and run Claude Code in it to
+  build the app with full wiki context. Can be split into its own repo later if it needs its own
+  CI/EAS pipeline.
 
 ## Stack
 - Expo (React Native), TypeScript, Expo Router.
