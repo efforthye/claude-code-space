@@ -85,8 +85,13 @@ tail -f ~/Library/Logs/mayo-expo.log             # watch logs (also mayo-autopul
 ./scripts/mayo-autostart-install.sh --uninstall  # remove
 ```
 Caveats:
+- **Do NOT keep the repo under `~/Desktop`, `~/Documents`, or `~/Downloads`.** macOS TCC blocks
+  background launchd agents from those folders → the agent fails with *"Operation not permitted"*
+  (exit 126). Keep the clone somewhere unprotected like `~/dev/…` or `~/claude-code-space`. (This
+  bit us: the mini's clone was under `~/Desktop/programs/work/creiip/…`; moving it out fixed the
+  auto-pull agent.)
 - LaunchAgents start at **login**. For start-at-boot with no one logged in, enable **automatic
-  login** on the mini (System Settings → Users & Groups).
+  login** on the mini (`scripts/enable-autologin.sh`, or System Settings → Users & Groups).
 - The dev server runs **headless** (no interactive QR) — use the `exp://…` URL from the log
   (it's stable; bookmark it in Expo Go once).
 - `git pull` uses cached git credentials; if pulls fail for the private repo under launchd, check
