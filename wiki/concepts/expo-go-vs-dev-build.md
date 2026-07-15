@@ -31,6 +31,16 @@ exactly like Expo Go — **same Fast Refresh / live-reload loop**.
 | Live reload | yes | **yes (identical)** |
 | Install | from the store | build once, install |
 
+## Common misconception: "Expo does all native stuff now"
+True — but that's **Expo the framework**, delivered **through development builds**, not through
+Expo Go. Modern Expo can use almost any native module and change native config via **config
+plugins**; the old "Expo is limited" reputation is outdated. The catch: config plugins and
+non-bundled native modules change the native project, so **Expo Go can't run them** — a
+development build can. So "Expo does everything native" and "you need a dev build" are the *same
+statement*: the dev build is how Expo delivers that power. Expo officially recommends dev builds
+over Expo Go for real apps. (A dev build is still 100% Expo — same `expo start`, same Fast
+Refresh.)
+
 ## When to use which
 - **Expo Go:** quick prototyping while your SDK matches Expo Go's, and you only need built-in
   native modules.
