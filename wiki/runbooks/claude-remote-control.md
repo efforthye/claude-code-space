@@ -47,6 +47,17 @@ claude                          # full local Claude Code session on the server
 ```
 Same full access; the only downside is you're typing in a terminal instead of the app UI.
 
+## Troubleshooting (first-run gotchas)
+Both hit on first setup — fix once, then `claude remote-control` works:
+- **`API Error: 401 … Invalid authentication credentials · Please run /login`** — Claude Code on
+  the mini isn't logged in (or the token expired). Run plain `claude`, type **`/login`**, open the
+  printed URL in a browser (phone Safari is fine), sign in, paste the code back. Then retry
+  `claude remote-control`.
+- **`Error: Workspace not trusted. Please run 'claude' in <dir> first…`** — run plain **`claude`**
+  in that folder once and choose **"1. Yes, proceed"** on the trust dialog, then exit and run
+  `claude remote-control` from the same folder.
+- Order that works: `cd <repo>` → `claude` → accept trust → `/login` → `/exit` → `claude remote-control`.
+
 ## This is what makes the wiki real
 With Claude running on the mini (driven from the phone), the same session can **both** operate
 the server **and** keep this wiki current — do the deploy, then update the [[home-server]] /
