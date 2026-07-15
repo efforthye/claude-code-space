@@ -34,6 +34,6 @@ decisions, and incident records accurate and cross-linked.
 - **Lint:** ask Claude to *"lint the wiki"* — checks stale status, missing runbooks, **leaked
   secrets**, orphan pages, and open follow-ups.
 
-## ⚠️ Secrets never go in this repo
+## Secrets never go in this repo
 No passwords, API keys, tokens, private keys, or `.env` values in the wiki or `raw/`. Record
 *pointers* to where secrets live, never the values. See `CLAUDE.md` for the full rule.
