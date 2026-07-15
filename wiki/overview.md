@@ -17,6 +17,10 @@ On the [[home-server]] via Docker (observed 2026-07-15):
 - **[[richclub]]** — web app: `richclub-api` (FastAPI, `:8000`) + `richclub-front` (nginx, `:3000`).
 - **[[jenkins]]** — CI server (`:9090` web, `:50000` agent).
 
+Planned:
+- **[[mobile-app]]** — Expo/React Native mobile app (iOS + Android), dev loop on the mini via
+  Expo Go ([[0003-expo-react-native-for-mobile-app]], [[expo-dev-loop]]).
+
 ## Infrastructure
 - **[[home-server]]** — Apple **M1 Mac mini** (8-core, **16 GB**, **1 TB SSD ~771 GB free**,
   macOS **15.4.1**, `arm64`; `m1mini`, `home.efforthye.com`) running Docker (status: live). Up
