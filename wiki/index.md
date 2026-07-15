@@ -26,6 +26,7 @@ Updated whenever pages are added/renamed or a service's status changes.
 ## Runbooks
 - [[deploy-home-server]] — Deploy a service to the home server (current path: Jenkins webhook).
 - [[expo-dev-loop]] — Live-preview mobile dev loop: Expo dev server on the mini + Expo Go on phone.
+- [[claude-remote-control]] — Operate the home server from your phone (Claude Remote Control / SSH).
 
 ## Decisions (ADRs)
 - [[0002-cicd-via-jenkins-webhook]] — **Current** CI/CD: Jenkins builds & deploys, triggered by

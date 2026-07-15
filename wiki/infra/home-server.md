@@ -96,7 +96,11 @@ The following aren't documented yet — capture them as they're confirmed:
 ([[0002-cicd-via-jenkins-webhook]]). The `HOME_SERVER` GitHub environment/secrets exist but are
 unused; the GitHub Actions plan ([[0001-github-actions-home-server-deploy]]) is superseded.
 
+## Operating it from your phone
+Run Claude Code **on the mini** and steer it from your phone (Claude Remote Control) or via SSH —
+full server access, no cloud-sandbox limits. See [[claude-remote-control]].
+
 ## Related
-- Runbook: [[deploy-home-server]]
+- Runbooks: [[deploy-home-server]], [[claude-remote-control]]
 - Decision: [[0001-github-actions-home-server-deploy]]
 - Services hosted here: [[richclub]], [[jenkins]]

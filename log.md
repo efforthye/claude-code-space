@@ -17,3 +17,4 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-07-15] ingest | Host specs + state from m1mini: M1 8-core / 16GB / 1TB (~771GB free) / macOS 15.4.1; up 138d, healthy; ~35GB reclaimable Docker images. home-server status → live
 ## [2026-07-15] decision | ADR 0003 — Expo/React Native for mobile app; dev loop on M1 mini + Expo Go. Added service (mobile-app, planned) + runbook (expo-dev-loop)
 ## [2026-07-15] setup | Adopt workspace model: in-house apps live in apps/<slug>/ inside this repo. Updated CLAUDE.md, .gitignore (node/expo artifacts), added apps/README
+## [2026-07-15] query | How to operate the home server from the phone via Claude → runbook claude-remote-control (Remote Control on the mini + phone app; SSH fallback). Web sandbox confirmed unable to reach the server.
