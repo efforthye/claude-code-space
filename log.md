@@ -25,4 +25,5 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-07-15] setup | Dev auto-sync for mayo: scripts/dev-autopull.sh (poll git pull) + runbook mayo-dev-autosync (tunnel for cellular; webhook option documented)
 ## [2026-07-15] service | mayo: downgraded Expo SDK 57 → 56 (App Store Expo Go didn't support 57); pinned RN 0.85.3/reanimated 4.3.1 etc., trimmed 57-only template extras. tsc + expo export both pass
 ## [2026-07-15] service | mayo: SDK 56 also rejected by installed Expo Go (confirmed serving 56) → downgraded further to SDK 55 (RN 0.83.10); removed expo-router ThemeProvider (not in SDK55). tsc + expo export pass. If 55 fails too → dev build.
+## [2026-07-15] service | mayo: DIAGNOSED root cause — App Store Expo Go supports only SDK 54 (SDK 55/57 Expo Go stuck in Apple review), so 55/56/57 all failed. Pinned to SDK 54 (RN 0.81.5, expo-router 6.0.24); fixed use-theme for RN 0.81. tsc + expo export pass.
 ## [2026-07-15] query | Explained Expo Go vs development build → concept page expo-go-vs-dev-build

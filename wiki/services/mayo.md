@@ -40,13 +40,19 @@ Users pay a premium for high-quality generated video. Output includes **both** t
   backend location are TBD (see open decisions).
 
 ## Current state — app shell scaffolded (2026-07-15)
-UI-only shell (no backend yet), **Expo SDK 55** / React Native 0.83 / TypeScript. Typechecks
-clean **and bundles clean** (`expo export`). Pinned down to **SDK 55**: the installed Expo Go
-rejected both SDK 57 and 56 ("requires a newer version of Expo Go") — modern Expo Go supports only
-the SDK it shipped with, and the store build lags npm's release. SDK 55 is the highest the phone's
-Expo Go accepts. If even 55 fails, the fix is a **development build** (removes the Expo Go version
-dependency entirely). Trimmed the template's SDK-57-only extras; `_layout` uses plain `Tabs` (no
-`ThemeProvider`, which SDK 55's expo-router doesn't export).
+UI-only shell (no backend yet), **Expo SDK 54** / React Native 0.81 / TypeScript. Typechecks
+clean (`tsc`) **and bundles clean** (`expo export`).
+
+**Why SDK 54 (diagnosed, not guessed):** the App Store **Expo Go currently supports only SDK 54**
+— per Expo's status, the SDK 55 and 57 Expo Go builds are stuck in **Apple review**, so 55/56/57
+projects all fail with *"requires a newer version of Expo Go."* Expo Go runs exactly one SDK (the
+store-approved one), so **54 is the match** for running in Expo Go today. Options to go newer:
+SDK 56 via **TestFlight** external beta, or SDK 57 via `eas go`. The durable fix is a
+**development build** (bakes our SDK in → immune to Expo Go's review lottery) — see
+[[expo-go-vs-dev-build]]. mayo will need a dev build anyway once native modules arrive.
+
+Trimmed the template's SDK-57-only extras; `_layout` uses plain `Tabs` (no `ThemeProvider`, which
+older expo-router doesn't export); fixed `use-theme` for RN 0.81's `useColorScheme`.
 Four tabs built with mock data:
 - **Create** (`src/app/index.tsx`) — prompt, length selector (3m/10m/30m/1hr+), quality & model
   tier (Draft/Standard/Premium), estimated-cost card, Generate button.
