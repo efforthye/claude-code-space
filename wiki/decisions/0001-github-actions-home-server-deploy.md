@@ -26,7 +26,8 @@ without ever committing those values to git.
 ## Decision
 Use **GitHub Actions gated by the `HOME_SERVER` Environment**. Deploy credentials live as
 Environment secrets — `HOME_SERVER_URL`, `HOME_SERVER_USER`, `HOME_SERVER_SECRET` — and a
-workflow declaring `environment: HOME_SERVER` connects over SSH to ship the service.
+workflow declaring `environment: HOME_SERVER` connects over **SSH (password auth,
+`HOME_SERVER_SECRET`)** to run the service with **Docker** (`docker compose up -d`).
 
 ## Consequences
 - ✅ Credentials never touch git; they're referenced via the `secrets` context at run time only.
@@ -35,8 +36,10 @@ workflow declaring `environment: HOME_SERVER` connects over SSH to ship the serv
 - ⚠️ Deploys depend on GitHub Actions availability; the runner needs network reach to the home
    server (SSH exposed to the runner, or a self-hosted runner on the LAN).
 - ⚠️ Per-service `.env` values still need a home on the host — decide per service, keep out of git.
-- 🔜 Follow-up: create the actual `.github/workflows/deploy.yml`, confirm whether
-  `HOME_SERVER_SECRET` is an SSH key vs. token, and decide self-hosted vs. GitHub-hosted runner.
+- ⚠️ `HOME_SERVER_SECRET` is an **SSH password** — simpler than keys but weaker; consider moving
+  to key-based auth as a later hardening step.
+- 🔜 Follow-up: create the actual `.github/workflows/deploy.yml`, and decide self-hosted vs.
+  GitHub-hosted runner (a home server behind a router usually favors a self-hosted runner).
 
 ## Related
 - Infra: [[home-server]] · Runbook: [[deploy-home-server]]

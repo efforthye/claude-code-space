@@ -22,15 +22,18 @@ workflow uses the **`HOME_SERVER` Environment** to get credentials, then SSHes i
 
 ## The pipeline (intended shape)
 1. Trigger: push to the deploy branch (or a manual `workflow_dispatch`).
-2. Build the service (and/or its Docker image).
+2. Build the service Docker image (build on the runner and push to a registry, or build on the
+   host — decide per service).
 3. Job declares `environment: HOME_SERVER` → GitHub injects the three secrets into that job only.
-4. Connect over SSH to `${{ secrets.HOME_SERVER_URL }}` as `${{ secrets.HOME_SERVER_USER }}`
-   using `${{ secrets.HOME_SERVER_SECRET }}`.
-5. Pull/copy the new version, write any per-service `.env` on the host (never in git), restart
-   the service (e.g. `docker compose up -d`).
+4. Connect over **SSH with password auth** to `${{ secrets.HOME_SERVER_URL }}` as
+   `${{ secrets.HOME_SERVER_USER }}` using the password `${{ secrets.HOME_SERVER_SECRET }}`.
+5. On the host: pull/build the image, write any per-service `.env` (never in git), then
+   `docker compose up -d` to (re)start the container.
 6. Health-check, then report.
 
 ## Workflow skeleton (to adapt per service)
+Password-based SSH — `appleboy/ssh-action` takes a `password:` input, so no key setup needed.
+
 ```yaml
 # .github/workflows/deploy.yml  — NOT YET CREATED; template only
 name: Deploy
@@ -44,15 +47,18 @@ jobs:
     environment: HOME_SERVER          # <- unlocks the environment secrets
     steps:
       - uses: actions/checkout@v4
-      # build / package here …
-      - name: Deploy over SSH
-        # secrets referenced as ${{ secrets.HOME_SERVER_URL }} etc. — never hardcode values
-        run: |
-          echo "connect to $HOST as $USER and deploy"   # fill in real steps
-        env:
-          HOST: ${{ secrets.HOME_SERVER_URL }}
-          USER: ${{ secrets.HOME_SERVER_USER }}
-          # HOME_SERVER_SECRET wired into the SSH action/step as key or token
+      # optional: build & push the image here …
+      - name: Deploy over SSH (password auth) and run with Docker
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOME_SERVER_URL }}
+          username: ${{ secrets.HOME_SERVER_USER }}
+          password: ${{ secrets.HOME_SERVER_SECRET }}   # SSH login password
+          script: |
+            cd /opt/<service>            # per-service dir on the host
+            git pull                     # or: docker pull <image>
+            docker compose up -d --build
+            docker compose ps
 ```
 
 ## Secrets rule

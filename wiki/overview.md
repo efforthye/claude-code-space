@@ -18,9 +18,9 @@ _No services deployed yet._
 ## Infrastructure
 - **[[home-server]]** — the self-hosted host (status: building). Host specs, OS, how services
   run, reverse proxy, DNS, storage, and backups are still TBD on that page.
-- **Deploy path:** GitHub Actions → `HOME_SERVER` environment → SSH to the host. Credentials
-  live as GitHub Environment secrets, never in git. See [[deploy-home-server]] and
-  [[0001-github-actions-home-server-deploy]].
+- **Deploy path:** GitHub Actions → `HOME_SERVER` environment → SSH (password auth) → run with
+  **Docker** on the host. Credentials live as GitHub Environment secrets, never in git. See
+  [[deploy-home-server]] and [[0001-github-actions-home-server-deploy]].
 
 ## Architecture
 _(A simple diagram or description of how services, the proxy, and data stores connect will go
