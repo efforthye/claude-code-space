@@ -30,6 +30,8 @@ Users pay a premium for high-quality generated video. Output includes **both** t
   download during that window). Paid tiers extend retention/long-term storage.
 - **Premium billing** — high-value generation is the paid product; pricing varies by model tier
   and storage.
+- **Publish to YouTube** — upload a finished video straight to the user's YouTube channel from the
+  app (title/description/visibility), no manual download-and-reupload. (Other platforms later.)
 
 ## Platforms
 - **App (primary):** Expo / React Native / TypeScript — distributed to iOS + Android.
@@ -73,11 +75,16 @@ next; today the screens use `src/mocks/data.ts`.
   provider APIs**, not on the [[home-server]] — so the mini can host the orchestration API + web +
   queue, while generation happens off-box. Long-term video storage will likely outgrow the mini's
   disk → plan object storage early.
+- **Publishing integrations:** upload finished videos to **YouTube** via the YouTube Data API v3
+  (per-user OAuth2, resumable upload straight from storage). Note the API's upload quota (~1600
+  units/upload against a default 10k/day → few uploads/day without a quota increase). Designed as a
+  pluggable "publisher" so other platforms (TikTok/Instagram/etc.) can be added later.
 
 ## Hosting
-- Initial orchestration API + web can run on the [[home-server]] (M1 mini) via Docker, deployed
-  through [[jenkins]] like [[richclub]]. Generation is external APIs; bulk video storage → object
-  storage (not the mini's local disk long-term).
+- **Confirmed:** mayo runs on the [[home-server]] — the operator's "MacBook" is this same **M1
+  Mac mini** (one machine). Orchestration API + web run there via Docker, deployed through
+  [[jenkins]] like [[richclub]]. Generation is external APIs; bulk video storage → object storage
+  (not the mini's local disk long-term, per [[0004-mayo-storage-local-then-s3]]).
 
 ## Config & secrets (pointers only — never values)
 Will need API keys for each AI model provider (image + video), an object-storage credential, and a
@@ -90,8 +97,10 @@ payment-provider key. **Record names/locations only**, values go in a secret sto
 - Payment/billing provider and pricing model (per-length? per-model-tier? credits?).
 - Scenario→scenes→clips→stitch pipeline design and how models are abstracted behind the registry.
 - First set of image/video models to integrate.
+- YouTube publishing: OAuth2 app setup + handling the Data API upload quota (batching / quota
+  increase request); design the pluggable "publisher" interface.
 - **Resolved:** storage strategy — local-first, S3 later ([[0004-mayo-storage-local-then-s3]]).
-- **To confirm:** which host runs mayo — the [[home-server]] mini, or a separate MacBook?
+- **Resolved:** host — the [[home-server]] M1 mini (the operator's "MacBook" = same machine).
 
 ## Related
 - Client decision: [[0003-expo-react-native-for-mobile-app]]

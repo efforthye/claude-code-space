@@ -21,3 +21,4 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-07-15] service | Defined mayo — premium AI long-form video generation platform (Expo app + mayo.im web). Replaced mobile-app placeholder; captured vision, features, architecture sketch, open decisions
 ## [2026-07-15] decision | ADR 0004 — mayo storage: local filesystem first, S3 when past ~half host disk; abstract storage behind local/s3 interface from day one
 ## [2026-07-15] service | mayo app shell scaffolded in apps/mayo (Expo SDK 57 / RN 0.86 / TS). 4 tabs Create/Jobs/Library/Account with mock data; typechecks clean. status → building
+## [2026-07-15] service | mayo: confirmed host = M1 mini (the "MacBook" is the same machine); added YouTube-publish feature (Data API v3 OAuth2, pluggable publisher) to plan

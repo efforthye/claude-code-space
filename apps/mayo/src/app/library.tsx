@@ -43,11 +43,18 @@ export default function LibraryScreen() {
                 : `Expires in ${v.expiresInDays} day${v.expiresInDays === 1 ? '' : 's'}`}
             </ThemedText>
           </View>
-          <Pressable
-            accessibilityLabel="Download"
-            style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
-            <Ionicons name="download-outline" size={22} color={theme.text} />
-          </Pressable>
+          <View style={styles.actions}>
+            <Pressable
+              accessibilityLabel="Publish to YouTube"
+              style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+              <Ionicons name="logo-youtube" size={22} color="#FF0000" />
+            </Pressable>
+            <Pressable
+              accessibilityLabel="Download"
+              style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+              <Ionicons name="download-outline" size={22} color={theme.text} />
+            </Pressable>
+          </View>
         </ThemedView>
       ))}
     </Screen>
@@ -83,6 +90,11 @@ const styles = StyleSheet.create({
   meta: {
     flex: 1,
     gap: Spacing.one,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
   },
   pressed: {
     opacity: 0.6,
