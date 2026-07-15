@@ -38,7 +38,22 @@ cd ~/…/claude-code-space && ./scripts/dev-autopull.sh      # every 15s; pass a
 `apps/mayo/package*.json` changed (restart expo after dependency changes). JS/TS edits just
 Fast-Refresh. Latency ≈ the poll interval.
 
-> Keep both alive across SSH drops with `tmux` (or `caffeinate -s` so the mini won't sleep).
+### Keep it running without Termius (tmux)
+The dev server dies when the SSH session ends — unless it's detached. Use `tmux` so it survives
+closing Termius / the phone sleeping; the process keeps running on the mini.
+
+```bash
+brew install tmux                 # once, if missing
+tmux new -s mayo                  # start a persistent session
+# inside tmux:
+caffeinate -s &                   # keep the mini awake (optional)
+cd ~/…/claude-code-space/apps/mayo && npx expo start --tunnel
+#   split for auto-pull: Ctrl+b then "  → cd ~/…/claude-code-space && ./scripts/dev-autopull.sh
+# detach: Ctrl+b then d            → now safe to close Termius; both keep running
+```
+Reattach later: `tmux attach -t mayo`. Stop: attach + `Ctrl+c`, or `tmux kill-session -t mayo`.
+No-tmux fallback: `nohup npx expo start --tunnel > ~/mayo-expo.log 2>&1 & disown`
+(read the tunnel URL from `~/mayo-expo.log` and open it in Expo Go).
 
 ## Option B — GitHub webhook → pull (event-driven, near-instant)
 For zero polling, have GitHub notify the mini on push. Two ways:
