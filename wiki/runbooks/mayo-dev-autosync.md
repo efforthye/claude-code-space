@@ -13,13 +13,15 @@ Goal: when the cloud/web Claude (or anyone) **pushes** to the repo, the [[home-s
 no manual `git pull`. Builds on [[expo-dev-loop]].
 
 ## Connect the phone first
-The Expo dev server binds to the mini's **LAN IP** (e.g. `exp://192.168.x.x:8081`). The phone
-must reach it:
-- **Same WiFi** as the mini → Expo Go lists the server automatically, or
-- **Tunnel** (works on cellular): `npx expo start --tunnel`, then scan the new QR.
+Two connection modes:
+- **`--tunnel` → works from ANY network** (cellular, other WiFi, traveling). Routes
+  phone → relay → mini over the internet, so the phone does **not** need to be on the mini's
+  WiFi. **Use this as the default for network independence:** `npx expo start --tunnel`, scan QR.
+- **LAN (default `expo start`)** — only when the phone is on the **same WiFi** as the mini; Metro
+  shows a `192.168.*` URL and Expo Go lists it automatically. Faster, but same-network only.
 
-If the phone is on LTE/5G and Metro shows a `192.168.*` URL, Expo Go will show **no server** —
-switch to `--tunnel` or join the WiFi.
+If the phone is on LTE/5G and Metro shows a `192.168.*` URL, Expo Go shows **no server** — that's
+the LAN limitation; use `--tunnel`.
 
 ## Option A — polling auto-pull (recommended for dev; zero infra)
 A tiny loop pulls every few seconds; on new commits the dev server refreshes. Run it next to
