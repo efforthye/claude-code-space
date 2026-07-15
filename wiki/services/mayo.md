@@ -40,10 +40,13 @@ Users pay a premium for high-quality generated video. Output includes **both** t
   backend location are TBD (see open decisions).
 
 ## Current state — app shell scaffolded (2026-07-15)
-UI-only shell (no backend yet), **Expo SDK 56** / React Native 0.85 / TypeScript. Typechecks
-clean **and bundles clean** (`expo export`). Pinned to **SDK 56 (not 57)** because the App Store
-Expo Go didn't yet support SDK 57 — see [[expo-dev-loop]] troubleshooting. Trimmed the template's
-SDK-57-only extras (glass-effect splash, @expo/ui, native-tabs) that the shell didn't use.
+UI-only shell (no backend yet), **Expo SDK 55** / React Native 0.83 / TypeScript. Typechecks
+clean **and bundles clean** (`expo export`). Pinned down to **SDK 55**: the installed Expo Go
+rejected both SDK 57 and 56 ("requires a newer version of Expo Go") — modern Expo Go supports only
+the SDK it shipped with, and the store build lags npm's release. SDK 55 is the highest the phone's
+Expo Go accepts. If even 55 fails, the fix is a **development build** (removes the Expo Go version
+dependency entirely). Trimmed the template's SDK-57-only extras; `_layout` uses plain `Tabs` (no
+`ThemeProvider`, which SDK 55's expo-router doesn't export).
 Four tabs built with mock data:
 - **Create** (`src/app/index.tsx`) — prompt, length selector (3m/10m/30m/1hr+), quality & model
   tier (Draft/Standard/Premium), estimated-cost card, Generate button.

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { DarkTheme, DefaultTheme, Tabs, ThemeProvider } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
@@ -10,17 +10,16 @@ export default function RootLayout() {
   const colors = Colors[scheme];
 
   return (
-    <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: colors.text,
-          tabBarInactiveTintColor: colors.textSecondary,
-          tabBarStyle: {
-            backgroundColor: colors.background,
-            borderTopColor: colors.backgroundSelected,
-          },
-        }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.text,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: colors.background,
+          borderTopColor: colors.backgroundSelected,
+        },
+      }}>
         <Tabs.Screen
           name="index"
           options={{
@@ -55,7 +54,6 @@ export default function RootLayout() {
             ),
           }}
         />
-      </Tabs>
-    </ThemeProvider>
+    </Tabs>
   );
 }
