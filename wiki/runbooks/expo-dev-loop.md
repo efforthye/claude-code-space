@@ -57,6 +57,11 @@ r                         # reload the app ; m → toggle the dev menu
 ## Troubleshooting
 - **Phone can't connect:** confirm same WiFi; try `--tunnel`; check the mini's firewall isn't
   blocking Metro's port (default 8081).
+- **"Project is incompatible with this version of Expo Go":** the phone's Expo Go is older than
+  the project's Expo SDK. **Update Expo Go from the App/Play Store** and re-scan. If the store's
+  latest Expo Go still lags the SDK (SDK 57 is bleeding-edge), either pin the project to the
+  latest Expo-Go-supported SDK, or switch to a **development build** (`npx expo run:ios/android`
+  / EAS dev build) which isn't tied to Expo Go's version.
 - **Stuck / white screen:** `npx expo start -c` to clear cache; shake the phone → Reload.
 - **arm64:** native tooling is all arm64 here — no emulation concerns for JS-only development.
 
