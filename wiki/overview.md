@@ -18,9 +18,9 @@ On the [[home-server]] via Docker (observed 2026-07-15):
 - **[[jenkins]]** — CI server (`:9090` web, `:50000` agent).
 
 ## Infrastructure
-- **[[home-server]]** — Apple **M1 Mac mini** (`m1mini`, `home.efforthye.com`, `arm64`), macOS,
-  running Docker (status: building). Exact RAM/storage/OS version, reverse proxy, DNS, and
-  backups are still TBD on that page.
+- **[[home-server]]** — Apple **M1 Mac mini** (8-core, **16 GB**, **1 TB SSD ~771 GB free**,
+  macOS **15.4.1**, `arm64`; `m1mini`, `home.efforthye.com`) running Docker (status: live). Up
+  ~138 days, lightly loaded. Reverse proxy, DNS, and backups still TBD on that page.
 - **Deploy path:** GitHub push webhook → **[[jenkins]]** builds the arm64 image & redeploys the
   Docker container. See [[0002-cicd-via-jenkins-webhook]]. (The `HOME_SERVER` GitHub Actions env
   exists but is unused — [[0001-github-actions-home-server-deploy]], superseded.)

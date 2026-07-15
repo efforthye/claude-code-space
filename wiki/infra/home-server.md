@@ -1,7 +1,7 @@
 ---
 title: Home Server
 type: infra
-status: building
+status: live
 tags: [infra, home-server, deploy]
 created: 2026-07-15
 updated: 2026-07-15
@@ -12,14 +12,18 @@ updated: 2026-07-15
 The machine that hosts self-hosted services. Builds & deploys run through [[jenkins]] on the host,
 triggered by GitHub webhooks ([[0002-cicd-via-jenkins-webhook]]).
 
-## Host
-- **Hardware:** Apple **Mac mini (M1, Apple Silicon)**. Architecture: **`arm64`**.
-- **OS:** macOS (version to confirm via `sw_vers`).
+## Host (verified 2026-07-15)
+- **Hardware:** Apple **Mac mini (M1)**, model `Macmini9,1`. Architecture: **`arm64`**.
+- **Chip / cores:** Apple M1, **8 cores** (4 performance + 4 efficiency).
+- **Memory:** **16 GB**.
+- **Storage:** **1 TB** internal SSD (APPLE SSD AP1024Q, APFS) — **~771 GB free** (host used
+  ~137 GB: ~120 GB Data + system).
+- **OS:** **macOS 15.4.1** (build 24E263).
 - **Hostname:** `m1mini`. **Domain:** `home.efforthye.com`.
 - **Access:** SSH via [[deploy-home-server]] (login user + password in the `HOME_SERVER`
   environment secrets). Interactively reached over Termius.
-- **RAM / storage / macOS version / exact chip cores:** _to confirm_ — run
-  `system_profiler SPHardwareDataType SPStorageDataType && sw_vers` and record here.
+
+_(Serial / hardware UUID / provisioning UDID exist but are intentionally NOT recorded here.)_
 
 > **arm64 gotcha:** Docker images for this host must be built for **`linux/arm64`** (or
 > multi-arch). An `amd64`-only image runs under emulation (slow) or fails. Build with
@@ -33,6 +37,19 @@ Containers publish ports directly to the host (no reverse proxy in front yet —
 | `richclub-api` | `efforthye/richclub-api:latest` | `8000→8000` | [[richclub]] API (FastAPI/uvicorn) |
 | `richclub-front` | `efforthye/richclub-front:latest` | `3000→80` | [[richclub]] frontend (nginx) |
 | `jenkins` | `jenkins/jenkins:lts-jdk17` | `9090→8080`, `50000→50000` | [[jenkins]] CI (web + agent) |
+
+## Current state (snapshot 2026-07-15)
+Healthy, lightly loaded.
+- **Uptime:** ~138 days. **Load avg:** ~1.4–1.6 (of 8 cores → plenty of headroom).
+- **Memory:** ~15 GB "used" of 16 GB, but **~49% effectively free** via the compressor and
+  **no swapping** (swapins/swapouts = 0) → healthy.
+- **Disk:** 17 GB used on `/` system volume, ~120 GB on Data; **~771 GB free**.
+- **Docker VM memory:** containers see a **~5.77 GiB** limit (Docker's Linux VM allocation on
+  macOS), not the full 16 GB.
+- **Per-container (`docker stats`):** `jenkins` ~1.05 GiB (18%), `richclub-api` ~551 MiB (9%),
+  `richclub-front` ~5 MiB.
+- **Docker disk (`docker system df`):** **254 images, only 8 active — ~24 GB + ~11 GB build
+  cache reclaimable.** Consider `docker image prune -a` / `docker builder prune` to free ~35 GB.
 
 ## Inspecting specs & state
 ```bash
@@ -59,20 +76,21 @@ HOME_SERVER). Only the *names* live here; the values stay in GitHub.
 | `HOME_SERVER_SECRET` | SSH login **password** for that user | value in GitHub Env |
 
 ## Runtime
-Services run as **Docker** containers on the host. Expect a `docker compose` file per service (or
-a shared one); deploys pull/build the image and `docker compose up -d`. Exact compose layout and
-image registry are TBD until the first service ships.
+Services run as **Docker** containers on the host (3 running — see the table above). Images are
+built by [[jenkins]] and tagged under `efforthye/*`. Whether containers are managed via
+`docker compose` or plain `docker run`, and where those files live on the host, is TBD.
 
 ## To fill in (unverified / TBD)
 The following aren't documented yet — capture them as they're confirmed:
-- Exact RAM, storage size/free, macOS version (run the commands above).
-- Docker specifics: Compose file location(s) on the host, image registry (Docker Hub
-  `efforthye/*` seen — public or private?), networks, volumes.
+- Docker specifics: how the Docker engine runs on macOS (Docker Desktop / colima / OrbStack?),
+  its VM memory (~5.77 GiB observed), image registry (Docker Hub `efforthye/*` — public/private?),
+  volumes.
 - Reverse proxy: none visible in `docker ps` (ports published directly, e.g. `:3000`, `:8000`).
   Confirm whether a proxy / TLS terminates `home.efforthye.com`, or access is host:port.
 - DNS: `home.efforthye.com` → the mini (dynamic DNS? router port-forward?).
 - Backup strategy → will get its own [[runbooks]] page.
 - Hardening: SSH currently uses **password** auth — consider moving to key-based auth later.
+- Housekeeping: ~35 GB reclaimable Docker images/build cache (see Current state).
 
 **CI/CD (resolved):** builds & deploys run through [[jenkins]], triggered by GitHub webhooks
 ([[0002-cicd-via-jenkins-webhook]]). The `HOME_SERVER` GitHub environment/secrets exist but are

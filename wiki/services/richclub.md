@@ -25,11 +25,13 @@ Two Docker containers, images published under `efforthye/*` (Docker Hub — publ
 | Frontend | `richclub-front` | `efforthye/richclub-front:latest` | `3000→80` | Served by nginx (`docker-entrypoint`) |
 
 - **Uptime (as observed):** both up ~2 weeks as of 2026-07-15.
+- **Resource use (`docker stats`, 2026-07-15):** api ~551 MiB, front ~5 MiB. Lightweight.
 - **Access:** ports published directly on the host — `home.efforthye.com:3000` (front) and
   `:8000` (api), unless a reverse proxy fronts them (not yet confirmed — see [[home-server]]).
 
 ## Code location
-_TBD — which repo(s) hold `richclub-api` and `richclub-front` source? Record here._
+_Not tracked for now (by choice)._ Images are published as `efforthye/richclub-api:latest` and
+`efforthye/richclub-front:latest`; the source repo(s) can be documented later if needed.
 
 ## Dependencies
 _TBD — database, cache, external APIs? None visible in `docker ps`; confirm._

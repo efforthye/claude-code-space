@@ -19,8 +19,8 @@ Updated whenever pages are added/renamed or a service's status changes.
 | Jenkins (CI) | live | `home.efforthye.com:9090` | [[jenkins]] |
 
 ## Infra
-- [[home-server]] — Apple M1 Mac mini (`m1mini` / `home.efforthye.com`) running Docker; deploys
-  via GitHub Actions + the `HOME_SERVER` environment. _(status: building)_
+- [[home-server]] — Apple M1 Mac mini (8-core, 16 GB, 1 TB, macOS 15.4.1, `arm64`; `m1mini` /
+  `home.efforthye.com`) running Docker; CI/CD via [[jenkins]] webhooks. _(status: live)_
 
 ## Runbooks
 - [[deploy-home-server]] — Deploy a service to the home server via GitHub Actions (shared path).
