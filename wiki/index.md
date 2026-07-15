@@ -6,22 +6,30 @@ created: 2026-07-15
 updated: 2026-07-15
 ---
 
-# Index — Wiki Catalog
+# Index — Service Registry & Catalog
 
-The map of the entire wiki. Every page is listed here with a one-line summary. Read this first
-when answering a query, then drill into the relevant pages. Updated on every ingest.
+The map of the whole wiki. Read this first on any query, then drill into the relevant pages.
+Updated whenever pages are added/renamed or a service's status changes.
 
-_The wiki is empty — no sources have been ingested yet. Drop a file into `raw/` and ask Claude
-to ingest it; entries will appear below._
+## Service registry
 
-## Overview
-- [[overview]] — Top-level synthesis and evolving thesis. _(empty)_
+| Service | Status | URL / Host | Page |
+|---------|--------|-----------|------|
+| _(none yet)_ | — | — | — |
 
-## Sources
-_(none yet — one summary page will appear here per ingested source)_
+_No services documented yet. Start one with: "새 서비스 만들자" / "create a service page for X"._
 
-## Entities
-_(none yet — people, orgs, products, places, works)_
+## Infra
+_(none yet — home server, network, reverse proxy, DNS, Docker, storage, backups)_
+
+## Runbooks
+_(none yet — deploy / restart / backup / restore / upgrade how-tos)_
+
+## Decisions (ADRs)
+_(none yet — architectural & tooling choices and rationale)_
+
+## Incidents
+_(none yet — postmortems)_
 
 ## Concepts
-_(none yet — ideas, themes, methods, topics)_
+_(none yet — reusable patterns & reference knowledge)_

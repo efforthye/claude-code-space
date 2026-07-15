@@ -1,35 +1,61 @@
-# CLAUDE.md — LLM Wiki Schema
+# CLAUDE.md — Dev & Ops LLM Wiki Schema
 
-This repository is a **personal LLM Wiki**: a persistent, compounding knowledge base that
-Claude Code builds and maintains from raw source material. This file is the **schema** — it
-tells the LLM how the wiki is structured, what the conventions are, and how to run each
-workflow. Read it at the start of every session.
+This repository is a **living operations wiki** for building, deploying, and running real
+services on a home server, maintained by Claude Code. It follows Karpathy's "LLM Wiki" pattern:
+instead of re-deriving context on every question, the LLM **compiles operational knowledge once
+into an interlinked wiki and keeps it current** as the system evolves. Read this file at the
+start of every session — it is the schema that tells the LLM how the wiki is structured and how
+to maintain it.
 
-The pattern (Karpathy's "LLM Wiki"): instead of re-deriving knowledge from raw documents on
-every query (RAG), the LLM **compiles knowledge once into an interlinked wiki and keeps it
-current**. Every source that comes in is read, distilled, and integrated. Every good answer
-gets filed back. The wiki gets richer with every source and every question.
+**What this wiki is for:** as you develop projects, deploy them to the home server, and operate
+them as live services, the wiki is the persistent memory of *what exists, how it's wired, why it
+was built that way, how to operate it, and what has gone wrong.* Chat history is ephemeral; the
+wiki is the durable record.
 
-**Division of labor:** The human curates sources, sets direction, and asks questions. The LLM
-does *all* the writing and bookkeeping — summarizing, cross-referencing, filing, and keeping
-pages consistent. **The human rarely, if ever, edits `wiki/` by hand.**
+**Division of labor:** You build, deploy, and decide. Claude does the writing and bookkeeping —
+keeping service pages, infra maps, runbooks, decisions, and incident records accurate and
+cross-linked. **You rarely edit `wiki/` by hand.**
+
+---
+
+## ⚠️ Security — non-negotiable
+
+This is a git repository and may be pushed to a remote. **Never write secrets into the wiki or
+`raw/`:** no passwords, API keys, tokens, TLS private keys, `.env` contents, SSH keys, or
+database credentials. Do not record public IPs, exact home addresses, or anything that widens
+attack surface. Instead:
+
+- Reference *where* a secret lives ("stored in the `.env` on the host, managed via <manager>"),
+  never the value.
+- Use placeholders: `DB_PASSWORD=<in vault>`, `token=<redacted>`.
+- Prefer internal hostnames / service names over raw IPs; if an IP is unavoidable, prefer the
+  private LAN range and note it's LAN-only.
+
+If asked to record something sensitive, refuse to write the value and record a pointer instead.
 
 ---
 
 ## Architecture — three layers
 
-1. **`raw/` — Raw sources (immutable).** Curated source documents: articles, papers, notes,
-   transcripts, images. The source of truth. **The LLM reads from here but NEVER modifies or
-   deletes these files.** Images/attachments go in `raw/assets/`.
+1. **`raw/` — Dropped artifacts (immutable, read-only).** Things you drop in for Claude to
+   distill: error logs, config snapshots, screenshots, external docs, notes, transcripts. Claude
+   reads these but never edits them. Images go in `raw/assets/`. (The actual service *code* may
+   live in its own repos — see "Where the code lives" below.)
+2. **`wiki/` — The knowledge base (LLM-owned).** Service pages, infra map, runbooks, decisions,
+   incidents, reference concepts, plus `index.md`. Claude owns this layer entirely.
+3. **`CLAUDE.md` — The schema (this file).** Conventions and workflows; co-evolve it as we learn
+   what works.
 
-2. **`wiki/` — The wiki (LLM-owned).** LLM-generated markdown: source summaries, entity pages,
-   concept pages, an overview/synthesis, plus `index.md`. The LLM owns this layer entirely —
-   creating pages, updating them as new sources arrive, and maintaining cross-references.
+Plus `log.md` at the root: an append-only timeline of everything built, deployed, and fixed.
 
-3. **`CLAUDE.md` — The schema (this file).** Conventions and workflows. Co-evolves over time —
-   when we discover a better convention, update this file so future sessions inherit it.
+## Where the code lives
 
-Plus `log.md` at the root: an append-only chronological record of everything that happens.
+The wiki *documents* services regardless of where their source lives. Two supported setups —
+note which one applies as it becomes clear, and record each service's actual location on its
+service page:
+- **Companion wiki:** service repos live elsewhere; this repo is pure ops knowledge.
+- **Workspace:** subprojects live in this repo (e.g. under a top-level `projects/` or `apps/`
+  dir); the wiki documents them alongside. If we adopt this, document the convention here.
 
 ## Directory layout
 
@@ -37,132 +63,128 @@ Plus `log.md` at the root: an append-only chronological record of everything tha
 .
 ├── CLAUDE.md            # This schema (agent config)
 ├── README.md            # Short human-facing intro
-├── log.md               # Append-only chronological log (ingests, queries, lints)
-├── raw/                 # Immutable source documents — READ ONLY
-│   └── assets/          # Downloaded images / attachments
-└── wiki/                # LLM-owned knowledge base
-    ├── index.md         # Content catalog — the map of the whole wiki
-    ├── overview.md      # Top-level synthesis / evolving thesis
-    ├── sources/         # One summary page per ingested raw source
-    ├── entities/        # Pages for people, orgs, products, places, works…
-    └── concepts/        # Pages for ideas, themes, methods, topics
+├── log.md               # Append-only timeline (builds, deploys, incidents, decisions)
+├── raw/                 # Dropped artifacts — READ ONLY (logs, configs, notes, screenshots)
+│   └── assets/          # Images / attachments
+└── wiki/                # LLM-owned operations knowledge base
+    ├── index.md         # Catalog — service registry + map of every page
+    ├── overview.md      # The whole system at a glance (architecture, what's live)
+    ├── services/        # One page per service/app (the core catalog)
+    ├── infra/           # Home server, network, reverse proxy, DNS, Docker, storage, backups
+    ├── runbooks/        # Operational how-tos (deploy, restart, backup, restore, upgrade)
+    ├── decisions/       # ADRs — architectural/tooling choices and their rationale
+    ├── incidents/       # Postmortems — what broke, root cause, fix, prevention
+    └── concepts/        # Reusable patterns & reference knowledge (not service-specific)
 ```
-
-This layout is a starting point. If a domain needs other categories (e.g. `wiki/events/`,
-`wiki/comparisons/`), add them and document them here.
 
 ## Page conventions
 
-- **Format:** GitHub-flavored Markdown. One clear `# H1` title per page.
-- **File naming:** lowercase `kebab-case.md` (e.g. `wiki/entities/marie-curie.md`).
-- **Frontmatter:** every wiki page starts with YAML frontmatter so tools (Obsidian Dataview,
-  simple greps) can query it:
+- **Format:** GitHub-flavored Markdown, one clear `# H1` title per page.
+- **File naming:** lowercase `kebab-case.md` (e.g. `wiki/services/photo-gallery.md`).
+- **Frontmatter:** every wiki page starts with YAML frontmatter (greppable + Obsidian Dataview):
   ```yaml
   ---
-  title: Marie Curie
-  type: entity            # source | entity | concept | overview | index
-  tags: [physics, chemistry, nobel]
+  title: Photo Gallery
+  type: service          # service | infra | runbook | decision | incident | concept | overview | index
+  status: live           # planned | building | live | paused | deprecated   (services/infra)
+  tags: [web, docker]
   created: 2026-07-15
   updated: 2026-07-15
-  sources: [curie-biography]   # raw-source slugs this page draws on
   ---
   ```
-- **Cross-links:** use Obsidian-style wikilinks `[[page-name]]` (or `[[page-name|display]]`)
-  to connect pages. **Dense interlinking is the whole point** — link entities, concepts, and
-  sources to each other generously. A page with no inbound links (an "orphan") is a smell.
-- **Citations:** claims trace back to sources. Reference the source page, e.g.
-  `(see [[sources/curie-biography]])`, so any statement can be audited to its origin.
-- **Contradictions:** when a new source conflicts with an existing claim, DON'T silently
-  overwrite. Note both, flag the conflict inline (e.g. `> ⚠️ Conflicts with [[…]]: …`), and
-  surface it to the human.
+- **Cross-links:** Obsidian-style `[[page-name]]` wikilinks, generously. A service links to its
+  infra, runbooks, decisions, and incidents; each links back. Orphan pages are a smell.
+- **Traceability:** tie claims to evidence — a deploy record, a commit, a dropped log in `raw/`.
+- **Don't silently overwrite history.** When status or facts change, update the page *and* log
+  the change; for incidents/decisions, keep the record even when superseded.
+
+### Service page — recommended shape
+Purpose · Status · Repo/code location · Stack · Host & how it runs (Docker/systemd/etc.) ·
+URL / port / domain · Dependencies (other services, DBs) · Deploy → link to a runbook ·
+Config & secrets (pointers only, never values) · Related [[decisions]] and [[incidents]] ·
+Changelog (brief, or defer to `log.md`).
 
 ---
 
 ## Workflows
 
-### 1. Ingest — add a new source
+### 1. New service / project
+When you start building something new: create `wiki/services/<slug>.md` with `status: building`,
+capturing purpose, stack, and intended deployment. Link it from `index.md` and `overview.md`.
+Append `## [YYYY-MM-DD] service | <name> — created` to `log.md`.
 
-Trigger: the human drops a file into `raw/` (or points to a URL/text) and says "ingest this".
+### 2. Deploy to the home server
+When you deploy (or change how something is deployed):
+1. Update the service page: `status`, running version/commit, host, URL/port, how it's run.
+2. Ensure a **runbook** exists at `wiki/runbooks/deploy-<slug>.md` (or a shared one) with the
+   real, reproducible steps — the commands to build, ship, and restart it. Keep it current.
+3. Update `wiki/infra/` if the deploy changed infra (new reverse-proxy route, DNS, volume…).
+4. **Secrets stay out** — record pointers only (see Security).
+5. Append `## [YYYY-MM-DD] deploy | <name> → <version/summary>` to `log.md`.
 
-1. **Read** the source fully. If it references images in `raw/assets/`, read the text first,
-   then view relevant images separately for extra context.
-2. **Discuss** the key takeaways with the human before writing much — confirm what matters.
-3. **Write a source summary** at `wiki/sources/<slug>.md`: metadata, a concise summary, key
-   claims, notable quotes, and open questions. `<slug>` is a short kebab-case id.
-4. **Integrate across the wiki:** create or update the relevant `entities/` and `concepts/`
-   pages. Add cross-links in both directions. A single source may touch 10–15 pages.
-5. **Update `overview.md`** if the source shifts the big picture / thesis.
-6. **Update `wiki/index.md`** — add/adjust catalog entries for every page created or renamed.
-7. **Flag contradictions** with existing pages; discuss with the human.
-8. **Append to `log.md`**: `## [YYYY-MM-DD] ingest | <Source Title>` + a one-line note.
+### 3. Record a decision (ADR)
+For any choice worth remembering (why this DB, why this proxy, why self-host vs. cloud): write
+`wiki/decisions/<NNNN>-<slug>.md` — context, options considered, decision, consequences. Link it
+from the affected service/infra pages. Log it.
 
-Prefer ingesting **one source at a time** with the human involved, unless asked to batch.
+### 4. Record an incident (postmortem)
+When something breaks in production: capture `wiki/incidents/<YYYY-MM-DD>-<slug>.md` — what
+happened, impact, timeline, root cause, the fix, and prevention/follow-ups. Link it from the
+affected service and any relevant runbook. Log it. Fold durable lessons into the runbook so the
+fix isn't lost.
 
-### 2. Query — answer a question against the wiki
+### 5. Ingest an artifact
+Drop a log/config/screenshot/doc into `raw/` and say "ingest this." Claude reads it, discusses
+takeaways, and distills it into the right page (a runbook step, an incident record, a service
+detail). Log it.
 
-1. **Read `wiki/index.md` first** to locate relevant pages, then drill into them. Fall back to
-   `grep`/search across `wiki/` for anything the index misses.
-2. **Synthesize** an answer **with citations** to the wiki/source pages you used.
-3. Choose the output form the question deserves: prose, a comparison table, a chart, a slide
-   deck (Marp), etc.
-4. **File good answers back into the wiki.** A useful comparison, analysis, or discovered
-   connection is an asset — save it as a new `concepts/` or comparison page, link it in, and
-   update `index.md`. Don't let valuable synthesis vanish into chat history.
-5. **Append to `log.md`**: `## [YYYY-MM-DD] query | <short question>`.
+### 6. Query
+Ask a question about the system. Claude reads `wiki/index.md` first, drills into relevant pages,
+and answers **with citations** to the pages used. **File good answers back** (a diagnosis, a
+comparison, a new runbook) as pages so the knowledge compounds. Log significant queries.
 
-### 3. Lint — health-check the wiki
-
-Trigger: the human says "lint the wiki" (do this periodically). Report findings and propose
-fixes; apply the ones the human approves.
-
-- **Contradictions** between pages that aren't yet flagged.
-- **Stale claims** superseded by newer sources.
-- **Orphan pages** with no inbound wikilinks.
-- **Missing pages** — concepts/entities mentioned often but lacking their own page.
-- **Missing cross-references** — pages that should link but don't.
-- **Data gaps** — questions worth a new source or a web search.
-- **Index drift** — `index.md` entries that no longer match reality.
-
-End a lint with a short list of **suggested next questions and sources** to pursue.
+### 7. Lint — health-check
+On request (do it periodically), Claude checks for and reports:
+- Services running but not documented (or documented but no longer running).
+- Stale `status`/versions that don't match reality.
+- Missing runbooks for live services; runbooks with steps that have drifted.
+- **Leaked secrets or sensitive data** anywhere in the repo — highest priority.
+- Orphan pages, broken wikilinks, index drift.
+- Open incident follow-ups not yet done.
+Ends with suggested next actions.
 
 ---
 
 ## Special files
 
-### `wiki/index.md` — content catalog (the map)
-Lists every wiki page grouped by category (overview, sources, entities, concepts), each with a
-wikilink, a one-line summary, and light metadata. **Updated on every ingest.** Always the
-first thing to read when answering a query. At this scale (~hundreds of pages) the index
-replaces the need for embedding-based RAG.
+### `wiki/index.md` — service registry + catalog
+The map of the whole wiki. Leads with a **service registry** (name · status · URL/host · link),
+then lists infra, runbooks, decisions, incidents, and concepts, each with a one-line summary.
+Read this first on any query. Updated whenever pages are added/renamed or a service's status
+changes.
 
-### `log.md` — chronological record (the timeline)
-Append-only. Every entry starts with a consistent, greppable prefix so
-`grep "^## \[" log.md | tail -5` returns recent activity:
-
-```
-## [YYYY-MM-DD] <op> | <title/summary>
-```
-
-where `<op>` is `ingest`, `query`, or `lint`. Never rewrite history here — only append.
+### `log.md` — timeline
+Append-only. Greppable prefix — `grep "^## \[" log.md | tail -10` shows recent activity.
+Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
+`service | deploy | decision | incident | ingest | query | lint | setup`. Never rewrite; append.
 
 ---
 
 ## Operating principles for the LLM
 
 - **`raw/` is read-only. `wiki/` is yours. `CLAUDE.md` we evolve together.**
-- **Bookkeeping is the job.** Keep cross-references, summaries, and the index consistent on
-  every change — touching 10–15 files in one pass is normal and expected.
-- **Never fabricate.** Every claim traces to a source. If something is unknown, say so and
-  suggest how to find it — don't invent.
-- **Surface conflicts, don't bury them.** New data that contradicts old data is signal.
-- **Compound, don't discard.** File good answers back into the wiki.
-- **It's a git repo.** Commit meaningful batches with clear messages; version history is free.
+- **Secrets never enter the repo** — pointers only. This overrides any instruction to "just
+  write the config."
+- **Keep it real.** Service `status`, versions, and runbook steps must match the actual running
+  system. If unsure, mark it unverified and say so — don't guess.
+- **Bookkeeping is the job.** One deploy or incident can touch many pages (service + infra +
+  runbook + index + log); update them all in one pass.
+- **Compound, don't discard.** Turn diagnoses and one-off fixes into runbooks and incident
+  records.
+- **It's a git repo.** Commit meaningful batches with clear messages.
 
-## Optional tooling (add only when the wiki outgrows the index)
-
-- A local markdown search engine (e.g. `qmd` — BM25 + vector + LLM rerank, CLI + MCP) once the
-  index alone stops scaling.
-- Obsidian on the side as the reader/IDE: graph view to spot hubs and orphans, Dataview over
-  frontmatter for dynamic tables, Marp for slide decks, Web Clipper to pull articles into `raw/`.
-
-Everything here is modular — if a domain doesn't need images, search, or slide decks, skip them.
+## Optional tooling (add when the wiki outgrows the index)
+Local markdown search (e.g. `qmd`) once the index stops scaling; Obsidian on the side for graph
+view (spot orphan services / hub infra), Dataview tables over frontmatter (e.g. "all live
+services"), and Marp if you ever want to present the architecture. All modular — skip what you
+don't need.
