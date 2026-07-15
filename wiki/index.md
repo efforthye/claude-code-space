@@ -15,13 +15,12 @@ Updated whenever pages are added/renamed or a service's status changes.
 
 | Service | Status | URL / Host | Page |
 |---------|--------|-----------|------|
-| _(none yet)_ | — | — | — |
-
-_No services documented yet. Start one with: "새 서비스 만들자" / "create a service page for X"._
+| RichClub (api + front) | live | `home.efforthye.com:8000` (api) / `:3000` (front) | [[richclub]] |
+| Jenkins (CI) | live | `home.efforthye.com:9090` | [[jenkins]] |
 
 ## Infra
-- [[home-server]] — The self-hosted host; deploys arrive via GitHub Actions + the `HOME_SERVER`
-  environment. _(status: building)_
+- [[home-server]] — Apple M1 Mac mini (`m1mini` / `home.efforthye.com`) running Docker; deploys
+  via GitHub Actions + the `HOME_SERVER` environment. _(status: building)_
 
 ## Runbooks
 - [[deploy-home-server]] — Deploy a service to the home server via GitHub Actions (shared path).
