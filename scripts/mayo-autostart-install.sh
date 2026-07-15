@@ -80,7 +80,9 @@ PLIST
 }
 
 write_plist "$EXPO_PLIST" "$EXPO_LABEL" "$APP" "npx expo start --tunnel" "$LOGS/mayo-expo.log"
-write_plist "$PULL_PLIST" "$PULL_LABEL" "$REPO" "./scripts/dev-autopull.sh" "$LOGS/mayo-autopull.log"
+# Invoke the pull script via an explicit bash (not shebang/exec) — launchd
+# returned exit 126 execing the script directly.
+write_plist "$PULL_PLIST" "$PULL_LABEL" "$REPO" "/bin/bash $REPO/scripts/dev-autopull.sh" "$LOGS/mayo-autopull.log"
 
 unload
 launchctl bootstrap "gui/$UID_NUM" "$EXPO_PLIST"
