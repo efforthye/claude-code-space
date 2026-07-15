@@ -1,7 +1,7 @@
 ---
 title: Mayo
 type: service
-status: planned
+status: building
 tags: [service, mayo, ai-video, expo, web, platform]
 created: 2026-07-15
 updated: 2026-07-15
@@ -36,6 +36,23 @@ Users pay a premium for high-quality generated video. Output includes **both** t
 - **Web:** **mayo.im** — same product on the web.
 - **Code location:** Expo app lives in this workspace at **`apps/mayo/`**. Web frontend and the
   backend location are TBD (see open decisions).
+
+## Current state — app shell scaffolded (2026-07-15)
+UI-only shell (no backend yet), Expo SDK 57 / React Native 0.86 / TypeScript. Typechecks clean.
+Four tabs built with mock data:
+- **Create** (`src/app/index.tsx`) — prompt, length selector (3m/10m/30m/1hr+), quality & model
+  tier (Draft/Standard/Premium), estimated-cost card, Generate button.
+- **Jobs** (`jobs.tsx`) — per-job scene progress bars + status (queued/generating/done/failed).
+- **Library** (`library.tsx`) — finished videos, size, **retention "expires in N days"**, download;
+  storage-usage bar (ties to [[0004-mayo-storage-local-then-s3]]).
+- **Account** (`account.tsx`) — plan, storage, retention extension, model prefs.
+
+**Run it (on a Mac with the repo cloned):**
+```bash
+cd apps/mayo && npm install && npx expo start
+```
+Then scan the QR with Expo Go (iOS/Android) — see [[expo-dev-loop]]. Backend/model wiring comes
+next; today the screens use `src/mocks/data.ts`.
 
 ## Architecture sketch (draft — not locked)
 - **Clients:** Expo app + mayo.im web (share a backend API). Web could reuse the RN codebase via

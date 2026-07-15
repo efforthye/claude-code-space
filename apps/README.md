@@ -10,4 +10,4 @@ In-house applications built with Claude Code in this workspace. One folder per a
 
 | App | Slug | Wiki page | Status |
 |-----|------|-----------|--------|
-| Mayo (AI video platform) | `mayo` | [[mayo]] | planned |
+| Mayo (AI video platform) | `mayo` | [[mayo]] | building (app shell) |

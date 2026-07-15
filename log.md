@@ -20,3 +20,4 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-07-15] query | How to operate the home server from the phone via Claude → runbook claude-remote-control (Remote Control on the mini + phone app; SSH fallback). Web sandbox confirmed unable to reach the server.
 ## [2026-07-15] service | Defined mayo — premium AI long-form video generation platform (Expo app + mayo.im web). Replaced mobile-app placeholder; captured vision, features, architecture sketch, open decisions
 ## [2026-07-15] decision | ADR 0004 — mayo storage: local filesystem first, S3 when past ~half host disk; abstract storage behind local/s3 interface from day one
+## [2026-07-15] service | mayo app shell scaffolded in apps/mayo (Expo SDK 57 / RN 0.86 / TS). 4 tabs Create/Jobs/Library/Account with mock data; typechecks clean. status → building
