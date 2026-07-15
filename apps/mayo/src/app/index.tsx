@@ -27,7 +27,7 @@ export default function CreateScreen() {
   return (
     <Screen
       title="Create"
-      subtitle="Describe it once — AI writes the scenario and builds a full-length video.">
+      subtitle="Describe it once — AI writes the script and directs the whole film.">
       <ThemedView type="backgroundElement" style={styles.card}>
         <ThemedText type="smallBold">Prompt</ThemedText>
         <TextInput
