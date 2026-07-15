@@ -35,6 +35,8 @@ Updated whenever pages are added/renamed or a service's status changes.
   `HOME_SERVER` environment.
 - [[0003-expo-react-native-for-mobile-app]] — Use Expo/React Native for the mobile app; dev loop
   on the M1 mini with Expo Go.
+- [[0004-mayo-storage-local-then-s3]] — Mayo video storage: local filesystem first, migrate to
+  S3-compatible object storage past ~half the host disk; abstract storage from day one.
 
 ## Incidents
 _(none yet — postmortems)_

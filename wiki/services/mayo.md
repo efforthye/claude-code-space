@@ -47,9 +47,10 @@ Users pay a premium for high-quality generated video. Output includes **both** t
   tracking (a 30-min film = many scene jobs). Users watch progress, then download.
 - **Model registry:** pluggable image/video providers (Nano Banana, Higgsfield, and future ones)
   each with a price tier; user selects per job. New models can be added without client changes.
-- **Storage + lifecycle:** large video files in object storage (S3-compatible — cloud like R2/
-  Backblaze, or self-hosted MinIO). Lifecycle rules enforce the 7–14 day default retention; paid
-  tiers extend it. Storage cost/space is a first-class concern.
+- **Storage + lifecycle:** phased — **local filesystem first, S3-compatible object storage when
+  it outgrows ~half the host disk** ([[0004-mayo-storage-local-then-s3]]). Access goes through a
+  storage interface (`local`/`s3` backends) from day one so the switch is config-only. Retention
+  (7–14 day default, paid extension) is enforced app-side regardless of backend.
 - **Billing:** payment provider for premium/model-tier/retention charges.
 - **Heavy AI compute is external:** the actual image/video generation runs on **external AI
   provider APIs**, not on the [[home-server]] — so the mini can host the orchestration API + web +
@@ -69,10 +70,11 @@ payment-provider key. **Record names/locations only**, values go in a secret sto
 ## Open decisions (to ADR as we choose)
 - Backend stack (FastAPI?) and job-queue tech (Redis+workers / Celery / RQ / …).
 - Web approach: RN-Web shared codebase vs. separate web frontend for mayo.im.
-- Object-storage provider + retention/lifecycle implementation.
 - Payment/billing provider and pricing model (per-length? per-model-tier? credits?).
 - Scenario→scenes→clips→stitch pipeline design and how models are abstracted behind the registry.
 - First set of image/video models to integrate.
+- **Resolved:** storage strategy — local-first, S3 later ([[0004-mayo-storage-local-then-s3]]).
+- **To confirm:** which host runs mayo — the [[home-server]] mini, or a separate MacBook?
 
 ## Related
 - Client decision: [[0003-expo-react-native-for-mobile-app]]
