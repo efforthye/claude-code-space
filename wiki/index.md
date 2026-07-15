@@ -43,4 +43,5 @@ Updated whenever pages are added/renamed or a service's status changes.
 _(none yet — postmortems)_
 
 ## Concepts
-_(none yet — reusable patterns & reference knowledge)_
+- [[expo-go-vs-dev-build]] — Expo Go (generic container, SDK-locked) vs a development build
+  (your own compiled app); why mayo will need a dev build.
