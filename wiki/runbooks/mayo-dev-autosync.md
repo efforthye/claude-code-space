@@ -55,6 +55,27 @@ Reattach later: `tmux attach -t mayo`. Stop: attach + `Ctrl+c`, or `tmux kill-se
 No-tmux fallback: `nohup npx expo start --tunnel > ~/mayo-expo.log 2>&1 & disown`
 (read the tunnel URL from `~/mayo-expo.log` and open it in Expo Go).
 
+### Set-once, never-touch-Termius workflow
+Run **both** in the same tmux session, then detach — the mini keeps them alive:
+```
+tmux new -s mayo
+# window 0: cd apps/mayo && npx expo start --tunnel
+# Ctrl+b c  → new window
+# window 1: cd <repo> && ./scripts/dev-autopull.sh
+# Ctrl+b d  → detach; close Termius freely
+```
+Now every push auto-pulls on the mini and Fast-Refreshes the phone — **no manual `git pull`,
+no Termius session needed.** Just keep Expo Go open on the phone.
+
+**Tunnel URL is stable.** Expo derives the tunnel subdomain from the project + machine, so it stays
+the same across runs (observed: `exp://a-5i9ye-anonymous-8081.exp.direct`). **Keep expo running in
+tmux (don't restart)** and the URL never changes — bookmark the `exp://…exp.direct` link on the
+phone and reuse it. `npx expo login` (Expo account) pins it deterministically (subdomain uses the
+account name instead of `anonymous`).
+
+**True permanence across reboots:** wrap expo + autopull in a macOS **launchd** LaunchAgent so they
+auto-start on boot. Not set up yet — ask Claude to add it when wanted.
+
 ## Option B — GitHub webhook → pull (event-driven, near-instant)
 For zero polling, have GitHub notify the mini on push. Two ways:
 - **Reuse [[jenkins]]** (already receives GitHub webhooks): add a job that runs the pull in the
