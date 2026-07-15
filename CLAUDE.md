@@ -33,6 +33,12 @@ attack surface. Instead:
 
 If asked to record something sensitive, refuse to write the value and record a pointer instead.
 
+**Canonical secret store for this repo:** deploy credentials live as **GitHub Environment
+secrets** on the `HOME_SERVER` environment (`HOME_SERVER_URL`, `HOME_SERVER_USER`,
+`HOME_SERVER_SECRET`) and are injected only into workflow jobs that declare
+`environment: HOME_SERVER`. The wiki records secret *names* and their location, never values.
+See [[home-server]] and [[0001-github-actions-home-server-deploy]].
+
 ---
 
 ## Architecture — three layers

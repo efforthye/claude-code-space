@@ -20,13 +20,15 @@ Updated whenever pages are added/renamed or a service's status changes.
 _No services documented yet. Start one with: "새 서비스 만들자" / "create a service page for X"._
 
 ## Infra
-_(none yet — home server, network, reverse proxy, DNS, Docker, storage, backups)_
+- [[home-server]] — The self-hosted host; deploys arrive via GitHub Actions + the `HOME_SERVER`
+  environment. _(status: building)_
 
 ## Runbooks
-_(none yet — deploy / restart / backup / restore / upgrade how-tos)_
+- [[deploy-home-server]] — Deploy a service to the home server via GitHub Actions (shared path).
 
 ## Decisions (ADRs)
-_(none yet — architectural & tooling choices and rationale)_
+- [[0001-github-actions-home-server-deploy]] — Deploy via GitHub Actions + `HOME_SERVER`
+  environment; keeps deploy credentials out of git.
 
 ## Incidents
 _(none yet — postmortems)_
