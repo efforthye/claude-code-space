@@ -103,5 +103,15 @@ export type Screenplay = { title: string; logline: string; style: string; scenes
 export type DirectorMessage = { role: 'user' | 'director'; content: string };
 export type DirectorChatRequest = { messages: DirectorMessage[]; seconds: number; tier: string };
 export type DirectorTurn = { reply: string; screenplay?: Screenplay | null; ready: boolean };
+// --- Accounts (mirrors app/auth.py) ---
+export type AuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  provider: 'email' | 'google';
+  createdAt: number;
+};
+export type SessionResult = { token: string; user: AuthUser };
+
 export type PublishRequest = { title: string; description?: string; visibility: Visibility };
 export type PublishResult = { accepted: boolean; videoId: string; visibility: Visibility };

@@ -5,9 +5,11 @@
 // owns :8000). Note: over plain HTTP the phone must reach that host (home LAN or
 // a forwarded port / tunnel); prefer HTTPS in production.
 
+import { getSessionToken } from '@/auth/session';
 import { getApiKey } from './api-key';
 import { getApiBaseUrl } from './base-url';
 import type {
+  AuthUser,
   CreateJobRequest,
   DirectorChatRequest,
   DirectorModel,
@@ -26,6 +28,7 @@ import type {
   PublishResult,
   RetentionPlan,
   RuntimeSettings,
+  SessionResult,
   Storage,
   Tier,
   Video,
@@ -43,6 +46,7 @@ export class ApiError extends Error {
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const key = getApiKey();
+  const session = getSessionToken();
   let res: Response;
   try {
     res = await fetch(`${getApiBaseUrl()}${path}`, {
@@ -50,6 +54,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
       headers: {
         'Content-Type': 'application/json',
         ...(key ? { Authorization: `Bearer ${key}` } : {}),
+        ...(session ? { 'X-Mayo-Session': session } : {}),
         ...(init?.headers ?? {}),
       },
     });
@@ -72,6 +77,19 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 // --- Health ---
 export const getHealth = () => req<Health>('/health');
+
+// --- Auth (accounts + sessions; session token via X-Mayo-Session) ---
+export const authRegister = (email: string, password: string, name?: string) =>
+  req<SessionResult>('/v1/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, name: name ?? '' }),
+  });
+export const authLogin = (email: string, password: string) =>
+  req<SessionResult>('/v1/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+export const authGoogle = (idToken: string) =>
+  req<SessionResult>('/v1/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) });
+export const authMe = () => req<AuthUser>('/v1/auth/me');
+export const authLogout = () => req<void>('/v1/auth/logout', { method: 'POST' });
 
 // --- Catalog ---
 export const getTiers = () => req<Tier[]>('/v1/catalog/tiers');

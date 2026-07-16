@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { TIERS } from '@/api/catalog';
 import { getHealth, getSettings, getStorage, putSettings } from '@/api/client';
 import type { RuntimeSettings } from '@/api/types';
+import { useAuth } from '@/auth/auth';
 import { Chip } from '@/components/chip';
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
@@ -83,6 +84,7 @@ export default function AccountScreen() {
     }
   };
   const { entitlement } = usePayments();
+  const { user, signOut } = useAuth();
 
   const online = !!health && health.status === 'ok' && !healthError;
 
@@ -109,6 +111,36 @@ export default function AccountScreen() {
 
   return (
     <Screen title={t('tab.account')} subtitle={t('account.subtitle')}>
+      {user ? (
+        <ThemedView type="backgroundElement" style={styles.authCard}>
+          <Ionicons name="person-circle" size={36} color={theme.text} />
+          <View style={styles.flex}>
+            <ThemedText type="smallBold">{user.name}</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {user.email} · {user.provider === 'google' ? 'Google' : t('auth.emailProvider')}
+            </ThemedText>
+          </View>
+          <Pressable onPress={signOut} hitSlop={8}>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.signOut}>
+              {t('auth.signOut')}
+            </ThemedText>
+          </Pressable>
+        </ThemedView>
+      ) : (
+        <Pressable onPress={() => router.push('/login')}>
+          <ThemedView type="backgroundElement" style={styles.authCard}>
+            <Ionicons name="person-circle-outline" size={36} color={theme.textSecondary} />
+            <View style={styles.flex}>
+              <ThemedText type="smallBold">{t('auth.signIn')}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('auth.signInHint')}
+              </ThemedText>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+          </ThemedView>
+        </Pressable>
+      )}
+
       <Pressable
         onPress={() => router.push('/plan')}
         style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
@@ -304,6 +336,14 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
+  authCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    padding: Spacing.three,
+    borderRadius: Spacing.four,
+  },
+  signOut: { textDecorationLine: 'underline' },
   plan: {
     gap: Spacing.one,
     padding: Spacing.four,

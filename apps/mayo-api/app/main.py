@@ -16,6 +16,7 @@ from . import __version__
 from .config import settings
 from .planner import get_scenario_planner
 from .routers import (
+    auth,
     billing,
     catalog,
     director,
@@ -76,6 +77,7 @@ app.add_middleware(
 # /health stays open (liveness / tunnel probe). Everything else requires the key.
 protected = [Depends(require_api_key)]
 app.include_router(health.router)
+app.include_router(auth.router, dependencies=protected)
 app.include_router(catalog.router, dependencies=protected)
 app.include_router(director.router, dependencies=protected)
 app.include_router(explore.router, dependencies=protected)

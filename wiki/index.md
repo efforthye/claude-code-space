@@ -55,6 +55,9 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[0010-mayo-external-generation-providers]] — Real **paid cloud generation** — Nano Banana (Gemini
   2.5 Flash Image) stills + Higgsfield video — behind the same seam; config-driven ("low-code")
   provider schema; keys from host env; app-selectable (Account → 외부 API).
+- [[0011-mayo-accounts-sns-login]] — **Accounts + SNS login**: email/password (scrypt) and Google
+  (id_token verified server-side); opaque sessions via `X-Mayo-Session`; login modal + Account
+  profile card. Prerequisite for a public mayo.im and per-user BYOK.
 
 ## Incidents
 _(none yet — postmortems)_

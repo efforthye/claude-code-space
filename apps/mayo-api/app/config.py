@@ -114,6 +114,11 @@ class Settings:
         default_factory=lambda: os.getenv("MAYO_EXTERNAL_USE_IMAGE_STAGE", "true").lower()
         in ("1", "true", "yes")
     )
+    # Google sign-in: OAuth client id(s) whose id_tokens we accept (comma-sep —
+    # web + iOS + Android clients each have their own id). Names only in the repo.
+    google_oauth_client_ids: list[str] = field(
+        default_factory=lambda: _split(os.getenv("GOOGLE_OAUTH_CLIENT_IDS", ""))
+    )
     # Font for burned-in editor captions (ffmpeg drawtext). Default a macOS font
     # with Hangul glyphs; if missing, captions are skipped (render never fails).
     edit_font: str = field(
