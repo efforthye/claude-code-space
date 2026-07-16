@@ -187,6 +187,16 @@ scene list), and a **Generate this film** button that creates a job from the app
 mirror the server in `src/api/types.ts`. Tested: director `pytest` (converse + endpoint), app tsc +
 export clean.
 
+**Free local-LLM director (2026-07-16).** So the real (non-mock) director can run **without a paid
+API key**, a third planner backend `local` (`MAYO_PLANNER_BACKEND=local`) drives an **Ollama** LLM
+on the mini: `LocalScenarioPlanner` POSTs to `MAYO_LOCAL_LLM_URL` (default `:11434`) with the
+Pydantic JSON schema in Ollama's `format` field, so a locally-pulled model (default `llama3.2:3b`,
+or `qwen2.5:7b` for quality) returns the `Screenplay`/`DirectorTurn` as JSON. `converse()` degrades
+gracefully if the server is down or a small model drifts off-schema. Uses `httpx` (light dep). Setup:
+`brew install ollama && brew services start ollama && ollama pull llama3.2:3b`, then set the env and
+restart. The three director backends — **mock** (free/fake) · **local** (free/real, Ollama) ·
+**claude** (paid/best) — are one config flip apart.
+
 **API authentication (2026-07-16).** The repo is public, so the API must not be wide open. All data
 routers (catalog / jobs / library / billing) now require a **shared bearer key**
 (`app/security.py`, `require_api_key`): the client sends `Authorization: Bearer <key>` (also accepts

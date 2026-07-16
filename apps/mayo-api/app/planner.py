@@ -264,7 +264,84 @@ class ClaudeScenarioPlanner(ScenarioPlanner):
         return resp.parsed_output
 
 
+class LocalScenarioPlanner(ScenarioPlanner):
+    """Free director backed by a **local LLM** (Ollama) — no paid API key.
+
+    Talks to an Ollama-compatible server (MAYO_LOCAL_LLM_URL, default
+    http://localhost:11434) using its structured-output `format` field, so the
+    model returns a Screenplay / DirectorTurn as JSON. Just pull a model first
+    (e.g. `ollama pull llama3.2:3b`) — great for running the real director flow
+    on the home mini for free. Small models can drift off-schema, so converse()
+    degrades gracefully instead of erroring. See ADR 0008.
+    """
+
+    id = "local"
+
+    async def _chat(self, messages: list[dict], schema: dict) -> str:
+        import httpx  # lazy — only needed in local mode
+
+        url = settings.local_llm_url.rstrip("/") + "/api/chat"
+        payload = {
+            "model": settings.local_llm_model,
+            "messages": messages,
+            "stream": False,
+            "format": schema,  # JSON-schema constrained decoding (Ollama 0.5+)
+            "options": {"temperature": 0.7},
+        }
+        async with httpx.AsyncClient(timeout=settings.local_llm_timeout) as client:
+            resp = await client.post(url, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+        return (data.get("message") or {}).get("content", "") or ""
+
+    async def plan(self, prompt: str, seconds: int, tier: str) -> Screenplay:
+        user = f"Prompt: {prompt}\nTotal length: {seconds} seconds."
+        content = await self._chat(
+            [
+                {"role": "system", "content": _DIRECTOR_SYSTEM},
+                {"role": "user", "content": user},
+            ],
+            Screenplay.model_json_schema(),
+        )
+        return Screenplay.model_validate_json(content)
+
+    async def converse(
+        self, messages: List[DirectorMessage], seconds: int, tier: str
+    ) -> DirectorTurn:
+        if not messages:
+            return DirectorTurn(reply="Tell me the film you'd like to make.", ready=False)
+        convo: list[dict] = [
+            {
+                "role": "system",
+                "content": (
+                    _DIRECTOR_CHAT_SYSTEM
+                    + f"\n\nTarget total length: {seconds} seconds. Quality tier: {tier}."
+                ),
+            }
+        ]
+        convo += [
+            {"role": "assistant" if m.role == "director" else "user", "content": m.content}
+            for m in messages
+        ]
+        try:
+            content = await self._chat(convo, DirectorTurn.model_json_schema())
+            return DirectorTurn.model_validate_json(content)
+        except Exception:
+            # Local server unreachable, or a small model returned off-schema JSON.
+            # Degrade to a plain nudge rather than 500 the whole chat.
+            return DirectorTurn(
+                reply=(
+                    "I couldn't shape that into a scene plan just now — try again, "
+                    "or add a detail (setting, mood, or length)."
+                ),
+                ready=False,
+            )
+
+
 def get_scenario_planner() -> ScenarioPlanner:
-    if settings.planner_backend == "claude":
+    backend = settings.planner_backend
+    if backend == "claude":
         return ClaudeScenarioPlanner()
+    if backend == "local":
+        return LocalScenarioPlanner()
     return MockScenarioPlanner()

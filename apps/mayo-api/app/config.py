@@ -45,6 +45,18 @@ class Settings:
     director_model: str = field(
         default_factory=lambda: os.getenv("MAYO_DIRECTOR_MODEL", "claude-opus-4-8")
     )
+    # Local LLM director (free) — used when planner_backend=local. Talks to an
+    # Ollama-compatible server; no paid API key needed (see ADR 0008). Pull a
+    # model first, e.g. `ollama pull llama3.2:3b`.
+    local_llm_url: str = field(
+        default_factory=lambda: os.getenv("MAYO_LOCAL_LLM_URL", "http://localhost:11434")
+    )
+    local_llm_model: str = field(
+        default_factory=lambda: os.getenv("MAYO_LOCAL_LLM_MODEL", "llama3.2:3b")
+    )
+    local_llm_timeout: float = field(
+        default_factory=lambda: float(os.getenv("MAYO_LOCAL_LLM_TIMEOUT", "120"))
+    )
 
     @property
     def is_dev(self) -> bool:

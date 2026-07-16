@@ -34,13 +34,20 @@ prompt + length ──▶ ScenarioPlanner (Claude) ──▶ Screenplay(scenes[]
 **Haiku 4.5** (draft) — so users pick director quality vs cost the same way they pick generation
 tiers. Selected via `MAYO_DIRECTOR_MODEL` (default `claude-opus-4-8`).
 
-Two implementations, chosen by `MAYO_PLANNER_BACKEND`:
-- **`mock`** (default) — deterministic split into evenly-timed scenes; no key, runs offline so the
-  whole pipeline works end-to-end today.
-- **`claude`** — uses the **Anthropic SDK** (`messages.parse` → the `Screenplay` Pydantic model as
-  **structured output**, with adaptive thinking) to have Claude write the screenplay. Credentials
-  come from the environment (`ANTHROPIC_API_KEY` or an `ant` profile — **names only** in the repo);
-  the `anthropic` dep is optional (`requirements-ai.txt`) and lazy-imported so mock mode stays light.
+Three implementations, chosen by `MAYO_PLANNER_BACKEND`:
+- **`mock`** (default) — deterministic split into evenly-timed scenes; **no real AI**, runs offline
+  so the whole pipeline works end-to-end today. The "conversation" is rule-based filler.
+- **`local`** — a **free, real AI** director backed by a **local LLM (Ollama)**. Talks to an
+  Ollama-compatible server (`MAYO_LOCAL_LLM_URL`, default `:11434`) using its JSON-schema
+  `format` field, so the model returns a `Screenplay` / `DirectorTurn` directly; just
+  `ollama pull <model>` first (default `llama3.2:3b`; `qwen2.5:7b` for better quality on the 16 GB
+  mini). No paid key. Small models can drift off-schema, so `converse()` degrades gracefully
+  instead of erroring. Uses `httpx` (a light, pure-Python dep in `requirements.txt`).
+- **`claude`** — best quality. Uses the **Anthropic SDK** (`messages.parse` → the `Screenplay`
+  Pydantic model as **structured output**, with adaptive thinking) to have Claude write the
+  screenplay. Credentials come from the environment (`ANTHROPIC_API_KEY` or an `ant` profile —
+  **names only** in the repo); the `anthropic` dep is optional (`requirements-ai.txt`) and
+  lazy-imported. Paid.
 
 This mirrors the storage seam ([[0004-mayo-storage-local-then-s3]]) and the model-provider seam
 (0007): swapping mock → Claude is a config flip, not a rewrite.

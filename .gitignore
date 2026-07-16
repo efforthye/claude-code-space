@@ -2,6 +2,9 @@
 .env
 .env.*
 *.env
+# …but DO track the names-only templates (no secret values in these).
+!.env.example
+!**/.env.example
 *.key
 *.pem
 *.p12
