@@ -41,6 +41,7 @@ class AuthUser(BaseModel):
     name: str
     provider: str  # "email" | "google"
     createdAt: float
+    planId: str = "free"  # entitlement, granted by billing (e.g. Stripe webhook)
 
 
 class RegisterRequest(BaseModel):
@@ -136,6 +137,14 @@ class _Store:
         if self.sessions.pop(token, None) is not None:
             self.save()
 
+    def set_plan(self, user_id: str, plan_id: str) -> bool:
+        user = self.users.get(user_id)
+        if not user:
+            return False
+        user["planId"] = plan_id
+        self.save()
+        return True
+
 
 store = _Store()
 
@@ -147,6 +156,7 @@ def to_public(user: dict) -> AuthUser:
         name=user["name"],
         provider=user["provider"],
         createdAt=user["createdAt"],
+        planId=user.get("planId", "free"),
     )
 
 

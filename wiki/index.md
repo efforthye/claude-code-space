@@ -58,6 +58,9 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[0011-mayo-accounts-sns-login]] — **Accounts + SNS login**: email/password (scrypt) and Google
   (id_token verified server-side); opaque sessions via `X-Mayo-Session`; login modal + Account
   profile card. Prerequisite for a public mayo.im and per-user BYOK.
+- [[0012-mayo-stripe-card-payments]] — **Real payments**: Stripe Checkout on the web (plain REST +
+  manual webhook signature verification; plan granted to the signed-in account), mobile IAP deferred
+  to a dev build.
 
 ## Incidents
 _(none yet — postmortems)_

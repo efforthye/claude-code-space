@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PLANS } from '@/api/catalog';
+import { ApiError, startCheckout } from '@/api/client';
+import { useAuth } from '@/auth/auth';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/toast';
@@ -57,6 +60,30 @@ export default function PlanScreen() {
   const onRestore = async () => {
     const found = await restore();
     toast.show(found ? t('toast.restored') : t('toast.noPurchases'));
+  };
+
+  const { user } = useAuth();
+  const [checkingOut, setCheckingOut] = useState(false);
+
+  // Card payment (Stripe Checkout, web path) — needs a signed-in account so the
+  // webhook can grant the plan to the right user.
+  const payWithCard = async () => {
+    if (checkingOut || isFree || isCurrent) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    setCheckingOut(true);
+    try {
+      const { url } = await startCheckout(selected);
+      await WebBrowser.openBrowserAsync(url);
+    } catch (e) {
+      toast.show(
+        e instanceof ApiError && e.status === 400 ? t('plan.cardUnavailable') : t('common.error'),
+      );
+    } finally {
+      setCheckingOut(false);
+    }
   };
 
   const ctaLabel = isCurrent
@@ -135,6 +162,21 @@ export default function PlanScreen() {
             </ThemedText>
           </Pressable>
 
+          {!isFree && !isCurrent ? (
+            <Pressable
+              onPress={payWithCard}
+              disabled={checkingOut}
+              style={({ pressed }) => [
+                styles.cardBtn,
+                { borderColor: theme.backgroundSelected, opacity: checkingOut ? 0.4 : pressed ? 0.7 : 1 },
+              ]}>
+              <Ionicons name="card-outline" size={16} color={theme.text} />
+              <ThemedText type="smallBold">
+                {checkingOut ? t('plan.purchasing') : t('plan.payWithCard')}
+              </ThemedText>
+            </Pressable>
+          ) : null}
+
           <Pressable
             onPress={onRestore}
             disabled={purchasing}
@@ -195,6 +237,15 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     borderRadius: Spacing.five,
     marginTop: Spacing.two,
+  },
+  cardBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.five,
+    borderWidth: 1,
   },
   restore: {
     textAlign: 'center',

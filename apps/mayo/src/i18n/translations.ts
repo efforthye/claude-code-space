@@ -129,6 +129,9 @@ const en: Dict = {
   'director.moreScenes': '+{n} more scenes',
   'director.generate': 'Generate this film',
   'director.generating': 'Sent to the render queue.',
+  'plan.payWithCard': 'Pay by card (web)',
+  'plan.cardUnavailable': 'Card payments are not set up on the server yet.',
+
   'auth.signIn': 'Sign in',
   'auth.signUp': 'Create account',
   'auth.signOut': 'Sign out',
@@ -421,6 +424,9 @@ const ko: Dict = {
   'director.moreScenes': '+{n}개 씬 더',
   'director.generate': '이 영상 생성하기',
   'director.generating': '렌더 대기열로 보냈어요.',
+  'plan.payWithCard': '카드로 결제 (웹)',
+  'plan.cardUnavailable': '서버에 카드결제가 아직 설정되지 않았어요.',
+
   'auth.signIn': '로그인',
   'auth.signUp': '계정 만들기',
   'auth.signOut': '로그아웃',

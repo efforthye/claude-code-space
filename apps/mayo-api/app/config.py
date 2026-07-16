@@ -114,6 +114,24 @@ class Settings:
         default_factory=lambda: os.getenv("MAYO_EXTERNAL_USE_IMAGE_STAGE", "true").lower()
         in ("1", "true", "yes")
     )
+    # Stripe (real card payments for plans on the web/mayo.im). Names only here;
+    # values live in the host secret store. Price ids map plans to Stripe Prices.
+    stripe_secret_key: str = field(default_factory=lambda: os.getenv("STRIPE_SECRET_KEY", ""))
+    stripe_webhook_secret: str = field(
+        default_factory=lambda: os.getenv("STRIPE_WEBHOOK_SECRET", "")
+    )
+    stripe_price_pro: str = field(default_factory=lambda: os.getenv("STRIPE_PRICE_PRO", ""))
+    stripe_price_studio: str = field(default_factory=lambda: os.getenv("STRIPE_PRICE_STUDIO", ""))
+    checkout_success_url: str = field(
+        default_factory=lambda: os.getenv(
+            "MAYO_CHECKOUT_SUCCESS_URL", "https://mayo.im/plan?checkout=success"
+        )
+    )
+    checkout_cancel_url: str = field(
+        default_factory=lambda: os.getenv(
+            "MAYO_CHECKOUT_CANCEL_URL", "https://mayo.im/plan?checkout=cancel"
+        )
+    )
     # Google sign-in: OAuth client id(s) whose id_tokens we accept (comma-sep —
     # web + iOS + Android clients each have their own id). Names only in the repo.
     google_oauth_client_ids: list[str] = field(

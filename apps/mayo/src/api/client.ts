@@ -136,6 +136,10 @@ export const addComment = (id: string, text: string) =>
     body: JSON.stringify({ text }),
   });
 
+// --- Billing (web card payments via Stripe Checkout) ---
+export const startCheckout = (planId: string) =>
+  req<{ url: string }>('/v1/billing/checkout', { method: 'POST', body: JSON.stringify({ planId }) });
+
 // --- Runtime settings (app-controlled generation mode) ---
 export const getSettings = () => req<RuntimeSettings>('/v1/settings');
 export const putSettings = (body: RuntimeSettings) =>
