@@ -38,6 +38,14 @@ async def like_explore(item_id: str) -> ExploreItem:
     return item
 
 
+@router.post("/{item_id}/unlike", response_model=ExploreItem)
+async def unlike_explore(item_id: str) -> ExploreItem:
+    item = await explore_store.unlike(item_id)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+    return item
+
+
 @router.get("/{item_id}/comments", response_model=list[ExploreComment])
 async def list_comments(item_id: str) -> list[ExploreComment]:
     comments = await explore_store.comments(item_id)

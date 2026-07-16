@@ -5,13 +5,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
-import { likeExplore } from '@/api/client';
+import { likeExplore, unlikeExplore } from '@/api/client';
 import type { ExploreItem } from '@/api/types';
 
 type FavoritesValue = {
   favorites: ExploreItem[];
   has: (id: string) => boolean;
-  toggle: (item: ExploreItem) => void;
+  /** Toggle like: one per device. Returns when the server call settles. */
+  toggle: (item: ExploreItem) => Promise<void>;
 };
 
 const FavoritesContext = createContext<FavoritesValue | null>(null);
@@ -39,13 +40,17 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   const has = (id: string) => favorites.some((f) => f.id === id);
 
-  const toggle = (item: ExploreItem) => {
+  const toggle = (item: ExploreItem): Promise<void> => {
     if (has(item.id)) {
       persist(favorites.filter((f) => f.id !== item.id));
-    } else {
-      persist([item, ...favorites]);
-      likeExplore(item.id).catch(() => {}); // best-effort server like
+      return unlikeExplore(item.id)
+        .then(() => {})
+        .catch(() => {});
     }
+    persist([item, ...favorites]);
+    return likeExplore(item.id)
+      .then(() => {})
+      .catch(() => {});
   };
 
   return (

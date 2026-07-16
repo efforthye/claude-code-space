@@ -136,7 +136,10 @@ export default function ExploreScreen() {
               </ThemedText>
             </View>
             <Pressable
-              onPress={() => toggle(item)}
+              onPress={async () => {
+                await toggle(item);
+                refetch();
+              }}
               accessibilityLabel={t('explore.like')}
               style={({ pressed }) => [styles.like, pressed && styles.pressed]}>
               <Ionicons
@@ -145,7 +148,7 @@ export default function ExploreScreen() {
                 color={has(item.id) ? '#E5484D' : theme.textSecondary}
               />
               <ThemedText type="small" themeColor="textSecondary">
-                {item.likes + (has(item.id) ? 1 : 0)}
+                {item.likes}
               </ThemedText>
             </Pressable>
           </View>

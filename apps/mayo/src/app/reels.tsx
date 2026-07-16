@@ -133,7 +133,7 @@ function Reel({
         <Action
           icon={has(item.id) ? 'heart' : 'heart-outline'}
           color={has(item.id) ? '#E5484D' : '#ffffff'}
-          label={String(item.likes + (has(item.id) ? 1 : 0))}
+          label={String(item.likes)}
           onPress={() => toggle(item)}
         />
         <Action icon="chatbubble-outline" color="#ffffff" label={String(item.comments ?? 0)} onPress={onComment} />

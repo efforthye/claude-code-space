@@ -6,6 +6,8 @@ phase these move behind a DB / config, but the shapes stay the same.
 
 from __future__ import annotations
 
+import math
+
 from .schemas import DirectorModel, Duration, ModelProvider, Plan, RetentionPlan, Tier
 
 TIERS: list[Tier] = [
@@ -71,5 +73,20 @@ def estimate_credits(seconds: int, tier: Tier) -> int:
 
 
 def scenes_for(seconds: int) -> int:
-    """Mirror of the app's scenesFor() — ~1 scene per 10s, at least 1."""
+    """Narrative scene count — ~1 scene per 10s, at least 1 (used by the planner)."""
     return max(1, round(seconds / 10))
+
+
+def clip_seconds() -> float:
+    """Length of one generated clip = frames / fps (e.g. 16/8 = 2s)."""
+    from .config import settings
+
+    return settings.comfy_frames / max(1, settings.comfy_fps)
+
+
+def clips_for_duration(seconds: int) -> int:
+    """How many clips to render so the stitched film reaches `seconds` (>= it),
+    capped so a long duration can't queue an unreasonable number of renders."""
+    from .config import settings
+
+    return max(1, min(math.ceil(seconds / clip_seconds()), settings.max_scenes))

@@ -49,12 +49,13 @@ def test_create_job_generates_and_completes():
         transport = ASGITransport(app=app)
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
             r = await ac.post(
-                "/v1/jobs", json={"prompt": "A short test film", "seconds": 20, "tier": "draft"}
+                "/v1/jobs", json={"prompt": "A short test film", "seconds": 4, "tier": "draft"}
             )
             assert r.status_code == 201
             job = r.json()
             assert job["status"] == "queued"
-            assert job["scenesTotal"] == 2  # 20s -> 2 scenes
+            # 4s / 2s-per-clip (16 frames / 8 fps) -> 2 clips to fill the length
+            assert job["scenesTotal"] == 2
             job_id = job["id"]
 
             final = job

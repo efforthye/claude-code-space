@@ -106,6 +106,8 @@ export const publishToExplore = (videoId: string, prompt: string) =>
   req<ExploreItem>('/v1/explore', { method: 'POST', body: JSON.stringify({ videoId, prompt }) });
 export const likeExplore = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/like`, { method: 'POST' });
+export const unlikeExplore = (id: string) =>
+  req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/unlike`, { method: 'POST' });
 export const getComments = (id: string) =>
   req<ExploreComment[]>(`/v1/explore/${encodeURIComponent(id)}/comments`);
 export const addComment = (id: string, text: string) =>

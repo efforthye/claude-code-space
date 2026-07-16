@@ -13,7 +13,7 @@ import os
 import time
 from typing import Optional
 
-from .catalog import scenes_for, tier_by_id
+from .catalog import clips_for_duration, tier_by_id
 from .config import settings
 from .schemas import ExploreComment, ExploreItem, Job, Storage, Video
 
@@ -68,9 +68,15 @@ class JobStore:
     ) -> Job:
         tier = tier_by_id(tier_id)
         title = (prompt.strip().splitlines()[0][:60] if prompt.strip() else "Untitled film")
-        # When the director supplied per-scene prompts, the scene count follows
-        # them; otherwise derive it from the requested length.
-        total = len(scene_prompts) if scene_prompts else scenes_for(seconds)
+        # Fill the requested LENGTH: render enough fixed-length clips to reach it.
+        needed = clips_for_duration(seconds)
+        if scene_prompts:
+            # Pad the director's scenes (cycling) so the film still hits the length.
+            if len(scene_prompts) < needed:
+                scene_prompts = [scene_prompts[i % len(scene_prompts)] for i in range(needed)]
+            total = len(scene_prompts)
+        else:
+            total = needed
         job = Job(
             id=_new_id("j"),
             title=title,
@@ -277,6 +283,15 @@ class ExploreStore:
             if not item:
                 return None
             updated = item.model_copy(update={"likes": item.likes + 1})
+            self._items[item_id] = updated
+            return updated.model_copy()
+
+    async def unlike(self, item_id: str) -> Optional[ExploreItem]:
+        async with self._lock:
+            item = self._items.get(item_id)
+            if not item:
+                return None
+            updated = item.model_copy(update={"likes": max(0, item.likes - 1)})
             self._items[item_id] = updated
             return updated.model_copy()
 
