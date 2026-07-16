@@ -67,12 +67,15 @@ export type RuntimeSettings = {
 };
 
 export type TextPosition = 'top' | 'center' | 'bottom';
+export type ClipFilter = 'none' | 'mono' | 'warm' | 'cool' | 'vivid';
 export type EditClip = {
   videoId: string;
   start?: number;
   end?: number;
   text?: string;
   textPosition?: TextPosition;
+  speed?: number;
+  filter?: ClipFilter;
 };
 export type EditRequest = { title: string; clips: EditClip[]; audioKey?: string };
 

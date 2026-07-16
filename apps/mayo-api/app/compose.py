@@ -20,8 +20,9 @@ from .schemas import EditRequest, Video
 from .storage import get_storage
 from .store import library
 
-# A source clip in the edit spec: (start, end, storage_key, caption, position).
-Source = tuple[float, Optional[float], str, str, str]
+# A source clip in the edit spec:
+# (start, end, storage_key, caption, position, speed, color_filter).
+Source = tuple[float, Optional[float], str, str, str, float, str]
 
 
 def _key_from_url(url: Optional[str]) -> Optional[str]:
@@ -34,6 +35,26 @@ def _key_from_url(url: Optional[str]) -> Optional[str]:
 def _escape_drawtext(text: str) -> str:
     # ffmpeg drawtext needs colons, quotes and backslashes escaped.
     return text.replace("\\", "\\\\").replace(":", "\\:").replace("'", "’").replace("%", "\\%")
+
+
+_COLOR_FILTERS = {
+    "mono": "hue=s=0",
+    "warm": "colorbalance=rm=.15:bm=-.10",
+    "cool": "colorbalance=bm=.15:rm=-.10",
+    "vivid": "eq=saturation=1.4:contrast=1.06",
+}
+
+
+def _vf_chain(text: str, position: str, speed: float, color: str) -> str:
+    """Compose the per-clip -vf chain: caption + speed + color look."""
+    parts: list[str] = []
+    if text.strip():
+        parts.append(_drawtext_filter(text.strip(), position))
+    if speed and speed != 1.0:
+        parts.append(f"setpts=PTS/{speed}")
+    if color in _COLOR_FILTERS:
+        parts.append(_COLOR_FILTERS[color])
+    return ",".join(parts)
 
 
 def _drawtext_filter(text: str, position: str) -> str:
@@ -61,7 +82,7 @@ def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[
     store = get_storage()
     with tempfile.TemporaryDirectory() as td:
         segments: list[str] = []
-        for i, (start, end, key, text, position) in enumerate(sources):
+        for i, (start, end, key, text, position, speed, color) in enumerate(sources):
             src = os.path.join(td, f"src{i}.mp4")
             with open(src, "wb") as fh:
                 fh.write(store.read(key))
@@ -74,8 +95,10 @@ def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[
                 cmd += ["-i", src]
                 if end is not None and end > (start or 0):
                     cmd += ["-t", f"{end - (start or 0)}"]  # duration after seek
-                if with_text and text.strip():
-                    cmd += ["-vf", _drawtext_filter(text.strip(), position)]
+                if with_text:
+                    chain = _vf_chain(text, position, speed, color)
+                    if chain:
+                        cmd += ["-vf", chain]
                 # Re-encode to a uniform codec so the concat step can stream-copy.
                 cmd += ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", seg]
                 return cmd
@@ -83,8 +106,8 @@ def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[
             try:
                 subprocess.run(build(True), check=True, capture_output=True, timeout=600)
             except subprocess.CalledProcessError:
-                # A caption filter can fail (missing font, unsupported glyphs) — never
-                # let that break the edit; re-render the segment without the overlay.
+                # A filter can fail (missing font, unsupported glyphs/filters) — never
+                # let that break the edit; re-render the segment with no filters.
                 subprocess.run(build(False), check=True, capture_output=True, timeout=600)
             segments.append(seg)
 
@@ -137,7 +160,9 @@ async def compose_edit(req: EditRequest) -> Optional[Video]:
         key = _key_from_url(video.url)
         if not key or not store.exists(key):
             continue
-        sources.append((clip.start, clip.end, key, clip.text, clip.textPosition))
+        sources.append(
+            (clip.start, clip.end, key, clip.text, clip.textPosition, clip.speed, clip.filter)
+        )
         scenes += 1
     if not sources:
         return None

@@ -36,3 +36,15 @@ def test_drawtext_filter_positions_and_text():
     # centre + bottom map to different y expressions
     assert "(h-text_h)/2" in _drawtext_filter("x", "center")
     assert "h-text_h-h*0.08" in _drawtext_filter("x", "bottom")
+
+
+def test_vf_chain_composes_caption_speed_and_color():
+    from app.compose import _vf_chain
+
+    chain = _vf_chain("hi", "bottom", 2.0, "mono")
+    assert "drawtext=" in chain and "setpts=PTS/2.0" in chain and "hue=s=0" in chain
+    assert chain.index("drawtext") < chain.index("setpts") < chain.index("hue")
+    # neutral clip -> empty chain (no -vf at all)
+    assert _vf_chain("", "bottom", 1.0, "none") == ""
+    # unknown color names are ignored rather than breaking ffmpeg
+    assert _vf_chain("", "bottom", 1.0, "sepia?") == ""

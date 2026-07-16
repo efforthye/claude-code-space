@@ -119,6 +119,8 @@ class EditClip(BaseModel):
     end: Optional[float] = Field(default=None, ge=0)  # trim out-point; None = to end
     text: str = Field(default="", max_length=120)  # optional caption burned onto the clip
     textPosition: Literal["top", "center", "bottom"] = "bottom"
+    speed: float = Field(default=1.0, ge=0.25, le=4.0)  # playback speed multiplier
+    filter: Literal["none", "mono", "warm", "cool", "vivid"] = "none"  # color look
 
 
 class EditRequest(BaseModel):

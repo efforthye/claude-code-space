@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
 import { createEdit, listVideos, uploadEditAudio } from '@/api/client';
-import type { EditClip, TextPosition, Video } from '@/api/types';
+import type { ClipFilter, EditClip, TextPosition, Video } from '@/api/types';
 import { useToast } from '@/components/toast';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -30,6 +30,8 @@ type Clip = {
   end: number;
   text: string;
   textPos: TextPosition;
+  speed: number;
+  filter: ClipFilter;
 };
 
 // "1:23" -> 83, "0:12" -> 12, "" -> 0
@@ -142,6 +144,8 @@ export default function EditScreen() {
       end: dur,
       text: '',
       textPos: 'bottom',
+      speed: 1,
+      filter: 'none',
     };
     setClips((c) => {
       const next = [...c, clip];
@@ -216,6 +220,8 @@ export default function EditScreen() {
           ...(c.start > 0 ? { start: c.start } : {}),
           ...(c.end > 0 && c.end > c.start ? { end: c.end } : {}),
           ...(c.text.trim() ? { text: c.text.trim(), textPosition: c.textPos } : {}),
+          ...(c.speed !== 1 ? { speed: c.speed } : {}),
+          ...(c.filter !== 'none' ? { filter: c.filter } : {}),
         })),
         ...(audioKey ? { audioKey } : {}),
       };
@@ -297,6 +303,42 @@ export default function EditScreen() {
                   <Op icon="chevron-back" label="" onPress={() => move(selected, -1)} theme={theme} />
                   <Op icon="chevron-forward" label="" onPress={() => move(selected, 1)} theme={theme} />
                   <Op icon="trash-outline" label={t('edit.delete')} onPress={() => remove(selected)} theme={theme} danger />
+                </View>
+
+                {/* Speed */}
+                <ThemedText type="smallBold">{t('edit.speed')}</ThemedText>
+                <View style={styles.posRow}>
+                  {([0.5, 1, 1.5, 2] as const).map((sp) => (
+                    <Pressable
+                      key={sp}
+                      onPress={() => update(selected, { speed: sp })}
+                      style={[
+                        styles.posChip,
+                        { borderColor: sel.speed === sp ? theme.text : theme.backgroundSelected },
+                      ]}>
+                      <ThemedText type="small" themeColor={sel.speed === sp ? 'text' : 'textSecondary'}>
+                        {sp}x
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </View>
+
+                {/* Color filter */}
+                <ThemedText type="smallBold">{t('edit.filter')}</ThemedText>
+                <View style={styles.posRow}>
+                  {(['none', 'mono', 'warm', 'cool', 'vivid'] as const).map((f) => (
+                    <Pressable
+                      key={f}
+                      onPress={() => update(selected, { filter: f })}
+                      style={[
+                        styles.posChip,
+                        { borderColor: sel.filter === f ? theme.text : theme.backgroundSelected },
+                      ]}>
+                      <ThemedText type="small" themeColor={sel.filter === f ? 'text' : 'textSecondary'}>
+                        {t(`edit.filter.${f}`)}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
                 </View>
 
                 {/* Caption */}
@@ -387,7 +429,7 @@ export default function EditScreen() {
                 </ThemedText>
                 <View style={styles.tlDur}>
                   <ThemedText type="small" style={styles.tlDurText}>
-                    {fmt(Math.max(0, clip.end - clip.start))}
+                    {fmt(Math.max(0, (clip.end - clip.start) / (clip.speed || 1)))}
                   </ThemedText>
                 </View>
                 {clip.text.trim() ? <Ionicons name="text" size={12} color="#fff" style={styles.tlText} /> : null}
