@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Chip } from '@/components/chip';
+import { useToast } from '@/components/toast';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -18,6 +19,7 @@ export default function PublishScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const video = getVideo(id ?? '');
 
@@ -98,7 +100,10 @@ export default function PublishScreen() {
           </ThemedText>
 
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => {
+              router.back();
+              toast.show(t('toast.published'));
+            }}
             disabled={!title.trim()}
             style={({ pressed }) => [
               styles.primary,

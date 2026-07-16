@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useToast } from '@/components/toast';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useI18n } from '@/settings/settings';
@@ -15,6 +16,7 @@ export default function ExtendScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const video = getVideo(id ?? '');
   const [planId, setPlanId] = useState<string>(RETENTION_PLANS[0].id);
@@ -86,7 +88,10 @@ export default function ExtendScreen() {
           })}
 
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => {
+              router.back();
+              toast.show(t('toast.extended'));
+            }}
             style={({ pressed }) => [
               styles.primary,
               { backgroundColor: theme.text, opacity: pressed ? 0.75 : 1 },

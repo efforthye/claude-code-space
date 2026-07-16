@@ -106,6 +106,10 @@ const en: Dict = {
   'plan.choose': 'Choose {name}',
   'plan.stayFree': 'Free',
 
+  'toast.published': 'Published to YouTube',
+  'toast.extended': 'Retention extended',
+  'toast.planUpdated': 'Plan updated',
+
   'account.subtitle': 'Your plan, storage, and generation preferences.',
   'account.plan': 'Current plan',
   'account.planDesc': 'Longer retention · premium models · priority queue',
@@ -228,6 +232,10 @@ const ko: Dict = {
   'plan.current': '현재 요금제',
   'plan.choose': '{name} 선택',
   'plan.stayFree': '무료',
+
+  'toast.published': '유튜브에 게시했어요',
+  'toast.extended': '보관 기간을 연장했어요',
+  'toast.planUpdated': '요금제를 변경했어요',
 
   'account.subtitle': '요금제, 저장공간, 생성 설정.',
   'account.plan': '현재 요금제',

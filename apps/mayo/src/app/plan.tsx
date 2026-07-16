@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useToast } from '@/components/toast';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useI18n } from '@/settings/settings';
@@ -15,6 +16,7 @@ export default function PlanScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
+  const toast = useToast();
   const [selected, setSelected] = useState<string>(CURRENT_PLAN_ID);
 
   const selectedName = t(`plan.${selected}.name`);
@@ -78,7 +80,10 @@ export default function PlanScreen() {
           })}
 
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => {
+              router.back();
+              toast.show(t('toast.planUpdated'));
+            }}
             disabled={isCurrent}
             style={({ pressed }) => [
               styles.primary,

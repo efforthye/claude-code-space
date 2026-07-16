@@ -87,6 +87,10 @@ Stacked screens:
   with monthly price + tagline, current plan highlighted, and a Choose-plan CTA (disabled on the
   current plan). Opened from the Account plan card and the "Billing" row. Payment wiring comes later.
 
+**Action feedback:** an app-wide **toast** (`src/components/toast.tsx`, `ToastProvider`/`useToast`)
+pops a short confirmation banner after mock actions that otherwise dismiss silently — publish
+("Published to YouTube"), extend retention, and plan change.
+
 **Generate flow (end-to-end, UI-only):** an in-memory **jobs store** (`src/store/jobs.tsx`,
 `JobsProvider` + `useJobs`) seeds from the mock `JOBS` and lets **Create** add a real "queued" job
 (title from the prompt, scene count derived from the chosen length). Generate now pushes straight
