@@ -406,7 +406,7 @@ export default function EditScreen() {
       </SafeAreaView>
 
       {/* Source picker */}
-      <Modal visible={pickerOpen} transparent animationType="slide" onRequestClose={() => setPickerOpen(false)}>
+      <Modal visible={pickerOpen} transparent animationType="slide" supportedOrientations={['portrait', 'landscape']} onRequestClose={() => setPickerOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setPickerOpen(false)} />
         <ThemedView type="background" style={styles.sheet}>
           <View style={styles.sheetHandle} />

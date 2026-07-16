@@ -123,9 +123,36 @@ class JobStore:
 
 
 class LibraryStore:
+    """Video metadata. Media files live on disk already; the metadata is also
+    persisted (media/.library.json) so the Library survives API restarts."""
+
     def __init__(self) -> None:
         self._videos: dict[str, Video] = {v.id: v.model_copy() for v in _SEED_VIDEOS}
         self._lock = asyncio.Lock()
+        try:
+            import json as _json
+            import os as _os
+
+            path = _os.path.join(settings.storage_local_path, ".library.json")
+            with open(path) as fh:
+                for raw in _json.load(fh):
+                    v = Video.model_validate(raw)
+                    self._videos[v.id] = v
+        except Exception:
+            pass  # first run / unreadable file — start from seeds
+
+    def _persist(self) -> None:
+        """Best-effort save; call while holding self._lock (or right after a pop)."""
+        try:
+            import json as _json
+            import os as _os
+
+            path = _os.path.join(settings.storage_local_path, ".library.json")
+            _os.makedirs(_os.path.dirname(path) or ".", exist_ok=True)
+            with open(path, "w") as fh:
+                _json.dump([v.model_dump() for v in self._videos.values()], fh)
+        except Exception:
+            pass
 
     async def list(self) -> list[Video]:
         async with self._lock:
@@ -158,6 +185,7 @@ class LibraryStore:
         )
         async with self._lock:
             self._videos[video.id] = video
+            self._persist()
         return video.model_copy()
 
     async def add_film(
@@ -185,6 +213,7 @@ class LibraryStore:
         )
         async with self._lock:
             self._videos[video.id] = video
+            self._persist()
         return video.model_copy()
 
     async def add_imported(self, title: str, film_key: str, size_bytes: int) -> Video:
@@ -193,6 +222,7 @@ class LibraryStore:
     async def remove(self, video_id: str) -> bool:
         async with self._lock:
             video = self._videos.pop(video_id, None)
+            self._persist()
         if video is None:
             return False
         if video.url:
@@ -214,6 +244,7 @@ class LibraryStore:
             new_days = 3650 if add_days == 0 else max(v.expiresInDays, 0) + add_days
             updated = v.model_copy(update={"expiresInDays": new_days})
             self._videos[video_id] = updated
+            self._persist()
             return updated.model_copy()
 
     async def storage(self) -> Storage:
