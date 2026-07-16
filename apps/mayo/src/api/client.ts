@@ -119,6 +119,25 @@ export const directorChat = (body: DirectorChatRequest) =>
 export const createEdit = (body: EditRequest) =>
   req<Video>('/v1/edit', { method: 'POST', body: JSON.stringify(body) });
 
+/** Upload a recorded audio track (voiceover/BGM) for an edit; returns its key. */
+export async function uploadEditAudio(fileUri: string, mimeType = 'audio/mp4'): Promise<string> {
+  const file = await fetch(fileUri);
+  const blob = await file.blob();
+  const key = getApiKey();
+  const session = getSessionToken();
+  const res = await fetch(`${getApiBaseUrl()}/v1/edit/audio`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': mimeType,
+      ...(key ? { Authorization: `Bearer ${key}` } : {}),
+      ...(session ? { 'X-Mayo-Session': session } : {}),
+    },
+    body: blob,
+  });
+  if (!res.ok) throw new ApiError(res.status, res.statusText);
+  return ((await res.json()) as { key: string }).key;
+}
+
 // --- Explore (public feed + remix + publish) ---
 export const getExplore = (sort: ExploreSort = 'popular') =>
   req<ExploreItem[]>(`/v1/explore?sort=${sort}`);

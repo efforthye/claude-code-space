@@ -73,7 +73,7 @@ export type EditClip = {
   text?: string;
   textPosition?: TextPosition;
 };
-export type EditRequest = { title: string; clips: EditClip[] };
+export type EditRequest = { title: string; clips: EditClip[]; audioKey?: string };
 
 export type ExploreItem = {
   id: string;

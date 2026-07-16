@@ -122,6 +122,13 @@ class EditClip(BaseModel):
 class EditRequest(BaseModel):
     title: str = Field(default="My edit", max_length=100)
     clips: list[EditClip] = Field(min_length=1)
+    # Optional audio track (voiceover/BGM) — a storage key from POST /v1/edit/audio,
+    # muxed over the stitched cut (trimmed to the shorter of the two).
+    audioKey: Optional[str] = None
+
+
+class AudioUploadResult(BaseModel):
+    key: str  # storage key to pass back as EditRequest.audioKey
 
 
 class ExploreItem(BaseModel):

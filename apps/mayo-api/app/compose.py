@@ -55,8 +55,9 @@ def _drawtext_filter(text: str, position: str) -> str:
     return "drawtext=" + ":".join(parts)
 
 
-def _render(sources: list[Source]) -> Optional[bytes]:
-    """Trim each source (+ optional burned-in caption) and concat via ffmpeg."""
+def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[bytes]:
+    """Trim each source (+ optional burned-in caption), concat, and optionally
+    mux an audio track — all via ffmpeg."""
     store = get_storage()
     with tempfile.TemporaryDirectory() as td:
         segments: list[str] = []
@@ -98,6 +99,28 @@ def _render(sources: list[Source]) -> Optional[bytes]:
             capture_output=True,
             timeout=600,
         )
+
+        # Optional audio track (voiceover/BGM): mux it over the stitched cut,
+        # trimmed to the shorter stream. Audio problems must never break the
+        # edit — on any failure the silent cut is returned instead.
+        if audio_key and store.exists(audio_key):
+            src_audio = os.path.join(td, "track" + os.path.splitext(audio_key)[1])
+            with open(src_audio, "wb") as fh:
+                fh.write(store.read(audio_key))
+            with_audio = os.path.join(td, "edit-audio.mp4")
+            try:
+                subprocess.run(
+                    ["ffmpeg", "-y", "-i", out, "-i", src_audio,
+                     "-map", "0:v:0", "-map", "1:a:0",
+                     "-c:v", "copy", "-c:a", "aac", "-shortest", with_audio],
+                    check=True,
+                    capture_output=True,
+                    timeout=600,
+                )
+                out = with_audio
+            except subprocess.CalledProcessError:
+                pass  # unsupported/corrupt audio — keep the silent cut
+
         with open(out, "rb") as fh:
             return fh.read()
 
@@ -119,7 +142,7 @@ async def compose_edit(req: EditRequest) -> Optional[Video]:
     if not sources:
         return None
 
-    data = await asyncio.to_thread(_render, sources)
+    data = await asyncio.to_thread(_render, sources, req.audioKey)
     if not data:
         return None
     film_key = f"films/edit-{int(time.time() * 1000)}.mp4"

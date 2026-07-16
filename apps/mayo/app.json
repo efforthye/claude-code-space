@@ -36,6 +36,12 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "mayo records your voiceover for video edits."
+        }
       ]
     ],
     "experiments": {

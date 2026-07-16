@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { AudioModule, RecordingPresets, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
 import { useRouter } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -8,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { createEdit, listVideos } from '@/api/client';
+import { createEdit, listVideos, uploadEditAudio } from '@/api/client';
 import type { EditClip, TextPosition, Video } from '@/api/types';
 import { useToast } from '@/components/toast';
 import { ThemedText } from '@/components/themed-text';
@@ -59,6 +60,46 @@ export default function EditScreen() {
   const [exporting, setExporting] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const keyRef = useRef(0);
+
+  // Voiceover/BGM: record on-device, upload, attach its key to the export.
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const [recording, setRecording] = useState(false);
+  const [audioBusy, setAudioBusy] = useState(false);
+  const [audioKey, setAudioKey] = useState<string | null>(null);
+
+  const toggleRecord = async () => {
+    if (audioBusy) return;
+    try {
+      if (!recording) {
+        const perm = await AudioModule.requestRecordingPermissionsAsync();
+        if (!perm.granted) {
+          toast.show(t('edit.micDenied'));
+          return;
+        }
+        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+        await recorder.prepareToRecordAsync();
+        recorder.record();
+        setRecording(true);
+        return;
+      }
+      // stop -> upload -> attach
+      setAudioBusy(true);
+      await recorder.stop();
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
+      setRecording(false);
+      const uri = recorder.uri;
+      if (uri) {
+        const key = await uploadEditAudio(uri);
+        setAudioKey(key);
+        toast.show(t('edit.audioAttached'));
+      }
+    } catch {
+      setRecording(false);
+      toast.show(t('common.error'));
+    } finally {
+      setAudioBusy(false);
+    }
+  };
 
   // Rotate to landscape while editing (KineMaster/CapCut-style); restore portrait
   // on exit. Native only — no-op on web.
@@ -176,6 +217,7 @@ export default function EditScreen() {
           ...(c.end > 0 && c.end > c.start ? { end: c.end } : {}),
           ...(c.text.trim() ? { text: c.text.trim(), textPosition: c.textPos } : {}),
         })),
+        ...(audioKey ? { audioKey } : {}),
       };
       const video = await createEdit(payload);
       router.replace(`/library/${video.id}`);
@@ -282,12 +324,44 @@ export default function EditScreen() {
                   ))}
                 </View>
 
-                <Pressable onPress={() => toast.show(t('edit.audioSoon'))} style={[styles.audioBtn, { borderColor: theme.backgroundSelected }]}>
-                  <Ionicons name="musical-notes-outline" size={16} color={theme.textSecondary} />
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t('edit.audio')}
-                  </ThemedText>
-                </Pressable>
+                {/* Voiceover — record on device, muxed over the whole edit. */}
+                {Platform.OS !== 'web' ? (
+                  <>
+                    <ThemedText type="smallBold">{t('edit.audio')}</ThemedText>
+                    <View style={styles.audioRow}>
+                      <Pressable
+                        onPress={toggleRecord}
+                        disabled={audioBusy}
+                        style={[
+                          styles.audioBtn,
+                          {
+                            borderColor: recording ? '#E5484D' : theme.backgroundSelected,
+                            opacity: audioBusy ? 0.5 : 1,
+                          },
+                        ]}>
+                        <Ionicons
+                          name={recording ? 'stop-circle' : 'mic-outline'}
+                          size={16}
+                          color={recording ? '#E5484D' : theme.text}
+                        />
+                        <ThemedText type="small" style={recording ? { color: '#E5484D' } : undefined}>
+                          {audioBusy
+                            ? t('edit.audioUploading')
+                            : recording
+                              ? t('edit.recordStop')
+                              : t('edit.recordVoice')}
+                        </ThemedText>
+                      </Pressable>
+                      {audioKey ? (
+                        <Pressable onPress={() => setAudioKey(null)} style={[styles.audioBtn, { borderColor: theme.backgroundSelected }]}>
+                          <Ionicons name="musical-notes" size={16} color={theme.text} />
+                          <ThemedText type="small">{t('edit.audioOn')}</ThemedText>
+                          <Ionicons name="close" size={14} color={theme.textSecondary} />
+                        </Pressable>
+                      ) : null}
+                    </View>
+                  </>
+                ) : null}
               </>
             ) : (
               <ThemedText type="small" themeColor="textSecondary">
@@ -484,15 +558,16 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.four,
     borderWidth: 1,
   },
+  audioRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap' },
   audioBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.two,
     paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
     borderRadius: Spacing.three,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginTop: Spacing.two,
+    borderWidth: 1,
   },
   timeline: { borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: Spacing.two },
   timelineInner: { gap: Spacing.two, paddingHorizontal: Spacing.four, alignItems: 'center' },
