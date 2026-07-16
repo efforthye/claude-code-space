@@ -1,7 +1,7 @@
 ---
 title: Mayo
 type: service
-status: building
+status: live
 tags: [service, mayo, ai-video, expo, web, platform]
 created: 2026-07-15
 updated: 2026-07-16

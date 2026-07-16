@@ -17,8 +17,8 @@ Updated whenever pages are added/renamed or a service's status changes.
 |---------|--------|-----------|------|
 | RichClub (api + front) | live | `home.efforthye.com:8000` (api) / `:3000` (front) | [[richclub]] |
 | Jenkins (CI) | live | `home.efforthye.com:9090` | [[jenkins]] |
-| Mayo (AI video platform) | building | app + mayo.im (web) | [[mayo]] |
-| mayo-api (orchestration API) | building | `apps/mayo-api/` (FastAPI, Docker) | [[mayo]] |
+| Mayo (AI video platform) | live | Expo Go 앱 + **mayo.im** (Vercel) | [[mayo]] |
+| mayo-api (orchestration API) | live | mini `:8001` → `mayo-api.efforthye.dev` (tunnel) | [[mayo]] |
 
 ## Infra
 - [[home-server]] — Apple M1 Mac mini (8-core, 16 GB, 1 TB, macOS 15.4.1, `arm64`; `m1mini` /
