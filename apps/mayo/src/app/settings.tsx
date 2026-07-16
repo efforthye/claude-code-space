@@ -59,6 +59,7 @@ export default function SettingsScreen() {
       ...patch,
     });
   const chooseGen = async (backend: string) => {
+    if (!genSettings) return; // don't write defaults before the server state loads
     setGenOverride(backend);
     try {
       await saveSettings({ generationBackend: backend });
@@ -67,6 +68,7 @@ export default function SettingsScreen() {
     }
   };
   const chooseByok = async (value: boolean) => {
+    if (!genSettings) return; // don't write defaults before the server state loads
     setByokOverride(value);
     try {
       await saveSettings({ byok: value });

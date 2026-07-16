@@ -322,7 +322,7 @@ function DirectorPicker() {
         : t('director.backendMock');
 
   const choose = async (next: PlannerBackend, model?: string) => {
-    if (!sel || saving) return;
+    if (!sel || !settings || saving) return; // wait for server state before writing
     const updated: RuntimeSettings = {
       ...sel,
       plannerBackend: next,
