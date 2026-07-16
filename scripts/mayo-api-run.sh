@@ -19,6 +19,20 @@ cd "$API"
 
 log() { echo "[mayo-api-run $(date '+%H:%M:%S')] $*"; }
 
+# Load runtime config/secrets from a git-ignored .env if present (e.g.
+# MAYO_API_KEY). The file lives only on the host — it is never committed (see
+# .gitignore + CLAUDE.md). `set -a` exports each KEY=value into the environment
+# so config.py's os.getenv() picks them up; nothing here echoes the values.
+if [ -f "$API/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$API/.env"
+  set +a
+  log ".env loaded; MAYO_API_KEY $([ -n "${MAYO_API_KEY:-}" ] && echo set || echo unset)"
+else
+  log "no .env at $API/.env — using process environment only"
+fi
+
 # Prefer a Python with broad wheel availability; fall back through to python3
 # (which on this host is Homebrew 3.14). Deps are pinned to versions that have
 # 3.14 wheels, so 3.14 is fine — this just prefers a more-settled interpreter if
