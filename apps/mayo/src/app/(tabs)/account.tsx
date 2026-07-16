@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { TIERS } from '@/api/catalog';
-import { API_BASE_URL, getHealth, getStorage } from '@/api/client';
+import { getHealth, getStorage } from '@/api/client';
 import { Chip } from '@/components/chip';
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
@@ -26,13 +26,16 @@ type Row = {
 export default function AccountScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { t, themeMode, setThemeMode, lang, setLang, defaultTierId, setDefaultTier } = useSettings();
+  const { t, themeMode, setThemeMode, lang, setLang, defaultTierId, setDefaultTier, apiUrl, setApiUrl } =
+    useSettings();
   const { data: storage } = useQuery(getStorage);
-  const { data: health, error: healthError } = useQuery(getHealth, { pollMs: 10000 });
+  const { data: health, error: healthError } = useQuery(getHealth, {
+    pollMs: 10000,
+    deps: [apiUrl],
+  });
   const { entitlement } = usePayments();
 
   const online = !!health && health.status === 'ok' && !healthError;
-  const apiHost = API_BASE_URL.replace(/^https?:\/\//, '');
 
   const themeOptions: { id: ThemeMode; label: string }[] = [
     { id: 'system', label: t('theme.system') },
@@ -74,13 +77,26 @@ export default function AccountScreen() {
         </ThemedView>
       </Pressable>
 
-      <ThemedView type="backgroundElement" style={styles.serverRow}>
-        <View style={[styles.dot, { backgroundColor: online ? '#3BA55D' : '#E5484D' }]} />
-        <ThemedText type="small" style={styles.flex}>
-          {t('account.server')} · {online ? t('account.serverConnected') : t('account.serverOffline')}
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-          {apiHost}
+      <ThemedView type="backgroundElement" style={styles.serverCard}>
+        <View style={styles.serverRow}>
+          <View style={[styles.dot, { backgroundColor: online ? '#3BA55D' : '#E5484D' }]} />
+          <ThemedText type="smallBold" style={styles.flex}>
+            {t('account.server')} ·{' '}
+            {online ? t('account.serverConnected') : t('account.serverOffline')}
+          </ThemedText>
+        </View>
+        <TextInput
+          value={apiUrl}
+          onChangeText={setApiUrl}
+          placeholder="https://…"
+          placeholderTextColor={theme.textSecondary}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="url"
+          style={[styles.serverInput, { color: theme.text, borderColor: theme.backgroundSelected }]}
+        />
+        <ThemedText type="small" themeColor="textSecondary">
+          {t('account.serverHint')}
         </ThemedText>
       </ThemedView>
 
@@ -179,12 +195,22 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.6,
   },
+  serverCard: {
+    gap: Spacing.two,
+    padding: Spacing.three,
+    borderRadius: Spacing.four,
+  },
   serverRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    padding: Spacing.three,
-    borderRadius: Spacing.four,
+  },
+  serverInput: {
+    fontSize: 14,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Spacing.three,
   },
   dot: {
     width: 10,

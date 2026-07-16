@@ -5,6 +5,7 @@
 // owns :8000). Note: over plain HTTP the phone must reach that host (home LAN or
 // a forwarded port / tunnel); prefer HTTPS in production.
 
+import { getApiBaseUrl } from './base-url';
 import type {
   CreateJobRequest,
   Duration,
@@ -21,9 +22,6 @@ import type {
   Video,
 } from './types';
 
-const RAW_BASE = process.env.EXPO_PUBLIC_MAYO_API_URL ?? 'http://home.efforthye.com:8001';
-export const API_BASE_URL = RAW_BASE.replace(/\/+$/, '');
-
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -37,7 +35,7 @@ export class ApiError extends Error {
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE_URL}${path}`, {
+    res = await fetch(`${getApiBaseUrl()}${path}`, {
       ...init,
       headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     });

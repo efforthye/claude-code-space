@@ -46,6 +46,24 @@ curl -s localhost:8001/health           # -> {"status":"ok",...}
 backend changes go live on the mini with no manual step (same loop as the app). Logs:
 `~/Library/Logs/mayo-api.log`.
 
+### Reaching the API from the phone (anywhere)
+The API binds `0.0.0.0:8001` but that's only reachable on the home LAN. So the app can reach it
+from **outside** the house (office / 5G), the installer also runs a **Cloudflare quick tunnel**
+agent (`com.efforthye.mayo.tunnel` → `scripts/mayo-tunnel-run.sh`) that publishes a public HTTPS URL
+(no account/router config; installs `cloudflared` via Homebrew on first run). Get the URL and point
+the app at it:
+```bash
+grep -m1 trycloudflare ~/Library/Logs/mayo-tunnel.log   # -> https://<random>.trycloudflare.com
+```
+Paste that URL into the app: **Account → Server** (it's persisted; the status dot turns green when
+connected). The app's API base URL is runtime-configurable there — default is the LAN
+`http://home.efforthye.com:8001` for on-network use.
+
+> A quick tunnel's URL is **random and changes on restart/reboot**, so you'll re-paste after a
+> reboot. For a **permanent** address, upgrade to a **named** Cloudflare tunnel bound to the
+> `efforthye.com` domain (stable hostname, e.g. `mayo-api.efforthye.com`) and bake it into
+> `EXPO_PUBLIC_MAYO_API_URL` — a follow-up when the dev URL settles.
+
 ## (B) Prod deploy — Docker (build & run on the host)
 ```bash
 cd apps/mayo-api

@@ -27,19 +27,22 @@ UID_NUM="$(id -u)"
 EXPO_LABEL="com.efforthye.mayo.expo"
 PULL_LABEL="com.efforthye.mayo.autopull"
 API_LABEL="com.efforthye.mayo.api"
+TUNNEL_LABEL="com.efforthye.mayo.tunnel"
 EXPO_PLIST="$AGENTS/$EXPO_LABEL.plist"
 PULL_PLIST="$AGENTS/$PULL_LABEL.plist"
 API_PLIST="$AGENTS/$API_LABEL.plist"
+TUNNEL_PLIST="$AGENTS/$TUNNEL_LABEL.plist"
 
 unload() {
   launchctl bootout "gui/$UID_NUM/$EXPO_LABEL" 2>/dev/null || true
   launchctl bootout "gui/$UID_NUM/$PULL_LABEL" 2>/dev/null || true
   launchctl bootout "gui/$UID_NUM/$API_LABEL" 2>/dev/null || true
+  launchctl bootout "gui/$UID_NUM/$TUNNEL_LABEL" 2>/dev/null || true
 }
 
 if [ "${1:-}" = "--uninstall" ]; then
   unload
-  rm -f "$EXPO_PLIST" "$PULL_PLIST" "$API_PLIST"
+  rm -f "$EXPO_PLIST" "$PULL_PLIST" "$API_PLIST" "$TUNNEL_PLIST"
   echo "Uninstalled mayo autostart agents."
   exit 0
 fi
@@ -89,6 +92,9 @@ write_plist "$PULL_PLIST" "$PULL_LABEL" "$REPO" "/bin/bash $REPO/scripts/dev-aut
 # Orchestration API (FastAPI/uvicorn on port 8001 — richclub owns 8000). The
 # run script self-bootstraps a venv + deps, so no manual pip step is needed.
 write_plist "$API_PLIST" "$API_LABEL" "$REPO" "/bin/bash $REPO/scripts/mayo-api-run.sh" "$LOGS/mayo-api.log"
+# Public tunnel so the phone app can reach the API from anywhere (not just LAN).
+# Prints a trycloudflare.com URL to the log; paste it into the app (Account -> Server).
+write_plist "$TUNNEL_PLIST" "$TUNNEL_LABEL" "$REPO" "/bin/bash $REPO/scripts/mayo-tunnel-run.sh" "$LOGS/mayo-tunnel.log"
 
 # Bootstrap with a retry — launchctl can transiently fail ("Bootstrap failed:
 # 5: Input/output error") if the old agent is still tearing down.
@@ -106,16 +112,21 @@ sleep 2
 boot "$EXPO_PLIST"
 boot "$PULL_PLIST"
 boot "$API_PLIST"
+boot "$TUNNEL_PLIST"
 
 echo "Installed launchd agents:"
 echo "  $EXPO_PLIST"
 echo "  $PULL_PLIST"
 echo "  $API_PLIST"
+echo "  $TUNNEL_PLIST"
 echo
 echo "They now run on login, restart on crash, and survive reboots + Termius close."
-echo "Get the tunnel URL (give it ~15s to boot):"
+echo "Get the Expo tunnel URL (give it ~15s to boot):"
 echo "  grep -m1 'exp://' $LOGS/mayo-expo.log"
 echo "API health (give it ~30s the first time — it builds a venv):"
 echo "  curl -s localhost:8001/health   (interactive docs at http://<host>:8001/docs)"
-echo "Watch logs:  tail -f $LOGS/mayo-expo.log   (and mayo-autopull.log, mayo-api.log)"
+echo "Public API URL for the phone (give it ~15s; cloudflared installs on first run):"
+echo "  grep -m1 trycloudflare $LOGS/mayo-tunnel.log"
+echo "  -> paste that https URL into the app: Account -> Server"
+echo "Watch logs:  tail -f $LOGS/mayo-api.log   (and mayo-expo/autopull/tunnel logs)"
 echo "Uninstall:   $0 --uninstall"
