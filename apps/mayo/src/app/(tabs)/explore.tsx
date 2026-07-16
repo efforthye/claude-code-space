@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { getExplore, likeExplore } from '@/api/client';
+import { getExplore } from '@/api/client';
 import type { ExploreItem, ExploreSort } from '@/api/types';
 import { Chip } from '@/components/chip';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
@@ -11,29 +11,23 @@ import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { useFavorites } from '@/explore/favorites';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
+
+type Mode = 'popular' | 'latest' | 'liked';
 
 export default function ExploreScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
-  const [sort, setSort] = useState<ExploreSort>('popular');
+  const { favorites, has, toggle } = useFavorites();
+  const [mode, setMode] = useState<Mode>('popular');
+  const sort: ExploreSort = mode === 'latest' ? 'latest' : 'popular';
   const { data: items, loading, error, refetch } = useQuery(() => getExplore(sort), { deps: [sort] });
-  const [liked, setLiked] = useState<Set<string>>(new Set());
 
-  const toggleLike = (item: ExploreItem) => {
-    if (liked.has(item.id)) return;
-    setLiked((prev) => new Set(prev).add(item.id));
-    likeExplore(item.id).catch(() => {
-      setLiked((prev) => {
-        const next = new Set(prev);
-        next.delete(item.id);
-        return next;
-      });
-    });
-  };
+  const list = mode === 'liked' ? favorites : (items ?? []);
 
   const remix = (item: ExploreItem) =>
     router.navigate({ pathname: '/', params: { seed: item.prompt } });
@@ -47,10 +41,12 @@ export default function ExploreScreen() {
         title: item.title,
         prompt: item.prompt,
         author: item.author,
+        accent: item.accent,
+        durationLabel: item.durationLabel,
+        tierLabel: item.tierLabel,
+        likes: String(item.likes),
       },
     });
-
-  const likeCount = (item: ExploreItem) => item.likes + (liked.has(item.id) ? 1 : 0);
 
   return (
     <Screen
@@ -60,23 +56,30 @@ export default function ExploreScreen() {
         await refetch();
       }}>
       <View style={styles.sortRow}>
-        <Chip label={t('explore.popular')} selected={sort === 'popular'} onPress={() => setSort('popular')} />
-        <Chip label={t('explore.latest')} selected={sort === 'latest'} onPress={() => setSort('latest')} />
+        <Chip label={t('explore.popular')} selected={mode === 'popular'} onPress={() => setMode('popular')} />
+        <Chip label={t('explore.latest')} selected={mode === 'latest'} onPress={() => setMode('latest')} />
+        <Chip label={t('explore.liked')} selected={mode === 'liked'} onPress={() => setMode('liked')} />
       </View>
 
-      {loading && !items ? <LoadingBlock /> : null}
-      {error && !items ? <ErrorBlock onRetry={refetch} /> : null}
-      {items && items.length === 0 ? (
+      {mode !== 'liked' && loading && !items ? <LoadingBlock /> : null}
+      {mode !== 'liked' && error && !items ? <ErrorBlock onRetry={refetch} /> : null}
+      {list.length === 0 && !(mode !== 'liked' && loading && !items) ? (
         <ThemedView type="backgroundElement" style={styles.empty}>
-          <Ionicons name="compass-outline" size={36} color={theme.textSecondary} />
-          <ThemedText type="smallBold">{t('explore.emptyTitle')}</ThemedText>
+          <Ionicons
+            name={mode === 'liked' ? 'heart-outline' : 'compass-outline'}
+            size={36}
+            color={theme.textSecondary}
+          />
+          <ThemedText type="smallBold">
+            {mode === 'liked' ? t('explore.likedEmptyTitle') : t('explore.emptyTitle')}
+          </ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
-            {t('explore.emptyBody')}
+            {mode === 'liked' ? t('explore.likedEmptyBody') : t('explore.emptyBody')}
           </ThemedText>
         </ThemedView>
       ) : null}
 
-      {(items ?? []).map((item) => (
+      {list.map((item) => (
         <ThemedView key={item.id} type="backgroundElement" style={styles.card}>
           <Pressable onPress={() => open(item)}>
             <View style={[styles.poster, { backgroundColor: item.accent }]}>
@@ -99,16 +102,16 @@ export default function ExploreScreen() {
               </ThemedText>
             </View>
             <Pressable
-              onPress={() => toggleLike(item)}
+              onPress={() => toggle(item)}
               accessibilityLabel={t('explore.like')}
               style={({ pressed }) => [styles.like, pressed && styles.pressed]}>
               <Ionicons
-                name={liked.has(item.id) ? 'heart' : 'heart-outline'}
+                name={has(item.id) ? 'heart' : 'heart-outline'}
                 size={18}
-                color={liked.has(item.id) ? '#E5484D' : theme.textSecondary}
+                color={has(item.id) ? '#E5484D' : theme.textSecondary}
               />
               <ThemedText type="small" themeColor="textSecondary">
-                {likeCount(item)}
+                {item.likes + (has(item.id) ? 1 : 0)}
               </ThemedText>
             </Pressable>
           </View>

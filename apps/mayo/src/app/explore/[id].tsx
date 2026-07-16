@@ -1,16 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { likeExplore } from '@/api/client';
+import type { ExploreItem } from '@/api/types';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useFavorites } from '@/explore/favorites';
 import { useTheme } from '@/hooks/use-theme';
 import { useI18n } from '@/settings/settings';
 
@@ -36,15 +36,31 @@ export default function ExploreDetailScreen() {
     title?: string;
     prompt?: string;
     author?: string;
+    accent?: string;
+    durationLabel?: string;
+    tierLabel?: string;
+    likes?: string;
   }>();
-  const [liked, setLiked] = useState(false);
+  const { has, toggle } = useFavorites();
+  const liked = params.id ? has(params.id) : false;
 
   const url = params.url ? `${getApiBaseUrl()}${params.url}` : '';
 
+  const item: ExploreItem = {
+    id: params.id ?? '',
+    title: params.title ?? '',
+    prompt: params.prompt ?? '',
+    author: params.author ?? '',
+    likes: Number(params.likes ?? 0) || 0,
+    durationLabel: params.durationLabel ?? '',
+    accent: params.accent ?? '#6D5DF6',
+    tierLabel: params.tierLabel ?? '',
+    url: params.url || null,
+  };
+
   const like = () => {
-    if (liked || !params.id) return;
-    setLiked(true);
-    likeExplore(params.id).catch(() => setLiked(false));
+    if (!params.id) return;
+    toggle(item);
   };
 
   const remix = () => router.navigate({ pathname: '/', params: { seed: params.prompt ?? '' } });

@@ -17,8 +17,11 @@ const en: Dict = {
   'explore.like': 'Like',
   'explore.popular': 'Popular',
   'explore.latest': 'Latest',
+  'explore.liked': 'Liked',
   'explore.emptyTitle': 'Nothing published yet',
   'explore.emptyBody': 'Be the first — generate a film, then tap "Share to Explore" in its details.',
+  'explore.likedEmptyTitle': 'No liked videos yet',
+  'explore.likedEmptyBody': 'Tap the heart on any Explore video to collect it here.',
 
   'library.newEdit': 'Edit videos',
   'edit.title': 'Editor',
@@ -247,8 +250,11 @@ const ko: Dict = {
   'explore.like': '좋아요',
   'explore.popular': '인기순',
   'explore.latest': '최신순',
+  'explore.liked': '좋아요',
   'explore.emptyTitle': '아직 공개된 영상이 없어요',
   'explore.emptyBody': '첫 주인공이 되어보세요 — 영상을 만든 뒤 상세에서 "탐색에 공개"를 누르세요.',
+  'explore.likedEmptyTitle': '아직 좋아요한 영상이 없어요',
+  'explore.likedEmptyBody': '탐색에서 하트를 누르면 여기 모여요.',
 
   'library.newEdit': '영상 편집',
   'edit.title': '편집',
