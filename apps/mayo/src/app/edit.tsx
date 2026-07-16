@@ -131,6 +131,25 @@ export default function EditScreen() {
     }
   }, [sel?.url, sel?.start, player]);
 
+  // Preview honors the trim: loop playback inside [start, end] so what you see
+  // is what the export will contain for the selected clip.
+  useEffect(() => {
+    if (!sel?.url) return;
+    const start = sel.start;
+    const end = sel.end;
+    const iv = setInterval(() => {
+      try {
+        const tNow = player.currentTime;
+        if (end > start && (tNow >= end || tNow < Math.max(0, start - 0.75))) {
+          player.currentTime = start;
+        }
+      } catch {
+        // player transitioning — ignore
+      }
+    }, 250);
+    return () => clearInterval(iv);
+  }, [sel?.url, sel?.start, sel?.end, player]);
+
   const addClip = (v: Video) => {
     const dur = parseDuration(v.durationLabel) || 0;
     const clip: Clip = {

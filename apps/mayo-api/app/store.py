@@ -324,8 +324,17 @@ class ExploreStore:
             items = [e.model_copy() for e in self._items.values()]
         if sort == "latest":
             items.reverse()  # dict preserves insertion order; newest last
-        else:  # popular
-            items.sort(key=lambda e: e.likes, reverse=True)
+        else:
+            # Popular = engagement + freshness: likes weigh most, comments count
+            # double-ish, and newer items get a decaying boost so the feed isn't
+            # frozen by early winners (position n from the end ~ freshness).
+            total = len(items)
+            def score(pair: tuple[int, ExploreItem]) -> float:
+                idx, e = pair
+                freshness = (idx + 1) / total * 3 if total else 0  # newest -> +3
+                return e.likes * 3 + e.comments * 2 + freshness
+            ranked = sorted(enumerate(items), key=score, reverse=True)
+            items = [e for _, e in ranked]
         return items
 
     async def publish(self, video: Video, prompt: str) -> ExploreItem:
