@@ -65,7 +65,14 @@ export type RuntimeSettings = {
   byok?: boolean;
 };
 
-export type EditClip = { videoId: string; start?: number; end?: number };
+export type TextPosition = 'top' | 'center' | 'bottom';
+export type EditClip = {
+  videoId: string;
+  start?: number;
+  end?: number;
+  text?: string;
+  textPosition?: TextPosition;
+};
 export type EditRequest = { title: string; clips: EditClip[] };
 
 export type ExploreItem = {

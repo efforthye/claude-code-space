@@ -15,9 +15,13 @@ import tempfile
 import time
 from typing import Optional
 
+from .config import settings
 from .schemas import EditRequest, Video
 from .storage import get_storage
 from .store import library
+
+# A source clip in the edit spec: (start, end, storage_key, caption, position).
+Source = tuple[float, Optional[float], str, str, str]
 
 
 def _key_from_url(url: Optional[str]) -> Optional[str]:
@@ -27,25 +31,60 @@ def _key_from_url(url: Optional[str]) -> Optional[str]:
     return url.split(marker, 1)[1] if marker in url else None
 
 
-def _render(sources: list[tuple[float, Optional[float], str]]) -> Optional[bytes]:
-    """sources: list of (start, end, storage_key). Trim + concat via ffmpeg."""
+def _escape_drawtext(text: str) -> str:
+    # ffmpeg drawtext needs colons, quotes and backslashes escaped.
+    return text.replace("\\", "\\\\").replace(":", "\\:").replace("'", "’").replace("%", "\\%")
+
+
+def _drawtext_filter(text: str, position: str) -> str:
+    y = {"top": "h*0.08", "center": "(h-text_h)/2", "bottom": "h-text_h-h*0.08"}.get(
+        position, "h-text_h-h*0.08"
+    )
+    parts = [
+        f"text='{_escape_drawtext(text)}'",
+        "fontcolor=white",
+        "fontsize=h/16",
+        "box=1",
+        "boxcolor=black@0.5",
+        "boxborderw=12",
+        "x=(w-text_w)/2",
+        f"y={y}",
+    ]
+    if settings.edit_font and os.path.exists(settings.edit_font):
+        parts.append(f"fontfile={settings.edit_font}")
+    return "drawtext=" + ":".join(parts)
+
+
+def _render(sources: list[Source]) -> Optional[bytes]:
+    """Trim each source (+ optional burned-in caption) and concat via ffmpeg."""
     store = get_storage()
     with tempfile.TemporaryDirectory() as td:
         segments: list[str] = []
-        for i, (start, end, key) in enumerate(sources):
+        for i, (start, end, key, text, position) in enumerate(sources):
             src = os.path.join(td, f"src{i}.mp4")
             with open(src, "wb") as fh:
                 fh.write(store.read(key))
             seg = os.path.join(td, f"seg{i}.mp4")
-            cmd = ["ffmpeg", "-y"]
-            if start and start > 0:
-                cmd += ["-ss", f"{start}"]  # input seek
-            cmd += ["-i", src]
-            if end is not None and end > (start or 0):
-                cmd += ["-t", f"{end - (start or 0)}"]  # duration after seek
-            # Re-encode to a uniform codec so the concat step can stream-copy.
-            cmd += ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", seg]
-            subprocess.run(cmd, check=True, capture_output=True, timeout=600)
+
+            def build(with_text: bool) -> list[str]:
+                cmd = ["ffmpeg", "-y"]
+                if start and start > 0:
+                    cmd += ["-ss", f"{start}"]  # input seek
+                cmd += ["-i", src]
+                if end is not None and end > (start or 0):
+                    cmd += ["-t", f"{end - (start or 0)}"]  # duration after seek
+                if with_text and text.strip():
+                    cmd += ["-vf", _drawtext_filter(text.strip(), position)]
+                # Re-encode to a uniform codec so the concat step can stream-copy.
+                cmd += ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", seg]
+                return cmd
+
+            try:
+                subprocess.run(build(True), check=True, capture_output=True, timeout=600)
+            except subprocess.CalledProcessError:
+                # A caption filter can fail (missing font, unsupported glyphs) — never
+                # let that break the edit; re-render the segment without the overlay.
+                subprocess.run(build(False), check=True, capture_output=True, timeout=600)
             segments.append(seg)
 
         listfile = os.path.join(td, "list.txt")
@@ -66,7 +105,7 @@ def _render(sources: list[tuple[float, Optional[float], str]]) -> Optional[bytes
 async def compose_edit(req: EditRequest) -> Optional[Video]:
     # Resolve each clip to a real, existing storage key (skip mock/metadata ones).
     store = get_storage()
-    sources: list[tuple[float, Optional[float], str]] = []
+    sources: list[Source] = []
     scenes = 0
     for clip in req.clips:
         video = await library.get(clip.videoId)
@@ -75,7 +114,7 @@ async def compose_edit(req: EditRequest) -> Optional[Video]:
         key = _key_from_url(video.url)
         if not key or not store.exists(key):
             continue
-        sources.append((clip.start, clip.end, key))
+        sources.append((clip.start, clip.end, key, clip.text, clip.textPosition))
         scenes += 1
     if not sources:
         return None

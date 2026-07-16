@@ -114,6 +114,13 @@ class Settings:
         default_factory=lambda: os.getenv("MAYO_EXTERNAL_USE_IMAGE_STAGE", "true").lower()
         in ("1", "true", "yes")
     )
+    # Font for burned-in editor captions (ffmpeg drawtext). Default a macOS font
+    # with Hangul glyphs; if missing, captions are skipped (render never fails).
+    edit_font: str = field(
+        default_factory=lambda: os.getenv(
+            "MAYO_EDIT_FONT", "/System/Library/Fonts/AppleSDGothicNeo.ttc"
+        )
+    )
     # Scenario planner ("AI director") selector — mock | claude (ADR 0008).
     planner_backend: str = field(
         default_factory=lambda: os.getenv("MAYO_PLANNER_BACKEND", "mock")
