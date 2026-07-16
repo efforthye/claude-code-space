@@ -4,13 +4,16 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { RETENTION_PLANS } from '@/api/catalog';
+import { extendVideo, getVideo } from '@/api/client';
+import type { RetentionPlan } from '@/api/types';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/toast';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
-import { RETENTION_PLANS, getVideo, type RetentionPlan } from '@/mocks/data';
 
 export default function ExtendScreen() {
   const theme = useTheme();
@@ -18,8 +21,27 @@ export default function ExtendScreen() {
   const { t } = useI18n();
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const video = getVideo(id ?? '');
+  const videoId = id ?? '';
+  const { data: video } = useQuery(() => getVideo(videoId), {
+    enabled: !!videoId,
+    deps: [videoId],
+  });
   const [planId, setPlanId] = useState<string>(RETENTION_PLANS[0].id);
+  const [submitting, setSubmitting] = useState(false);
+
+  const confirm = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      if (videoId) await extendVideo(videoId, planId);
+      router.back();
+      toast.show(t('toast.extended'));
+    } catch {
+      toast.show(t('common.error'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const planLabel = (p: RetentionPlan) =>
     p.days === 0 ? t('extend.forever') : p.days === 7 ? t('extend.plan7') : t('extend.plan30');
@@ -88,13 +110,11 @@ export default function ExtendScreen() {
           })}
 
           <Pressable
-            onPress={() => {
-              router.back();
-              toast.show(t('toast.extended'));
-            }}
+            onPress={confirm}
+            disabled={submitting}
             style={({ pressed }) => [
               styles.primary,
-              { backgroundColor: theme.text, opacity: pressed ? 0.75 : 1 },
+              { backgroundColor: theme.text, opacity: submitting ? 0.5 : pressed ? 0.75 : 1 },
             ]}>
             <ThemedText type="smallBold" style={{ color: theme.background }}>
               {t('extend.confirm')}

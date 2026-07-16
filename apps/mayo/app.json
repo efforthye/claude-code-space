@@ -7,6 +7,13 @@
     "icon": "./assets/images/icon.png",
     "scheme": "mayo",
     "userInterfaceStyle": "automatic",
+    "ios": {
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",

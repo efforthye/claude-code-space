@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { TIERS } from '@/api/catalog';
+import { getStorage } from '@/api/client';
 import { Chip } from '@/components/chip';
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
@@ -9,9 +11,9 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useQuery } from '@/hooks/use-query';
 import { useSettings, type ThemeMode } from '@/settings/settings';
 import { type Lang } from '@/i18n/translations';
-import { STORAGE, TIERS } from '@/mocks/data';
 
 type Row = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -24,6 +26,7 @@ export default function AccountScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t, themeMode, setThemeMode, lang, setLang, defaultTierId, setDefaultTier } = useSettings();
+  const { data: storage } = useQuery(getStorage);
 
   const themeOptions: { id: ThemeMode; label: string }[] = [
     { id: 'system', label: t('theme.system') },
@@ -103,10 +106,10 @@ export default function AccountScreen() {
         <View style={styles.headerRow}>
           <ThemedText type="smallBold">{t('account.storage')}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            {STORAGE.usedLabel} / {STORAGE.totalLabel}
+            {storage ? `${storage.usedLabel} / ${storage.totalLabel}` : '—'}
           </ThemedText>
         </View>
-        <ProgressBar value={STORAGE.usedRatio} />
+        <ProgressBar value={storage?.usedRatio ?? 0} />
         <ThemedText type="small" themeColor="textSecondary">
           {t('account.storageHint')}
         </ThemedText>

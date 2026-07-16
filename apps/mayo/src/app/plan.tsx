@@ -8,9 +8,9 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/toast';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { CURRENT_PLAN_ID, PLANS } from '@/api/catalog';
 import { useTheme } from '@/hooks/use-theme';
 import { useI18n } from '@/settings/settings';
-import { CURRENT_PLAN_ID, PLANS } from '@/mocks/data';
 
 export default function PlanScreen() {
   const theme = useTheme();

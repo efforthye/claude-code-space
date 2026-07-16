@@ -1,21 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getVideo } from '@/api/client';
+import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
-import { getVideo } from '@/mocks/data';
 
 export default function VideoDetailScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const video = getVideo(id ?? '');
+  const videoId = id ?? '';
+  const { data: video, loading, error, refetch } = useQuery(() => getVideo(videoId), {
+    enabled: !!videoId,
+    deps: [videoId],
+  });
 
   const retentionLabel = (days: number) => {
     if (days <= 0) return t('library.expired');
@@ -25,7 +31,6 @@ export default function VideoDetailScreen() {
 
   return (
     <ThemedView style={styles.root}>
-      <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView edges={['top']} style={styles.safe}>
         <View style={styles.topBar}>
           <Pressable
@@ -36,14 +41,21 @@ export default function VideoDetailScreen() {
           </Pressable>
         </View>
 
-        {!video ? (
-          <View style={styles.empty}>
-            <Ionicons name="alert-circle-outline" size={40} color={theme.textSecondary} />
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('detail.notFound')}
-            </ThemedText>
-          </View>
-        ) : (
+        {loading && !video ? <LoadingBlock /> : null}
+        {error ? (
+          error.name === 'ApiError' && /404|not found/i.test(error.message) ? (
+            <View style={styles.empty}>
+              <Ionicons name="alert-circle-outline" size={40} color={theme.textSecondary} />
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('detail.notFound')}
+              </ThemedText>
+            </View>
+          ) : !video ? (
+            <ErrorBlock onRetry={refetch} />
+          ) : null
+        ) : null}
+
+        {video ? (
           <ScrollView
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}>
@@ -123,7 +135,7 @@ export default function VideoDetailScreen() {
               full
             />
           </ScrollView>
-        )}
+        ) : null}
       </SafeAreaView>
     </ThemedView>
   );

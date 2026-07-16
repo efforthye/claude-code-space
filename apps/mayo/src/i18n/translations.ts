@@ -11,6 +11,10 @@ const en: Dict = {
   'tab.library': 'Library',
   'tab.account': 'Account',
 
+  'common.error': "Couldn't reach the server.",
+  'common.retry': 'Retry',
+  'common.empty': 'Nothing here yet.',
+
   'create.subtitle': 'Describe it once — AI writes the script and directs the whole film.',
   'create.prompt': 'Prompt',
   'create.promptPlaceholder': 'A cinematic short about a lighthouse keeper who discovers…',
@@ -155,6 +159,10 @@ const ko: Dict = {
   'tab.jobs': '작업',
   'tab.library': '보관함',
   'tab.account': '계정',
+
+  'common.error': '서버에 연결하지 못했어요.',
+  'common.retry': '다시 시도',
+  'common.empty': '아직 아무것도 없어요.',
 
   'create.subtitle': '한 번만 설명하면 — AI가 시나리오를 쓰고 전체 영상을 연출해요.',
   'create.prompt': '프롬프트',

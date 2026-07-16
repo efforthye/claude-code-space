@@ -134,8 +134,15 @@ config/secrets** (values at runtime, names-only in `.env.example`). Tested with 
 `scripts/mayo-api-run.sh` (self-bootstrapping venv → uvicorn on **:8001**, since [[richclub]] owns
 :8000). Installed by `mayo-autostart-install.sh` alongside the Expo + autopull agents; `dev-autopull`
 restarts it whenever `apps/mayo-api/**` is pushed, so backend changes go live with no manual step.
-See [[deploy-mayo-api]]. **Not yet wired to the app** (client still on local mocks — that's the next
-step).
+See [[deploy-mayo-api]].
+
+**App ↔ API wired (2026-07-16).** The Expo app now talks to mayo-api for **all non-AI data** — the
+client mocks are gone. `src/api/client.ts` (base URL from `EXPO_PUBLIC_MAYO_API_URL`, default
+`:8001`) + a small `useQuery` hook drive: Create → `POST /v1/jobs`; Jobs tab polls `GET /v1/jobs`;
+Job detail polls `GET /v1/jobs/{id}` (live progress) and cancels/deletes via `DELETE`; Library +
+detail read `GET /v1/library/...`; extend/publish `POST` to the API. Catalog (tiers/durations/plans)
+is fetched with a bundled fallback so forms render offline; screens show loading/error/retry states.
+`app.json` allows cleartext HTTP (ATS) for dev builds hitting the mini over `http://`.
 
 ## Architecture sketch (draft — not locked)
 - **Clients:** Expo app + mayo.im web (share a backend API). Web could reuse the RN codebase via

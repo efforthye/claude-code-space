@@ -2,15 +2,16 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { estimateCredits, formatDuration, useCatalog } from '@/api/catalog';
+import { createJob } from '@/api/client';
 import { Chip } from '@/components/chip';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useToast } from '@/components/toast';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useI18n, useSettings } from '@/settings/settings';
-import { useJobs } from '@/store/jobs';
-import { DURATIONS, TIERS, estimateCredits, formatDuration } from '@/mocks/data';
 
 type Unit = 'sec' | 'min';
 
@@ -19,21 +20,31 @@ export default function CreateScreen() {
   const { t } = useI18n();
   const { defaultTierId } = useSettings();
   const router = useRouter();
-  const { addJob } = useJobs();
+  const toast = useToast();
+  const { tiers, durations } = useCatalog();
   const [prompt, setPrompt] = useState('');
   const [seconds, setSeconds] = useState(60);
   const [tierId, setTierId] = useState(defaultTierId);
   const [customMode, setCustomMode] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState<Unit>('min');
+  const [submitting, setSubmitting] = useState(false);
 
-  const tier = useMemo(() => TIERS.find((x) => x.id === tierId) ?? TIERS[0], [tierId]);
+  const tier = useMemo(() => tiers.find((x) => x.id === tierId) ?? tiers[0], [tiers, tierId]);
   const credits = estimateCredits(seconds, tier);
 
-  const generate = () => {
+  const generate = async () => {
+    if (submitting) return;
+    setSubmitting(true);
     const title = prompt.trim().split('\n')[0].slice(0, 60) || t('create.untitled');
-    const id = addJob({ title, seconds, tierLabel: tier.label });
-    router.push(`/jobs/${id}`);
+    try {
+      const job = await createJob({ prompt: title, seconds, tier: tier.id });
+      router.push(`/jobs/${job.id}`);
+    } catch {
+      toast.show(t('common.error'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const applyCustom = (raw: string, unit: Unit) => {
@@ -76,7 +87,7 @@ export default function CreateScreen() {
 
       <ThemedText type="smallBold">{t('create.length')}</ThemedText>
       <View style={styles.row}>
-        {DURATIONS.map((d) => (
+        {durations.map((d) => (
           <Chip
             key={d.id}
             label={d.label}
@@ -120,7 +131,7 @@ export default function CreateScreen() {
 
       <ThemedText type="smallBold">{t('create.quality')}</ThemedText>
       <View style={styles.row}>
-        {TIERS.map((x) => (
+        {tiers.map((x) => (
           <Chip key={x.id} label={x.label} selected={x.id === tierId} onPress={() => setTierId(x.id)} />
         ))}
       </View>
@@ -140,9 +151,10 @@ export default function CreateScreen() {
 
       <Pressable
         onPress={generate}
+        disabled={submitting}
         style={({ pressed }) => [
           styles.cta,
-          { backgroundColor: theme.text, opacity: pressed ? 0.85 : 1 },
+          { backgroundColor: theme.text, opacity: submitting ? 0.5 : pressed ? 0.85 : 1 },
         ]}>
         <ThemedText type="smallBold" style={{ color: theme.background }}>
           {t('create.generate')}

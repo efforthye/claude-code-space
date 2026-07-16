@@ -4,16 +4,16 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getVideo, publishVideo } from '@/api/client';
+import type { Visibility } from '@/api/types';
 import { Chip } from '@/components/chip';
 import { useToast } from '@/components/toast';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
-import { getVideo } from '@/mocks/data';
-
-type Visibility = 'private' | 'unlisted' | 'public';
 
 export default function PublishScreen() {
   const theme = useTheme();
@@ -21,11 +21,36 @@ export default function PublishScreen() {
   const { t } = useI18n();
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const video = getVideo(id ?? '');
+  const videoId = id ?? '';
+  const { data: video } = useQuery(() => getVideo(videoId), {
+    enabled: !!videoId,
+    deps: [videoId],
+  });
 
-  const [title, setTitle] = useState(video?.title ?? '');
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('private');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Prefill the title from the video once it loads, unless the user already typed.
+  const [touched, setTouched] = useState(false);
+  if (video && !touched && title === '') {
+    setTitle(video.title);
+  }
+
+  const submit = async () => {
+    if (!title.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      if (videoId) await publishVideo(videoId, { title, description, visibility });
+      router.back();
+      toast.show(t('toast.published'));
+    } catch {
+      toast.show(t('common.error'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const visOptions: { id: Visibility; label: string }[] = [
     { id: 'private', label: t('vis.private') },
@@ -60,7 +85,10 @@ export default function PublishScreen() {
           <ThemedText type="smallBold">{t('publish.videoTitle')}</ThemedText>
           <TextInput
             value={title}
-            onChangeText={setTitle}
+            onChangeText={(v) => {
+              setTouched(true);
+              setTitle(v);
+            }}
             placeholder={t('publish.videoTitlePlaceholder')}
             placeholderTextColor={theme.textSecondary}
             style={[
@@ -100,14 +128,14 @@ export default function PublishScreen() {
           </ThemedText>
 
           <Pressable
-            onPress={() => {
-              router.back();
-              toast.show(t('toast.published'));
-            }}
-            disabled={!title.trim()}
+            onPress={submit}
+            disabled={!title.trim() || submitting}
             style={({ pressed }) => [
               styles.primary,
-              { backgroundColor: theme.text, opacity: !title.trim() ? 0.4 : pressed ? 0.7 : 1 },
+              {
+                backgroundColor: theme.text,
+                opacity: !title.trim() || submitting ? 0.4 : pressed ? 0.7 : 1,
+              },
             ]}>
             <Ionicons name="logo-youtube" size={20} color={theme.background} />
             <ThemedText type="smallBold" style={{ color: theme.background }}>

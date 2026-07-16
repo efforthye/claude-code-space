@@ -2,19 +2,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { getStorage, listVideos } from '@/api/client';
+import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
-import { STORAGE, VIDEOS } from '@/mocks/data';
 
 export default function LibraryScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
+  const { data: videos, loading, error, refetch } = useQuery(listVideos);
+  const { data: storage } = useQuery(getStorage);
 
   const retentionLabel = (days: number) => {
     if (days <= 0) return t('library.expired');
@@ -24,17 +28,27 @@ export default function LibraryScreen() {
 
   return (
     <Screen title={t('tab.library')} subtitle={t('library.subtitle')}>
-      <ThemedView type="backgroundElement" style={styles.storage}>
-        <View style={styles.headerRow}>
-          <ThemedText type="smallBold">{t('library.storage')}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {STORAGE.usedLabel} / {STORAGE.totalLabel}
-          </ThemedText>
-        </View>
-        <ProgressBar value={STORAGE.usedRatio} />
-      </ThemedView>
+      {storage ? (
+        <ThemedView type="backgroundElement" style={styles.storage}>
+          <View style={styles.headerRow}>
+            <ThemedText type="smallBold">{t('library.storage')}</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {storage.usedLabel} / {storage.totalLabel}
+            </ThemedText>
+          </View>
+          <ProgressBar value={storage.usedRatio} />
+        </ThemedView>
+      ) : null}
 
-      {VIDEOS.map((v) => (
+      {loading && !videos ? <LoadingBlock /> : null}
+      {error && !videos ? <ErrorBlock onRetry={refetch} /> : null}
+      {videos?.length === 0 ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {t('common.empty')}
+        </ThemedText>
+      ) : null}
+
+      {(videos ?? []).map((v) => (
         <Pressable
           key={v.id}
           onPress={() => router.push(`/library/${v.id}`)}

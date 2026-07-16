@@ -3,14 +3,16 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { deleteJob, getJob } from '@/api/client';
+import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ProgressBar } from '@/components/progress-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/toast';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
-import { useJobs } from '@/store/jobs';
 
 const MAX_DOTS = 48;
 
@@ -20,8 +22,12 @@ export default function JobDetailScreen() {
   const { t } = useI18n();
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getJob, removeJob } = useJobs();
-  const job = getJob(id ?? '');
+  const jobId = id ?? '';
+  const { data: job, loading, error, refetch } = useQuery(() => getJob(jobId), {
+    pollMs: 1500,
+    enabled: !!jobId,
+    deps: [jobId],
+  });
 
   const progress = job && job.scenesTotal ? job.scenesDone / job.scenesTotal : 0;
   const done = job?.status === 'done';
@@ -39,10 +45,14 @@ export default function JobDetailScreen() {
         {
           text: t(active ? 'jobDetail.cancel' : 'jobDetail.delete'),
           style: 'destructive',
-          onPress: () => {
-            removeJob(job.id);
-            router.back();
-            toast.show(t(active ? 'toast.jobCanceled' : 'toast.jobDeleted'));
+          onPress: async () => {
+            try {
+              await deleteJob(job.id);
+              router.back();
+              toast.show(t(active ? 'toast.jobCanceled' : 'toast.jobDeleted'));
+            } catch {
+              toast.show(t('common.error'));
+            }
           },
         },
       ],
@@ -61,14 +71,10 @@ export default function JobDetailScreen() {
           </Pressable>
         </View>
 
-        {!job ? (
-          <View style={styles.empty}>
-            <Ionicons name="alert-circle-outline" size={40} color={theme.textSecondary} />
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('jobDetail.notFound')}
-            </ThemedText>
-          </View>
-        ) : (
+        {loading && !job ? <LoadingBlock /> : null}
+        {error && !job ? <ErrorBlock onRetry={refetch} /> : null}
+
+        {job ? (
           <ScrollView
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}>
@@ -95,10 +101,7 @@ export default function JobDetailScreen() {
                   key={i}
                   style={[
                     styles.dot,
-                    {
-                      backgroundColor:
-                        i < filledDots ? theme.text : theme.backgroundSelected,
-                    },
+                    { backgroundColor: i < filledDots ? theme.text : theme.backgroundSelected },
                   ]}
                 />
               ))}
@@ -147,7 +150,7 @@ export default function JobDetailScreen() {
               </ThemedText>
             </Pressable>
           </ScrollView>
-        )}
+        ) : null}
       </SafeAreaView>
     </ThemedView>
   );
@@ -222,13 +225,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.two,
     paddingVertical: Spacing.three,
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.three,
-    padding: Spacing.four,
   },
   pressed: {
     opacity: 0.6,
