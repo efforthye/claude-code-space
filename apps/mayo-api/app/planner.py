@@ -84,9 +84,16 @@ class ScenarioPlanner(ABC):
 
     @abstractmethod
     async def converse(
-        self, messages: List[DirectorMessage], seconds: int, tier: str
+        self,
+        messages: List[DirectorMessage],
+        seconds: int,
+        tier: str,
+        api_key: Optional[str] = None,
     ) -> DirectorTurn:
-        """Chat with the user, returning a reply + an evolving Screenplay draft."""
+        """Chat with the user, returning a reply + an evolving Screenplay draft.
+
+        `api_key` is a per-user BYOK override (the caller's own provider key);
+        only key-backed planners (claude) use it — mock/local ignore it."""
 
 
 def _split_seconds(total: int, n: int) -> list[int]:
@@ -121,7 +128,11 @@ class MockScenarioPlanner(ScenarioPlanner):
         )
 
     async def converse(
-        self, messages: List[DirectorMessage], seconds: int, tier: str
+        self,
+        messages: List[DirectorMessage],
+        seconds: int,
+        tier: str,
+        api_key: Optional[str] = None,
     ) -> DirectorTurn:
         # Deterministic stand-in for the Claude director: re-plans from everything
         # the user has said so far, and nudges toward "ready" after a couple of
@@ -281,7 +292,11 @@ class ClaudeScenarioPlanner(ScenarioPlanner):
         return resp.parsed_output
 
     async def converse(
-        self, messages: List[DirectorMessage], seconds: int, tier: str
+        self,
+        messages: List[DirectorMessage],
+        seconds: int,
+        tier: str,
+        api_key: Optional[str] = None,
     ) -> DirectorTurn:
         ko = _is_korean("\n".join(m.content for m in messages))
         try:
@@ -319,7 +334,7 @@ class ClaudeScenarioPlanner(ScenarioPlanner):
         # One structured turn = a chat reply plus the evolving screenplay draft.
         # Same Fable-5 caveat as plan() applies if the director model is fable.
         try:
-            client = anthropic.AsyncAnthropic()
+            client = anthropic.AsyncAnthropic(api_key=api_key) if api_key else anthropic.AsyncAnthropic()
             resp = await client.messages.parse(
                 model=runtime.director_model(),
                 max_tokens=16000,
@@ -401,7 +416,11 @@ class LocalScenarioPlanner(ScenarioPlanner):
         return Screenplay.model_validate_json(content)
 
     async def converse(
-        self, messages: List[DirectorMessage], seconds: int, tier: str
+        self,
+        messages: List[DirectorMessage],
+        seconds: int,
+        tier: str,
+        api_key: Optional[str] = None,
     ) -> DirectorTurn:
         if not messages:
             return DirectorTurn(reply="Tell me the film you'd like to make.", ready=False)

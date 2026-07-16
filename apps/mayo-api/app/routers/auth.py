@@ -55,6 +55,50 @@ async def google_login(req: GoogleLoginRequest) -> SessionResult:
     return SessionResult(token=store.create_session(user["id"]), user=to_public(user))
 
 
+from pydantic import BaseModel, Field  # noqa: E402  (router-local wire types)
+
+_BYOK_PROVIDERS = ("anthropic", "gemini", "higgsfield")
+
+
+class ByokKeysRequest(BaseModel):
+    # Empty string removes the stored key; omitted fields are left unchanged.
+    anthropic: str | None = Field(default=None, max_length=500)
+    gemini: str | None = Field(default=None, max_length=500)
+    higgsfield: str | None = Field(default=None, max_length=500)
+
+
+class ByokStatus(BaseModel):
+    # provider -> masked tail (e.g. "…4gAA"); absent providers have no key.
+    keys: dict[str, str]
+
+
+def _masked(user: dict) -> ByokStatus:
+    stored = user.get("byokKeys", {})
+    return ByokStatus(keys={k: "…" + v[-4:] for k, v in stored.items() if v})
+
+
+def _require_user(token: str | None) -> dict:
+    user = store.user_for_session(token or "")
+    if not user:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="not signed in")
+    return user
+
+
+@router.get("/me/keys", response_model=ByokStatus)
+async def my_keys(x_mayo_session: Optional[str] = Header(default=None)) -> ByokStatus:
+    return _masked(_require_user(x_mayo_session))
+
+
+@router.put("/me/keys", response_model=ByokStatus)
+async def put_keys(
+    req: ByokKeysRequest, x_mayo_session: Optional[str] = Header(default=None)
+) -> ByokStatus:
+    user = _require_user(x_mayo_session)
+    updates = {p: getattr(req, p) for p in _BYOK_PROVIDERS if getattr(req, p) is not None}
+    store.set_byok_keys(user["id"], updates)
+    return _masked(store.users[user["id"]])
+
+
 @router.get("/me", response_model=AuthUser)
 async def me(x_mayo_session: Optional[str] = Header(default=None)) -> AuthUser:
     user = store.user_for_session(x_mayo_session or "")

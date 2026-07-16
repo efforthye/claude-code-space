@@ -137,6 +137,26 @@ class _Store:
         if self.sessions.pop(token, None) is not None:
             self.save()
 
+    # --- BYOK: per-user provider keys (values live only in the gitignored store;
+    # reads are always masked — the full value is never returned to a client) ---
+    def set_byok_keys(self, user_id: str, keys: dict[str, str]) -> bool:
+        user = self.users.get(user_id)
+        if not user:
+            return False
+        stored: dict[str, str] = dict(user.get("byokKeys", {}))
+        for name, value in keys.items():
+            value = value.strip()
+            if value:
+                stored[name] = value
+            else:
+                stored.pop(name, None)  # empty -> remove the key
+        user["byokKeys"] = stored
+        self.save()
+        return True
+
+    def byok_key(self, user: dict | None, provider: str) -> str:
+        return (user or {}).get("byokKeys", {}).get(provider, "")
+
     def set_plan(self, user_id: str, plan_id: str) -> bool:
         user = self.users.get(user_id)
         if not user:

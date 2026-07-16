@@ -89,6 +89,13 @@ export const authLogin = (email: string, password: string) =>
 export const authGoogle = (idToken: string) =>
   req<SessionResult>('/v1/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) });
 export const authMe = () => req<AuthUser>('/v1/auth/me');
+// BYOK — per-account provider keys; reads are masked ("…1234"), writes are raw.
+export const getMyKeys = () => req<{ keys: Record<string, string> }>('/v1/auth/me/keys');
+export const putMyKeys = (keys: { anthropic?: string; gemini?: string; higgsfield?: string }) =>
+  req<{ keys: Record<string, string> }>('/v1/auth/me/keys', {
+    method: 'PUT',
+    body: JSON.stringify(keys),
+  });
 export const authLogout = () => req<void>('/v1/auth/logout', { method: 'POST' });
 
 // --- Catalog ---

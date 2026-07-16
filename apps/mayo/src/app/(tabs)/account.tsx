@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useState } from 'react';
 
 import { TIERS } from '@/api/catalog';
-import { getHealth, getSettings, getStorage, putSettings } from '@/api/client';
+import { getHealth, getMyKeys, getSettings, getStorage, putMyKeys, putSettings } from '@/api/client';
 import type { RuntimeSettings } from '@/api/types';
 import { useAuth } from '@/auth/auth';
 import { Chip } from '@/components/chip';
@@ -17,7 +17,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
 import { usePayments } from '@/payments/context';
-import { useSettings, type ThemeMode } from '@/settings/settings';
+import { useI18n, useSettings, type ThemeMode } from '@/settings/settings';
 import { type Lang } from '@/i18n/translations';
 
 type Row = {
@@ -259,6 +259,7 @@ export default function AccountScreen() {
       <ThemedText type="small" themeColor="textSecondary">
         {t('account.byokHint')}
       </ThemedText>
+      {user ? <ByokKeysCard /> : null}
 
       <ThemedText type="smallBold">{t('account.autoplay')}</ThemedText>
       <View style={styles.row}>
@@ -335,7 +336,94 @@ export default function AccountScreen() {
   );
 }
 
+/** Per-account BYOK provider keys. Values are write-only — the server returns a
+ * masked tail ("…1234"), never the stored key. Saving any key gives BYOK pricing. */
+function ByokKeysCard() {
+  const theme = useTheme();
+  const { t } = useI18n();
+  const { data: status, refetch } = useQuery(getMyKeys);
+  const [anthropic, setAnthropic] = useState('');
+  const [higgsfield, setHiggsfield] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState(false);
+
+  const save = async () => {
+    if (saving || (!anthropic.trim() && !higgsfield.trim())) return;
+    setSaving(true);
+    try {
+      await putMyKeys({
+        ...(anthropic.trim() ? { anthropic: anthropic.trim() } : {}),
+        ...(higgsfield.trim() ? { higgsfield: higgsfield.trim() } : {}),
+      });
+      setAnthropic('');
+      setHiggsfield('');
+      setSavedMsg(true);
+      refetch();
+    } catch {
+      // toast lives above; keep quiet and let the user retry
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const masked = status?.keys ?? {};
+  const field = (
+    value: string,
+    onChange: (v: string) => void,
+    placeholder: string,
+    saved?: string,
+  ) => (
+    <TextInput
+      value={value}
+      onChangeText={onChange}
+      placeholder={saved ? `${placeholder} (${t('account.keySaved')} ${saved})` : placeholder}
+      placeholderTextColor={theme.textSecondary}
+      autoCapitalize="none"
+      autoCorrect={false}
+      secureTextEntry
+      style={[styles.keyInput, { color: theme.text, borderColor: theme.backgroundSelected }]}
+    />
+  );
+
+  return (
+    <ThemedView type="backgroundElement" style={styles.keysCard}>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('account.myKeysHint')}
+      </ThemedText>
+      {field(anthropic, setAnthropic, 'Anthropic (sk-ant-…)', masked.anthropic)}
+      {field(higgsfield, setHiggsfield, 'Higgsfield (id:secret)', masked.higgsfield)}
+      <Pressable
+        onPress={save}
+        disabled={saving || (!anthropic.trim() && !higgsfield.trim())}
+        style={({ pressed }) => [
+          styles.keySave,
+          {
+            backgroundColor: theme.text,
+            opacity: saving || (!anthropic.trim() && !higgsfield.trim()) ? 0.4 : pressed ? 0.8 : 1,
+          },
+        ]}>
+        <ThemedText type="smallBold" style={{ color: theme.background }}>
+          {saving ? t('account.keySaving') : savedMsg ? t('account.keySavedDone') : t('account.keySaveBtn')}
+        </ThemedText>
+      </Pressable>
+    </ThemedView>
+  );
+}
+
 const styles = StyleSheet.create({
+  keysCard: { gap: Spacing.two, padding: Spacing.three, borderRadius: Spacing.four },
+  keyInput: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    fontSize: 14,
+  },
+  keySave: {
+    alignItems: 'center',
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.four,
+  },
   authCard: {
     flexDirection: 'row',
     alignItems: 'center',

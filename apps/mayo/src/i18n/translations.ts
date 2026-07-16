@@ -134,6 +134,13 @@ const en: Dict = {
   'director.moreScenes': '+{n} more scenes',
   'director.generate': 'Generate this film',
   'director.generating': 'Sent to the render queue.',
+  'account.myKeysHint':
+    'Your own provider keys (BYOK): generation runs on your keys and you pay only 10% in credits. Stored only on the server and always shown masked.',
+  'account.keySaved': 'saved',
+  'account.keySaving': 'Saving…',
+  'account.keySavedDone': 'Saved ✓',
+  'account.keySaveBtn': 'Save my keys',
+
   'plan.payWithCard': 'Pay by card (web)',
   'plan.cardUnavailable': 'Card payments are not set up on the server yet.',
 
@@ -434,6 +441,13 @@ const ko: Dict = {
   'director.moreScenes': '+{n}개 씬 더',
   'director.generate': '이 영상 생성하기',
   'director.generating': '렌더 대기열로 보냈어요.',
+  'account.myKeysHint':
+    '내 API 키 (BYOK): 등록하면 생성이 내 키로 돌아가고 크레딧은 10%만 차감돼요. 키는 서버에만 보관되고 항상 마스킹되어 표시돼요.',
+  'account.keySaved': '저장됨',
+  'account.keySaving': '저장 중…',
+  'account.keySavedDone': '저장 완료 ✓',
+  'account.keySaveBtn': '내 키 저장',
+
   'plan.payWithCard': '카드로 결제 (웹)',
   'plan.cardUnavailable': '서버에 카드결제가 아직 설정되지 않았어요.',
 

@@ -18,12 +18,25 @@ async def list_jobs() -> list[Job]:
 
 
 @router.post("/estimate", response_model=Estimate)
-async def estimate(req: CreateJobRequest) -> Estimate:
+async def estimate(
+    req: CreateJobRequest, x_mayo_session: Optional[str] = Header(default=None)
+) -> Estimate:
     tier = catalog.tier_by_id(req.tier)
     if tier is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown tier '{req.tier}'")
     base = catalog.estimate_credits(req.seconds, tier)
-    credits = max(1, round(base * runtime.price_factor()))
+    # BYOK pricing: a signed-in user with any stored provider key pays the BYOK
+    # factor on their own — independent of the global (owner) toggle.
+    from ..auth import store as users
+    from ..runtime import BYOK_PRICE_FACTOR
+
+    caller = users.user_for_session(x_mayo_session or "")
+    factor = (
+        BYOK_PRICE_FACTOR
+        if (caller and caller.get("byokKeys"))
+        else runtime.price_factor()
+    )
+    credits = max(1, round(base * factor))
     return Estimate(seconds=req.seconds, tier=req.tier, credits=credits)
 
 
