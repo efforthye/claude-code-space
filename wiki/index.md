@@ -49,6 +49,9 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[0008-mayo-ai-director-scenario-planner]] — A Claude **scenario planner** in front of generation
   (prompt+length → typed `Screenplay`); selectable director model (Opus 4.8/Sonnet 5/Haiku 4.5);
   mock (default) vs claude backend. Also records the API-authentication (bearer-key) hardening.
+- [[0009-mayo-local-video-generation-comfyui]] — Real **local video generation** on the mini via
+  **ComfyUI + AnimateLCM** behind the `ModelBackend` seam; per-scene clips stitched with ffmpeg,
+  served + played in-app; mock⇄local is an in-app toggle.
 
 ## Incidents
 _(none yet — postmortems)_

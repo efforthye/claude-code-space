@@ -197,6 +197,34 @@ gracefully if the server is down or a small model drifts off-schema. Uses `httpx
 restart. The three director backends — **mock** (free/fake) · **local** (free/real, Ollama) ·
 **claude** (paid/best) — are one config flip apart.
 
+**Real local VIDEO generation ([[0009-mayo-local-video-generation-comfyui]], 2026-07-16).** The
+generation seam ([[0007-mayo-model-provider-abstraction]]) now has a real **local** backend:
+**ComfyUI + AnimateLCM** runs on the mini as a 5th launchd agent
+(`com.efforthye.mayo.comfy`, `scripts/mayo-comfy-run.sh`, 127.0.0.1:8188). `ComfyUIModelBackend`
+renders each scene (workflow file `workflows/animatelcm_t2v.json`, ~6 min/clip on the M1), the worker
+**stitches clips with ffmpeg** into one film, and it's served (`GET /v1/media/{key}`, Range-enabled)
+and **played in-app with expo-video**. Generation mode (mock ⇄ comfy) is an in-app toggle
+(`/v1/settings`, `runtime.py`). Per-scene prompts come from the director's screenplay. Speed levers:
+`MAYO_COMFY_WIDTH/HEIGHT/FRAMES/STEPS`.
+
+**App feature set (shipped 2026-07-16).** Beyond Create/Jobs/Library/Account:
+- **Explore tab** (leftmost) — `GET /v1/explore` feed, like + "make like this" (remix → Create prefill).
+- **Video editor** — `POST /v1/edit` (`compose.py`): pick Library clips, reorder + trim, ffmpeg
+  concat → new film. App modal `edit.tsx`.
+- **Download** — film → `expo-file-system` + share sheet (`expo-sharing`).
+- **Notifications** — local notification on job done/failed (`expo-notifications`, `JobNotifier`).
+- **Live status** — pull-to-refresh (shared `Screen`), Library poll + focus-refetch, Jobs
+  "in progress: N" + status dots; Job **retry** (`POST /v1/jobs/{id}/retry`) and video **delete**
+  (`DELETE /v1/library/videos/{id}`) are real.
+- **Auto-import** — startup scan of ComfyUI output → Library, so any generated clip is viewable.
+- **Per-plan storage quota** — free 300 MB / pro 5 GB / studio 50 GB, metered against real usage.
+- **No mock content** — seed videos/jobs removed; Library/Jobs show only real generated/imported/
+  edited items.
+
+🔜 Planned (requested, not yet built): **BYOK** — users with their own Higgsfield/Claude API key use
+it and pay ~10% (own compute); real external video/image APIs wired per their docs behind the
+`ModelBackend` seam.
+
 **API authentication (2026-07-16).** The repo is public, so the API must not be wide open. All data
 routers (catalog / jobs / library / billing) now require a **shared bearer key**
 (`app/security.py`, `require_api_key`): the client sends `Authorization: Bearer <key>` (also accepts
