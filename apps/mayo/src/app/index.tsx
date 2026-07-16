@@ -79,7 +79,7 @@ export default function CreateScreen() {
           { backgroundColor: theme.text, opacity: pressed ? 0.85 : 1 },
         ]}>
         <ThemedText type="smallBold" style={{ color: theme.background }}>
-          Generate video
+          Generate my film
         </ThemedText>
       </Pressable>
     </Screen>
