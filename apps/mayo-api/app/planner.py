@@ -202,12 +202,13 @@ _SCREENPLAY_JSON_SHAPE = (
 )
 _TURN_JSON_SHAPE = (
     ' Respond with ONLY a JSON object, no markdown, exactly: '
-    '{"reply": string, "ready": boolean, "screenplay": null OR '
+    '{"reply": string, "ready": boolean, "screenplay": '
     '{"title": string, "logline": string, "style": string, "scenes": '
     '[{"index": integer, "heading": string, "prompt": string, "motion": string, '
-    '"seconds": integer}]}}. Put your chat message in "reply" (keep it short). '
-    'Include "screenplay" once you have a concept; use null before then. Set '
-    '"ready" true only when the user approves.'
+    '"seconds": integer}]}}. ALWAYS fill "screenplay" with your best current draft '
+    '(never null once the user has given any idea — even a rough one- or two-scene '
+    'pass is fine), and refine it every turn. Keep "reply" a short chat line (you '
+    'may still ask one question). Set "ready" true only when the user approves.'
 )
 
 
