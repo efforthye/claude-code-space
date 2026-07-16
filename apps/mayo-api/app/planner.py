@@ -192,6 +192,25 @@ _DIRECTOR_CHAT_SYSTEM = (
 )
 
 
+# Local LLMs use lightweight JSON mode (not schema-enforced), so the exact output
+# shape is described in the prompt. Kept compact to keep small models on-track.
+_SCREENPLAY_JSON_SHAPE = (
+    ' Respond with ONLY a JSON object, no markdown, exactly: '
+    '{"title": string, "logline": string, "style": string, "scenes": '
+    '[{"index": integer, "heading": string, "prompt": string, "motion": string, '
+    '"seconds": integer}]}.'
+)
+_TURN_JSON_SHAPE = (
+    ' Respond with ONLY a JSON object, no markdown, exactly: '
+    '{"reply": string, "ready": boolean, "screenplay": null OR '
+    '{"title": string, "logline": string, "style": string, "scenes": '
+    '[{"index": integer, "heading": string, "prompt": string, "motion": string, '
+    '"seconds": integer}]}}. Put your chat message in "reply" (keep it short). '
+    'Include "screenplay" once you have a concept; use null before then. Set '
+    '"ready" true only when the user approves.'
+)
+
+
 class ClaudeScenarioPlanner(ScenarioPlanner):
     """Claude-powered director. Writes the screenplay as structured output.
 
@@ -269,16 +288,18 @@ class LocalScenarioPlanner(ScenarioPlanner):
     """Free director backed by a **local LLM** (Ollama) — no paid API key.
 
     Talks to an Ollama-compatible server (MAYO_LOCAL_LLM_URL, default
-    http://localhost:11434) using its structured-output `format` field, so the
-    model returns a Screenplay / DirectorTurn as JSON. Just pull a model first
-    (e.g. `ollama pull llama3.2:3b`) — great for running the real director flow
-    on the home mini for free. Small models can drift off-schema, so converse()
-    degrades gracefully instead of erroring. See ADR 0008.
+    http://localhost:11434). Uses Ollama's lightweight JSON mode (format="json")
+    rather than full schema-constrained decoding: small models (e.g. llama3.2:3b)
+    are FAR faster in plain JSON mode, so a chat turn returns within the phone's
+    ~60s request timeout. The expected JSON shape is described in the prompt and
+    parsed leniently; if a small model drifts off-shape, converse() degrades
+    gracefully instead of erroring. Pull a model first (`ollama pull llama3.2:3b`).
+    See ADR 0008.
     """
 
     id = "local"
 
-    async def _chat(self, messages: list[dict], schema: dict) -> str:
+    async def _chat(self, messages: list[dict]) -> str:
         import httpx  # lazy — only needed in local mode
 
         url = settings.local_llm_url.rstrip("/") + "/api/chat"
@@ -286,12 +307,14 @@ class LocalScenarioPlanner(ScenarioPlanner):
             "model": settings.local_llm_model,
             "messages": messages,
             "stream": False,
-            "format": schema,  # JSON-schema constrained decoding (Ollama 0.5+)
-            # keep_alive holds the model in RAM between turns so only the FIRST
-            # call pays the cold-load cost (which otherwise trips the phone's 60s
-            # request timeout); num_predict caps runaway generation.
+            # Lightweight JSON mode (valid JSON, not schema-constrained). Grammar-
+            # constraining a nested schema was overrunning the phone's 60s request
+            # timeout on small models; plain JSON mode is much faster.
+            "format": "json",
+            # keep_alive holds the model in RAM between turns; num_predict caps
+            # generation so a turn stays well under the client timeout.
             "keep_alive": "30m",
-            "options": {"temperature": 0.7, "num_predict": 2048},
+            "options": {"temperature": 0.6, "num_predict": 1200},
         }
         async with httpx.AsyncClient(timeout=settings.local_llm_timeout) as client:
             resp = await client.post(url, json=payload)
@@ -303,19 +326,13 @@ class LocalScenarioPlanner(ScenarioPlanner):
         """Best-effort: load the model into memory at startup so the user's first
         chat turn doesn't pay the cold-load latency (and time out on the phone)."""
         with contextlib.suppress(Exception):
-            await self._chat(
-                [{"role": "user", "content": "ok"}],
-                {"type": "object", "properties": {"ok": {"type": "boolean"}}, "required": ["ok"]},
-            )
+            await self._chat([{"role": "user", "content": 'Reply with {"ok":true}'}])
 
     async def plan(self, prompt: str, seconds: int, tier: str) -> Screenplay:
+        system = _DIRECTOR_SYSTEM + _SCREENPLAY_JSON_SHAPE
         user = f"Prompt: {prompt}\nTotal length: {seconds} seconds."
         content = await self._chat(
-            [
-                {"role": "system", "content": _DIRECTOR_SYSTEM},
-                {"role": "user", "content": user},
-            ],
-            Screenplay.model_json_schema(),
+            [{"role": "system", "content": system}, {"role": "user", "content": user}]
         )
         return Screenplay.model_validate_json(content)
 
@@ -324,24 +341,21 @@ class LocalScenarioPlanner(ScenarioPlanner):
     ) -> DirectorTurn:
         if not messages:
             return DirectorTurn(reply="Tell me the film you'd like to make.", ready=False)
-        convo: list[dict] = [
-            {
-                "role": "system",
-                "content": (
-                    _DIRECTOR_CHAT_SYSTEM
-                    + f"\n\nTarget total length: {seconds} seconds. Quality tier: {tier}."
-                ),
-            }
-        ]
+        system = (
+            _DIRECTOR_CHAT_SYSTEM
+            + f"\n\nTarget total length: {seconds} seconds. Quality tier: {tier}."
+            + _TURN_JSON_SHAPE
+        )
+        convo: list[dict] = [{"role": "system", "content": system}]
         convo += [
             {"role": "assistant" if m.role == "director" else "user", "content": m.content}
             for m in messages
         ]
         try:
-            content = await self._chat(convo, DirectorTurn.model_json_schema())
+            content = await self._chat(convo)
             return DirectorTurn.model_validate_json(content)
         except Exception:
-            # Local server unreachable, or a small model returned off-schema JSON.
+            # Server unreachable, timeout, or a small model returned off-shape JSON.
             # Degrade to a plain nudge rather than 500 the whole chat.
             return DirectorTurn(
                 reply=(
