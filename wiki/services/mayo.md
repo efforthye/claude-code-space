@@ -79,6 +79,10 @@ Stacked screens:
 - **Job detail** (`jobs/[id].tsx`) — status, progress bar, a bounded **scene-progress dot map**
   (capped at 48 dots), a status note, and status-specific actions (View in Library when done,
   Retry when failed). Looks up the job via the jobs store; not-found state for missing ids.
+- **Extend retention modal** (`extend.tsx`) — shows the video's current expiry and radio-style
+  retention plans (+7 days / +30 days / keep indefinitely) with per-plan credit cost, from
+  `RETENTION_PLANS` in the mock data. Opened from the detail screen's "extend retention" action.
+  Billing wiring comes later.
 
 **Generate flow (end-to-end, UI-only):** an in-memory **jobs store** (`src/store/jobs.tsx`,
 `JobsProvider` + `useJobs`) seeds from the mock `JOBS` and lets **Create** add a real "queued" job

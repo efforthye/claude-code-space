@@ -73,4 +73,12 @@ export function getVideo(id: string): Video | undefined {
   return VIDEOS.find((v) => v.id === id);
 }
 
+// Retention extension plans (UI-only). days === 0 means keep indefinitely.
+export type RetentionPlan = { id: string; days: number; credits: number };
+export const RETENTION_PLANS: RetentionPlan[] = [
+  { id: 'd7', days: 7, credits: 20 },
+  { id: 'd30', days: 30, credits: 60 },
+  { id: 'forever', days: 0, credits: 200 },
+];
+
 export const STORAGE = { usedLabel: '18.2 GB', totalLabel: '50 GB', usedRatio: 0.36 };

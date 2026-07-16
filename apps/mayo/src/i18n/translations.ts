@@ -83,6 +83,16 @@ const en: Dict = {
   'vis.unlisted': 'Unlisted',
   'vis.public': 'Public',
 
+  'extend.title': 'Extend retention',
+  'extend.subtitle': 'Keep this video past its expiry. Longer retention costs more credits.',
+  'extend.current': 'Currently {label}',
+  'extend.plan7': '+7 days',
+  'extend.plan30': '+30 days',
+  'extend.forever': 'Keep indefinitely',
+  'extend.planCredits': '{n} credits',
+  'extend.confirm': 'Extend',
+  'extend.cancel': 'Cancel',
+
   'account.subtitle': 'Your plan, storage, and generation preferences.',
   'account.plan': 'Current plan',
   'account.planDesc': 'Longer retention · premium models · priority queue',
@@ -181,6 +191,16 @@ const ko: Dict = {
   'vis.private': '비공개',
   'vis.unlisted': '일부 공개',
   'vis.public': '공개',
+
+  'extend.title': '보관 기간 연장',
+  'extend.subtitle': '만료 이후에도 영상을 보관해요. 오래 보관할수록 크레딧이 더 들어요.',
+  'extend.current': '현재 {label}',
+  'extend.plan7': '+7일',
+  'extend.plan30': '+30일',
+  'extend.forever': '무기한 보관',
+  'extend.planCredits': '{n} 크레딧',
+  'extend.confirm': '연장하기',
+  'extend.cancel': '취소',
 
   'account.subtitle': '요금제, 저장공간, 생성 설정.',
   'account.plan': '현재 요금제',

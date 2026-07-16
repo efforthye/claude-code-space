@@ -119,6 +119,7 @@ export default function VideoDetailScreen() {
               label={t('detail.extend')}
               color={theme.text}
               border={theme.backgroundSelected}
+              onPress={() => router.push(`/extend?id=${video.id}`)}
               full
             />
           </ScrollView>
@@ -134,15 +135,18 @@ function SecondaryButton({
   color,
   border,
   full,
+  onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   color: string;
   border: string;
   full?: boolean;
+  onPress?: () => void;
 }) {
   return (
     <Pressable
+      onPress={onPress}
       style={({ pressed }) => [
         styles.secondary,
         { borderColor: border },
