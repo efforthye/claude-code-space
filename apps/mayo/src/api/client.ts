@@ -86,6 +86,13 @@ export function mediaUrl(path: string): string {
   return `${base}${path.includes('?') ? '&' : '?'}s=${encodeURIComponent(session)}`;
 }
 
+/** Poster-frame URL for a stored video's playback path (server generates and
+ * caches the JPEG on first request). Returns null for metadata-only videos. */
+export function thumbUrl(playbackPath?: string | null): string | null {
+  if (!playbackPath || !playbackPath.startsWith('/v1/media/')) return null;
+  return mediaUrl(playbackPath.replace('/v1/media/', '/v1/thumb/'));
+}
+
 // --- Health ---
 export const getHealth = () => req<Health>('/health');
 

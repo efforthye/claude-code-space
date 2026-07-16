@@ -8,13 +8,59 @@ Supports HTTP Range requests — iOS AVPlayer (expo-video) needs 206/Range to pl
 an MP4 over HTTP, otherwise playback fails silently.
 """
 
+import asyncio
 import mimetypes
+import os
+import subprocess
+import tempfile
 
 from fastapi import APIRouter, HTTPException, Request, Response, status
 
 from ..storage import get_storage
 
 router = APIRouter(prefix="/v1/media", tags=["media"])
+# Thumbnails live under their own prefix so the media route stays a pure passthrough.
+thumb_router = APIRouter(prefix="/v1/thumb", tags=["media"])
+
+
+def _extract_frame(video_bytes: bytes) -> bytes | None:
+    """First-frame JPEG via ffmpeg (scaled to 480w); None if extraction fails."""
+    with tempfile.TemporaryDirectory() as td:
+        src = os.path.join(td, "in.mp4")
+        out = os.path.join(td, "thumb.jpg")
+        with open(src, "wb") as fh:
+            fh.write(video_bytes)
+        try:
+            subprocess.run(
+                ["ffmpeg", "-y", "-ss", "0.3", "-i", src,
+                 "-frames:v", "1", "-vf", "scale=480:-2", "-q:v", "4", out],
+                check=True, capture_output=True, timeout=60,
+            )
+            with open(out, "rb") as fh:
+                return fh.read()
+        except Exception:
+            return None
+
+
+@thumb_router.get("/{key:path}")
+async def thumb(key: str) -> Response:
+    """A cached poster frame for any stored video — generated on first request."""
+    if ".." in key or key.startswith("/"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="invalid media key")
+    store = get_storage()
+    cache_key = "thumbs/" + key.replace("/", "_") + ".jpg"
+    if not store.exists(cache_key):
+        if not store.exists(key):
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="media not found")
+        data = await asyncio.to_thread(_extract_frame, store.read(key))
+        if not data:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="no thumbnail")
+        store.save(cache_key, data)
+    return Response(
+        store.read(cache_key),
+        media_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @router.get("/{key:path}")

@@ -89,6 +89,7 @@ app.include_router(edit.router, dependencies=protected)
 app.include_router(jobs.router, dependencies=protected)
 app.include_router(library.router, dependencies=protected)
 app.include_router(media.router, dependencies=protected)
+app.include_router(media.thumb_router, dependencies=protected)
 app.include_router(settings_router.router, dependencies=protected)
 app.include_router(billing.router, dependencies=protected)
 # Stripe webhook: no shared-key guard — the verified signature is its auth.

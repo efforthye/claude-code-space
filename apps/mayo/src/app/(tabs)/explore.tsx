@@ -2,11 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { getExplore, mediaUrl } from '@/api/client';
+import { getExplore, mediaUrl, thumbUrl } from '@/api/client';
 import type { ExploreItem, ExploreSort } from '@/api/types';
 import { Chip } from '@/components/chip';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
@@ -108,7 +108,10 @@ export default function ExploreScreen() {
             />
           ) : (
             <Pressable onPress={() => open(index)}>
-              <View style={[styles.poster, { backgroundColor: item.accent }]}>
+              <View style={[styles.poster, styles.posterClipped, { backgroundColor: item.accent }]}>
+                {thumbUrl(item.url) ? (
+                  <Image source={{ uri: thumbUrl(item.url)! }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                ) : null}
                 <Ionicons name="play" size={40} color="#ffffff" />
                 <View style={styles.durationTag}>
                   <ThemedText type="small" style={styles.durationText}>
@@ -170,6 +173,7 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     borderRadius: Spacing.four,
   },
+  posterClipped: { overflow: 'hidden' },
   poster: {
     width: '100%',
     aspectRatio: 16 / 9,

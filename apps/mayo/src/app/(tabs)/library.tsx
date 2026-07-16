@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { formatBytes, planStorageBytes } from '@/api/catalog';
-import { getStorage, listVideos } from '@/api/client';
+import { getStorage, listVideos, thumbUrl } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
@@ -95,7 +95,10 @@ export default function LibraryScreen() {
           onPress={() => router.push(`/library/${v.id}`)}
           style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
           <ThemedView type="backgroundElement" style={styles.card}>
-            <View style={[styles.thumb, { backgroundColor: v.accent }]}>
+            <View style={[styles.thumb, styles.thumbClip, { backgroundColor: v.accent }]}>
+              {thumbUrl(v.url) ? (
+                <Image source={{ uri: thumbUrl(v.url)! }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+              ) : null}
               <Ionicons name="play" size={20} color="#ffffff" />
             </View>
             <View style={styles.meta}>
@@ -154,6 +157,7 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     borderRadius: Spacing.four,
   },
+  thumbClip: { overflow: 'hidden' },
   thumb: {
     width: 56,
     height: 56,
