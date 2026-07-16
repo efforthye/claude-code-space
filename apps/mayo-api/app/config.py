@@ -71,6 +71,49 @@ class Settings:
     comfy_max_wait: float = field(
         default_factory=lambda: float(os.getenv("MAYO_COMFY_MAX_WAIT", "1800"))
     )
+    # --- External paid providers (used when generation_backend=external, ADR 0010) ---
+    # Image stage — Nano Banana = Google Gemini 2.5 Flash Image (REST). Key names
+    # only in the repo; the value lives in the host env / secret store.
+    gemini_api_key: str = field(
+        default_factory=lambda: os.getenv("GEMINI_API_KEY", os.getenv("GOOGLE_API_KEY", ""))
+    )
+    gemini_api_base: str = field(
+        default_factory=lambda: os.getenv(
+            "MAYO_GEMINI_API_BASE", "https://generativelanguage.googleapis.com/v1beta"
+        )
+    )
+    nano_banana_model: str = field(
+        default_factory=lambda: os.getenv("MAYO_NANO_BANANA_MODEL", "gemini-2.5-flash-image")
+    )
+    external_aspect_ratio: str = field(
+        default_factory=lambda: os.getenv("MAYO_EXTERNAL_ASPECT_RATIO", "16:9")
+    )
+    # Video stage — Higgsfield (official Python SDK; creds via HF_KEY="id:secret").
+    # The exact model id + argument keys are provider-schema-specific, so they are
+    # config-driven ("low-code"): set them to match Higgsfield's docs, no code change.
+    higgsfield_key: str = field(default_factory=lambda: os.getenv("HF_KEY", ""))
+    higgsfield_model: str = field(
+        default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_MODEL", "higgsfield/dop/image-to-video")
+    )
+    # Argument keys in Higgsfield's submit() payload (match your model's schema).
+    higgsfield_prompt_arg: str = field(
+        default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_PROMPT_ARG", "prompt")
+    )
+    higgsfield_image_arg: str = field(
+        default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_IMAGE_ARG", "input_image")
+    )
+    higgsfield_poll_seconds: float = field(
+        default_factory=lambda: float(os.getenv("MAYO_HIGGSFIELD_POLL_SECONDS", "3"))
+    )
+    higgsfield_max_wait: float = field(
+        default_factory=lambda: float(os.getenv("MAYO_HIGGSFIELD_MAX_WAIT", "600"))
+    )
+    # Whether to run the Nano Banana image stage before Higgsfield (image->video).
+    # false -> Higgsfield text-to-video straight from the scene prompt.
+    external_use_image_stage: bool = field(
+        default_factory=lambda: os.getenv("MAYO_EXTERNAL_USE_IMAGE_STAGE", "true").lower()
+        in ("1", "true", "yes")
+    )
     # Scenario planner ("AI director") selector — mock | claude (ADR 0008).
     planner_backend: str = field(
         default_factory=lambda: os.getenv("MAYO_PLANNER_BACKEND", "mock")

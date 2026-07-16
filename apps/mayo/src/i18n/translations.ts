@@ -84,8 +84,11 @@ const en: Dict = {
   'account.generation': 'Generation',
   'account.genFast': 'Fast (preview)',
   'account.genLocal': 'Local AI',
+  'account.genExternal': 'External API',
   'account.genFastHint': 'Instant placeholder clips — good for trying the flow.',
   'account.genLocalHint': 'Real video generated on your home server (slower, a few min per scene).',
+  'account.genExternalHint':
+    'Paid cloud providers — Nano Banana (image) + Higgsfield (video). Needs API keys set on the server.',
   'account.byok': 'Bring your own API key',
   'account.byokOff': 'Off',
   'account.byokOn': 'Use my key (10%)',
@@ -339,8 +342,11 @@ const ko: Dict = {
   'account.generation': '영상 생성 모드',
   'account.genFast': '빠름 (미리보기)',
   'account.genLocal': '로컬 AI',
+  'account.genExternal': '외부 API',
   'account.genFastHint': '즉석 자리표시 클립 — 흐름 테스트용.',
   'account.genLocalHint': '홈서버에서 진짜 영상 생성 (느림, 씬당 몇 분).',
+  'account.genExternalHint':
+    '유료 클라우드 — Nano Banana(이미지) + Higgsfield(영상). 서버에 API 키 설정 필요.',
   'account.byok': '내 API 키 사용 (BYOK)',
   'account.byokOff': '사용 안 함',
   'account.byokOn': '내 키 사용 (10%)',

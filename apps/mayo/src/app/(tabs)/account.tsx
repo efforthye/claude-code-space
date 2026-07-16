@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import { TIERS } from '@/api/catalog';
 import { getHealth, getSettings, getStorage, putSettings } from '@/api/client';
+import type { RuntimeSettings } from '@/api/types';
 import { Chip } from '@/components/chip';
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
@@ -55,10 +56,20 @@ export default function AccountScreen() {
   const [byokOverride, setByokOverride] = useState<boolean | null>(null);
   const genBackend = genOverride ?? genSettings?.generationBackend ?? 'mock';
   const byok = byokOverride ?? genSettings?.byok ?? false;
+  // Always send the full settings object so flipping one control never resets
+  // the others (the director backend/model live in the same runtime settings).
+  const saveSettings = (patch: Partial<RuntimeSettings>) =>
+    putSettings({
+      generationBackend: genBackend,
+      plannerBackend: genSettings?.plannerBackend,
+      directorModel: genSettings?.directorModel,
+      byok,
+      ...patch,
+    });
   const chooseGen = async (backend: string) => {
     setGenOverride(backend);
     try {
-      await putSettings({ generationBackend: backend, byok });
+      await saveSettings({ generationBackend: backend });
     } catch {
       setGenOverride(genSettings?.generationBackend ?? 'mock');
     }
@@ -66,7 +77,7 @@ export default function AccountScreen() {
   const chooseByok = async (value: boolean) => {
     setByokOverride(value);
     try {
-      await putSettings({ generationBackend: genBackend, byok: value });
+      await saveSettings({ byok: value });
     } catch {
       setByokOverride(genSettings?.byok ?? false);
     }
@@ -194,9 +205,18 @@ export default function AccountScreen() {
           selected={genBackend === 'comfy'}
           onPress={() => chooseGen('comfy')}
         />
+        <Chip
+          label={t('account.genExternal')}
+          selected={genBackend === 'external'}
+          onPress={() => chooseGen('external')}
+        />
       </View>
       <ThemedText type="small" themeColor="textSecondary">
-        {genBackend === 'comfy' ? t('account.genLocalHint') : t('account.genFastHint')}
+        {genBackend === 'comfy'
+          ? t('account.genLocalHint')
+          : genBackend === 'external'
+            ? t('account.genExternalHint')
+            : t('account.genFastHint')}
       </ThemedText>
 
       <ThemedText type="smallBold">{t('account.byok')}</ThemedText>

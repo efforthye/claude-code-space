@@ -139,9 +139,14 @@ Endpoints (v1): `POST /v1/jobs` (+ `/estimate`), `GET /v1/jobs[/{id}]`, `DELETE 
 
 **Generation backend seam ([[0007-mayo-model-provider-abstraction]]):** per-scene model calls sit
 behind a `ModelBackend` interface (`app/providers.py`), selected by `MAYO_GENERATION_BACKEND`. The
-`mock` backend (default) advances a scene per tick; `external` is the declared seam for real
-image/video providers (keyed to the model registry + price tiers, media via the storage interface,
-keys from env — names only). Swapping mock → real is a backend change, not a pipeline rewrite. Seams built in from
+`mock` backend (default) advances a scene per tick; `comfy` renders real **local** video on the
+mini ([[0009-mayo-local-video-generation-comfyui]]); and `external` renders via **paid cloud
+providers — Nano Banana (Gemini 2.5 Flash Image) for stills + Higgsfield for video**
+([[0010-mayo-external-generation-providers]], 2026-07-16). All three are runtime-switchable from the
+app (Account → 생성 방식: 빠름 / 로컬 AI / 외부 API). External keys come from the host env
+(`GEMINI_API_KEY`, `HF_KEY`) — names only in the repo; the Higgsfield model id + argument keys are
+config-driven ("low-code") so they adapt to any model without a code change. Swapping backends is a
+backend change, not a pipeline rewrite. Seams built in from
 day one: **storage interface** (local now, S3 stub — [[0004-mayo-storage-local-then-s3]]), a
 **pluggable model registry** (image/video providers keyed to price tiers), and **env-driven
 config/secrets** (values at runtime, names-only in `.env.example`). Tested with `pytest`

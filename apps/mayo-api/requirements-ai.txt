@@ -3,3 +3,7 @@
 #   pip install -r requirements-ai.txt
 -r requirements.txt
 anthropic>=0.69
+# External paid generation (MAYO_GENERATION_BACKEND=external, ADR 0010):
+#   Nano Banana (Gemini) uses plain REST via httpx (already a dep) — no SDK.
+#   Higgsfield uses its official Python SDK.
+higgsfield-client

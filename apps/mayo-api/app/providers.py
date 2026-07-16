@@ -5,10 +5,11 @@ The pipeline renders a film scene-by-scene: for each scene it generates an image
 and the clips are stitched into the final cut. Those model calls sit behind a
 `ModelBackend` so the orchestration/job code never hard-codes a provider.
 
-Phase 1 ships a `MockModelBackend` (a timed no-op that drives the app's live
-progress). `ExternalModelBackend` is the declared seam for real providers — it
-reads provider keys from the environment (names only in .env.example) and is not
-wired yet. Select via MAYO_GENERATION_BACKEND (mock | external).
+Backends: `MockModelBackend` (timed no-op driving live progress),
+`ComfyUIModelBackend` (real **local** video, ADR 0009), and `ExternalModelBackend`
+(real **paid** providers — Nano Banana image + Higgsfield video, ADR 0010). All
+provider keys come from the environment (names only in .env.example), never the
+repo. Select via MAYO_GENERATION_BACKEND (mock | comfy | external).
 
 This mirrors the storage interface (ADR 0004) and the model registry in
 catalog.py: adding a real provider is a backend swap, not a rewrite.
@@ -50,21 +51,118 @@ class MockModelBackend(ModelBackend):
         return SceneResult(media_key=f"mock/{index:04d}.mp4")
 
 
-class ExternalModelBackend(ModelBackend):
-    """Seam for real image + video providers (keyed to price tiers in catalog.py).
+async def nano_banana_image(prompt: str) -> tuple[bytes, str]:
+    """Generate one still with **Nano Banana** (Google Gemini 2.5 Flash Image) via
+    the REST `generateContent` endpoint. Returns (image_bytes, mime_type).
 
-    A live implementation: pick the provider(s) for the job's tier, call the
-    image model then the video model with the scene prompt, upload the clip via
-    the storage interface, and return its key. Keys come from env
-    (MAYO_PROVIDER_* — names only in .env.example), never from the repo.
+    Docs: https://ai.google.dev/gemini-api/docs/image-generation. Auth is the
+    `x-goog-api-key` header; the value comes from the host env (GEMINI_API_KEY),
+    never the repo. See ADR 0010.
+    """
+    import base64
+
+    import httpx
+
+    key = settings.gemini_api_key
+    if not key:
+        raise RuntimeError("Nano Banana needs GEMINI_API_KEY set on the host")
+    url = f"{settings.gemini_api_base.rstrip('/')}/models/{settings.nano_banana_model}:generateContent"
+    body = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "responseModalities": ["Image"],
+            "imageConfig": {"aspectRatio": settings.external_aspect_ratio},
+        },
+    }
+    async with httpx.AsyncClient(timeout=120) as client:
+        resp = await client.post(
+            url, json=body, headers={"x-goog-api-key": key, "Content-Type": "application/json"}
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    # candidates[0].content.parts[].inlineData.data (base64). Accept snake_case too.
+    for cand in data.get("candidates", []):
+        for part in cand.get("content", {}).get("parts", []):
+            inline = part.get("inlineData") or part.get("inline_data")
+            if inline and inline.get("data"):
+                mime = inline.get("mimeType") or inline.get("mime_type") or "image/png"
+                return base64.b64decode(inline["data"]), mime
+    raise RuntimeError("Nano Banana returned no image data")
+
+
+def _higgsfield_video_sync(prompt: str, image_bytes: bytes | None) -> str:  # pragma: no cover
+    """Submit a Higgsfield job (official Python SDK) and return the finished
+    media URL. Synchronous (the SDK is sync) — called via asyncio.to_thread.
+
+    The model id + argument keys are config-driven (MAYO_HIGGSFIELD_*) so they
+    match whatever Higgsfield model you point at without code changes. Creds come
+    from HF_KEY on the host. See ADR 0010.
+    """
+    import base64
+    import time as _time
+
+    try:
+        import higgsfield_client
+    except ImportError as exc:
+        raise RuntimeError(
+            "Higgsfield needs the `higgsfield-client` package on the host "
+            "(`pip install higgsfield-client`) and HF_KEY set"
+        ) from exc
+    if not settings.higgsfield_key:
+        raise RuntimeError('Higgsfield needs HF_KEY="<id>:<secret>" set on the host')
+
+    arguments: dict = {settings.higgsfield_prompt_arg: prompt}
+    if image_bytes is not None:
+        arguments[settings.higgsfield_image_arg] = (
+            "data:image/png;base64," + base64.b64encode(image_bytes).decode()
+        )
+    job = higgsfield_client.submit(settings.higgsfield_model, arguments=arguments)
+
+    deadline = _time.monotonic() + settings.higgsfield_max_wait
+    while _time.monotonic() < deadline:
+        status = getattr(job, "status", lambda: job)()
+        state = str(getattr(status, "status", status)).lower()
+        if "complet" in state or "success" in state:
+            result = getattr(job, "result", lambda: status)()
+            media = result.get("videos") or result.get("images") or []
+            if media and media[0].get("url"):
+                return media[0]["url"]
+            raise RuntimeError("Higgsfield completed but returned no media URL")
+        if "fail" in state or "nsfw" in state or "cancel" in state:
+            raise RuntimeError(f"Higgsfield job ended: {state}")
+        _time.sleep(settings.higgsfield_poll_seconds)
+    raise RuntimeError("Higgsfield job timed out")
+
+
+class ExternalModelBackend(ModelBackend):
+    """Real paid image + video providers (ADR 0010), selected by tier in catalog.py.
+
+    Per scene: optionally generate a still with **Nano Banana** (Gemini 2.5 Flash
+    Image), then animate it into a clip with **Higgsfield**; store the clip via the
+    storage interface and return its key. All provider keys come from the host env
+    (names only in .env.example), never the repo. Set MAYO_GENERATION_BACKEND=external.
     """
 
     id = "external"
 
     async def generate_scene(self, prompt: str, index: int) -> SceneResult:  # pragma: no cover
-        raise NotImplementedError(
-            "real model providers not wired yet — set MAYO_GENERATION_BACKEND=mock"
-        )
+        import httpx
+
+        from .storage import get_storage
+
+        image_bytes: bytes | None = None
+        if settings.external_use_image_stage:
+            image_bytes, _mime = await nano_banana_image(prompt)
+
+        url = await asyncio.to_thread(_higgsfield_video_sync, prompt, image_bytes)
+        async with httpx.AsyncClient(timeout=settings.higgsfield_max_wait) as client:
+            clip = await client.get(url)
+            clip.raise_for_status()
+            content = clip.content
+
+        key = f"clips/{index:04d}-external.mp4"
+        get_storage().save(key, content)
+        return SceneResult(media_key=key)
 
 
 class ComfyUIModelBackend(ModelBackend):

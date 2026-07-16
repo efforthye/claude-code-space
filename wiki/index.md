@@ -52,6 +52,9 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[0009-mayo-local-video-generation-comfyui]] — Real **local video generation** on the mini via
   **ComfyUI + AnimateLCM** behind the `ModelBackend` seam; per-scene clips stitched with ffmpeg,
   served + played in-app; mock⇄local is an in-app toggle.
+- [[0010-mayo-external-generation-providers]] — Real **paid cloud generation** — Nano Banana (Gemini
+  2.5 Flash Image) stills + Higgsfield video — behind the same seam; config-driven ("low-code")
+  provider schema; keys from host env; app-selectable (Account → 외부 API).
 
 ## Incidents
 _(none yet — postmortems)_
