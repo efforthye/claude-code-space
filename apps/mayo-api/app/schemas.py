@@ -48,6 +48,13 @@ class ModelProvider(BaseModel):
     blurb: str
 
 
+class DirectorModel(BaseModel):
+    id: str  # a Claude model id, e.g. "claude-opus-4-8"
+    name: str
+    tier: str  # references a Tier.id
+    blurb: str
+
+
 class Job(BaseModel):
     id: str
     title: str

@@ -26,6 +26,9 @@ class Settings:
     allowed_origins: list[str] = field(
         default_factory=lambda: _split(os.getenv("MAYO_ALLOWED_ORIGINS", "*"))
     )
+    # Shared API key required on /v1/* (value at runtime; never committed).
+    # Unset -> auth is a no-op (dev); set it whenever the API is publicly reachable.
+    api_key: str = field(default_factory=lambda: os.getenv("MAYO_API_KEY", ""))
     # Mock generation cadence — seconds between scene-progress ticks.
     tick_seconds: float = field(
         default_factory=lambda: float(os.getenv("MAYO_TICK_SECONDS", "1.0"))
@@ -33,6 +36,14 @@ class Settings:
     # Generation backend selector — mock (built-in) | external (real providers).
     generation_backend: str = field(
         default_factory=lambda: os.getenv("MAYO_GENERATION_BACKEND", "mock")
+    )
+    # Scenario planner ("AI director") selector — mock | claude (ADR 0008).
+    planner_backend: str = field(
+        default_factory=lambda: os.getenv("MAYO_PLANNER_BACKEND", "mock")
+    )
+    # Director LLM used when planner_backend=claude (an id from catalog.DIRECTOR_MODELS).
+    director_model: str = field(
+        default_factory=lambda: os.getenv("MAYO_DIRECTOR_MODEL", "claude-opus-4-8")
     )
 
     @property

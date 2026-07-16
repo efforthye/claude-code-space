@@ -23,6 +23,12 @@ def test_catalog_tiers_and_models():
     assert any(m["kind"] == "image" for m in models)
 
 
+def test_catalog_directors():
+    directors = client.get("/v1/catalog/directors").json()
+    assert any(d["id"] == "claude-opus-4-8" for d in directors)
+    assert all({"id", "name", "tier", "blurb"} <= set(d) for d in directors)
+
+
 def test_estimate():
     r = client.post("/v1/jobs/estimate", json={"prompt": "x", "seconds": 60, "tier": "standard"})
     assert r.status_code == 200

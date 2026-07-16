@@ -1,0 +1,5 @@
+# Optional deps for real AI backends (not needed in mock mode).
+# Install when enabling MAYO_PLANNER_BACKEND=claude (the AI director, ADR 0008):
+#   pip install -r requirements-ai.txt
+-r requirements.txt
+anthropic>=0.69

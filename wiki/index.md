@@ -3,7 +3,7 @@ title: Index
 type: index
 tags: [meta]
 created: 2026-07-15
-updated: 2026-07-15
+updated: 2026-07-16
 ---
 
 # Index — Service Registry & Catalog
@@ -46,6 +46,9 @@ Updated whenever pages are added/renamed or a service's status changes.
   Redis-backed workers + a DB when generation becomes real / needs durability.
 - [[0007-mayo-model-provider-abstraction]] — Model calls behind a `ModelBackend` seam (mock now,
   external providers later); swapping in real image/video models is a backend change, not a rewrite.
+- [[0008-mayo-ai-director-scenario-planner]] — A Claude **scenario planner** in front of generation
+  (prompt+length → typed `Screenplay`); selectable director model (Opus 4.8/Sonnet 5/Haiku 4.5);
+  mock (default) vs claude backend. Also records the API-authentication (bearer-key) hardening.
 
 ## Incidents
 _(none yet — postmortems)_

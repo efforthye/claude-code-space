@@ -4,7 +4,7 @@ type: service
 status: building
 tags: [service, mayo, ai-video, expo, web, platform]
 created: 2026-07-15
-updated: 2026-07-15
+updated: 2026-07-16
 ---
 
 # Mayo
@@ -161,6 +161,30 @@ detail read `GET /v1/library/...`; extend/publish `POST` to the API. Catalog (ti
 is fetched with a bundled fallback so forms render offline; screens show loading/error/retry states.
 `app.json` allows cleartext HTTP (ATS) for dev builds hitting the mini over `http://`.
 
+**AI director — scenario planner ([[0008-mayo-ai-director-scenario-planner]], 2026-07-16).** The
+quality-defining step — a strong LLM that writes the screenplay before any pixels — is designed in
+and pluggable now. A `ScenarioPlanner` seam (`app/planner.py`) turns *prompt + length* into a typed
+**`Screenplay`** (title, logline, style, ordered `Scene`s each with a generation prompt, motion, and
+duration), which then feeds the per-scene `ModelBackend`. Two backends chosen by
+`MAYO_PLANNER_BACKEND`: **`mock`** (default, deterministic, offline — pipeline runs today) and
+**`claude`** (Anthropic SDK `messages.parse` → `Screenplay` as structured output, adaptive thinking;
+`anthropic` dep is optional/lazy in `requirements-ai.txt`). The **director model is user-selectable**
+— `catalog.DIRECTOR_MODELS` (served at `GET /v1/catalog/directors`) lists Claude tiers Opus 4.8
+(premium) / Sonnet 5 (standard) / Haiku 4.5 (draft), picked via `MAYO_DIRECTOR_MODEL`
+(default `claude-opus-4-8`). Not yet wired into `worker.py` — folding plan → per-scene generate is
+the next backend step (documented follow-up in the ADR). API keys are **names-only** in the repo
+(`ANTHROPIC_API_KEY` in the host env).
+
+**API authentication (2026-07-16).** The repo is public, so the API must not be wide open. All data
+routers (catalog / jobs / library / billing) now require a **shared bearer key**
+(`app/security.py`, `require_api_key`): the client sends `Authorization: Bearer <key>` (also accepts
+`X-API-Key`), compared with `secrets.compare_digest` against `MAYO_API_KEY`. `/health` stays open
+(so the app's connectivity check works). CORS `allow_credentials` is disabled when origins are `*`.
+The key is a **secret — never committed**: set `MAYO_API_KEY` on the mini (e.g. `openssl rand -hex
+32`) and paste the same value into the app (**Account → API key**, stored via Settings/AsyncStorage,
+sent by `src/api/client.ts`). **If `MAYO_API_KEY` is unset the API runs open** (dev fallback) and
+startup logs a warning — so locking down production is: set the key on the mini + paste it in the app.
+
 ## Architecture sketch (draft — not locked)
 - **Clients:** Expo app + mayo.im web (share a backend API). Web could reuse the RN codebase via
   React Native Web, or be a separate frontend — open decision.
@@ -207,10 +231,14 @@ payment-provider key. **Record names/locations only**, values go in a secret sto
 - **Resolved:** host — the [[home-server]] M1 mini (the operator's "MacBook" = same machine).
 - **Resolved:** backend stack — FastAPI orchestration API ([[0005-mayo-backend-fastapi]]).
 - **Resolved:** job queue — in-process asyncio first, Redis workers later ([[0006-mayo-job-queue-inprocess-then-redis]]).
+- **Resolved:** generation-model abstraction — `ModelBackend` seam ([[0007-mayo-model-provider-abstraction]]).
+- **Resolved:** scenario/director step — Claude scenario-planner seam, selectable director model
+  ([[0008-mayo-ai-director-scenario-planner]]). Still open: wiring the planner into the worker.
 
 ## Related
 - Client decision: [[0003-expo-react-native-for-mobile-app]]
 - Backend: [[0005-mayo-backend-fastapi]] · Queue: [[0006-mayo-job-queue-inprocess-then-redis]] ·
-  Storage: [[0004-mayo-storage-local-then-s3]]
+  Storage: [[0004-mayo-storage-local-then-s3]] · Generation seam: [[0007-mayo-model-provider-abstraction]] ·
+  AI director: [[0008-mayo-ai-director-scenario-planner]]
 - Dev loop: [[expo-dev-loop]] · Deploy API: [[deploy-mayo-api]] · Host: [[home-server]] · CI: [[jenkins]]
 - Related app in repo: [[richclub]] (existing FastAPI + front — reference for stack)

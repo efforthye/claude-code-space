@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { DEFAULT_API_KEY, setApiKey } from '@/api/api-key';
 import { DEFAULT_API_BASE_URL, setApiBaseUrl } from '@/api/base-url';
 import { translate, type ActiveLang, type Lang } from '@/i18n/translations';
 
@@ -21,6 +22,8 @@ type SettingsValue = {
   setDefaultTier: (id: string) => void;
   apiUrl: string;
   setApiUrl: (url: string) => void;
+  apiKey: string;
+  setApiKey: (key: string) => void;
   t: TFn;
 };
 
@@ -44,6 +47,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>('system');
   const [defaultTierId, setDefaultTierState] = useState<string>(DEFAULT_TIER);
   const [apiUrl, setApiUrlState] = useState<string>(DEFAULT_API_BASE_URL);
+  const [apiKey, setApiKeyState] = useState<string>(DEFAULT_API_KEY);
 
   useEffect(() => {
     let active = true;
@@ -56,6 +60,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             lang?: Lang;
             defaultTierId?: string;
             apiUrl?: string;
+            apiKey?: string;
           };
           if (parsed.themeMode) setThemeModeState(parsed.themeMode);
           if (parsed.lang) setLangState(parsed.lang);
@@ -63,6 +68,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           if (parsed.apiUrl) {
             setApiUrlState(parsed.apiUrl);
             setApiBaseUrl(parsed.apiUrl); // apply to the API client on launch
+          }
+          if (parsed.apiKey) {
+            setApiKeyState(parsed.apiKey);
+            setApiKey(parsed.apiKey); // apply to the API client on launch
           }
         } catch {
           // ignore malformed settings
@@ -79,8 +88,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     lang?: Lang;
     defaultTierId?: string;
     apiUrl?: string;
+    apiKey?: string;
   }) => {
-    const data = { themeMode, lang, defaultTierId, apiUrl, ...next };
+    const data = { themeMode, lang, defaultTierId, apiUrl, apiKey, ...next };
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => {});
   };
 
@@ -101,6 +111,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setApiBaseUrl(url); // apply immediately so the next request uses it
     persist({ apiUrl: url });
   };
+  const setApiKeyValue = (key: string) => {
+    setApiKeyState(key);
+    setApiKey(key); // apply immediately so the next request is authenticated
+    persist({ apiKey: key });
+  };
 
   const scheme: Scheme = themeMode === 'system' ? (system === 'dark' ? 'dark' : 'light') : themeMode;
   const activeLang: ActiveLang = lang === 'system' ? deviceLang() : lang;
@@ -117,6 +132,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setDefaultTier,
     apiUrl,
     setApiUrl,
+    apiKey,
+    setApiKey: setApiKeyValue,
     t,
   };
 

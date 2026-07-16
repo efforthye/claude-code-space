@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from .. import catalog
-from ..schemas import Duration, ModelProvider, Plan, RetentionPlan, Tier
+from ..schemas import DirectorModel, Duration, ModelProvider, Plan, RetentionPlan, Tier
 
 router = APIRouter(prefix="/v1/catalog", tags=["catalog"])
 
@@ -29,3 +29,8 @@ async def retention_plans() -> list[RetentionPlan]:
 @router.get("/models", response_model=list[ModelProvider])
 async def models() -> list[ModelProvider]:
     return catalog.MODELS
+
+
+@router.get("/directors", response_model=list[DirectorModel])
+async def directors() -> list[DirectorModel]:
+    return catalog.DIRECTOR_MODELS

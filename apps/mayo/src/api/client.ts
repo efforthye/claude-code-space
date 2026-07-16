@@ -5,6 +5,7 @@
 // owns :8000). Note: over plain HTTP the phone must reach that host (home LAN or
 // a forwarded port / tunnel); prefer HTTPS in production.
 
+import { getApiKey } from './api-key';
 import { getApiBaseUrl } from './base-url';
 import type {
   CreateJobRequest,
@@ -33,11 +34,16 @@ export class ApiError extends Error {
 }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  const key = getApiKey();
   let res: Response;
   try {
     res = await fetch(`${getApiBaseUrl()}${path}`, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(key ? { Authorization: `Bearer ${key}` } : {}),
+        ...(init?.headers ?? {}),
+      },
     });
   } catch (e) {
     throw new ApiError(0, e instanceof Error ? e.message : 'network error');

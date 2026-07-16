@@ -26,8 +26,19 @@ type Row = {
 export default function AccountScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { t, themeMode, setThemeMode, lang, setLang, defaultTierId, setDefaultTier, apiUrl, setApiUrl } =
-    useSettings();
+  const {
+    t,
+    themeMode,
+    setThemeMode,
+    lang,
+    setLang,
+    defaultTierId,
+    setDefaultTier,
+    apiUrl,
+    setApiUrl,
+    apiKey,
+    setApiKey,
+  } = useSettings();
   const { data: storage } = useQuery(getStorage);
   const { data: health, error: healthError } = useQuery(getHealth, {
     pollMs: 10000,
@@ -93,6 +104,16 @@ export default function AccountScreen() {
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
+          style={[styles.serverInput, { color: theme.text, borderColor: theme.backgroundSelected }]}
+        />
+        <TextInput
+          value={apiKey}
+          onChangeText={setApiKey}
+          placeholder={t('account.apiKey')}
+          placeholderTextColor={theme.textSecondary}
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry
           style={[styles.serverInput, { color: theme.text, borderColor: theme.backgroundSelected }]}
         />
         <ThemedText type="small" themeColor="textSecondary">
