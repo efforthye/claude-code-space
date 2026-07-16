@@ -1,0 +1,144 @@
+// Lightweight i18n: string tables + a translate() with {param} interpolation.
+
+export type Lang = 'system' | 'en' | 'ko';
+export type ActiveLang = 'en' | 'ko';
+
+type Dict = Record<string, string>;
+
+const en: Dict = {
+  'tab.create': 'Create',
+  'tab.jobs': 'Jobs',
+  'tab.library': 'Library',
+  'tab.account': 'Account',
+
+  'create.subtitle': 'Describe it once — AI writes the script and directs the whole film.',
+  'create.prompt': 'Prompt',
+  'create.promptPlaceholder': 'A cinematic short about a lighthouse keeper who discovers…',
+  'create.length': 'Length',
+  'create.custom': 'Custom',
+  'create.customHint': 'Any length — from 10 seconds to several hours.',
+  'create.customPlaceholder': 'e.g. 45',
+  'create.unitSec': 'sec',
+  'create.unitMin': 'min',
+  'create.quality': 'Quality & model',
+  'create.estimate': 'Estimated cost',
+  'create.credits': '{n} credits',
+  'create.estimateMeta': '{duration} · {tier} · exports the full film + every clip',
+  'create.generate': 'Generate my film',
+
+  'tier.draft.blurb': 'Fastest, cheapest models — good for rough cuts.',
+  'tier.standard.blurb': 'Balanced quality and cost.',
+  'tier.premium.blurb': 'Best image + video models — film-grade output.',
+
+  'jobs.subtitle': 'Generation runs scene by scene. Watch progress, then grab it from your Library.',
+  'jobs.completed': 'Completed — ready in Library',
+  'jobs.scenes': '{done}/{total} scenes',
+  'jobs.eta': ' · ~{n} min left',
+  'status.queued': 'Queued',
+  'status.generating': 'Generating',
+  'status.done': 'Done',
+  'status.failed': 'Failed',
+
+  'library.subtitle': 'Finished videos are kept for a limited time. Download or extend before they expire.',
+  'library.storage': 'Storage',
+  'library.expiresIn': 'Expires in {n} days',
+  'library.expiresInOne': 'Expires in 1 day',
+  'library.expired': 'Expired',
+
+  'account.subtitle': 'Your plan, storage, and generation preferences.',
+  'account.plan': 'Current plan',
+  'account.planDesc': 'Longer retention · premium models · priority queue',
+  'account.storage': 'Storage',
+  'account.storageHint': 'Extend retention to keep videos beyond the default window.',
+  'account.defaultModel': 'Default model',
+  'account.retention': 'Retention',
+  'account.retentionValue': '14 days',
+  'account.billing': 'Billing',
+  'account.billingValue': 'Manage',
+  'account.preferences': 'Preferences',
+  'account.appearance': 'Appearance',
+  'account.language': 'Language',
+  'theme.system': 'System',
+  'theme.light': 'Light',
+  'theme.dark': 'Dark',
+  'lang.system': 'System',
+  'lang.en': 'English',
+  'lang.ko': '한국어',
+};
+
+const ko: Dict = {
+  'tab.create': '만들기',
+  'tab.jobs': '작업',
+  'tab.library': '보관함',
+  'tab.account': '계정',
+
+  'create.subtitle': '한 번만 설명하면 — AI가 시나리오를 쓰고 전체 영상을 연출해요.',
+  'create.prompt': '프롬프트',
+  'create.promptPlaceholder': '등대지기가 무언가를 발견하는 시네마틱 단편…',
+  'create.length': '길이',
+  'create.custom': '직접 입력',
+  'create.customHint': '10초부터 수 시간까지 — 원하는 길이로.',
+  'create.customPlaceholder': '예: 45',
+  'create.unitSec': '초',
+  'create.unitMin': '분',
+  'create.quality': '품질 & 모델',
+  'create.estimate': '예상 비용',
+  'create.credits': '{n} 크레딧',
+  'create.estimateMeta': '{duration} · {tier} · 전체 영상 + 모든 클립 내보내기',
+  'create.generate': '영상 생성',
+
+  'tier.draft.blurb': '가장 빠르고 저렴한 모델 — 러프컷에 좋아요.',
+  'tier.standard.blurb': '품질과 비용의 균형.',
+  'tier.premium.blurb': '최고 이미지 + 영상 모델 — 영화급 결과물.',
+
+  'jobs.subtitle': '장면별로 생성돼요. 진행 상황을 보고, 완성되면 보관함에서 받으세요.',
+  'jobs.completed': '완료 — 보관함에서 확인',
+  'jobs.scenes': '{done}/{total} 장면',
+  'jobs.eta': ' · 약 {n}분 남음',
+  'status.queued': '대기 중',
+  'status.generating': '생성 중',
+  'status.done': '완료',
+  'status.failed': '실패',
+
+  'library.subtitle': '완성된 영상은 일정 기간만 보관돼요. 만료 전에 다운로드하거나 기간을 연장하세요.',
+  'library.storage': '저장공간',
+  'library.expiresIn': '{n}일 후 만료',
+  'library.expiresInOne': '1일 후 만료',
+  'library.expired': '만료됨',
+
+  'account.subtitle': '요금제, 저장공간, 생성 설정.',
+  'account.plan': '현재 요금제',
+  'account.planDesc': '긴 보관 기간 · 프리미엄 모델 · 우선 처리',
+  'account.storage': '저장공간',
+  'account.storageHint': '기간을 연장해 기본 보관 기간 이후에도 영상을 보관하세요.',
+  'account.defaultModel': '기본 모델',
+  'account.retention': '보관 기간',
+  'account.retentionValue': '14일',
+  'account.billing': '결제',
+  'account.billingValue': '관리',
+  'account.preferences': '환경설정',
+  'account.appearance': '화면 모드',
+  'account.language': '언어',
+  'theme.system': '시스템',
+  'theme.light': '라이트',
+  'theme.dark': '다크',
+  'lang.system': '시스템',
+  'lang.en': 'English',
+  'lang.ko': '한국어',
+};
+
+export const TRANSLATIONS: Record<ActiveLang, Dict> = { en, ko };
+
+export function translate(
+  lang: ActiveLang,
+  key: string,
+  params?: Record<string, string | number>,
+): string {
+  let s = TRANSLATIONS[lang][key] ?? en[key] ?? key;
+  if (params) {
+    for (const k of Object.keys(params)) {
+      s = s.split(`{${k}}`).join(String(params[k]));
+    }
+  }
+  return s;
+}

@@ -21,10 +21,14 @@ while true; do
     after="$(git rev-parse HEAD)"
     if [ "$before" != "$after" ]; then
       echo "[$(date '+%H:%M:%S')] pulled ${before:0:7} -> ${after:0:7}"
-      # Reinstall app deps only when the manifest changed (JS edits don't need it).
+      # Reinstall app deps when the manifest changed, then restart the expo agent
+      # so new native/JS modules are picked up (JS-only edits don't need this).
       if git diff --name-only "$before" "$after" | grep -q '^apps/mayo/package'; then
-        echo "  package manifest changed -> npm install (apps/mayo); restart expo after."
+        echo "  package manifest changed -> npm install (apps/mayo)"
         (cd apps/mayo && npm install --no-audit --no-fund) || true
+        if launchctl kickstart -k "gui/$(id -u)/com.efforthye.mayo.expo" 2>/dev/null; then
+          echo "  restarted mayo expo agent (new deps)"
+        fi
       fi
     fi
   else

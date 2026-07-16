@@ -7,17 +7,24 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useI18n } from '@/settings/settings';
 import { STORAGE, VIDEOS } from '@/mocks/data';
 
 export default function LibraryScreen() {
   const theme = useTheme();
+  const { t } = useI18n();
+
+  const retentionLabel = (days: number) => {
+    if (days <= 0) return t('library.expired');
+    if (days === 1) return t('library.expiresInOne');
+    return t('library.expiresIn', { n: days });
+  };
+
   return (
-    <Screen
-      title="Library"
-      subtitle="Finished videos are kept for a limited time. Download or extend before they expire.">
+    <Screen title={t('tab.library')} subtitle={t('library.subtitle')}>
       <ThemedView type="backgroundElement" style={styles.storage}>
         <View style={styles.headerRow}>
-          <ThemedText type="smallBold">Storage</ThemedText>
+          <ThemedText type="smallBold">{t('library.storage')}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             {STORAGE.usedLabel} / {STORAGE.totalLabel}
           </ThemedText>
@@ -38,9 +45,7 @@ export default function LibraryScreen() {
               {v.durationLabel} · {v.sizeLabel}
             </ThemedText>
             <ThemedText type="small" themeColor={v.expiresInDays <= 3 ? 'text' : 'textSecondary'}>
-              {v.expiresInDays <= 0
-                ? 'Expired'
-                : `Expires in ${v.expiresInDays} day${v.expiresInDays === 1 ? '' : 's'}`}
+              {retentionLabel(v.expiresInDays)}
             </ThemedText>
           </View>
           <View style={styles.actions}>

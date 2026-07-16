@@ -59,7 +59,13 @@ Four tabs built with mock data:
 - **Jobs** (`jobs.tsx`) — per-job scene progress bars + status (queued/generating/done/failed).
 - **Library** (`library.tsx`) — finished videos, size, **retention "expires in N days"**, download;
   storage-usage bar (ties to [[0004-mayo-storage-local-then-s3]]).
-- **Account** (`account.tsx`) — plan, storage, retention extension, model prefs.
+- **Account** (`account.tsx`) — plan, storage, retention extension, model prefs, **Appearance
+  (System/Light/Dark)** and **Language (System/English/한국어)** pickers.
+
+**Theming & i18n:** app-wide **Settings** context (`src/settings/settings.tsx`) holds theme mode +
+language, **persisted via AsyncStorage**. `useTheme()` resolves colors from the chosen scheme
+(falls back to OS); `useI18n().t(key)` resolves strings from `src/i18n/translations.ts` (en/ko,
+`{param}` interpolation). Length presets extended to 10 sec … 1 hr+ with a Custom sec/min input.
 
 **Run it (on a Mac with the repo cloned):**
 ```bash

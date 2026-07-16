@@ -8,12 +8,14 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useI18n } from '@/settings/settings';
 import { DURATIONS, TIERS, estimateCredits, formatDuration } from '@/mocks/data';
 
 type Unit = 'sec' | 'min';
 
 export default function CreateScreen() {
   const theme = useTheme();
+  const { t } = useI18n();
   const router = useRouter();
   const [prompt, setPrompt] = useState('');
   const [seconds, setSeconds] = useState(60);
@@ -22,7 +24,7 @@ export default function CreateScreen() {
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState<Unit>('min');
 
-  const tier = useMemo(() => TIERS.find((t) => t.id === tierId) ?? TIERS[0], [tierId]);
+  const tier = useMemo(() => TIERS.find((x) => x.id === tierId) ?? TIERS[0], [tierId]);
   const credits = estimateCredits(seconds, tier);
 
   const applyCustom = (raw: string, unit: Unit) => {
@@ -36,22 +38,20 @@ export default function CreateScreen() {
   };
 
   return (
-    <Screen
-      title="Create"
-      subtitle="Describe it once — AI writes the script and directs the whole film.">
+    <Screen title={t('tab.create')} subtitle={t('create.subtitle')}>
       <ThemedView type="backgroundElement" style={styles.card}>
-        <ThemedText type="smallBold">Prompt</ThemedText>
+        <ThemedText type="smallBold">{t('create.prompt')}</ThemedText>
         <TextInput
           value={prompt}
           onChangeText={setPrompt}
-          placeholder="A cinematic short about a lighthouse keeper who discovers…"
+          placeholder={t('create.promptPlaceholder')}
           placeholderTextColor={theme.textSecondary}
           multiline
           style={[styles.input, { color: theme.text }]}
         />
       </ThemedView>
 
-      <ThemedText type="smallBold">Length</ThemedText>
+      <ThemedText type="smallBold">{t('create.length')}</ThemedText>
       <View style={styles.row}>
         {DURATIONS.map((d) => (
           <Chip
@@ -64,7 +64,7 @@ export default function CreateScreen() {
             }}
           />
         ))}
-        <Chip label="Custom" selected={customMode} onPress={() => setCustomMode(true)} />
+        <Chip label={t('create.custom')} selected={customMode} onPress={() => setCustomMode(true)} />
       </View>
 
       {customMode ? (
@@ -73,37 +73,45 @@ export default function CreateScreen() {
             <TextInput
               value={customValue}
               onChangeText={(v) => applyCustom(v, customUnit)}
-              placeholder="e.g. 45"
+              placeholder={t('create.customPlaceholder')}
               placeholderTextColor={theme.textSecondary}
               keyboardType="numeric"
               style={[styles.customInput, { color: theme.text, borderColor: theme.backgroundSelected }]}
             />
-            <Chip label="sec" selected={customUnit === 'sec'} onPress={() => applyCustom(customValue, 'sec')} />
-            <Chip label="min" selected={customUnit === 'min'} onPress={() => applyCustom(customValue, 'min')} />
+            <Chip
+              label={t('create.unitSec')}
+              selected={customUnit === 'sec'}
+              onPress={() => applyCustom(customValue, 'sec')}
+            />
+            <Chip
+              label={t('create.unitMin')}
+              selected={customUnit === 'min'}
+              onPress={() => applyCustom(customValue, 'min')}
+            />
           </View>
           <ThemedText type="small" themeColor="textSecondary">
-            Any length — from 10 seconds to several hours.
+            {t('create.customHint')}
           </ThemedText>
         </ThemedView>
       ) : null}
 
-      <ThemedText type="smallBold">Quality &amp; model</ThemedText>
+      <ThemedText type="smallBold">{t('create.quality')}</ThemedText>
       <View style={styles.row}>
-        {TIERS.map((t) => (
-          <Chip key={t.id} label={t.label} selected={t.id === tierId} onPress={() => setTierId(t.id)} />
+        {TIERS.map((x) => (
+          <Chip key={x.id} label={x.label} selected={x.id === tierId} onPress={() => setTierId(x.id)} />
         ))}
       </View>
       <ThemedText type="small" themeColor="textSecondary">
-        {tier.blurb}
+        {t(`tier.${tier.id}.blurb`)}
       </ThemedText>
 
       <ThemedView type="backgroundElement" style={styles.estimate}>
         <ThemedText type="small" themeColor="textSecondary">
-          Estimated cost
+          {t('create.estimate')}
         </ThemedText>
-        <ThemedText type="subtitle">{credits} credits</ThemedText>
+        <ThemedText type="subtitle">{t('create.credits', { n: credits })}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          {formatDuration(seconds)} · {tier.label} · exports the full film + every clip
+          {t('create.estimateMeta', { duration: formatDuration(seconds), tier: tier.label })}
         </ThemedText>
       </ThemedView>
 
@@ -114,7 +122,7 @@ export default function CreateScreen() {
           { backgroundColor: theme.text, opacity: pressed ? 0.85 : 1 },
         ]}>
         <ThemedText type="smallBold" style={{ color: theme.background }}>
-          Generate my film
+          {t('create.generate')}
         </ThemedText>
       </Pressable>
     </Screen>

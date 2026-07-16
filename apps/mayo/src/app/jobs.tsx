@@ -5,13 +5,13 @@ import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { JOBS, jobStatusLabel } from '@/mocks/data';
+import { useI18n } from '@/settings/settings';
+import { JOBS } from '@/mocks/data';
 
 export default function JobsScreen() {
+  const { t } = useI18n();
   return (
-    <Screen
-      title="Jobs"
-      subtitle="Generation runs scene by scene. Watch progress, then grab it from your Library.">
+    <Screen title={t('tab.jobs')} subtitle={t('jobs.subtitle')}>
       {JOBS.map((job) => {
         const progress = job.scenesTotal ? job.scenesDone / job.scenesTotal : 0;
         const done = job.status === 'done';
@@ -22,14 +22,15 @@ export default function JobsScreen() {
                 {job.title}
               </ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                {jobStatusLabel(job.status)}
+                {t(`status.${job.status}`)}
               </ThemedText>
             </View>
             <ProgressBar value={done ? 1 : progress} />
             <ThemedText type="small" themeColor="textSecondary">
               {done
-                ? 'Completed — ready in Library'
-                : `${job.scenesDone}/${job.scenesTotal} scenes${job.etaMin ? ` · ~${job.etaMin} min left` : ''}`}
+                ? t('jobs.completed')
+                : t('jobs.scenes', { done: job.scenesDone, total: job.scenesTotal }) +
+                  (job.etaMin ? t('jobs.eta', { n: job.etaMin }) : '')}
             </ThemedText>
           </ThemedView>
         );
