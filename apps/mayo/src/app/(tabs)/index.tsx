@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { estimateCredits, formatDuration, useCatalog } from '@/api/catalog';
-import { createJob } from '@/api/client';
+import { createJob, getSettings } from '@/api/client';
+import { useQuery } from '@/hooks/use-query';
 import { Chip } from '@/components/chip';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
@@ -38,7 +39,9 @@ export default function CreateScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const tier = useMemo(() => tiers.find((x) => x.id === tierId) ?? tiers[0], [tiers, tierId]);
-  const credits = estimateCredits(seconds, tier);
+  const { data: genSettings } = useQuery(getSettings);
+  const priceFactor = genSettings?.byok ? 0.1 : 1;
+  const credits = Math.max(1, Math.round(estimateCredits(seconds, tier) * priceFactor));
 
   const generate = async () => {
     if (submitting) return;

@@ -77,6 +77,10 @@ const en: Dict = {
   'account.genLocal': 'Local AI',
   'account.genFastHint': 'Instant placeholder clips — good for trying the flow.',
   'account.genLocalHint': 'Real video generated on your home server (slower, a few min per scene).',
+  'account.byok': 'Bring your own API key',
+  'account.byokOff': 'Off',
+  'account.byokOn': 'Use my key (10%)',
+  'account.byokHint': 'Run on your own Higgsfield/Claude API key and pay ~10% of the price. (Key wiring per provider is being connected.)',
 
   'director.title': 'AI Director',
   'director.greeting':
@@ -302,6 +306,10 @@ const ko: Dict = {
   'account.genLocal': '로컬 AI',
   'account.genFastHint': '즉석 자리표시 클립 — 흐름 테스트용.',
   'account.genLocalHint': '홈서버에서 진짜 영상 생성 (느림, 씬당 몇 분).',
+  'account.byok': '내 API 키 사용 (BYOK)',
+  'account.byokOff': '사용 안 함',
+  'account.byokOn': '내 키 사용 (10%)',
+  'account.byokHint': '내 Higgsfield/Claude API 키로 돌리고 요금은 약 10%만 냅니다. (제공사별 키 연결 작업 진행 중)',
 
   'director.title': 'AI 감독',
   'director.greeting':

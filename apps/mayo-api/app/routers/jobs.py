@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from .. import catalog
+from .. import catalog, runtime
 from ..schemas import CreateJobRequest, Estimate, Job
 from ..store import jobs as job_store
 from ..worker import start_generation
@@ -18,7 +18,9 @@ async def estimate(req: CreateJobRequest) -> Estimate:
     tier = catalog.tier_by_id(req.tier)
     if tier is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown tier '{req.tier}'")
-    return Estimate(seconds=req.seconds, tier=req.tier, credits=catalog.estimate_credits(req.seconds, tier))
+    base = catalog.estimate_credits(req.seconds, tier)
+    credits = max(1, round(base * runtime.price_factor()))
+    return Estimate(seconds=req.seconds, tier=req.tier, credits=credits)
 
 
 @router.post("", response_model=Job, status_code=status.HTTP_201_CREATED)

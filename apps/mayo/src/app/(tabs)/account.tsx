@@ -48,14 +48,23 @@ export default function AccountScreen() {
   });
   const { data: genSettings } = useQuery(getSettings, { deps: [apiUrl] });
   const [genOverride, setGenOverride] = useState<string | null>(null);
+  const [byokOverride, setByokOverride] = useState<boolean | null>(null);
   const genBackend = genOverride ?? genSettings?.generationBackend ?? 'mock';
+  const byok = byokOverride ?? genSettings?.byok ?? false;
   const chooseGen = async (backend: string) => {
     setGenOverride(backend);
     try {
-      await putSettings({ generationBackend: backend });
+      await putSettings({ generationBackend: backend, byok });
     } catch {
-      // revert on failure
       setGenOverride(genSettings?.generationBackend ?? 'mock');
+    }
+  };
+  const chooseByok = async (value: boolean) => {
+    setByokOverride(value);
+    try {
+      await putSettings({ generationBackend: genBackend, byok: value });
+    } catch {
+      setByokOverride(genSettings?.byok ?? false);
     }
   };
   const { entitlement } = usePayments();
@@ -184,6 +193,15 @@ export default function AccountScreen() {
       </View>
       <ThemedText type="small" themeColor="textSecondary">
         {genBackend === 'comfy' ? t('account.genLocalHint') : t('account.genFastHint')}
+      </ThemedText>
+
+      <ThemedText type="smallBold">{t('account.byok')}</ThemedText>
+      <View style={styles.row}>
+        <Chip label={t('account.byokOff')} selected={!byok} onPress={() => chooseByok(false)} />
+        <Chip label={t('account.byokOn')} selected={byok} onPress={() => chooseByok(true)} />
+      </View>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('account.byokHint')}
       </ThemedText>
 
       <ThemedView type="backgroundElement" style={styles.card}>

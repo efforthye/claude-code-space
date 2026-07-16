@@ -53,7 +53,7 @@ export type CreateJobRequest = {
   tier: string;
   scenePrompts?: string[];
 };
-export type RuntimeSettings = { generationBackend: string };
+export type RuntimeSettings = { generationBackend: string; byok?: boolean };
 
 export type EditClip = { videoId: string; start?: number; end?: number };
 export type EditRequest = { title: string; clips: EditClip[] };
