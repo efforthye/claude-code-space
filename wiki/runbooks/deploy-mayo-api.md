@@ -26,8 +26,14 @@ Override with `MAYO_PORT`.
 The `mayo-autostart-install.sh` installer now manages **three** agents: the Expo dev server,
 `dev-autopull`, and **`com.efforthye.mayo.api`** (runs `scripts/mayo-api-run.sh` → uvicorn on 8001).
 `mayo-api-run.sh` self-bootstraps a Python venv and installs deps (refreshing when
-`requirements.txt` changes), so there's no manual `pip` step. Requires **Python 3.11** on the mini
-(`brew install python@3.11` if missing).
+`requirements.txt` changes), so there's no manual `pip` step.
+
+> **Python 3.14 gotcha (resolved):** the mini's Homebrew `python3` is **3.14**. Dependency floors
+> in `requirements.txt` are set to versions that ship **cp314 wheels** (pydantic ≥ 2.11, plain
+> `uvicorn` without the native `[standard]` extras) so nothing compiles from source. The runner
+> also exports `PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1` as a fallback if any native dep ever builds
+> from source on a newer interpreter. Symptom if this regresses: `mayo-api.log` shows
+> `Failed building wheel for pydantic-core` / `maturin failed`, and `localhost:8001/health` is empty.
 
 ```bash
 # on the mini, in the repo:

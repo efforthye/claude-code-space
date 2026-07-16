@@ -1,3 +1,8 @@
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
-pydantic==2.10.4
+# Floors chosen so prebuilt wheels exist on modern Pythons INCLUDING 3.14
+# (the home server's Homebrew python3 is 3.14). Older pydantic pins had no
+# cp314 wheel and tried to compile pydantic-core from source, which failed.
+# Plain uvicorn (no [standard]) avoids uvloop/httptools/watchfiles native
+# builds that would fail on 3.14 the same way — it's pure-Python and fine here.
+fastapi>=0.115,<1.0
+uvicorn>=0.34,<1.0
+pydantic>=2.11,<3.0

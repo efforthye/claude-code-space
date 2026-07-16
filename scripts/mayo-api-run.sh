@@ -19,13 +19,21 @@ cd "$API"
 
 log() { echo "[mayo-api-run $(date '+%H:%M:%S')] $*"; }
 
-# Prefer Python 3.11 (built + tested against); fall back to python3.
-PY="$(command -v python3.11 || command -v python3 || true)"
+# Prefer a Python with broad wheel availability; fall back through to python3
+# (which on this host is Homebrew 3.14). Deps are pinned to versions that have
+# 3.14 wheels, so 3.14 is fine — this just prefers a more-settled interpreter if
+# one is installed.
+PY="$(command -v python3.12 || command -v python3.13 || command -v python3.11 || command -v python3 || true)"
 if [ -z "$PY" ]; then
   log "ERROR: no python3 found on PATH ($PATH)"
   exit 127
 fi
 log "python: $("$PY" --version 2>&1) ($PY)"
+
+# Safety net: if any native dep (e.g. pydantic-core) has no wheel for this
+# Python and falls back to a source build, let PyO3 build against a newer
+# interpreter using the stable ABI instead of erroring on the version check.
+export PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 
 VENV="$API/.venv"
 VPY="$VENV/bin/python"
