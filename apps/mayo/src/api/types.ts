@@ -40,5 +40,18 @@ export type Estimate = { seconds: number; tier: string; credits: number };
 export type Health = { status: string; env: string; storage: string };
 
 export type CreateJobRequest = { prompt: string; seconds: number; tier: string };
+
+// --- Conversational director (mirrors app/planner.py) ---
+export type Scene = {
+  index: number;
+  heading: string;
+  prompt: string;
+  motion: string;
+  seconds: number;
+};
+export type Screenplay = { title: string; logline: string; style: string; scenes: Scene[] };
+export type DirectorMessage = { role: 'user' | 'director'; content: string };
+export type DirectorChatRequest = { messages: DirectorMessage[]; seconds: number; tier: string };
+export type DirectorTurn = { reply: string; screenplay?: Screenplay | null; ready: boolean };
 export type PublishRequest = { title: string; description?: string; visibility: Visibility };
 export type PublishResult = { accepted: boolean; videoId: string; visibility: Visibility };

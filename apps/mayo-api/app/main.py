@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import __version__
 from .config import settings
-from .routers import billing, catalog, health, jobs, library
+from .routers import billing, catalog, director, health, jobs, library
 from .security import require_api_key
 from .worker import shutdown
 
@@ -48,6 +48,7 @@ app.add_middleware(
 protected = [Depends(require_api_key)]
 app.include_router(health.router)
 app.include_router(catalog.router, dependencies=protected)
+app.include_router(director.router, dependencies=protected)
 app.include_router(jobs.router, dependencies=protected)
 app.include_router(library.router, dependencies=protected)
 app.include_router(billing.router, dependencies=protected)

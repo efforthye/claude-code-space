@@ -14,6 +14,7 @@ const en: Dict = {
   'common.error': "Couldn't reach the server.",
   'common.retry': 'Retry',
   'common.empty': 'Nothing here yet.',
+  'common.close': 'Close',
 
   'create.subtitle': 'Describe it once — AI writes the script and directs the whole film.',
   'create.prompt': 'Prompt',
@@ -39,6 +40,23 @@ const en: Dict = {
   'create.example.3.short': 'Product teaser',
   'create.example.4': 'A neon-noir city chase at night, rain-soaked streets, synthwave mood.',
   'create.example.4.short': 'Neon chase',
+
+  'create.director': 'Make it with the AI director',
+  'create.directorHint': 'Chat to shape the scenario, then generate.',
+
+  'director.title': 'AI Director',
+  'director.greeting':
+    "Hi — I'll direct your film. Tell me the idea: a theme, a mood, characters, anything. I'll draft it scene by scene and we'll shape it together.",
+  'director.inputPlaceholder': 'Describe your film…',
+  'director.send': 'Send',
+  'director.thinking': 'Director is thinking…',
+  'director.error': "I couldn't reach the studio — try again in a moment.",
+  'director.draft': 'Screenplay draft',
+  'director.ready': 'Ready',
+  'director.sceneCount': '{n} scenes · {sec}s total',
+  'director.moreScenes': '+{n} more scenes',
+  'director.generate': 'Generate this film',
+  'director.generating': 'Sent to the render queue.',
 
   'tier.draft.blurb': 'Fastest, cheapest models — good for rough cuts.',
   'tier.standard.blurb': 'Balanced quality and cost.',
@@ -174,6 +192,7 @@ const ko: Dict = {
   'common.error': '서버에 연결하지 못했어요.',
   'common.retry': '다시 시도',
   'common.empty': '아직 아무것도 없어요.',
+  'common.close': '닫기',
 
   'create.subtitle': '한 번만 설명하면 — AI가 시나리오를 쓰고 전체 영상을 연출해요.',
   'create.prompt': '프롬프트',
@@ -199,6 +218,23 @@ const ko: Dict = {
   'create.example.3.short': '제품 티저',
   'create.example.4': '비 내리는 밤거리의 네온 누아르 도심 추격, 신스웨이브 분위기.',
   'create.example.4.short': '네온 추격',
+
+  'create.director': 'AI 감독과 대화하며 만들기',
+  'create.directorHint': '대화로 시나리오를 잡은 뒤 생성하세요.',
+
+  'director.title': 'AI 감독',
+  'director.greeting':
+    '안녕하세요 — 제가 영상을 연출해 드릴게요. 만들고 싶은 걸 편하게 말씀해 주세요. 주제, 분위기, 등장인물 무엇이든요. 씬 단위로 초안을 잡아 함께 다듬어 가요.',
+  'director.inputPlaceholder': '만들고 싶은 영상을 말해 주세요…',
+  'director.send': '보내기',
+  'director.thinking': '감독이 구상 중…',
+  'director.error': '스튜디오에 연결하지 못했어요 — 잠시 후 다시 시도해 주세요.',
+  'director.draft': '각본 초안',
+  'director.ready': '준비 완료',
+  'director.sceneCount': '씬 {n}개 · 총 {sec}초',
+  'director.moreScenes': '+{n}개 씬 더',
+  'director.generate': '이 영상 생성하기',
+  'director.generating': '렌더 대기열로 보냈어요.',
 
   'tier.draft.blurb': '가장 빠르고 저렴한 모델 — 러프컷에 좋아요.',
   'tier.standard.blurb': '품질과 비용의 균형.',

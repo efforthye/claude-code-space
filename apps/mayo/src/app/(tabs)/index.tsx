@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
@@ -70,6 +71,26 @@ export default function CreateScreen() {
           style={[styles.input, { color: theme.text }]}
         />
       </ThemedView>
+
+      <Pressable
+        onPress={() =>
+          router.push({
+            pathname: '/director',
+            params: { seconds: String(seconds), tier: tier.id },
+          })
+        }
+        style={({ pressed }) => (pressed ? styles.directorPressed : undefined)}>
+        <ThemedView type="backgroundElement" style={styles.director}>
+          <Ionicons name="film-outline" size={20} color={theme.text} />
+          <View style={styles.flex}>
+            <ThemedText type="smallBold">{t('create.director')}</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('create.directorHint')}
+            </ThemedText>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+        </ThemedView>
+      </Pressable>
 
       <ThemedText type="small" themeColor="textSecondary">
         {t('create.examples')}
@@ -169,6 +190,19 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     padding: Spacing.three,
     borderRadius: Spacing.four,
+  },
+  director: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    padding: Spacing.three,
+    borderRadius: Spacing.four,
+  },
+  directorPressed: {
+    opacity: 0.6,
+  },
+  flex: {
+    flex: 1,
   },
   input: {
     minHeight: 96,

@@ -45,6 +45,13 @@ Two implementations, chosen by `MAYO_PLANNER_BACKEND`:
 This mirrors the storage seam ([[0004-mayo-storage-local-then-s3]]) and the model-provider seam
 (0007): swapping mock → Claude is a config flip, not a rewrite.
 
+**Conversational mode (added 2026-07-16).** Beyond one-shot `plan()`, the planner also exposes
+`converse(messages, seconds, tier) -> DirectorTurn` (a chat `reply` + an evolving `Screenplay` draft
++ a `ready` flag), served at `POST /v1/director/chat`. The mock backend makes it work offline; the
+Claude backend returns the whole turn as one `messages.parse` structured output. The app drives it
+from a chat modal (`apps/mayo/src/app/director.tsx`) and generates a job from the approved draft.
+This is the same seam — the "director" is just used interactively as well as one-shot.
+
 ## Consequences
 - ✅ The quality-defining "director" step is designed in and pluggable now; enabling it is a key +
   one env var.

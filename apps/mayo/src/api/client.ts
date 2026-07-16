@@ -9,6 +9,8 @@ import { getApiKey } from './api-key';
 import { getApiBaseUrl } from './base-url';
 import type {
   CreateJobRequest,
+  DirectorChatRequest,
+  DirectorTurn,
   Duration,
   Estimate,
   Health,
@@ -81,6 +83,10 @@ export const createJob = (body: CreateJobRequest) =>
   req<Job>('/v1/jobs', { method: 'POST', body: JSON.stringify(body) });
 export const deleteJob = (id: string) =>
   req<void>(`/v1/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' });
+
+// --- Director (conversational scenario flow) ---
+export const directorChat = (body: DirectorChatRequest) =>
+  req<DirectorTurn>('/v1/director/chat', { method: 'POST', body: JSON.stringify(body) });
 
 // --- Library ---
 export const listVideos = () => req<Video[]>('/v1/library/videos');

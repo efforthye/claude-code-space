@@ -175,6 +175,18 @@ duration), which then feeds the per-scene `ModelBackend`. Two backends chosen by
 the next backend step (documented follow-up in the ADR). API keys are **names-only** in the repo
 (`ANTHROPIC_API_KEY` in the host env).
 
+**Conversational director — chat flow (2026-07-16).** On top of the one-shot planner, the director
+is now **conversational**: `POST /v1/director/chat` takes the whole conversation + length/tier and
+returns a `DirectorTurn` (a chat `reply`, an evolving `Screenplay` draft, and a `ready` flag). Same
+seam — `MockScenarioPlanner.converse` runs offline today (re-plans from the dialogue, flips to
+`ready` on approval words EN/KO or after a few turns); `ClaudeScenarioPlanner.converse` uses
+`messages.parse` → `DirectorTurn` structured output so Claude replies in the user's language while
+drafting the screenplay. App side: a **chat modal** (`src/app/director.tsx`, opened from Create's
+"AI 감독과 대화하며 만들기" card) shows message bubbles, a live screenplay-draft card (title/logline/
+scene list), and a **Generate this film** button that creates a job from the approved draft. Types
+mirror the server in `src/api/types.ts`. Tested: director `pytest` (converse + endpoint), app tsc +
+export clean.
+
 **API authentication (2026-07-16).** The repo is public, so the API must not be wide open. All data
 routers (catalog / jobs / library / billing) now require a **shared bearer key**
 (`app/security.py`, `require_api_key`): the client sends `Authorization: Bearer <key>` (also accepts
