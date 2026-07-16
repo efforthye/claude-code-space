@@ -3,7 +3,15 @@ import * as Google from 'expo-auth-session/providers/google';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
@@ -38,10 +46,7 @@ export default function LoginScreen() {
       : { clientId: 'unconfigured.apps.googleusercontent.com' },
   );
 
-  useEffect(() => {
-    if (response?.type !== 'success') return;
-    const idToken = (response.params as { id_token?: string }).id_token;
-    if (!idToken) return;
+  const adoptIdToken = (idToken: string) => {
     setBusy(true);
     signInWithGoogle(idToken)
       .then(() => {
@@ -50,8 +55,47 @@ export default function LoginScreen() {
       })
       .catch(() => toast.show(t('auth.googleFailed')))
       .finally(() => setBusy(false));
+  };
+
+  useEffect(() => {
+    if (response?.type !== 'success') return;
+    const idToken = (response.params as { id_token?: string }).id_token;
+    if (idToken) adoptIdToken(idToken);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
+
+  // WEB: use Google Identity Services (Google's own button + credential
+  // callback) — the expo-auth-session popup flow is unreliable in browsers
+  // (the popup re-loads the app and the opener never gets the token).
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !GOOGLE_CLIENT_ID) return;
+    const g = globalThis as unknown as {
+      document: any;
+      google?: { accounts: { id: { initialize: (o: object) => void; renderButton: (el: unknown, o: object) => void } } };
+    };
+    const init = () => {
+      const gsi = g.google?.accounts.id;
+      const el = g.document.getElementById('gsi-btn');
+      if (!gsi || !el) return;
+      gsi.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (resp: { credential?: string }) => {
+          if (resp?.credential) adoptIdToken(resp.credential);
+        },
+      });
+      gsi.renderButton(el, { theme: 'outline', size: 'large', width: 280, text: 'continue_with' });
+    };
+    if (g.google?.accounts?.id) {
+      init();
+      return;
+    }
+    const script = g.document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.onload = init;
+    g.document.head.appendChild(script);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const submit = async () => {
     if (busy || !email.trim() || !password) return;
@@ -138,7 +182,10 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
-          {GOOGLE_CLIENT_ID ? (
+          {GOOGLE_CLIENT_ID && Platform.OS === 'web' ? (
+            // Google renders its own button in here (GIS) — see the web effect.
+            <View nativeID="gsi-btn" style={styles.gsi} />
+          ) : GOOGLE_CLIENT_ID ? (
             <Pressable
               onPress={() => promptAsync()}
               disabled={!request || busy}
@@ -207,5 +254,6 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.five,
     borderWidth: 1,
   },
+  gsi: { alignItems: 'center', minHeight: 44 },
   switch: { textAlign: 'center', textDecorationLine: 'underline', paddingVertical: Spacing.two },
 });
