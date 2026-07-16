@@ -31,3 +31,4 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-07-15] setup | mayo autostart: scripts/mayo-autostart-install.sh installs launchd agents (expo --tunnel + dev-autopull) that survive Termius close and reboot; runbook updated
 ## [2026-07-15] incident | launchd auto-pull failed "Operation not permitted" (exit 126) — repo was under ~/Desktop (macOS TCC blocks background agents). Fix: move repo out of Desktop. Runbook updated.
 ## [2026-07-16] setup | mayo autostart COMPLETE — moved repo out of ~/Desktop to ~/programs/... (TCC fix); both launchd agents (expo --tunnel + autopull) now run with PIDs. Full hands-off dev loop: push -> mini auto-pulls -> phone Fast-Refresh.
+## [2026-07-16] setup | Live-reload loop PROVEN end-to-end (cloud edit -> push -> mini autopull -> phone Fast-Refresh). Documented reboot nuance: enable-autologin.sh must run BEFORE a reboot (gui-domain agents need a GUI session; SSH alone cannot revive them).

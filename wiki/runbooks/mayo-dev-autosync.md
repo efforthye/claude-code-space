@@ -92,6 +92,17 @@ Caveats:
   auto-pull agent.)
 - LaunchAgents start at **login**. For start-at-boot with no one logged in, enable **automatic
   login** on the mini (`scripts/enable-autologin.sh`, or System Settings → Users & Groups).
+
+### After a reboot (important nuance)
+The agents run only while the user has an **active GUI (Aqua) session**. A reboot ends it, and
+**SSH does not create one** — so a gui-domain agent can't be revived over SSH alone. Therefore:
+- **Enable auto-login BEFORE you reboot** (not after):
+  `cd ~/programs/work/creiip/claude-code-space && ./scripts/enable-autologin.sh`
+  Then every future reboot auto-logs-in → the agents restart → mayo is back with zero touch.
+- **If you already rebooted without it** and the dev server is down: SSH in, run
+  `enable-autologin.sh`, then `sudo reboot` once more — after that boot it auto-recovers.
+- Current setup (this session) works because a GUI session is already active; it survives Termius
+  close but NOT a reboot until auto-login is on.
 - The dev server runs **headless** (no interactive QR) — use the `exp://…` URL from the log
   (it's stable; bookmark it in Expo Go once).
 - `git pull` uses cached git credentials; if pulls fail for the private repo under launchd, check
