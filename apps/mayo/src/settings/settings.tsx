@@ -24,6 +24,10 @@ type SettingsValue = {
   setApiUrl: (url: string) => void;
   apiKey: string;
   setApiKey: (key: string) => void;
+  exploreAutoplay: boolean;
+  setExploreAutoplay: (v: boolean) => void;
+  notifyOnDone: boolean;
+  setNotifyOnDone: (v: boolean) => void;
   t: TFn;
 };
 
@@ -48,6 +52,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [defaultTierId, setDefaultTierState] = useState<string>(DEFAULT_TIER);
   const [apiUrl, setApiUrlState] = useState<string>(DEFAULT_API_BASE_URL);
   const [apiKey, setApiKeyState] = useState<string>(DEFAULT_API_KEY);
+  const [exploreAutoplay, setExploreAutoplayState] = useState<boolean>(false);
+  const [notifyOnDone, setNotifyOnDoneState] = useState<boolean>(true);
 
   useEffect(() => {
     let active = true;
@@ -61,10 +67,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             defaultTierId?: string;
             apiUrl?: string;
             apiKey?: string;
+            exploreAutoplay?: boolean;
+            notifyOnDone?: boolean;
           };
           if (parsed.themeMode) setThemeModeState(parsed.themeMode);
           if (parsed.lang) setLangState(parsed.lang);
           if (parsed.defaultTierId) setDefaultTierState(parsed.defaultTierId);
+          if (typeof parsed.exploreAutoplay === 'boolean')
+            setExploreAutoplayState(parsed.exploreAutoplay);
+          if (typeof parsed.notifyOnDone === 'boolean') setNotifyOnDoneState(parsed.notifyOnDone);
           if (parsed.apiUrl) {
             setApiUrlState(parsed.apiUrl);
             setApiBaseUrl(parsed.apiUrl); // apply to the API client on launch
@@ -89,8 +100,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     defaultTierId?: string;
     apiUrl?: string;
     apiKey?: string;
+    exploreAutoplay?: boolean;
+    notifyOnDone?: boolean;
   }) => {
-    const data = { themeMode, lang, defaultTierId, apiUrl, apiKey, ...next };
+    const data = {
+      themeMode,
+      lang,
+      defaultTierId,
+      apiUrl,
+      apiKey,
+      exploreAutoplay,
+      notifyOnDone,
+      ...next,
+    };
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => {});
   };
 
@@ -116,6 +138,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setApiKey(key); // apply immediately so the next request is authenticated
     persist({ apiKey: key });
   };
+  const setExploreAutoplay = (v: boolean) => {
+    setExploreAutoplayState(v);
+    persist({ exploreAutoplay: v });
+  };
+  const setNotifyOnDone = (v: boolean) => {
+    setNotifyOnDoneState(v);
+    persist({ notifyOnDone: v });
+  };
 
   const scheme: Scheme = themeMode === 'system' ? (system === 'dark' ? 'dark' : 'light') : themeMode;
   const activeLang: ActiveLang = lang === 'system' ? deviceLang() : lang;
@@ -134,6 +164,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setApiUrl,
     apiKey,
     setApiKey: setApiKeyValue,
+    exploreAutoplay,
+    setExploreAutoplay,
+    notifyOnDone,
+    setNotifyOnDone,
     t,
   };
 

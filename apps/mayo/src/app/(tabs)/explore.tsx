@@ -1,8 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { getApiKey } from '@/api/api-key';
+import { getApiBaseUrl } from '@/api/base-url';
 import { getExplore } from '@/api/client';
 import type { ExploreItem, ExploreSort } from '@/api/types';
 import { Chip } from '@/components/chip';
@@ -14,7 +17,44 @@ import { Spacing } from '@/constants/theme';
 import { useFavorites } from '@/explore/favorites';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
-import { useI18n } from '@/settings/settings';
+import { useI18n, useSettings } from '@/settings/settings';
+
+function AutoPreview({
+  uri,
+  duration,
+  onPress,
+}: {
+  uri: string;
+  duration: string;
+  onPress: () => void;
+}) {
+  const key = getApiKey();
+  const player = useVideoPlayer(
+    { uri, headers: key ? { Authorization: `Bearer ${key}` } : undefined },
+    (p) => {
+      p.muted = true;
+      p.loop = true;
+      p.play();
+    },
+  );
+  return (
+    <Pressable onPress={onPress}>
+      <View style={styles.posterClip}>
+        <VideoView
+          player={player}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          nativeControls={false}
+        />
+        <View style={styles.durationTag}>
+          <ThemedText type="small" style={styles.durationText}>
+            {duration}
+          </ThemedText>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
 
 type Mode = 'popular' | 'latest' | 'liked';
 
@@ -23,6 +63,7 @@ export default function ExploreScreen() {
   const router = useRouter();
   const { t } = useI18n();
   const { favorites, has, toggle } = useFavorites();
+  const { exploreAutoplay } = useSettings();
   const [mode, setMode] = useState<Mode>('popular');
   const sort: ExploreSort = mode === 'latest' ? 'latest' : 'popular';
   const { data: items, loading, error, refetch } = useQuery(() => getExplore(sort), { deps: [sort] });
@@ -81,16 +122,24 @@ export default function ExploreScreen() {
 
       {list.map((item) => (
         <ThemedView key={item.id} type="backgroundElement" style={styles.card}>
-          <Pressable onPress={() => open(item)}>
-            <View style={[styles.poster, { backgroundColor: item.accent }]}>
-              <Ionicons name="play" size={40} color="#ffffff" />
-              <View style={styles.durationTag}>
-                <ThemedText type="small" style={styles.durationText}>
-                  {item.durationLabel}
-                </ThemedText>
+          {exploreAutoplay && item.url ? (
+            <AutoPreview
+              uri={`${getApiBaseUrl()}${item.url}`}
+              duration={item.durationLabel}
+              onPress={() => open(item)}
+            />
+          ) : (
+            <Pressable onPress={() => open(item)}>
+              <View style={[styles.poster, { backgroundColor: item.accent }]}>
+                <Ionicons name="play" size={40} color="#ffffff" />
+                <View style={styles.durationTag}>
+                  <ThemedText type="small" style={styles.durationText}>
+                    {item.durationLabel}
+                  </ThemedText>
+                </View>
               </View>
-            </View>
-          </Pressable>
+            </Pressable>
+          )}
 
           <View style={styles.metaRow}>
             <View style={styles.meta}>
@@ -157,6 +206,13 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  posterClip: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    borderRadius: Spacing.three,
+    overflow: 'hidden',
+    backgroundColor: '#000',
   },
   durationTag: {
     position: 'absolute',

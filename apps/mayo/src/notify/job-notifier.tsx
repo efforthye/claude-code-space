@@ -7,7 +7,7 @@ import * as Notifications from 'expo-notifications';
 import { useEffect, useRef } from 'react';
 
 import { listJobs } from '@/api/client';
-import { useI18n } from '@/settings/settings';
+import { useSettings } from '@/settings/settings';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -19,9 +19,11 @@ Notifications.setNotificationHandler({
 });
 
 export function JobNotifier() {
-  const { t } = useI18n();
+  const { t, notifyOnDone } = useSettings();
   const tRef = useRef(t);
   tRef.current = t;
+  const notifyRef = useRef(notifyOnDone);
+  notifyRef.current = notifyOnDone;
   const known = useRef<Record<string, string>>({});
   const grantedRef = useRef(false);
 
@@ -50,7 +52,7 @@ export function JobNotifier() {
           const prev = known.current[job.id];
           const finished = job.status === 'done' || job.status === 'failed';
           // Only notify on a real transition we witnessed (not the first sighting).
-          if (prev && prev !== job.status && finished && grantedRef.current) {
+          if (prev && prev !== job.status && finished && grantedRef.current && notifyRef.current) {
             const done = job.status === 'done';
             Notifications.scheduleNotificationAsync({
               content: {

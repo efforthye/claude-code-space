@@ -84,6 +84,13 @@ const en: Dict = {
   'account.byokOff': 'Off',
   'account.byokOn': 'Use my key (10%)',
   'account.byokHint': 'Run on your own Higgsfield/Claude API key and pay ~10% of the price. (Key wiring per provider is being connected.)',
+  'account.autoplay': 'Explore autoplay',
+  'account.autoplayOff': 'Off (save data)',
+  'account.autoplayOn': 'On',
+  'account.autoplayHint': 'Play Explore videos automatically in the feed. Off uses less data — tap a video to play it.',
+  'account.notify': 'Done notifications',
+  'account.notifyOff': 'Off',
+  'account.notifyOn': 'On',
 
   'director.title': 'AI Director',
   'director.greeting':
@@ -317,6 +324,13 @@ const ko: Dict = {
   'account.byokOff': '사용 안 함',
   'account.byokOn': '내 키 사용 (10%)',
   'account.byokHint': '내 Higgsfield/Claude API 키로 돌리고 요금은 약 10%만 냅니다. (제공사별 키 연결 작업 진행 중)',
+  'account.autoplay': '탐색 자동재생',
+  'account.autoplayOff': '끔 (데이터 절약)',
+  'account.autoplayOn': '켬',
+  'account.autoplayHint': '탐색 피드에서 영상을 자동재생합니다. 끄면 데이터를 아끼고, 영상을 탭하면 재생돼요.',
+  'account.notify': '완성 알림',
+  'account.notifyOff': '끔',
+  'account.notifyOn': '켬',
 
   'director.title': 'AI 감독',
   'director.greeting':

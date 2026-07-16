@@ -40,6 +40,10 @@ export default function AccountScreen() {
     setApiUrl,
     apiKey,
     setApiKey,
+    exploreAutoplay,
+    setExploreAutoplay,
+    notifyOnDone,
+    setNotifyOnDone,
   } = useSettings();
   const { data: storage } = useQuery(getStorage);
   const { data: health, error: healthError } = useQuery(getHealth, {
@@ -203,6 +207,37 @@ export default function AccountScreen() {
       <ThemedText type="small" themeColor="textSecondary">
         {t('account.byokHint')}
       </ThemedText>
+
+      <ThemedText type="smallBold">{t('account.autoplay')}</ThemedText>
+      <View style={styles.row}>
+        <Chip
+          label={t('account.autoplayOff')}
+          selected={!exploreAutoplay}
+          onPress={() => setExploreAutoplay(false)}
+        />
+        <Chip
+          label={t('account.autoplayOn')}
+          selected={exploreAutoplay}
+          onPress={() => setExploreAutoplay(true)}
+        />
+      </View>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('account.autoplayHint')}
+      </ThemedText>
+
+      <ThemedText type="smallBold">{t('account.notify')}</ThemedText>
+      <View style={styles.row}>
+        <Chip
+          label={t('account.notifyOff')}
+          selected={!notifyOnDone}
+          onPress={() => setNotifyOnDone(false)}
+        />
+        <Chip
+          label={t('account.notifyOn')}
+          selected={notifyOnDone}
+          onPress={() => setNotifyOnDone(true)}
+        />
+      </View>
 
       <ThemedView type="backgroundElement" style={styles.card}>
         <View style={styles.headerRow}>
