@@ -64,38 +64,6 @@ export default function LoginScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
-  // WEB: use Google Identity Services (Google's own button + credential
-  // callback) — the expo-auth-session popup flow is unreliable in browsers
-  // (the popup re-loads the app and the opener never gets the token).
-  useEffect(() => {
-    if (Platform.OS !== 'web' || !GOOGLE_CLIENT_ID) return;
-    const g = globalThis as unknown as {
-      document: any;
-      google?: { accounts: { id: { initialize: (o: object) => void; renderButton: (el: unknown, o: object) => void } } };
-    };
-    const init = () => {
-      const gsi = g.google?.accounts.id;
-      const el = g.document.getElementById('gsi-btn');
-      if (!gsi || !el) return;
-      gsi.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: (resp: { credential?: string }) => {
-          if (resp?.credential) adoptIdToken(resp.credential);
-        },
-      });
-      gsi.renderButton(el, { theme: 'outline', size: 'large', width: 280, text: 'continue_with' });
-    };
-    if (g.google?.accounts?.id) {
-      init();
-      return;
-    }
-    const script = g.document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.onload = init;
-    g.document.head.appendChild(script);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const submit = async () => {
     if (busy || !email.trim() || !password) return;
@@ -183,8 +151,29 @@ export default function LoginScreen() {
           </Pressable>
 
           {GOOGLE_CLIENT_ID && Platform.OS === 'web' ? (
-            // Google renders its own button in here (GIS) — see the web effect.
-            <View nativeID="gsi-btn" style={styles.gsi} />
+            // Full-page OAuth redirect — survives mobile-Safari popup/cookie
+            // blocking (the GIS popup hung at gsi/transform). The id_token comes
+            // back in the URL fragment and AuthProvider adopts it on boot.
+            <Pressable
+              onPress={() => {
+                const g = globalThis as unknown as { location: { origin: string; href: string } };
+                const q = new URLSearchParams({
+                  client_id: GOOGLE_CLIENT_ID,
+                  redirect_uri: g.location.origin,
+                  response_type: 'id_token',
+                  scope: 'openid email profile',
+                  nonce: Math.random().toString(36).slice(2) + Date.now().toString(36),
+                  prompt: 'select_account',
+                });
+                g.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${q.toString()}`;
+              }}
+              style={({ pressed }) => [
+                styles.google,
+                { borderColor: theme.backgroundSelected, opacity: pressed ? 0.7 : 1 },
+              ]}>
+              <Ionicons name="logo-google" size={18} color={theme.text} />
+              <ThemedText type="smallBold">{t('auth.google')}</ThemedText>
+            </Pressable>
           ) : GOOGLE_CLIENT_ID ? (
             <Pressable
               onPress={() => promptAsync()}

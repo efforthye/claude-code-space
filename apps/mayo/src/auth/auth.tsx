@@ -5,6 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 
 import { authGoogle, authLogin, authLogout, authMe, authRegister } from '@/api/client';
 import type { AuthUser } from '@/api/types';
@@ -35,6 +36,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     (async () => {
+      // WEB: returning from the full-page Google OAuth redirect — the id_token
+      // arrives in the URL fragment. Adopt it, then clean the URL.
+      if (Platform.OS === 'web') {
+        try {
+          const g = globalThis as unknown as {
+            location?: { hash: string; pathname: string; search: string };
+            history?: { replaceState: (a: unknown, b: string, c: string) => void };
+          };
+          const hash = g.location?.hash ?? '';
+          const m = hash.match(/[#&]id_token=([^&]+)/);
+          if (m) {
+            g.history?.replaceState(null, '', (g.location?.pathname ?? '/') + (g.location?.search ?? ''));
+            const res = await authGoogle(decodeURIComponent(m[1]));
+            setSessionToken(res.token);
+            if (active) setUser(res.user);
+            await AsyncStorage.setItem(STORAGE_KEY, res.token).catch(() => {});
+            if (active) setRestoring(false);
+            return;
+          }
+        } catch {
+          // fall through to the normal session restore
+        }
+      }
       try {
         const token = await AsyncStorage.getItem(STORAGE_KEY);
         if (token) {
