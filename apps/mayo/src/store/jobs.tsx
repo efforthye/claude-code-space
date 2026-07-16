@@ -14,6 +14,7 @@ type JobsValue = {
   jobs: Job[];
   addJob: (input: NewJob) => string;
   getJob: (id: string) => Job | undefined;
+  removeJob: (id: string) => void;
 };
 
 const JobsContext = createContext<JobsValue | null>(null);
@@ -40,7 +41,14 @@ export function JobsProvider({ children }: { children: ReactNode }) {
 
   const getJob = useCallback((id: string) => jobs.find((j) => j.id === id), [jobs]);
 
-  const value = useMemo<JobsValue>(() => ({ jobs, addJob, getJob }), [jobs, addJob, getJob]);
+  const removeJob = useCallback((id: string) => {
+    setJobs((prev) => prev.filter((j) => j.id !== id));
+  }, []);
+
+  const value = useMemo<JobsValue>(
+    () => ({ jobs, addJob, getJob, removeJob }),
+    [jobs, addJob, getJob, removeJob],
+  );
 
   return <JobsContext.Provider value={value}>{children}</JobsContext.Provider>;
 }

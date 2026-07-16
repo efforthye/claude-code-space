@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ProgressBar } from '@/components/progress-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useToast } from '@/components/toast';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useI18n } from '@/settings/settings';
@@ -17,14 +18,36 @@ export default function JobDetailScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getJob } = useJobs();
+  const { getJob, removeJob } = useJobs();
   const job = getJob(id ?? '');
 
   const progress = job && job.scenesTotal ? job.scenesDone / job.scenesTotal : 0;
   const done = job?.status === 'done';
+  const active = job?.status === 'queued' || job?.status === 'generating';
   const shownDots = job ? Math.min(job.scenesTotal, MAX_DOTS) : 0;
   const filledDots = done ? shownDots : Math.round(progress * shownDots);
+
+  const confirmRemove = () => {
+    if (!job) return;
+    Alert.alert(
+      t(active ? 'jobDetail.confirmCancelTitle' : 'jobDetail.confirmDeleteTitle'),
+      t(active ? 'jobDetail.confirmCancelBody' : 'jobDetail.confirmDeleteBody'),
+      [
+        { text: t('jobDetail.keep'), style: 'cancel' },
+        {
+          text: t(active ? 'jobDetail.cancel' : 'jobDetail.delete'),
+          style: 'destructive',
+          onPress: () => {
+            removeJob(job.id);
+            router.back();
+            toast.show(t(active ? 'toast.jobCanceled' : 'toast.jobDeleted'));
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <ThemedView style={styles.root}>
@@ -114,6 +137,15 @@ export default function JobDetailScreen() {
                 <ThemedText type="small">{t('jobDetail.retry')}</ThemedText>
               </Pressable>
             ) : null}
+
+            <Pressable
+              onPress={confirmRemove}
+              style={({ pressed }) => [styles.destructive, pressed && styles.pressed]}>
+              <Ionicons name="trash-outline" size={18} color="#E5484D" />
+              <ThemedText type="small" style={{ color: '#E5484D' }}>
+                {t(active ? 'jobDetail.cancel' : 'jobDetail.delete')}
+              </ThemedText>
+            </Pressable>
           </ScrollView>
         )}
       </SafeAreaView>
@@ -183,6 +215,13 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     borderRadius: Spacing.five,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  destructive: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.three,
   },
   empty: {
     flex: 1,
