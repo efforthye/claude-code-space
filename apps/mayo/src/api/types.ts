@@ -10,6 +10,10 @@ export type Duration = { id: string; label: string; seconds: number };
 export type Plan = { id: string; monthly: number; storageMb?: number };
 export type RetentionPlan = { id: string; days: number; credits: number };
 export type ModelProvider = { id: string; name: string; kind: ModelKind; tier: string; blurb: string };
+// AI director ("screenwriter") model — a Claude model id, e.g. "claude-opus-4-8".
+export type DirectorModel = { id: string; name: string; tier: string; blurb: string };
+// AI director backend: offline stub | free local LLM | paid Claude.
+export type PlannerBackend = 'mock' | 'local' | 'claude';
 
 export type Job = {
   id: string;
@@ -54,7 +58,12 @@ export type CreateJobRequest = {
   tier: string;
   scenePrompts?: string[];
 };
-export type RuntimeSettings = { generationBackend: string; byok?: boolean };
+export type RuntimeSettings = {
+  generationBackend: string;
+  plannerBackend?: PlannerBackend;
+  directorModel?: string;
+  byok?: boolean;
+};
 
 export type EditClip = { videoId: string; start?: number; end?: number };
 export type EditRequest = { title: string; clips: EditClip[] };

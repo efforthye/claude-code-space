@@ -72,6 +72,21 @@ This is the same seam — the "director" is just used interactively as well as o
   show the scene breakdown; for `claude-fable-5` add the server-side `fallbacks` param (refusal
   handling) before offering it as a director.
 
+## Update — 2026-07-16 · runtime-selectable director + Korean handling
+The director backend **and** model are now runtime-mutable from the app (same seam as the
+generation backend), not just `.env`:
+- `runtime.py` holds `planner_backend` (`mock`|`local`|`claude`) and `director_model`, persisted to
+  `.runtime.json`; `GET/PUT /v1/settings` expose `plannerBackend` + `directorModel` (validated —
+  unknown model → 400). `get_scenario_planner()` reads the runtime value.
+- The app has an **in-director model picker** (`director.tsx` header pill → bottom sheet) fed by
+  `GET /v1/catalog/directors`: Basic (mock) / Local LLM / each Claude model. The choice sticks.
+- **Korean quality fix** (the reported "echoes my words / mixes Chinese" bug): the local 3B model is
+  simply too weak for Korean screenplay JSON — the real fix is selecting Claude. Prompts were also
+  hardened (reply in the user's exact language, never echo, prefer proposing a full draft), and the
+  mock director + all error fallbacks now answer in Korean when the user writes Korean. The Claude
+  path degrades to a helpful message (in the user's language) if the key/package is missing instead
+  of 500-ing.
+
 ## Related
 - Service: [[mayo]] · Generation seam: [[0007-mayo-model-provider-abstraction]] · Backend:
   [[0005-mayo-backend-fastapi]] · Storage: [[0004-mayo-storage-local-then-s3]]

@@ -16,7 +16,8 @@ def test_default_planner_is_mock():
 
 
 def test_local_backend_is_selected(monkeypatch):
-    monkeypatch.setattr(planner_mod, "settings", SimpleNamespace(planner_backend="local"))
+    # Selection now reads the runtime backend (app-switchable), not the .env default.
+    monkeypatch.setattr(planner_mod.runtime, "planner_backend", lambda: "local")
     assert isinstance(planner_mod.get_scenario_planner(), LocalScenarioPlanner)
 
 
@@ -37,6 +38,55 @@ def test_local_converse_degrades_without_server(monkeypatch):
         )
     )
     assert turn.reply and turn.screenplay is None and turn.ready is False
+
+
+def test_mock_director_replies_in_korean():
+    # Korean in -> Korean out (no echoing, no language mixing) for the default mock director.
+    turn = asyncio.run(
+        MockScenarioPlanner().converse(
+            [DirectorMessage(role="user", content="밤하늘을 나는 고양이 만들어줘")], 20, "standard"
+        )
+    )
+    assert turn.screenplay is not None
+    # Reply must contain Hangul and must not just echo the user's words back.
+    assert any("가" <= ch <= "힣" for ch in turn.reply)
+    assert turn.reply.strip() != "밤하늘을 나는 고양이 만들어줘"
+
+
+def test_director_settings_roundtrip_and_validation():
+    from app.main import app as _app
+    from fastapi.testclient import TestClient
+
+    c = TestClient(_app)
+    before = c.get("/v1/settings").json()
+    assert "plannerBackend" in before and "directorModel" in before
+
+    ok = c.put(
+        "/v1/settings",
+        json={
+            "generationBackend": before["generationBackend"],
+            "plannerBackend": "claude",
+            "directorModel": "claude-sonnet-5",
+            "byok": before["byok"],
+        },
+    )
+    assert ok.status_code == 200
+    assert ok.json()["plannerBackend"] == "claude"
+    assert ok.json()["directorModel"] == "claude-sonnet-5"
+
+    bad = c.put(
+        "/v1/settings",
+        json={
+            "generationBackend": before["generationBackend"],
+            "plannerBackend": "claude",
+            "directorModel": "gpt-nope",
+            "byok": before["byok"],
+        },
+    )
+    assert bad.status_code == 400
+
+    # restore original settings so test ordering stays clean
+    c.put("/v1/settings", json=before)
 
 
 def test_mock_planner_scenes_sum_to_length():

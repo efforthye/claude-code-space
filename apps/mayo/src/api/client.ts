@@ -10,6 +10,7 @@ import { getApiBaseUrl } from './base-url';
 import type {
   CreateJobRequest,
   DirectorChatRequest,
+  DirectorModel,
   DirectorTurn,
   Duration,
   EditRequest,
@@ -78,6 +79,7 @@ export const getDurations = () => req<Duration[]>('/v1/catalog/durations');
 export const getPlans = () => req<Plan[]>('/v1/catalog/plans');
 export const getRetentionPlans = () => req<RetentionPlan[]>('/v1/catalog/retention-plans');
 export const getModels = () => req<ModelProvider[]>('/v1/catalog/models');
+export const getDirectors = () => req<DirectorModel[]>('/v1/catalog/directors');
 
 // --- Jobs ---
 export const listJobs = () => req<Job[]>('/v1/jobs');

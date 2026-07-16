@@ -2,7 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Keyboard,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -12,13 +14,20 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { createJob, directorChat } from '@/api/client';
-import type { DirectorMessage, Screenplay } from '@/api/types';
+import { createJob, directorChat, getDirectors, getSettings, putSettings } from '@/api/client';
+import type {
+  DirectorMessage,
+  DirectorModel,
+  PlannerBackend,
+  RuntimeSettings,
+  Screenplay,
+} from '@/api/types';
 import { useToast } from '@/components/toast';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useQuery } from '@/hooks/use-query';
 import { useI18n, useSettings } from '@/settings/settings';
 
 export default function DirectorScreen() {
@@ -110,12 +119,15 @@ export default function DirectorScreen() {
             <Ionicons name="film-outline" size={20} color={theme.text} />
             <ThemedText type="smallBold">{t('director.title')}</ThemedText>
           </View>
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityLabel={t('common.close')}
-            style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
-            <Ionicons name="close" size={24} color={theme.text} />
-          </Pressable>
+          <View style={styles.topRight}>
+            <DirectorPicker />
+            <Pressable
+              onPress={() => router.back()}
+              accessibilityLabel={t('common.close')}
+              style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+              <Ionicons name="close" size={24} color={theme.text} />
+            </Pressable>
+          </View>
         </View>
 
         <View style={[styles.flex, { paddingBottom: kbHeight > 0 ? kbHeight : insets.bottom }]}>
@@ -251,10 +263,201 @@ export default function DirectorScreen() {
   );
 }
 
+/** Header control that lets the user pick which AI writes the screenplay
+ * (Basic / Local LLM / a Claude model). Persists via /v1/settings so the choice
+ * sticks across sessions and the whole app uses it. */
+function DirectorPicker() {
+  const theme = useTheme();
+  const { t } = useI18n();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [sel, setSel] = useState<RuntimeSettings | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const { data: settings } = useQuery(() => getSettings());
+  const { data: directors } = useQuery(() => getDirectors());
+
+  useEffect(() => {
+    if (settings && !sel) setSel(settings);
+  }, [settings, sel]);
+
+  const backend: PlannerBackend = (sel?.plannerBackend ?? 'mock') as PlannerBackend;
+  const label =
+    backend === 'claude'
+      ? directors?.find((d) => d.id === sel?.directorModel)?.name ?? 'Claude'
+      : backend === 'local'
+        ? t('director.backendLocal')
+        : t('director.backendMock');
+
+  const choose = async (next: PlannerBackend, model?: string) => {
+    if (!sel || saving) return;
+    const updated: RuntimeSettings = {
+      ...sel,
+      plannerBackend: next,
+      directorModel: model ?? sel.directorModel,
+    };
+    setSel(updated);
+    setOpen(false);
+    setSaving(true);
+    try {
+      const saved = await putSettings(updated);
+      setSel(saved);
+      toast.show(t('director.saved'));
+    } catch {
+      setSel(sel); // revert on failure
+      toast.show(t('common.error'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const isSel = (b: PlannerBackend, model?: string) =>
+    backend === b && (b !== 'claude' || sel?.directorModel === model);
+
+  const Row = ({
+    b,
+    model,
+    title,
+    desc,
+    free,
+  }: {
+    b: PlannerBackend;
+    model?: string;
+    title: string;
+    desc: string;
+    free?: boolean;
+  }) => (
+    <Pressable
+      onPress={() => choose(b, model)}
+      style={({ pressed }) => [
+        styles.pickRow,
+        { borderColor: isSel(b, model) ? theme.text : theme.backgroundSelected },
+        pressed && styles.pressed,
+      ]}>
+      <View style={styles.flex}>
+        <View style={styles.pickRowHead}>
+          <ThemedText type="smallBold">{title}</ThemedText>
+          {free ? (
+            <View style={[styles.freeTag, { backgroundColor: theme.backgroundSelected }]}>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('director.free')}
+              </ThemedText>
+            </View>
+          ) : null}
+        </View>
+        <ThemedText type="small" themeColor="textSecondary">
+          {desc}
+        </ThemedText>
+      </View>
+      {isSel(b, model) ? <Ionicons name="checkmark-circle" size={20} color={theme.text} /> : null}
+    </Pressable>
+  );
+
+  return (
+    <>
+      <Pressable
+        onPress={() => setOpen(true)}
+        style={({ pressed }) => [
+          styles.pill,
+          { backgroundColor: theme.backgroundElement },
+          pressed && styles.pressed,
+        ]}>
+        <Ionicons name="sparkles" size={13} color={theme.textSecondary} />
+        <ThemedText type="small" numberOfLines={1} style={styles.pillLabel}>
+          {label}
+        </ThemedText>
+        <Ionicons name="chevron-down" size={13} color={theme.textSecondary} />
+      </Pressable>
+
+      <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
+        <ThemedView type="background" style={styles.sheet}>
+          <View style={styles.sheetHandle} />
+          <ThemedText type="subtitle">{t('director.pickTitle')}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.pickHint}>
+            {t('director.pickHint')}
+          </ThemedText>
+          {!settings ? (
+            <ActivityIndicator style={styles.pickLoading} />
+          ) : (
+            <ScrollView style={styles.pickList} contentContainerStyle={styles.pickListInner}>
+              <Row
+                b="mock"
+                title={t('director.backendMock')}
+                desc={t('director.backendMockDesc')}
+                free
+              />
+              <Row
+                b="local"
+                title={t('director.backendLocal')}
+                desc={t('director.backendLocalDesc')}
+                free
+              />
+              {(directors ?? []).map((d: DirectorModel) => (
+                <Row key={d.id} b="claude" model={d.id} title={d.name} desc={d.blurb} />
+              ))}
+            </ScrollView>
+          )}
+        </ThemedView>
+      </Modal>
+    </>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
   safe: { flex: 1 },
   flex: { flex: 1 },
+  topRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    borderRadius: Spacing.four,
+    maxWidth: 150,
+  },
+  pillLabel: { flexShrink: 1 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
+  sheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: Spacing.four,
+    paddingBottom: Spacing.six,
+    gap: Spacing.two,
+    maxHeight: '80%',
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(128,128,128,0.4)',
+    marginBottom: Spacing.two,
+  },
+  pickHint: { marginBottom: Spacing.two },
+  pickLoading: { padding: Spacing.five },
+  pickList: { flexGrow: 0 },
+  pickListInner: { gap: Spacing.two, paddingBottom: Spacing.two },
+  pickRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    padding: Spacing.three,
+    borderRadius: Spacing.four,
+    borderWidth: 1,
+  },
+  pickRowHead: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  freeTag: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 1,
+    borderRadius: Spacing.two,
+  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -25,8 +25,14 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from . import runtime
 from .catalog import scenes_for
 from .config import settings
+
+
+def _is_korean(text: str) -> bool:
+    """True if the text contains Hangul — used to reply in the user's language."""
+    return any("가" <= ch <= "힣" for ch in text)
 
 
 class Scene(BaseModel):
@@ -123,29 +129,47 @@ class MockScenarioPlanner(ScenarioPlanner):
         # (claude) backend converses fluently in the user's language.
         user_msgs = [m for m in messages if m.role == "user"]
         combined = "\n".join(m.content for m in user_msgs).strip()
+        ko = _is_korean(combined) if combined else _is_korean(
+            "\n".join(m.content for m in messages)
+        )
         if not combined:
-            return DirectorTurn(
-                reply=(
+            reply = (
+                "어떤 영상을 만들고 싶으세요? 주제, 분위기, 등장인물 무엇이든 편하게 말씀해 주시면 "
+                "씬 단위로 시나리오 초안을 잡아 함께 다듬어 드릴게요."
+                if ko
+                else (
                     "Tell me the film you want — a theme, a mood, characters, anything. "
                     "I'll draft a scene-by-scene screenplay and we'll refine it together."
-                ),
-                ready=False,
+                )
             )
+            return DirectorTurn(reply=reply, ready=False)
         screenplay = await self.plan(combined, seconds, tier)
         turns = len(user_msgs)
         last = user_msgs[-1].content.lower()
         approved = any(w in last for w in _APPROVE_WORDS)
         ready = approved or turns >= 3
-        if turns <= 1:
-            reply = (
-                f"Here's a first cut — “{screenplay.title}”, {len(screenplay.scenes)} "
-                f"scenes across {seconds}s. Want to shift the tone or length, or add a beat? "
-                "Or say “generate” and I'll build it."
-            )
-        elif not ready:
-            reply = "Folded that in and refreshed the draft. Anything else, or shall I generate it?"
+        if ko:
+            if turns <= 1:
+                reply = (
+                    f"'{screenplay.title}' 초안을 잡아봤어요 — {seconds}초, "
+                    f"씬 {len(screenplay.scenes)}개예요. 톤이나 길이를 바꾸거나 장면을 더할까요? "
+                    "마음에 드시면 '생성'이라고 말씀해 주세요."
+                )
+            elif not ready:
+                reply = "말씀 반영해서 초안을 다듬었어요. 더 손볼 부분 있으실까요, 아니면 생성할까요?"
+            else:
+                reply = "좋아요 — 생성 버튼을 누르시면 바로 렌더링을 시작할게요."
         else:
-            reply = "Locked in — tap Generate and I'll start the render."
+            if turns <= 1:
+                reply = (
+                    f"Here's a first cut — “{screenplay.title}”, {len(screenplay.scenes)} "
+                    f"scenes across {seconds}s. Want to shift the tone or length, or add a beat? "
+                    "Or say “generate” and I'll build it."
+                )
+            elif not ready:
+                reply = "Folded that in and refreshed the draft. Anything else, or shall I generate it?"
+            else:
+                reply = "Locked in — tap Generate and I'll start the render."
         return DirectorTurn(reply=reply, screenplay=screenplay, ready=ready)
 
 
@@ -182,13 +206,20 @@ _DIRECTOR_SYSTEM = (
 
 _DIRECTOR_CHAT_SYSTEM = (
     "You are a warm, sharp film director collaborating with a user in chat to shape a short film "
-    "for an AI video generator. Converse naturally IN THE USER'S LANGUAGE. When the brief is thin, "
-    "ask at most one or two focused questions. As soon as you have a workable concept, include a "
-    "`screenplay`: a title, a one-line logline, a style guide (palette, mood, recurring characters) "
-    "for cross-scene continuity, and an ordered list of scenes — each with a vivid, self-contained "
-    "image/video-generation prompt, camera-motion notes, and a duration in seconds. Revise the "
-    "screenplay as the user gives feedback. Set `ready` to true only when the user clearly approves. "
-    "Keep `reply` conversational and short; put the film itself in `screenplay`, not in the reply."
+    "for an AI video generator.\n"
+    "LANGUAGE: Reply in EXACTLY the same language the user writes in. If they write Korean, reply "
+    "in natural, fluent Korean (존댓말) — do NOT mix in English or Chinese characters.\n"
+    "NEVER echo, repeat, or paraphrase the user's message back at them — that is useless. Every "
+    "reply must ADD something: either one focused question when the brief is genuinely too thin, or "
+    "(preferably) a concrete creative proposal.\n"
+    "As soon as you have any workable concept — even from a one-line idea — produce a `screenplay`: "
+    "a title, a one-line logline, a style guide (palette, mood, recurring characters) for cross-scene "
+    "continuity, and an ordered list of scenes, each with a vivid, self-contained image/video-"
+    "generation prompt, camera-motion notes, and a duration in seconds. Prefer proposing a full draft "
+    "over asking questions. Revise the screenplay as the user gives feedback. Set `ready` to true only "
+    "when the user clearly approves (e.g. says to generate/make it). Keep `reply` to ONE or TWO short "
+    "sentences describing what you drafted or changed; put the actual film in `screenplay`, not in the "
+    "reply."
 )
 
 
@@ -238,9 +269,9 @@ class ClaudeScenarioPlanner(ScenarioPlanner):
         # sets output_config.format from the Pydantic model). Adaptive thinking
         # for the planning reasoning. NOTE: claude-fable-5 additionally needs the
         # server-side `fallbacks` param — see the claude-api guidance before
-        # switching MAYO_DIRECTOR_MODEL to fable.
+        # switching the director model to fable.
         resp = await client.messages.parse(
-            model=settings.director_model,
+            model=runtime.director_model(),
             max_tokens=16000,
             thinking={"type": "adaptive"},
             system=_DIRECTOR_SYSTEM,
@@ -252,18 +283,30 @@ class ClaudeScenarioPlanner(ScenarioPlanner):
     async def converse(
         self, messages: List[DirectorMessage], seconds: int, tier: str
     ) -> DirectorTurn:
+        ko = _is_korean("\n".join(m.content for m in messages))
         try:
             import anthropic  # lazy — only needed in claude mode
-        except ImportError as exc:  # pragma: no cover - exercised only in claude mode
-            raise RuntimeError(
-                "anthropic not installed — `pip install -r requirements-ai.txt` "
-                "to use MAYO_PLANNER_BACKEND=claude"
-            ) from exc
+        except ImportError:
+            # Package not installed on the host — tell the operator, don't 500.
+            return DirectorTurn(
+                reply=(
+                    "Claude 감독을 쓰려면 서버에 anthropic 패키지 설치가 필요해요. "
+                    "설정에서 '로컬' 또는 '기본' 감독으로 바꿔서 계속하실 수 있어요."
+                    if ko
+                    else (
+                        "The Claude director needs the `anthropic` package on the server. "
+                        "Switch the director to Local or Basic in Settings to continue."
+                    )
+                ),
+                ready=False,
+            )
 
         if not messages:
-            return DirectorTurn(reply="Tell me the film you'd like to make.", ready=False)
+            return DirectorTurn(
+                reply="어떤 영상을 만들고 싶으세요?" if ko else "Tell me the film you'd like to make.",
+                ready=False,
+            )
 
-        client = anthropic.AsyncAnthropic()
         convo = [
             {"role": "assistant" if m.role == "director" else "user", "content": m.content}
             for m in messages
@@ -274,16 +317,33 @@ class ClaudeScenarioPlanner(ScenarioPlanner):
             "Scene durations in any screenplay must sum to that total."
         )
         # One structured turn = a chat reply plus the evolving screenplay draft.
-        # Same Fable-5 caveat as plan() applies if MAYO_DIRECTOR_MODEL is fable.
-        resp = await client.messages.parse(
-            model=settings.director_model,
-            max_tokens=16000,
-            thinking={"type": "adaptive"},
-            system=system,
-            messages=convo,
-            output_format=DirectorTurn,
-        )
-        return resp.parsed_output
+        # Same Fable-5 caveat as plan() applies if the director model is fable.
+        try:
+            client = anthropic.AsyncAnthropic()
+            resp = await client.messages.parse(
+                model=runtime.director_model(),
+                max_tokens=16000,
+                thinking={"type": "adaptive"},
+                system=system,
+                messages=convo,
+                output_format=DirectorTurn,
+            )
+            return resp.parsed_output
+        except Exception:
+            # Missing/invalid ANTHROPIC_API_KEY, network, refusal, or off-shape output.
+            # Degrade to a helpful nudge in the user's language rather than 500.
+            return DirectorTurn(
+                reply=(
+                    "지금 Claude 감독에 연결하지 못했어요. 서버에 API 키가 설정됐는지 확인하거나, "
+                    "설정에서 '로컬'·'기본' 감독으로 바꿔 계속 진행해 주세요."
+                    if ko
+                    else (
+                        "I couldn't reach the Claude director just now — check the server's API key, "
+                        "or switch to the Local/Basic director in Settings to continue."
+                    )
+                ),
+                ready=False,
+            )
 
 
 class LocalScenarioPlanner(ScenarioPlanner):
@@ -355,6 +415,7 @@ class LocalScenarioPlanner(ScenarioPlanner):
             {"role": "assistant" if m.role == "director" else "user", "content": m.content}
             for m in messages
         ]
+        ko = _is_korean("\n".join(m.content for m in messages))
         try:
             content = await self._chat(convo)
             return DirectorTurn.model_validate_json(content)
@@ -363,15 +424,22 @@ class LocalScenarioPlanner(ScenarioPlanner):
             # Degrade to a plain nudge rather than 500 the whole chat.
             return DirectorTurn(
                 reply=(
-                    "I couldn't shape that into a scene plan just now — try again, "
-                    "or add a detail (setting, mood, or length)."
+                    "지금 장면 구성을 만들지 못했어요. 다시 시도하시거나 배경·분위기·길이 같은 "
+                    "세부 내용을 조금 더 알려주세요."
+                    if ko
+                    else (
+                        "I couldn't shape that into a scene plan just now — try again, "
+                        "or add a detail (setting, mood, or length)."
+                    )
                 ),
                 ready=False,
             )
 
 
 def get_scenario_planner() -> ScenarioPlanner:
-    backend = settings.planner_backend
+    # Runtime-selected (app-switchable via /v1/settings), falling back to the
+    # .env default the first time before anything is persisted.
+    backend = runtime.planner_backend()
     if backend == "claude":
         return ClaudeScenarioPlanner()
     if backend == "local":
