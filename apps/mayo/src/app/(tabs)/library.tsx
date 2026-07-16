@@ -82,7 +82,7 @@ export default function LibraryScreen() {
       ) : null}
 
       {loading && !videos ? <LoadingBlock /> : null}
-      {error && !videos ? <ErrorBlock onRetry={refetch} /> : null}
+      {error && !videos ? <ErrorBlock onRetry={refetch} error={error} /> : null}
       {videos?.length === 0 ? (
         <ThemedText type="small" themeColor="textSecondary">
           {t('common.empty')}

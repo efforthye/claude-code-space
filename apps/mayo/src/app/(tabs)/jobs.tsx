@@ -40,7 +40,7 @@ export default function JobsScreen() {
         await refetch();
       }}>
       {loading && !jobs ? <LoadingBlock /> : null}
-      {error && !jobs ? <ErrorBlock onRetry={refetch} /> : null}
+      {error && !jobs ? <ErrorBlock onRetry={refetch} error={error} /> : null}
       {active ? (
         <ThemedView type="backgroundElement" style={styles.activeBar}>
           <View style={[styles.liveDot, { backgroundColor: '#3BA55D' }]} />

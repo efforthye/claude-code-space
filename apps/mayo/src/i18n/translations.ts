@@ -66,6 +66,7 @@ const en: Dict = {
 
   'common.error': "Couldn't reach the server.",
   'common.retry': 'Retry',
+  'common.authNeeded': 'Sign in to see your videos and jobs here.',
   'common.empty': 'Nothing here yet.',
   'common.close': 'Close',
   'common.cancel': 'Cancel',
@@ -379,6 +380,7 @@ const ko: Dict = {
 
   'common.error': '서버에 연결하지 못했어요.',
   'common.retry': '다시 시도',
+  'common.authNeeded': '로그인하면 내 영상과 작업이 여기에 보여요.',
   'common.empty': '아직 아무것도 없어요.',
   'common.close': '닫기',
   'common.cancel': '취소',

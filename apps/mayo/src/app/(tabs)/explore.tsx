@@ -88,7 +88,7 @@ export default function ExploreScreen() {
       </View>
 
       {mode !== 'liked' && loading && !items ? <LoadingBlock /> : null}
-      {mode !== 'liked' && error && !items ? <ErrorBlock onRetry={refetch} /> : null}
+      {mode !== 'liked' && error && !items ? <ErrorBlock onRetry={refetch} error={error} /> : null}
       {list.length === 0 && !(mode !== 'liked' && loading && !items) ? (
         <ThemedView type="backgroundElement" style={styles.empty}>
           <Ionicons
