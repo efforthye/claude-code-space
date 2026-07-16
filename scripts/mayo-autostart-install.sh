@@ -84,9 +84,21 @@ write_plist "$EXPO_PLIST" "$EXPO_LABEL" "$APP" "npx expo start --tunnel" "$LOGS/
 # returned exit 126 execing the script directly.
 write_plist "$PULL_PLIST" "$PULL_LABEL" "$REPO" "/bin/bash $REPO/scripts/dev-autopull.sh" "$LOGS/mayo-autopull.log"
 
+# Bootstrap with a retry — launchctl can transiently fail ("Bootstrap failed:
+# 5: Input/output error") if the old agent is still tearing down.
+boot() {
+  local label plist="$1"
+  label="$(basename "$plist" .plist)"
+  if launchctl bootstrap "gui/$UID_NUM" "$plist" 2>/dev/null; then return 0; fi
+  launchctl bootout "gui/$UID_NUM/$label" 2>/dev/null || true
+  sleep 2
+  launchctl bootstrap "gui/$UID_NUM" "$plist"
+}
+
 unload
-launchctl bootstrap "gui/$UID_NUM" "$EXPO_PLIST"
-launchctl bootstrap "gui/$UID_NUM" "$PULL_PLIST"
+sleep 2
+boot "$EXPO_PLIST"
+boot "$PULL_PLIST"
 
 echo "Installed launchd agents:"
 echo "  $EXPO_PLIST"
