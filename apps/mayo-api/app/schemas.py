@@ -130,6 +130,13 @@ class ExploreItem(BaseModel):
     durationLabel: str
     accent: str
     tierLabel: str
+    url: Optional[str] = None  # playback path of the published film
+    createdLabel: str = "just now"
+
+
+class PublishExploreRequest(BaseModel):
+    videoId: str
+    prompt: str = ""  # optional; the remix seed (falls back to the video title)
 
 
 class ExtendRequest(BaseModel):

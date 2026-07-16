@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { getExplore, likeExplore } from '@/api/client';
-import type { ExploreItem } from '@/api/types';
+import type { ExploreItem, ExploreSort } from '@/api/types';
+import { Chip } from '@/components/chip';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
@@ -18,14 +19,14 @@ export default function ExploreScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
-  const { data: items, loading, error, refetch } = useQuery(getExplore);
+  const [sort, setSort] = useState<ExploreSort>('popular');
+  const { data: items, loading, error, refetch } = useQuery(() => getExplore(sort), { deps: [sort] });
   const [liked, setLiked] = useState<Set<string>>(new Set());
 
   const toggleLike = (item: ExploreItem) => {
     if (liked.has(item.id)) return;
     setLiked((prev) => new Set(prev).add(item.id));
     likeExplore(item.id).catch(() => {
-      // roll back if it failed
       setLiked((prev) => {
         const next = new Set(prev);
         next.delete(item.id);
@@ -37,6 +38,18 @@ export default function ExploreScreen() {
   const remix = (item: ExploreItem) =>
     router.navigate({ pathname: '/', params: { seed: item.prompt } });
 
+  const open = (item: ExploreItem) =>
+    router.push({
+      pathname: '/explore/[id]',
+      params: {
+        id: item.id,
+        url: item.url ?? '',
+        title: item.title,
+        prompt: item.prompt,
+        author: item.author,
+      },
+    });
+
   const likeCount = (item: ExploreItem) => item.likes + (liked.has(item.id) ? 1 : 0);
 
   return (
@@ -46,12 +59,26 @@ export default function ExploreScreen() {
       onRefresh={async () => {
         await refetch();
       }}>
+      <View style={styles.sortRow}>
+        <Chip label={t('explore.popular')} selected={sort === 'popular'} onPress={() => setSort('popular')} />
+        <Chip label={t('explore.latest')} selected={sort === 'latest'} onPress={() => setSort('latest')} />
+      </View>
+
       {loading && !items ? <LoadingBlock /> : null}
       {error && !items ? <ErrorBlock onRetry={refetch} /> : null}
+      {items && items.length === 0 ? (
+        <ThemedView type="backgroundElement" style={styles.empty}>
+          <Ionicons name="compass-outline" size={36} color={theme.textSecondary} />
+          <ThemedText type="smallBold">{t('explore.emptyTitle')}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
+            {t('explore.emptyBody')}
+          </ThemedText>
+        </ThemedView>
+      ) : null}
 
       {(items ?? []).map((item) => (
         <ThemedView key={item.id} type="backgroundElement" style={styles.card}>
-          <Pressable onPress={() => remix(item)}>
+          <Pressable onPress={() => open(item)}>
             <View style={[styles.poster, { backgroundColor: item.accent }]}>
               <Ionicons name="play" size={40} color="#ffffff" />
               <View style={styles.durationTag}>
@@ -103,6 +130,19 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
+  sortRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  empty: {
+    alignItems: 'center',
+    gap: Spacing.two,
+    padding: Spacing.five,
+    borderRadius: Spacing.four,
+  },
+  emptyText: {
+    textAlign: 'center',
+  },
   card: {
     gap: Spacing.two,
     padding: Spacing.three,

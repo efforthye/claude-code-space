@@ -14,6 +14,7 @@ import type {
   Duration,
   EditRequest,
   ExploreItem,
+  ExploreSort,
   Estimate,
   Health,
   Job,
@@ -97,8 +98,11 @@ export const directorChat = (body: DirectorChatRequest) =>
 export const createEdit = (body: EditRequest) =>
   req<Video>('/v1/edit', { method: 'POST', body: JSON.stringify(body) });
 
-// --- Explore (public feed + remix) ---
-export const getExplore = () => req<ExploreItem[]>('/v1/explore');
+// --- Explore (public feed + remix + publish) ---
+export const getExplore = (sort: ExploreSort = 'popular') =>
+  req<ExploreItem[]>(`/v1/explore?sort=${sort}`);
+export const publishToExplore = (videoId: string, prompt: string) =>
+  req<ExploreItem>('/v1/explore', { method: 'POST', body: JSON.stringify({ videoId, prompt }) });
 export const likeExplore = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/like`, { method: 'POST' });
 

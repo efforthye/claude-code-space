@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { deleteVideo, getVideo } from '@/api/client';
+import { deleteVideo, getVideo, publishToExplore } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -75,6 +75,20 @@ export default function VideoDetailScreen() {
         },
       },
     ]);
+  };
+
+  const shareToExplore = async () => {
+    if (!video) return;
+    if (!video.url) {
+      toast.show(t('detail.noFile'));
+      return;
+    }
+    try {
+      await publishToExplore(video.id, video.title);
+      toast.show(t('detail.sharedToExplore'));
+    } catch {
+      toast.show(t('common.error'));
+    }
   };
 
   const retentionLabel = (days: number) => {
@@ -193,6 +207,15 @@ export default function VideoDetailScreen() {
                 onPress={() => toast.show(t('detail.clipsSoon'))}
               />
             </View>
+
+            <SecondaryButton
+              icon="compass-outline"
+              label={t('detail.shareToExplore')}
+              color={theme.text}
+              border={theme.backgroundSelected}
+              onPress={shareToExplore}
+              full
+            />
 
             <SecondaryButton
               icon="time-outline"

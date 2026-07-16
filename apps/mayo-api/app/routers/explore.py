@@ -1,20 +1,33 @@
-"""Explore feed — browse trending community creations and 'make like this'.
+"""Explore feed — browse REAL user-published creations, publish your own, remix.
 
-Seeded, in-memory for now (like the library); a real backend swaps the store for
-published user videos later. The `prompt` on each item powers the remix flow.
+No dummy seed: the feed is empty until users publish. `prompt` on each item powers
+the "make like this" remix flow; `url` makes items playable.
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 
-from ..schemas import ExploreItem
+from ..schemas import ExploreItem, PublishExploreRequest
 from ..store import explore as explore_store
+from ..store import library as lib
 
 router = APIRouter(prefix="/v1/explore", tags=["explore"])
 
 
 @router.get("", response_model=list[ExploreItem])
-async def list_explore() -> list[ExploreItem]:
-    return await explore_store.list()
+async def list_explore(sort: str = Query("popular", pattern="^(popular|latest)$")) -> list[ExploreItem]:
+    return await explore_store.list(sort)
+
+
+@router.post("", response_model=ExploreItem, status_code=status.HTTP_201_CREATED)
+async def publish_explore(req: PublishExploreRequest) -> ExploreItem:
+    video = await lib.get(req.videoId)
+    if video is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="video not found")
+    if not video.url:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, detail="only a real (playable) video can be published"
+        )
+    return await explore_store.publish(video, req.prompt)
 
 
 @router.post("/{item_id}/like", response_model=ExploreItem)
