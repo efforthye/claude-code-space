@@ -1,12 +1,25 @@
 // Mock data for the mayo app shell (UI only — no backend yet).
 
-export type Duration = { id: string; label: string; minutes: number };
+export type Duration = { id: string; label: string; seconds: number };
 export const DURATIONS: Duration[] = [
-  { id: 'd3', label: '3 min', minutes: 3 },
-  { id: 'd10', label: '10 min', minutes: 10 },
-  { id: 'd30', label: '30 min', minutes: 30 },
-  { id: 'd60', label: '1 hr+', minutes: 60 },
+  { id: 's10', label: '10 sec', seconds: 10 },
+  { id: 's30', label: '30 sec', seconds: 30 },
+  { id: 'm1', label: '1 min', seconds: 60 },
+  { id: 'm3', label: '3 min', seconds: 180 },
+  { id: 'm10', label: '10 min', seconds: 600 },
+  { id: 'm30', label: '30 min', seconds: 1800 },
+  { id: 'h1', label: '1 hr+', seconds: 3600 },
 ];
+
+export function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds} sec`;
+  const totalMin = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  if (totalMin < 60) return s ? `${totalMin}m ${s}s` : `${totalMin} min`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m ? `${h}h ${m}m` : `${h} hr`;
+}
 
 export type Tier = { id: string; label: string; blurb: string; pricePerMin: number };
 export const TIERS: Tier[] = [
@@ -15,8 +28,8 @@ export const TIERS: Tier[] = [
   { id: 'premium', label: 'Premium', blurb: 'Best image + video models — film-grade output.', pricePerMin: 30 },
 ];
 
-export function estimateCredits(minutes: number, tier: Tier): number {
-  return Math.round(minutes * tier.pricePerMin);
+export function estimateCredits(seconds: number, tier: Tier): number {
+  return Math.max(1, Math.round((seconds / 60) * tier.pricePerMin));
 }
 
 export type JobStatus = 'queued' | 'generating' | 'done' | 'failed';

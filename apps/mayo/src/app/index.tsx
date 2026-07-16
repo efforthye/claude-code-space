@@ -8,21 +8,32 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { DURATIONS, TIERS, estimateCredits } from '@/mocks/data';
+import { DURATIONS, TIERS, estimateCredits, formatDuration } from '@/mocks/data';
+
+type Unit = 'sec' | 'min';
 
 export default function CreateScreen() {
   const theme = useTheme();
   const router = useRouter();
   const [prompt, setPrompt] = useState('');
-  const [durationId, setDurationId] = useState(DURATIONS[1].id);
+  const [seconds, setSeconds] = useState(60);
   const [tierId, setTierId] = useState(TIERS[1].id);
+  const [customMode, setCustomMode] = useState(false);
+  const [customValue, setCustomValue] = useState('');
+  const [customUnit, setCustomUnit] = useState<Unit>('min');
 
-  const duration = useMemo(
-    () => DURATIONS.find((d) => d.id === durationId) ?? DURATIONS[0],
-    [durationId],
-  );
   const tier = useMemo(() => TIERS.find((t) => t.id === tierId) ?? TIERS[0], [tierId]);
-  const credits = estimateCredits(duration.minutes, tier);
+  const credits = estimateCredits(seconds, tier);
+
+  const applyCustom = (raw: string, unit: Unit) => {
+    const value = raw.replace(/[^0-9.]/g, '');
+    setCustomValue(value);
+    setCustomUnit(unit);
+    const n = parseFloat(value);
+    if (!Number.isNaN(n) && n > 0) {
+      setSeconds(Math.max(1, Math.round(n * (unit === 'min' ? 60 : 1))));
+    }
+  };
 
   return (
     <Screen
@@ -46,11 +57,35 @@ export default function CreateScreen() {
           <Chip
             key={d.id}
             label={d.label}
-            selected={d.id === durationId}
-            onPress={() => setDurationId(d.id)}
+            selected={!customMode && seconds === d.seconds}
+            onPress={() => {
+              setSeconds(d.seconds);
+              setCustomMode(false);
+            }}
           />
         ))}
+        <Chip label="Custom" selected={customMode} onPress={() => setCustomMode(true)} />
       </View>
+
+      {customMode ? (
+        <ThemedView type="backgroundElement" style={styles.customBox}>
+          <View style={styles.customRow}>
+            <TextInput
+              value={customValue}
+              onChangeText={(v) => applyCustom(v, customUnit)}
+              placeholder="e.g. 45"
+              placeholderTextColor={theme.textSecondary}
+              keyboardType="numeric"
+              style={[styles.customInput, { color: theme.text, borderColor: theme.backgroundSelected }]}
+            />
+            <Chip label="sec" selected={customUnit === 'sec'} onPress={() => applyCustom(customValue, 'sec')} />
+            <Chip label="min" selected={customUnit === 'min'} onPress={() => applyCustom(customValue, 'min')} />
+          </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            Any length — from 10 seconds to several hours.
+          </ThemedText>
+        </ThemedView>
+      ) : null}
 
       <ThemedText type="smallBold">Quality &amp; model</ThemedText>
       <View style={styles.row}>
@@ -68,7 +103,7 @@ export default function CreateScreen() {
         </ThemedText>
         <ThemedText type="subtitle">{credits} credits</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          {duration.label} · {tier.label} · exports the full film + every clip
+          {formatDuration(seconds)} · {tier.label} · exports the full film + every clip
         </ThemedText>
       </ThemedView>
 
@@ -102,6 +137,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.two,
+  },
+  customBox: {
+    gap: Spacing.two,
+    padding: Spacing.three,
+    borderRadius: Spacing.four,
+  },
+  customRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  customInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    borderWidth: 1,
+    borderRadius: Spacing.three,
   },
   estimate: {
     gap: Spacing.one,
