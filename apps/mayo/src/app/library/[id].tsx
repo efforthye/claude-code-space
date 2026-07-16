@@ -1,6 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { cacheDirectory, downloadAsync } from 'expo-file-system/legacy';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,6 +13,7 @@ import { getVideo } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useToast } from '@/components/toast';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
@@ -25,6 +29,34 @@ export default function VideoDetailScreen() {
     enabled: !!videoId,
     deps: [videoId],
   });
+  const toast = useToast();
+  const [downloading, setDownloading] = useState(false);
+
+  const download = async () => {
+    if (!video) return;
+    if (!video.url) {
+      toast.show(t('detail.noFile'));
+      return;
+    }
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const key = getApiKey();
+      const target = `${cacheDirectory}${video.id}.mp4`;
+      const { uri } = await downloadAsync(`${getApiBaseUrl()}${video.url}`, target, {
+        headers: key ? { Authorization: `Bearer ${key}` } : undefined,
+      });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'video/mp4', UTI: 'public.mpeg-4' });
+      } else {
+        toast.show(t('detail.downloaded'));
+      }
+    } catch {
+      toast.show(t('common.error'));
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const retentionLabel = (days: number) => {
     if (days <= 0) return t('library.expired');
@@ -121,15 +153,17 @@ export default function VideoDetailScreen() {
             <View style={styles.secondaryRow}>
               <SecondaryButton
                 icon="download-outline"
-                label={t('detail.download')}
+                label={downloading ? t('detail.downloading') : t('detail.download')}
                 color={theme.text}
                 border={theme.backgroundSelected}
+                onPress={download}
               />
               <SecondaryButton
                 icon="albums-outline"
                 label={t('detail.downloadClips', { n: video.scenes })}
                 color={theme.text}
                 border={theme.backgroundSelected}
+                onPress={() => toast.show(t('detail.clipsSoon'))}
               />
             </View>
 
