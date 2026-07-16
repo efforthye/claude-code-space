@@ -202,13 +202,14 @@ _SCREENPLAY_JSON_SHAPE = (
 )
 _TURN_JSON_SHAPE = (
     ' Respond with ONLY a JSON object, no markdown, exactly: '
-    '{"reply": string, "ready": boolean, "screenplay": '
+    '{"reply": string, "ready": boolean, "screenplay": null OR '
     '{"title": string, "logline": string, "style": string, "scenes": '
     '[{"index": integer, "heading": string, "prompt": string, "motion": string, '
-    '"seconds": integer}]}}. ALWAYS fill "screenplay" with your best current draft '
-    '(never null once the user has given any idea — even a rough one- or two-scene '
-    'pass is fine), and refine it every turn. Keep "reply" a short chat line (you '
-    'may still ask one question). Set "ready" true only when the user approves.'
+    '"seconds": integer}]}}. Put a short chat message in "reply". If the user has '
+    'described any concept, fill "screenplay" with a CONCISE draft — at most 2-4 '
+    'short scenes, one sentence per scene prompt — and refine it each turn. If they '
+    'have only greeted you or said nothing concrete, set "screenplay" to null and '
+    'briefly ask what they want to make. Set "ready" true only when the user approves.'
 )
 
 
@@ -315,7 +316,9 @@ class LocalScenarioPlanner(ScenarioPlanner):
             # keep_alive holds the model in RAM between turns; num_predict caps
             # generation so a turn stays well under the client timeout.
             "keep_alive": "30m",
-            "options": {"temperature": 0.6, "num_predict": 1200},
+            # Bound generation so a turn stays comfortably under the phone's ~60s
+            # request timeout even on a small model (a concise screenplay fits).
+            "options": {"temperature": 0.6, "num_predict": 800},
         }
         async with httpx.AsyncClient(timeout=settings.local_llm_timeout) as client:
             resp = await client.post(url, json=payload)
