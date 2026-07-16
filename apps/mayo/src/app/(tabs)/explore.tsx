@@ -56,19 +56,19 @@ function AutoPreview({
   );
 }
 
-type Mode = 'popular' | 'latest' | 'liked';
+type Mode = 'popular' | 'latest';
 
 export default function ExploreScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
-  const { favorites, has, toggle } = useFavorites();
+  const { has, toggle } = useFavorites();
   const { exploreAutoplay } = useSettings();
   const [mode, setMode] = useState<Mode>('popular');
   const sort: ExploreSort = mode === 'latest' ? 'latest' : 'popular';
   const { data: items, loading, error, refetch } = useQuery(() => getExplore(sort), { deps: [sort] });
 
-  const list = mode === 'liked' ? favorites : (items ?? []);
+  const list = items ?? [];
 
   // Tapping a card opens the full-screen reels player at that position.
   const open = (index: number) =>
@@ -84,23 +84,16 @@ export default function ExploreScreen() {
       <View style={styles.sortRow}>
         <Chip label={t('explore.popular')} selected={mode === 'popular'} onPress={() => setMode('popular')} />
         <Chip label={t('explore.latest')} selected={mode === 'latest'} onPress={() => setMode('latest')} />
-        <Chip label={t('explore.liked')} selected={mode === 'liked'} onPress={() => setMode('liked')} />
       </View>
 
-      {mode !== 'liked' && loading && !items ? <LoadingBlock /> : null}
-      {mode !== 'liked' && error && !items ? <ErrorBlock onRetry={refetch} error={error} /> : null}
-      {list.length === 0 && !(mode !== 'liked' && loading && !items) ? (
+      {loading && !items ? <LoadingBlock /> : null}
+      {error && !items ? <ErrorBlock onRetry={refetch} error={error} /> : null}
+      {list.length === 0 && !(loading && !items) ? (
         <ThemedView type="backgroundElement" style={styles.empty}>
-          <Ionicons
-            name={mode === 'liked' ? 'heart-outline' : 'compass-outline'}
-            size={36}
-            color={theme.textSecondary}
-          />
-          <ThemedText type="smallBold">
-            {mode === 'liked' ? t('explore.likedEmptyTitle') : t('explore.emptyTitle')}
-          </ThemedText>
+          <Ionicons name="compass-outline" size={36} color={theme.textSecondary} />
+          <ThemedText type="smallBold">{t('explore.emptyTitle')}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
-            {mode === 'liked' ? t('explore.likedEmptyBody') : t('explore.emptyBody')}
+            {t('explore.emptyBody')}
           </ThemedText>
         </ThemedView>
       ) : null}

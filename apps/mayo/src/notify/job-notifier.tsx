@@ -10,6 +10,8 @@ import { Platform } from 'react-native';
 import { listJobs } from '@/api/client';
 import { useSettings } from '@/settings/settings';
 
+import { useInbox } from './inbox';
+
 // Local notifications aren't supported on web — skip the handler there.
 const NOTIFY_SUPPORTED = Platform.OS !== 'web';
 
@@ -26,6 +28,9 @@ if (NOTIFY_SUPPORTED) {
 
 export function JobNotifier() {
   const { t, notifyOnDone } = useSettings();
+  const inbox = useInbox();
+  const inboxRef = useRef(inbox);
+  inboxRef.current = inbox;
   const tRef = useRef(t);
   tRef.current = t;
   const notifyRef = useRef(notifyOnDone);
@@ -34,22 +39,23 @@ export function JobNotifier() {
   const grantedRef = useRef(false);
 
   useEffect(() => {
-    if (!NOTIFY_SUPPORTED) return;
     let alive = true;
 
-    (async () => {
-      try {
-        const current = await Notifications.getPermissionsAsync();
-        if (current.status === 'granted') {
-          grantedRef.current = true;
-        } else {
-          const req = await Notifications.requestPermissionsAsync();
-          grantedRef.current = req.status === 'granted';
+    if (NOTIFY_SUPPORTED) {
+      (async () => {
+        try {
+          const current = await Notifications.getPermissionsAsync();
+          if (current.status === 'granted') {
+            grantedRef.current = true;
+          } else {
+            const req = await Notifications.requestPermissionsAsync();
+            grantedRef.current = req.status === 'granted';
+          }
+        } catch {
+          grantedRef.current = false;
         }
-      } catch {
-        grantedRef.current = false;
-      }
-    })();
+      })();
+    }
 
     const tick = async () => {
       try {
@@ -59,15 +65,24 @@ export function JobNotifier() {
           const prev = known.current[job.id];
           const finished = job.status === 'done' || job.status === 'failed';
           // Only notify on a real transition we witnessed (not the first sighting).
-          if (prev && prev !== job.status && finished && grantedRef.current && notifyRef.current) {
+          if (prev && prev !== job.status && finished) {
             const done = job.status === 'done';
-            Notifications.scheduleNotificationAsync({
-              content: {
-                title: done ? tRef.current('notify.doneTitle') : tRef.current('notify.failTitle'),
-                body: job.title,
-              },
-              trigger: null,
-            }).catch(() => {});
+            // Always file it into the in-app inbox (all platforms)…
+            inboxRef.current.add({
+              icon: done ? 'film' : 'alert',
+              title: done ? tRef.current('notify.doneTitle') : tRef.current('notify.failTitle'),
+              body: job.title,
+            });
+            // …and additionally pop a system notification where supported.
+            if (NOTIFY_SUPPORTED && grantedRef.current && notifyRef.current) {
+              Notifications.scheduleNotificationAsync({
+                content: {
+                  title: done ? tRef.current('notify.doneTitle') : tRef.current('notify.failTitle'),
+                  body: job.title,
+                },
+                trigger: null,
+              }).catch(() => {});
+            }
           }
           known.current[job.id] = job.status;
         }

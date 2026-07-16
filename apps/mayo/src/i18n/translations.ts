@@ -10,7 +10,7 @@ const en: Dict = {
   'tab.create': 'Create',
   'tab.jobs': 'Jobs',
   'tab.library': 'Library',
-  'tab.account': 'Account',
+  'tab.account': 'My',
 
   'explore.subtitle': "Films the community published — watch, like, or make your own version.",
   'explore.remix': 'Make like this',
@@ -151,6 +151,18 @@ const en: Dict = {
 
   'plan.payWithCard': 'Pay by card (web)',
   'plan.cardUnavailable': 'Card payments are not set up on the server yet.',
+
+  'my.subtitle': 'Your profile, likes, notifications and plan.',
+  'my.inbox': 'Notifications',
+  'my.liked': 'Liked videos',
+  'my.myVideos': 'My videos',
+  'settings.title': 'Settings',
+  'inbox.empty': 'Nothing yet — job updates and news will land here.',
+  'inbox.clear': 'Clear all',
+  'inbox.justNow': 'just now',
+  'inbox.minAgo': '{n}m ago',
+  'inbox.hourAgo': '{n}h ago',
+  'inbox.dayAgo': '{n}d ago',
 
   'auth.signIn': 'Sign in',
   'auth.signUp': 'Create account',
@@ -325,7 +337,7 @@ const ko: Dict = {
   'tab.create': '만들기',
   'tab.jobs': '작업',
   'tab.library': '보관함',
-  'tab.account': '계정',
+  'tab.account': '마이',
 
   'explore.subtitle': '커뮤니티가 공개한 영상 — 감상하고, 좋아요, 나만의 버전으로 만들어요.',
   'explore.remix': '이렇게 만들기',
@@ -466,6 +478,18 @@ const ko: Dict = {
 
   'plan.payWithCard': '카드로 결제 (웹)',
   'plan.cardUnavailable': '서버에 카드결제가 아직 설정되지 않았어요.',
+
+  'my.subtitle': '내 프로필·좋아요·알림·요금제를 한곳에서.',
+  'my.inbox': '알림',
+  'my.liked': '좋아요한 영상',
+  'my.myVideos': '내 영상',
+  'settings.title': '설정',
+  'inbox.empty': '아직 없어요 — 생성 완료/실패 등 소식이 여기에 쌓여요.',
+  'inbox.clear': '모두 지우기',
+  'inbox.justNow': '방금',
+  'inbox.minAgo': '{n}분 전',
+  'inbox.hourAgo': '{n}시간 전',
+  'inbox.dayAgo': '{n}일 전',
 
   'auth.signIn': '로그인',
   'auth.signUp': '계정 만들기',
