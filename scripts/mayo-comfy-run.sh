@@ -32,6 +32,9 @@ if [ ! -x "$VPY" ]; then
 fi
 
 cd "$COMFY"
+# On Apple Silicon some diffusion ops aren't implemented for MPS (Metal); fall
+# back to CPU for those instead of crashing (required for AnimateDiff on Mac).
+export PYTORCH_ENABLE_MPS_FALLBACK=1
 log "starting ComfyUI on 127.0.0.1:$PORT ($("$VPY" --version 2>&1))"
 # --port fixes the API port. Listen stays on 127.0.0.1 (default) — same-host only.
 exec "$VPY" main.py --port "$PORT"
