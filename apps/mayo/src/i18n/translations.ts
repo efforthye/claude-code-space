@@ -142,6 +142,11 @@ const en: Dict = {
   'account.keySavedDone': 'Saved ✓',
   'account.keySaveBtn': 'Save my keys',
 
+  'publish.connect': 'Connect YouTube',
+  'publish.connectHint': 'One-time Google sign-in so mayo can upload to your channel.',
+  'publish.connected': 'YouTube connected — publishing uploads for real.',
+  'publish.connectSignIn': 'Sign in to your mayo account first.',
+
   'plan.payWithCard': 'Pay by card (web)',
   'plan.cardUnavailable': 'Card payments are not set up on the server yet.',
 
@@ -449,6 +454,11 @@ const ko: Dict = {
   'account.keySaving': '저장 중…',
   'account.keySavedDone': '저장 완료 ✓',
   'account.keySaveBtn': '내 키 저장',
+
+  'publish.connect': 'YouTube 연결하기',
+  'publish.connectHint': '한 번만 구글로 승인하면 내 채널로 실제 업로드돼요.',
+  'publish.connected': 'YouTube 연결됨 — 게시하면 실제로 업로드됩니다.',
+  'publish.connectSignIn': '먼저 mayo 계정으로 로그인해 주세요.',
 
   'plan.payWithCard': '카드로 결제 (웹)',
   'plan.cardUnavailable': '서버에 카드결제가 아직 설정되지 않았어요.',

@@ -143,6 +143,19 @@ class Settings:
             "MAYO_CHECKOUT_CANCEL_URL", "https://mayo.im/plan?checkout=cancel"
         )
     )
+    # YouTube publish (real upload via YouTube Data API v3, per-user OAuth).
+    youtube_client_id: str = field(
+        default_factory=lambda: os.getenv("MAYO_YOUTUBE_CLIENT_ID", "")
+    )
+    youtube_client_secret: str = field(
+        default_factory=lambda: os.getenv("MAYO_YOUTUBE_CLIENT_SECRET", "")
+    )
+    youtube_redirect_uri: str = field(
+        default_factory=lambda: os.getenv(
+            "MAYO_YOUTUBE_REDIRECT_URI",
+            "https://mayo-api.efforthye.dev/v1/publish/youtube/callback",
+        )
+    )
     # Google sign-in: OAuth client id(s) whose id_tokens we accept (comma-sep —
     # web + iOS + Android clients each have their own id). Names only in the repo.
     google_oauth_client_ids: list[str] = field(

@@ -17,6 +17,7 @@ from .config import settings
 from .planner import get_scenario_planner
 from .routers import (
     auth,
+    publish,
     billing,
     catalog,
     director,
@@ -89,6 +90,9 @@ app.include_router(settings_router.router, dependencies=protected)
 app.include_router(billing.router, dependencies=protected)
 # Stripe webhook: no shared-key guard — the verified signature is its auth.
 app.include_router(billing.webhook_router)
+app.include_router(publish.router, dependencies=protected)
+# Google's browser redirect can't carry our key — one-time state is its auth.
+app.include_router(publish.callback_router)
 
 
 @app.get("/")

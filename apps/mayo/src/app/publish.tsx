@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getVideo, publishVideo } from '@/api/client';
+import { getVideo, publishVideo, youtubeConnect, youtubeStatus } from '@/api/client';
 import type { Visibility } from '@/api/types';
 import { Chip } from '@/components/chip';
 import { useToast } from '@/components/toast';
@@ -26,6 +27,17 @@ export default function PublishScreen() {
     enabled: !!videoId,
     deps: [videoId],
   });
+  // Real upload requires the user's YouTube grant; otherwise publish is a no-op.
+  const { data: yt, refetch: refetchYt } = useQuery(youtubeStatus);
+  const connectYoutube = async () => {
+    try {
+      const { url } = await youtubeConnect();
+      await WebBrowser.openBrowserAsync(url);
+      refetchYt();
+    } catch {
+      toast.show(t('publish.connectSignIn'));
+    }
+  };
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -81,6 +93,26 @@ export default function PublishScreen() {
           <ThemedText type="small" themeColor="textSecondary">
             {t('publish.subtitle')}
           </ThemedText>
+
+          {yt && yt.configured && !yt.connected ? (
+            <Pressable onPress={connectYoutube}>
+              <ThemedView type="backgroundElement" style={styles.connectCard}>
+                <Ionicons name="logo-youtube" size={20} color="#FF0000" />
+                <View style={styles.flex1}>
+                  <ThemedText type="smallBold">{t('publish.connect')}</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {t('publish.connectHint')}
+                  </ThemedText>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+              </ThemedView>
+            </Pressable>
+          ) : null}
+          {yt?.connected ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              ✅ {t('publish.connected')}
+            </ThemedText>
+          ) : null}
 
           <ThemedText type="smallBold">{t('publish.videoTitle')}</ThemedText>
           <TextInput
@@ -149,6 +181,14 @@ export default function PublishScreen() {
 }
 
 const styles = StyleSheet.create({
+  connectCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    padding: Spacing.three,
+    borderRadius: Spacing.four,
+  },
+  flex1: { flex: 1 },
   root: {
     flex: 1,
   },

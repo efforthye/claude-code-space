@@ -157,6 +157,14 @@ class _Store:
     def byok_key(self, user: dict | None, provider: str) -> str:
         return (user or {}).get("byokKeys", {}).get(provider, "")
 
+    def set_youtube_token(self, user_id: str, refresh_token: str) -> bool:
+        user = self.users.get(user_id)
+        if not user:
+            return False
+        user["youtubeRefreshToken"] = refresh_token
+        self.save()
+        return True
+
     def set_plan(self, user_id: str, plan_id: str) -> bool:
         user = self.users.get(user_id)
         if not user:

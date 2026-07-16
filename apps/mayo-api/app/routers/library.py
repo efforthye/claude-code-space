@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Optional
+
+from fastapi import APIRouter, Header, HTTPException, status
 
 from .. import catalog
 from ..schemas import ExtendRequest, PublishRequest, PublishResult, Storage, Video
@@ -44,9 +46,36 @@ async def extend(video_id: str, req: ExtendRequest) -> Video:
 
 
 @router.post("/videos/{video_id}/publish", response_model=PublishResult)
-async def publish(video_id: str, req: PublishRequest) -> PublishResult:
+async def publish(
+    video_id: str,
+    req: PublishRequest,
+    x_mayo_session: Optional[str] = Header(default=None),
+) -> PublishResult:
     video = await lib.get(video_id)
     if video is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="video not found")
-    # Mock: real impl kicks off a YouTube Data API resumable upload (per-user OAuth2).
+
+    # Real YouTube upload when this user has connected their channel (ADR 0008
+    # follow-up): read the film from storage and run the resumable upload on the
+    # user's own OAuth grant. Falls back to the accepted-stub otherwise.
+    from .. import youtube
+    from ..auth import store as users
+    from ..storage import get_storage
+
+    user = users.user_for_session(x_mayo_session or "")
+    refresh = (user or {}).get("youtubeRefreshToken", "")
+    if refresh and youtube.is_configured() and video.url:
+        key = video.url.split("/v1/media/", 1)[-1]
+        store = get_storage()
+        if not store.exists(key):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="video file missing")
+        try:
+            yt_id = await youtube.upload_video(
+                refresh, store.read(key), req.title, req.description, req.visibility
+            )
+        except ValueError as exc:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=str(exc))
+        return PublishResult(accepted=True, videoId=yt_id, visibility=req.visibility)
+
+    # Not connected / not configured — keep the previous no-op acceptance.
     return PublishResult(accepted=True, videoId=video_id, visibility=req.visibility)

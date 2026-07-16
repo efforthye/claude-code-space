@@ -166,6 +166,12 @@ export const addComment = (id: string, text: string) =>
 export const startCheckout = (planId: string) =>
   req<{ url: string }>('/v1/billing/checkout', { method: 'POST', body: JSON.stringify({ planId }) });
 
+// --- YouTube publish (per-user OAuth) ---
+export const youtubeStatus = () =>
+  req<{ configured: boolean; connected: boolean }>('/v1/publish/youtube/status');
+export const youtubeConnect = () =>
+  req<{ url: string }>('/v1/publish/youtube/connect', { method: 'POST' });
+
 // --- Runtime settings (app-controlled generation mode) ---
 export const getSettings = () => req<RuntimeSettings>('/v1/settings');
 export const putSettings = (body: RuntimeSettings) =>
