@@ -90,8 +90,10 @@ Stacked screens:
 into that job's detail screen; the **Jobs** tab reads live from the store and each card taps into
 its detail. State isn't persisted — a backend job-queue replaces this store later.
 
-**Theming & i18n:** app-wide **Settings** context (`src/settings/settings.tsx`) holds theme mode +
-language, **persisted via AsyncStorage**. `useTheme()` resolves colors from the chosen scheme
+**Theming, i18n & prefs:** app-wide **Settings** context (`src/settings/settings.tsx`) holds theme
+mode, language, **and the default model tier**, all **persisted via AsyncStorage**. Account exposes
+the default-model tier as an inline picker (Draft/Standard/Premium); **Create** initializes its
+tier from that saved default. `useTheme()` resolves colors from the chosen scheme
 (falls back to OS); `useI18n().t(key)` resolves strings from `src/i18n/translations.ts` (en/ko,
 `{param}` interpolation). Length presets extended to 10 sec … 1 hr+ with a Custom sec/min input.
 

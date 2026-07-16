@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useI18n } from '@/settings/settings';
+import { useI18n, useSettings } from '@/settings/settings';
 import { useJobs } from '@/store/jobs';
 import { DURATIONS, TIERS, estimateCredits, formatDuration } from '@/mocks/data';
 
@@ -17,11 +17,12 @@ type Unit = 'sec' | 'min';
 export default function CreateScreen() {
   const theme = useTheme();
   const { t } = useI18n();
+  const { defaultTierId } = useSettings();
   const router = useRouter();
   const { addJob } = useJobs();
   const [prompt, setPrompt] = useState('');
   const [seconds, setSeconds] = useState(60);
-  const [tierId, setTierId] = useState(TIERS[1].id);
+  const [tierId, setTierId] = useState(defaultTierId);
   const [customMode, setCustomMode] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState<Unit>('min');

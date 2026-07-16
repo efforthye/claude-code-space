@@ -10,13 +10,13 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useSettings, type ThemeMode } from '@/settings/settings';
 import { type Lang } from '@/i18n/translations';
-import { STORAGE } from '@/mocks/data';
+import { STORAGE, TIERS } from '@/mocks/data';
 
 type Row = { icon: keyof typeof Ionicons.glyphMap; label: string; value: string };
 
 export default function AccountScreen() {
   const theme = useTheme();
-  const { t, themeMode, setThemeMode, lang, setLang } = useSettings();
+  const { t, themeMode, setThemeMode, lang, setLang, defaultTierId, setDefaultTier } = useSettings();
 
   const themeOptions: { id: ThemeMode; label: string }[] = [
     { id: 'system', label: t('theme.system') },
@@ -29,7 +29,6 @@ export default function AccountScreen() {
     { id: 'ko', label: t('lang.ko') },
   ];
   const rows: Row[] = [
-    { icon: 'sparkles-outline', label: t('account.defaultModel'), value: 'Standard' },
     { icon: 'time-outline', label: t('account.retention'), value: t('account.retentionValue') },
     { icon: 'card-outline', label: t('account.billing'), value: t('account.billingValue') },
     { icon: 'settings-outline', label: t('account.preferences'), value: '' },
@@ -65,6 +64,21 @@ export default function AccountScreen() {
           <Chip key={o.id} label={o.label} selected={lang === o.id} onPress={() => setLang(o.id)} />
         ))}
       </View>
+
+      <ThemedText type="smallBold">{t('account.defaultModel')}</ThemedText>
+      <View style={styles.row}>
+        {TIERS.map((tier) => (
+          <Chip
+            key={tier.id}
+            label={tier.label}
+            selected={defaultTierId === tier.id}
+            onPress={() => setDefaultTier(tier.id)}
+          />
+        ))}
+      </View>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('account.defaultModelHint')}
+      </ThemedText>
 
       <ThemedView type="backgroundElement" style={styles.card}>
         <View style={styles.headerRow}>

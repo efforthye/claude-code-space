@@ -16,8 +16,12 @@ type SettingsValue = {
   lang: Lang;
   setLang: (l: Lang) => void;
   activeLang: ActiveLang;
+  defaultTierId: string;
+  setDefaultTier: (id: string) => void;
   t: TFn;
 };
+
+const DEFAULT_TIER = 'standard';
 
 const SettingsContext = createContext<SettingsValue | null>(null);
 const STORAGE_KEY = 'mayo.settings.v1';
@@ -35,6 +39,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme();
   const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
   const [lang, setLangState] = useState<Lang>('system');
+  const [defaultTierId, setDefaultTierState] = useState<string>(DEFAULT_TIER);
 
   useEffect(() => {
     let active = true;
@@ -42,9 +47,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       .then((raw) => {
         if (!active || !raw) return;
         try {
-          const parsed = JSON.parse(raw) as { themeMode?: ThemeMode; lang?: Lang };
+          const parsed = JSON.parse(raw) as {
+            themeMode?: ThemeMode;
+            lang?: Lang;
+            defaultTierId?: string;
+          };
           if (parsed.themeMode) setThemeModeState(parsed.themeMode);
           if (parsed.lang) setLangState(parsed.lang);
+          if (parsed.defaultTierId) setDefaultTierState(parsed.defaultTierId);
         } catch {
           // ignore malformed settings
         }
@@ -55,8 +65,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const persist = (next: { themeMode?: ThemeMode; lang?: Lang }) => {
-    const data = { themeMode, lang, ...next };
+  const persist = (next: { themeMode?: ThemeMode; lang?: Lang; defaultTierId?: string }) => {
+    const data = { themeMode, lang, defaultTierId, ...next };
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => {});
   };
 
@@ -67,6 +77,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const setLang = (l: Lang) => {
     setLangState(l);
     persist({ lang: l });
+  };
+  const setDefaultTier = (id: string) => {
+    setDefaultTierState(id);
+    persist({ defaultTierId: id });
   };
 
   const scheme: Scheme = themeMode === 'system' ? (system === 'dark' ? 'dark' : 'light') : themeMode;
@@ -80,6 +94,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     lang,
     setLang,
     activeLang,
+    defaultTierId,
+    setDefaultTier,
     t,
   };
 
