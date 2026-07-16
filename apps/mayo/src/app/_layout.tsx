@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
 import { ToastProvider } from '@/components/toast';
+import { JobNotifier } from '@/notify/job-notifier';
 import { PaymentsProvider } from '@/payments/context';
 import { SettingsProvider } from '@/settings/settings';
 
@@ -9,6 +10,7 @@ export default function RootLayout() {
     <SettingsProvider>
       <PaymentsProvider>
         <ToastProvider>
+          <JobNotifier />
           <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="jobs/[id]" options={{ presentation: 'card' }} />

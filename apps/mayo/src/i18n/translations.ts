@@ -21,6 +21,9 @@ const en: Dict = {
   'common.empty': 'Nothing here yet.',
   'common.close': 'Close',
 
+  'notify.doneTitle': '🎬 Your film is ready!',
+  'notify.failTitle': 'Generation failed',
+
   'create.subtitle': 'Describe it once — AI writes the script and directs the whole film.',
   'create.prompt': 'Prompt',
   'create.promptPlaceholder': 'A cinematic short about a lighthouse keeper who discovers…',
@@ -214,6 +217,9 @@ const ko: Dict = {
   'common.retry': '다시 시도',
   'common.empty': '아직 아무것도 없어요.',
   'common.close': '닫기',
+
+  'notify.doneTitle': '🎬 영상이 완성됐어요!',
+  'notify.failTitle': '생성 실패',
 
   'create.subtitle': '한 번만 설명하면 — AI가 시나리오를 쓰고 전체 영상을 연출해요.',
   'create.prompt': '프롬프트',
