@@ -89,6 +89,15 @@ class JobStore:
         async with self._lock:
             return self._jobs.pop(job_id, None) is not None
 
+    async def retry(self, job_id: str) -> Optional[Job]:
+        async with self._lock:
+            j = self._jobs.get(job_id)
+            if not j:
+                return None
+            updated = j.model_copy(update={"status": "queued", "scenesDone": 0, "etaMin": None})
+            self._jobs[job_id] = updated
+            return updated.model_copy()
+
     async def patch(self, job_id: str, **fields) -> Optional[Job]:
         async with self._lock:
             j = self._jobs.get(job_id)
@@ -161,6 +170,21 @@ class LibraryStore:
 
     async def add_imported(self, title: str, film_key: str, size_bytes: int) -> Video:
         return await self.add_film(title, film_key, size_bytes, "Local", "imported")
+
+    async def remove(self, video_id: str) -> bool:
+        async with self._lock:
+            video = self._videos.pop(video_id, None)
+        if video is None:
+            return False
+        if video.url:
+            key = video.url.split("/v1/media/", 1)[-1]
+            try:
+                from .storage import get_storage
+
+                get_storage().delete(key)
+            except Exception:
+                pass
+        return True
 
     async def extend(self, video_id: str, add_days: int) -> Optional[Video]:
         async with self._lock:

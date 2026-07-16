@@ -4,12 +4,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { getVideo } from '@/api/client';
+import { deleteVideo, getVideo } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -58,6 +58,25 @@ export default function VideoDetailScreen() {
     }
   };
 
+  const confirmDelete = () => {
+    Alert.alert(t('detail.deleteTitle'), t('detail.deleteConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('detail.delete'),
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteVideo(videoId);
+            router.back();
+            toast.show(t('detail.deleted'));
+          } catch {
+            toast.show(t('common.error'));
+          }
+        },
+      },
+    ]);
+  };
+
   const retentionLabel = (days: number) => {
     if (days <= 0) return t('library.expired');
     if (days === 1) return t('library.expiresInOne');
@@ -74,6 +93,14 @@ export default function VideoDetailScreen() {
             style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
             <Ionicons name="chevron-back" size={26} color={theme.text} />
           </Pressable>
+          {video ? (
+            <Pressable
+              onPress={confirmDelete}
+              accessibilityLabel={t('detail.delete')}
+              style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+              <Ionicons name="trash-outline" size={22} color="#E5484D" />
+            </Pressable>
+          ) : null}
         </View>
 
         {loading && !video ? <LoadingBlock /> : null}
@@ -236,6 +263,7 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
   },

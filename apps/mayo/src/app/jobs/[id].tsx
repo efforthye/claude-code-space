@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { deleteJob, getJob } from '@/api/client';
+import { deleteJob, getJob, retryJob } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ProgressBar } from '@/components/progress-bar';
 import { ThemedText } from '@/components/themed-text';
@@ -130,7 +130,15 @@ export default function JobDetailScreen() {
 
             {job.status === 'failed' ? (
               <Pressable
-                onPress={() => router.back()}
+                onPress={async () => {
+                  try {
+                    await retryJob(job.id);
+                    await refetch();
+                    toast.show(t('jobDetail.retrying'));
+                  } catch {
+                    toast.show(t('common.error'));
+                  }
+                }}
                 style={({ pressed }) => [
                   styles.secondary,
                   { borderColor: theme.backgroundSelected },

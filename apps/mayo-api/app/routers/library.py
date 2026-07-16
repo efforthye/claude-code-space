@@ -25,6 +25,13 @@ async def get_video(video_id: str) -> Video:
     return video
 
 
+@router.delete("/videos/{video_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_video(video_id: str) -> None:
+    removed = await lib.remove(video_id)
+    if not removed:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="video not found")
+
+
 @router.post("/videos/{video_id}/extend", response_model=Video)
 async def extend(video_id: str, req: ExtendRequest) -> Video:
     plan = catalog.retention_by_id(req.plan)

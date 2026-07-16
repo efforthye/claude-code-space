@@ -38,6 +38,15 @@ async def get_job(job_id: str) -> Job:
     return job
 
 
+@router.post("/{job_id}/retry", response_model=Job)
+async def retry_job(job_id: str) -> Job:
+    job = await job_store.retry(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    start_generation(job_id)
+    return job
+
+
 @router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_job(job_id: str) -> None:
     removed = await job_store.remove(job_id)

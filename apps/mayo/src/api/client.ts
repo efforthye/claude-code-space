@@ -86,6 +86,8 @@ export const createJob = (body: CreateJobRequest) =>
   req<Job>('/v1/jobs', { method: 'POST', body: JSON.stringify(body) });
 export const deleteJob = (id: string) =>
   req<void>(`/v1/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' });
+export const retryJob = (id: string) =>
+  req<Job>(`/v1/jobs/${encodeURIComponent(id)}/retry`, { method: 'POST' });
 
 // --- Director (conversational scenario flow) ---
 export const directorChat = (body: DirectorChatRequest) =>
@@ -109,6 +111,8 @@ export const putSettings = (body: RuntimeSettings) =>
 export const listVideos = () => req<Video[]>('/v1/library/videos');
 export const getVideo = (id: string) => req<Video>(`/v1/library/videos/${encodeURIComponent(id)}`);
 export const getStorage = () => req<Storage>('/v1/library/storage');
+export const deleteVideo = (id: string) =>
+  req<void>(`/v1/library/videos/${encodeURIComponent(id)}`, { method: 'DELETE' });
 export const extendVideo = (id: string, plan: string) =>
   req<Video>(`/v1/library/videos/${encodeURIComponent(id)}/extend`, {
     method: 'POST',
