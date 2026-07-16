@@ -3,6 +3,7 @@ import { cacheDirectory, downloadAsync } from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
+import * as WebBrowser from 'expo-web-browser';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -231,6 +232,17 @@ export default function VideoDetailScreen() {
               onPress={shareToExplore}
               full
             />
+
+            {video.youtubeUrl ? (
+              <SecondaryButton
+                icon="logo-youtube"
+                label={t('detail.viewOnYoutube')}
+                color={theme.text}
+                border={theme.backgroundSelected}
+                onPress={() => WebBrowser.openBrowserAsync(video.youtubeUrl!).catch(() => {})}
+                full
+              />
+            ) : null}
 
             <SecondaryButton
               icon="time-outline"

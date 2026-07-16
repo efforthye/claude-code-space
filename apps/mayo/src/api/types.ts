@@ -41,6 +41,7 @@ export type Video = {
   // Playback path of the stitched film (relative to the API base), when a real
   // backend produced one; null/absent for mock/metadata-only videos.
   url?: string | null;
+  youtubeUrl?: string | null;
 };
 
 export type Storage = {
@@ -114,4 +115,4 @@ export type AuthUser = {
 export type SessionResult = { token: string; user: AuthUser };
 
 export type PublishRequest = { title: string; description?: string; visibility: Visibility };
-export type PublishResult = { accepted: boolean; videoId: string; visibility: Visibility };
+export type PublishResult = { accepted: boolean; videoId: string; visibility: Visibility; url?: string | null };

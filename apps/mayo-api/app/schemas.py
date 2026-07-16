@@ -102,6 +102,8 @@ class Video(BaseModel):
     # Playback path of the stitched film (e.g. "/v1/media/films/<id>.mp4"), when a
     # real backend produced one. None for mock/metadata-only videos.
     url: Optional[str] = None
+    # Where this video was published (e.g. https://youtu.be/<id>), once it was.
+    youtubeUrl: Optional[str] = None
 
 
 class Storage(BaseModel):
@@ -177,6 +179,7 @@ class PublishResult(BaseModel):
     accepted: bool
     videoId: str
     visibility: Visibility
+    url: Optional[str] = None  # public link when a real upload happened
 
 
 class BillingProduct(BaseModel):

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -29,9 +29,24 @@ export default function PublishScreen() {
   });
   // Real upload requires the user's YouTube grant; otherwise publish is a no-op.
   const { data: yt, refetch: refetchYt } = useQuery(youtubeStatus);
+
+  // The grant happens in a separate browser tab/sheet, so poll until the server
+  // reports the connection (web tabs don't notify us when the user returns).
+  const [waitingGrant, setWaitingGrant] = useState(false);
+  useEffect(() => {
+    if (!waitingGrant || yt?.connected) return;
+    const iv = setInterval(() => refetchYt(), 3000);
+    const stop = setTimeout(() => setWaitingGrant(false), 120000);
+    return () => {
+      clearInterval(iv);
+      clearTimeout(stop);
+    };
+  }, [waitingGrant, yt?.connected, refetchYt]);
+
   const connectYoutube = async () => {
     try {
       const { url } = await youtubeConnect();
+      setWaitingGrant(true);
       await WebBrowser.openBrowserAsync(url);
       refetchYt();
     } catch {
@@ -54,9 +69,13 @@ export default function PublishScreen() {
     if (!title.trim() || submitting) return;
     setSubmitting(true);
     try {
-      if (videoId) await publishVideo(videoId, { title, description, visibility });
+      const result = videoId
+        ? await publishVideo(videoId, { title, description, visibility })
+        : null;
       router.back();
       toast.show(t('toast.published'));
+      // Real upload: pop the fresh YouTube page so the link is obvious.
+      if (result?.url) WebBrowser.openBrowserAsync(result.url).catch(() => {});
     } catch {
       toast.show(t('common.error'));
     } finally {

@@ -75,7 +75,9 @@ async def publish(
             )
         except ValueError as exc:
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=str(exc))
-        return PublishResult(accepted=True, videoId=yt_id, visibility=req.visibility)
+        yt_url = f"https://youtu.be/{yt_id}"
+        await lib.set_youtube_url(video_id, yt_url)
+        return PublishResult(accepted=True, videoId=yt_id, visibility=req.visibility, url=yt_url)
 
     # Not connected / not configured — keep the previous no-op acceptance.
     return PublishResult(accepted=True, videoId=video_id, visibility=req.visibility)

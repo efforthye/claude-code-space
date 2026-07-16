@@ -235,6 +235,13 @@ class LibraryStore:
                 pass
         return True
 
+    async def set_youtube_url(self, video_id: str, url: str) -> None:
+        async with self._lock:
+            v = self._videos.get(video_id)
+            if v:
+                self._videos[video_id] = v.model_copy(update={"youtubeUrl": url})
+                self._persist()
+
     async def extend(self, video_id: str, add_days: int) -> Optional[Video]:
         async with self._lock:
             v = self._videos.get(video_id)
