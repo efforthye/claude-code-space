@@ -1,15 +1,19 @@
 import { Stack } from 'expo-router';
 
 import { SettingsProvider } from '@/settings/settings';
+import { JobsProvider } from '@/store/jobs';
 
 export default function RootLayout() {
   return (
     <SettingsProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="library/[id]" options={{ presentation: 'card' }} />
-        <Stack.Screen name="publish" options={{ presentation: 'modal' }} />
-      </Stack>
+      <JobsProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="jobs/[id]" options={{ presentation: 'card' }} />
+          <Stack.Screen name="library/[id]" options={{ presentation: 'card' }} />
+          <Stack.Screen name="publish" options={{ presentation: 'modal' }} />
+        </Stack>
+      </JobsProvider>
     </SettingsProvider>
   );
 }

@@ -9,6 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useI18n } from '@/settings/settings';
+import { useJobs } from '@/store/jobs';
 import { DURATIONS, TIERS, estimateCredits, formatDuration } from '@/mocks/data';
 
 type Unit = 'sec' | 'min';
@@ -17,6 +18,7 @@ export default function CreateScreen() {
   const theme = useTheme();
   const { t } = useI18n();
   const router = useRouter();
+  const { addJob } = useJobs();
   const [prompt, setPrompt] = useState('');
   const [seconds, setSeconds] = useState(60);
   const [tierId, setTierId] = useState(TIERS[1].id);
@@ -26,6 +28,12 @@ export default function CreateScreen() {
 
   const tier = useMemo(() => TIERS.find((x) => x.id === tierId) ?? TIERS[0], [tierId]);
   const credits = estimateCredits(seconds, tier);
+
+  const generate = () => {
+    const title = prompt.trim().split('\n')[0].slice(0, 60) || t('create.untitled');
+    const id = addJob({ title, seconds, tierLabel: tier.label });
+    router.push(`/jobs/${id}`);
+  };
 
   const applyCustom = (raw: string, unit: Unit) => {
     const value = raw.replace(/[^0-9.]/g, '');
@@ -116,7 +124,7 @@ export default function CreateScreen() {
       </ThemedView>
 
       <Pressable
-        onPress={() => router.push('/jobs')}
+        onPress={generate}
         style={({ pressed }) => [
           styles.cta,
           { backgroundColor: theme.text, opacity: pressed ? 0.85 : 1 },

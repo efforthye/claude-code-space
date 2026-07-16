@@ -25,6 +25,7 @@ const en: Dict = {
   'create.credits': '{n} credits',
   'create.estimateMeta': '{duration} · {tier} · exports the full film + every clip',
   'create.generate': 'Generate my film',
+  'create.untitled': 'Untitled film',
 
   'tier.draft.blurb': 'Fastest, cheapest models — good for rough cuts.',
   'tier.standard.blurb': 'Balanced quality and cost.',
@@ -38,6 +39,16 @@ const en: Dict = {
   'status.generating': 'Generating',
   'status.done': 'Done',
   'status.failed': 'Failed',
+
+  'jobDetail.status': 'Status',
+  'jobDetail.sceneMap': 'Scene progress',
+  'jobDetail.notFound': 'This job is no longer available.',
+  'jobDetail.viewInLibrary': 'View in Library',
+  'jobDetail.retry': 'Retry generation',
+  'jobDetail.note.queued': 'Queued — generation starts shortly.',
+  'jobDetail.note.generating': 'Generating scene by scene. You can leave — it keeps running.',
+  'jobDetail.note.done': 'Finished — available in your Library.',
+  'jobDetail.note.failed': 'Something went wrong. Try again.',
 
   'library.subtitle': 'Finished videos are kept for a limited time. Download or extend before they expire.',
   'library.storage': 'Storage',
@@ -113,6 +124,7 @@ const ko: Dict = {
   'create.credits': '{n} 크레딧',
   'create.estimateMeta': '{duration} · {tier} · 전체 영상 + 모든 클립 내보내기',
   'create.generate': '영상 생성',
+  'create.untitled': '제목 없는 영상',
 
   'tier.draft.blurb': '가장 빠르고 저렴한 모델 — 러프컷에 좋아요.',
   'tier.standard.blurb': '품질과 비용의 균형.',
@@ -126,6 +138,16 @@ const ko: Dict = {
   'status.generating': '생성 중',
   'status.done': '완료',
   'status.failed': '실패',
+
+  'jobDetail.status': '상태',
+  'jobDetail.sceneMap': '장면 진행',
+  'jobDetail.notFound': '더 이상 사용할 수 없는 작업이에요.',
+  'jobDetail.viewInLibrary': '보관함에서 보기',
+  'jobDetail.retry': '다시 생성',
+  'jobDetail.note.queued': '대기 중 — 곧 생성이 시작돼요.',
+  'jobDetail.note.generating': '장면별로 생성 중이에요. 나가도 계속 진행돼요.',
+  'jobDetail.note.done': '완료 — 보관함에서 확인할 수 있어요.',
+  'jobDetail.note.failed': '문제가 생겼어요. 다시 시도해 주세요.',
 
   'library.subtitle': '완성된 영상은 일정 기간만 보관돼요. 만료 전에 다운로드하거나 기간을 연장하세요.',
   'library.storage': '저장공간',

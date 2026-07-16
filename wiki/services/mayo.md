@@ -76,6 +76,15 @@ Stacked screens:
 - **Publish modal** (`publish.tsx`) — title (prefilled from the video), description, visibility
   chips (Private/Unlisted/Public), a note about the YouTube upload quota, and a Publish button
   (disabled until there's a title). Backend wiring (OAuth2 + Data API upload) comes later.
+- **Job detail** (`jobs/[id].tsx`) — status, progress bar, a bounded **scene-progress dot map**
+  (capped at 48 dots), a status note, and status-specific actions (View in Library when done,
+  Retry when failed). Looks up the job via the jobs store; not-found state for missing ids.
+
+**Generate flow (end-to-end, UI-only):** an in-memory **jobs store** (`src/store/jobs.tsx`,
+`JobsProvider` + `useJobs`) seeds from the mock `JOBS` and lets **Create** add a real "queued" job
+(title from the prompt, scene count derived from the chosen length). Generate now pushes straight
+into that job's detail screen; the **Jobs** tab reads live from the store and each card taps into
+its detail. State isn't persisted — a backend job-queue replaces this store later.
 
 **Theming & i18n:** app-wide **Settings** context (`src/settings/settings.tsx`) holds theme mode +
 language, **persisted via AsyncStorage**. `useTheme()` resolves colors from the chosen scheme

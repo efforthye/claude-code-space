@@ -1,38 +1,50 @@
-import { StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useI18n } from '@/settings/settings';
-import { JOBS } from '@/mocks/data';
+import { useJobs } from '@/store/jobs';
 
 export default function JobsScreen() {
   const { t } = useI18n();
+  const theme = useTheme();
+  const router = useRouter();
+  const { jobs } = useJobs();
   return (
     <Screen title={t('tab.jobs')} subtitle={t('jobs.subtitle')}>
-      {JOBS.map((job) => {
+      {jobs.map((job) => {
         const progress = job.scenesTotal ? job.scenesDone / job.scenesTotal : 0;
         const done = job.status === 'done';
         return (
-          <ThemedView key={job.id} type="backgroundElement" style={styles.card}>
-            <View style={styles.headerRow}>
-              <ThemedText type="smallBold" numberOfLines={1} style={styles.flex}>
-                {job.title}
-              </ThemedText>
+          <Pressable
+            key={job.id}
+            onPress={() => router.push(`/jobs/${job.id}`)}
+            style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+            <ThemedView type="backgroundElement" style={styles.card}>
+              <View style={styles.headerRow}>
+                <ThemedText type="smallBold" numberOfLines={1} style={styles.flex}>
+                  {job.title}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t(`status.${job.status}`)}
+                </ThemedText>
+                <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+              </View>
+              <ProgressBar value={done ? 1 : progress} />
               <ThemedText type="small" themeColor="textSecondary">
-                {t(`status.${job.status}`)}
+                {done
+                  ? t('jobs.completed')
+                  : t('jobs.scenes', { done: job.scenesDone, total: job.scenesTotal }) +
+                    (job.etaMin ? t('jobs.eta', { n: job.etaMin }) : '')}
               </ThemedText>
-            </View>
-            <ProgressBar value={done ? 1 : progress} />
-            <ThemedText type="small" themeColor="textSecondary">
-              {done
-                ? t('jobs.completed')
-                : t('jobs.scenes', { done: job.scenesDone, total: job.scenesTotal }) +
-                  (job.etaMin ? t('jobs.eta', { n: job.etaMin }) : '')}
-            </ThemedText>
-          </ThemedView>
+            </ThemedView>
+          </Pressable>
         );
       })}
     </Screen>
@@ -52,5 +64,8 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+  },
+  pressed: {
+    opacity: 0.6,
   },
 });
