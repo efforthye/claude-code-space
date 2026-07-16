@@ -106,6 +106,19 @@ class Storage(BaseModel):
     usedRatio: float
 
 
+class ExploreItem(BaseModel):
+    """A public creation shown in the Explore feed (browse + 'make like this')."""
+
+    id: str
+    title: str
+    prompt: str  # the prompt behind it — powers "make like this"
+    author: str
+    likes: int
+    durationLabel: str
+    accent: str
+    tierLabel: str
+
+
 class ExtendRequest(BaseModel):
     plan: str  # references a RetentionPlan.id
 

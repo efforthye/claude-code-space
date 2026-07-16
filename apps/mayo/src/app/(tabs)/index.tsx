@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { estimateCredits, formatDuration, useCatalog } from '@/api/catalog';
@@ -23,7 +23,13 @@ export default function CreateScreen() {
   const router = useRouter();
   const toast = useToast();
   const { tiers, durations } = useCatalog();
+  const { seed } = useLocalSearchParams<{ seed?: string }>();
   const [prompt, setPrompt] = useState('');
+
+  // "Make like this" from Explore navigates here with a seed prompt to prefill.
+  useEffect(() => {
+    if (seed) setPrompt(seed);
+  }, [seed]);
   const [seconds, setSeconds] = useState(60);
   const [tierId, setTierId] = useState(defaultTierId);
   const [customMode, setCustomMode] = useState(false);

@@ -12,6 +12,7 @@ import type {
   DirectorChatRequest,
   DirectorTurn,
   Duration,
+  ExploreItem,
   Estimate,
   Health,
   Job,
@@ -88,6 +89,11 @@ export const deleteJob = (id: string) =>
 // --- Director (conversational scenario flow) ---
 export const directorChat = (body: DirectorChatRequest) =>
   req<DirectorTurn>('/v1/director/chat', { method: 'POST', body: JSON.stringify(body) });
+
+// --- Explore (public feed + remix) ---
+export const getExplore = () => req<ExploreItem[]>('/v1/explore');
+export const likeExplore = (id: string) =>
+  req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/like`, { method: 'POST' });
 
 // --- Runtime settings (app-controlled generation mode) ---
 export const getSettings = () => req<RuntimeSettings>('/v1/settings');

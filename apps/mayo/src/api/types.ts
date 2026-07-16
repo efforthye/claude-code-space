@@ -50,6 +50,17 @@ export type CreateJobRequest = {
 };
 export type RuntimeSettings = { generationBackend: string };
 
+export type ExploreItem = {
+  id: string;
+  title: string;
+  prompt: string;
+  author: string;
+  likes: number;
+  durationLabel: string;
+  accent: string;
+  tierLabel: string;
+};
+
 // --- Conversational director (mirrors app/planner.py) ---
 export type Scene = {
   index: number;

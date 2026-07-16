@@ -20,6 +20,15 @@ export default function TabsLayout() {
         },
       }}>
       <Tabs.Screen
+        name="explore"
+        options={{
+          title: t('tab.explore'),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="compass-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: t('tab.create'),

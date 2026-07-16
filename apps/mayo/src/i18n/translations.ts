@@ -6,10 +6,15 @@ export type ActiveLang = 'en' | 'ko';
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  'tab.explore': 'Explore',
   'tab.create': 'Create',
   'tab.jobs': 'Jobs',
   'tab.library': 'Library',
   'tab.account': 'Account',
+
+  'explore.subtitle': "Trending films from the community — tap to make your own version.",
+  'explore.remix': 'Make like this',
+  'explore.like': 'Like',
 
   'common.error': "Couldn't reach the server.",
   'common.retry': 'Retry',
@@ -190,10 +195,15 @@ const en: Dict = {
 };
 
 const ko: Dict = {
+  'tab.explore': '탐색',
   'tab.create': '만들기',
   'tab.jobs': '작업',
   'tab.library': '보관함',
   'tab.account': '계정',
+
+  'explore.subtitle': '요즘 뜨는 커뮤니티 영상 — 눌러서 나만의 버전으로 만들어보세요.',
+  'explore.remix': '이렇게 만들기',
+  'explore.like': '좋아요',
 
   'common.error': '서버에 연결하지 못했어요.',
   'common.retry': '다시 시도',

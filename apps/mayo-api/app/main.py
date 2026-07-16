@@ -15,7 +15,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import __version__
 from .config import settings
 from .planner import get_scenario_planner
-from .routers import billing, catalog, director, health, jobs, library, media, settings as settings_router
+from .routers import (
+    billing,
+    catalog,
+    director,
+    explore,
+    health,
+    jobs,
+    library,
+    media,
+    settings as settings_router,
+)
 from .security import require_api_key
 from .worker import shutdown
 
@@ -57,6 +67,7 @@ protected = [Depends(require_api_key)]
 app.include_router(health.router)
 app.include_router(catalog.router, dependencies=protected)
 app.include_router(director.router, dependencies=protected)
+app.include_router(explore.router, dependencies=protected)
 app.include_router(jobs.router, dependencies=protected)
 app.include_router(library.router, dependencies=protected)
 app.include_router(media.router, dependencies=protected)

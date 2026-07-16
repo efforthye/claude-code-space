@@ -13,7 +13,7 @@ import time
 from typing import Optional
 
 from .catalog import scenes_for, tier_by_id
-from .schemas import Job, Storage, Video
+from .schemas import ExploreItem, Job, Storage, Video
 
 _counter = itertools.count(1)
 
@@ -147,5 +147,42 @@ def _fmt_clock(seconds: int) -> str:
     return f"{m}:{s:02d}"
 
 
+# Seed a public Explore feed — trending community creations to browse + remix.
+_SEED_EXPLORE: list[ExploreItem] = [
+    ExploreItem(id="e1", title="Neon Rain Chase", prompt="A neon-noir city chase at night, rain-soaked streets, synthwave mood, cinematic", author="@mika", likes=1284, durationLabel="0:32", accent="#6D5DF6", tierLabel="Premium"),
+    ExploreItem(id="e2", title="Deep Ocean Drift", prompt="A calm deep-ocean documentary shot, bioluminescent creatures, soft narration mood", author="@reef", likes=980, durationLabel="1:04", accent="#1FA2A6", tierLabel="Standard"),
+    ExploreItem(id="e3", title="Fox in the Snow", prompt="A red fox trotting through a snowy forest at dawn, soft light, cinematic", author="@yuki", likes=1721, durationLabel="0:20", accent="#E2A43B", tierLabel="Premium"),
+    ExploreItem(id="e4", title="Lantern Festival", prompt="Thousands of paper lanterns rising over a river at dusk, warm glow, dreamy", author="@lumen", likes=642, durationLabel="0:48", accent="#E0699A", tierLabel="Standard"),
+    ExploreItem(id="e5", title="Retro Space Diner", prompt="A retro-futuristic space diner, chrome and neon, 1960s sci-fi poster style", author="@astro", likes=1103, durationLabel="0:28", accent="#4C8DF6", tierLabel="Premium"),
+    ExploreItem(id="e6", title="Cherry Blossom Run", prompt="A runner sprinting through a tunnel of falling cherry blossoms, slow motion", author="@haru", likes=1560, durationLabel="0:24", accent="#E0699A", tierLabel="Standard"),
+    ExploreItem(id="e7", title="Cyber Market", prompt="A crowded cyberpunk street market, holograms and steam, blade-runner mood", author="@kite", likes=873, durationLabel="0:36", accent="#6D5DF6", tierLabel="Premium"),
+    ExploreItem(id="e8", title="Desert Monolith", prompt="A vast desert at golden hour with a mysterious black monolith, epic scale", author="@dune", likes=459, durationLabel="0:40", accent="#E2A43B", tierLabel="Draft"),
+]
+
+
+class ExploreStore:
+    def __init__(self) -> None:
+        self._items: dict[str, ExploreItem] = {e.id: e.model_copy() for e in _SEED_EXPLORE}
+        self._lock = asyncio.Lock()
+
+    async def list(self) -> list[ExploreItem]:
+        async with self._lock:
+            return sorted(
+                (e.model_copy() for e in self._items.values()),
+                key=lambda e: e.likes,
+                reverse=True,
+            )
+
+    async def like(self, item_id: str) -> Optional[ExploreItem]:
+        async with self._lock:
+            item = self._items.get(item_id)
+            if not item:
+                return None
+            updated = item.model_copy(update={"likes": item.likes + 1})
+            self._items[item_id] = updated
+            return updated.model_copy()
+
+
 jobs = JobStore()
 library = LibraryStore()
+explore = ExploreStore()
