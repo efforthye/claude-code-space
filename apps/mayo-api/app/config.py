@@ -33,9 +33,26 @@ class Settings:
     tick_seconds: float = field(
         default_factory=lambda: float(os.getenv("MAYO_TICK_SECONDS", "1.0"))
     )
-    # Generation backend selector — mock (built-in) | external (real providers).
+    # Generation backend selector — mock (built-in) | comfy (local ComfyUI video)
+    # | external (paid providers). See ADR 0007 / 0009.
     generation_backend: str = field(
         default_factory=lambda: os.getenv("MAYO_GENERATION_BACKEND", "mock")
+    )
+    # ComfyUI local video generation (used when generation_backend=comfy, ADR 0009).
+    comfy_url: str = field(
+        default_factory=lambda: os.getenv("MAYO_COMFY_URL", "http://127.0.0.1:8188")
+    )
+    # Text->video workflow (API format). Relative paths resolve against apps/mayo-api/.
+    comfy_workflow: str = field(
+        default_factory=lambda: os.getenv("MAYO_COMFY_WORKFLOW", "workflows/animatelcm_t2v.json")
+    )
+    comfy_poll_seconds: float = field(
+        default_factory=lambda: float(os.getenv("MAYO_COMFY_POLL_SECONDS", "3"))
+    )
+    # Max seconds to wait for one scene to render before giving up (a clip can
+    # take several minutes on the mini).
+    comfy_max_wait: float = field(
+        default_factory=lambda: float(os.getenv("MAYO_COMFY_MAX_WAIT", "1800"))
     )
     # Scenario planner ("AI director") selector — mock | claude (ADR 0008).
     planner_backend: str = field(
