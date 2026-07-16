@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { TIERS } from '@/api/catalog';
-import { getStorage } from '@/api/client';
+import { API_BASE_URL, getHealth, getStorage } from '@/api/client';
 import { Chip } from '@/components/chip';
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
@@ -28,7 +28,11 @@ export default function AccountScreen() {
   const router = useRouter();
   const { t, themeMode, setThemeMode, lang, setLang, defaultTierId, setDefaultTier } = useSettings();
   const { data: storage } = useQuery(getStorage);
+  const { data: health, error: healthError } = useQuery(getHealth, { pollMs: 10000 });
   const { entitlement } = usePayments();
+
+  const online = !!health && health.status === 'ok' && !healthError;
+  const apiHost = API_BASE_URL.replace(/^https?:\/\//, '');
 
   const themeOptions: { id: ThemeMode; label: string }[] = [
     { id: 'system', label: t('theme.system') },
@@ -69,6 +73,16 @@ export default function AccountScreen() {
           </ThemedText>
         </ThemedView>
       </Pressable>
+
+      <ThemedView type="backgroundElement" style={styles.serverRow}>
+        <View style={[styles.dot, { backgroundColor: online ? '#3BA55D' : '#E5484D' }]} />
+        <ThemedText type="small" style={styles.flex}>
+          {t('account.server')} · {online ? t('account.serverConnected') : t('account.serverOffline')}
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+          {apiHost}
+        </ThemedText>
+      </ThemedView>
 
       <ThemedText type="smallBold">{t('account.appearance')}</ThemedText>
       <View style={styles.row}>
@@ -164,6 +178,18 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.6,
+  },
+  serverRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    padding: Spacing.three,
+    borderRadius: Spacing.four,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   row: {
     flexDirection: 'row',

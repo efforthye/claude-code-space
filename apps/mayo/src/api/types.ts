@@ -37,6 +37,7 @@ export type Video = {
 
 export type Storage = { usedLabel: string; totalLabel: string; usedRatio: number };
 export type Estimate = { seconds: number; tier: string; credits: number };
+export type Health = { status: string; env: string; storage: string };
 
 export type CreateJobRequest = { prompt: string; seconds: number; tier: string };
 export type PublishRequest = { title: string; description?: string; visibility: Visibility };

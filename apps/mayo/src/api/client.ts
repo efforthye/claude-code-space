@@ -9,6 +9,7 @@ import type {
   CreateJobRequest,
   Duration,
   Estimate,
+  Health,
   Job,
   ModelProvider,
   Plan,
@@ -56,6 +57,9 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
+
+// --- Health ---
+export const getHealth = () => req<Health>('/health');
 
 // --- Catalog ---
 export const getTiers = () => req<Tier[]>('/v1/catalog/tiers');
