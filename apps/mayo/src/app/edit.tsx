@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { createEdit, listVideos, uploadEditAudio } from '@/api/client';
+import { createEdit, listVideos, mediaUrl, uploadEditAudio } from '@/api/client';
 import type { ClipFilter, EditClip, TextPosition, Video } from '@/api/types';
 import { useToast } from '@/components/toast';
 import { ThemedText } from '@/components/themed-text';
@@ -138,7 +138,7 @@ export default function EditScreen() {
       videoId: v.id,
       title: v.title,
       accent: v.accent,
-      url: `${getApiBaseUrl()}${v.url}`,
+      url: mediaUrl(v.url!),
       duration: dur,
       start: 0,
       end: dur,

@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { deleteJob, getJob, retryJob } from '@/api/client';
+import { deleteJob, getJob, retryJob, mediaUrl } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ProgressBar } from '@/components/progress-bar';
 import { ThemedText } from '@/components/themed-text';
@@ -119,7 +119,7 @@ export default function JobDetailScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.previewRow}>
                   {job.sceneUrls.map((u, i) => (
-                    <PreviewClip key={i} uri={`${getApiBaseUrl()}${u}`} />
+                    <PreviewClip key={i} uri={mediaUrl(u)} />
                   ))}
                 </ScrollView>
               </>

@@ -75,6 +75,17 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** Absolute playback URL for a media path, carrying auth in a way browser-native
+ * loaders can use: web <video> can't send headers, so a signed-in session rides
+ * along as ?s= (the API accepts it as a credential). Native players still get
+ * headers from the callers; the query param is harmless there. */
+export function mediaUrl(path: string): string {
+  const base = `${getApiBaseUrl()}${path}`;
+  const session = getSessionToken();
+  if (!session) return base;
+  return `${base}${path.includes('?') ? '&' : '?'}s=${encodeURIComponent(session)}`;
+}
+
 // --- Health ---
 export const getHealth = () => req<Health>('/health');
 

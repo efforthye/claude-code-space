@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { deleteVideo, getVideo, publishToExplore } from '@/api/client';
+import { deleteVideo, getVideo, mediaUrl, publishToExplore } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -152,7 +152,7 @@ export default function VideoDetailScreen() {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}>
             {video.url ? (
-              <FilmPlayer uri={`${getApiBaseUrl()}${video.url}`} />
+              <FilmPlayer uri={mediaUrl(video.url)} />
             ) : (
               <View style={[styles.poster, { backgroundColor: video.accent }]}>
                 <Ionicons name="play" size={44} color="#ffffff" />

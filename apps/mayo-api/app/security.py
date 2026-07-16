@@ -19,7 +19,7 @@ from __future__ import annotations
 import secrets
 from typing import Optional
 
-from fastapi import Header, HTTPException, status
+from fastapi import Header, HTTPException, Query, status
 
 from .config import settings
 
@@ -28,6 +28,7 @@ def require_api_key(
     authorization: Optional[str] = Header(default=None),
     x_api_key: Optional[str] = Header(default=None),
     x_mayo_session: Optional[str] = Header(default=None),
+    s: Optional[str] = Query(default=None),
 ) -> None:
     key = settings.api_key
     if not key:
@@ -45,11 +46,14 @@ def require_api_key(
     # A signed-in user's session is an equally valid credential — this is what
     # lets the public web build (mayo.im) ship WITHOUT the shared key baked into
     # its inspectable JS bundle: web visitors sign in instead (ADR 0011).
-    if x_mayo_session:
-        from .auth import store as users  # lazy — avoids an import cycle
+    # `?s=<session>` covers browser-native loaders (<video>/<img> on mayo.im)
+    # that cannot attach headers.
+    for candidate in (x_mayo_session, s):
+        if candidate:
+            from .auth import store as users  # lazy — avoids an import cycle
 
-        if users.user_for_session(x_mayo_session):
-            return
+            if users.user_for_session(candidate):
+                return
 
     raise HTTPException(
         status.HTTP_401_UNAUTHORIZED,

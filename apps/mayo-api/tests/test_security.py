@@ -82,3 +82,16 @@ def test_auth_endpoints_open_without_key(monkeypatch):
         json={"email": "openweb@example.com", "password": "pw12345678", "name": "W"},
     )
     assert r.status_code in (201, 409)  # reachable (409 if re-run) — not a 401
+
+
+def test_query_param_session_accepted(monkeypatch):
+    # Browser-native loaders (<video> on the web) can't send headers — a valid
+    # session in ?s= must authenticate media requests.
+    from app.auth import store as users
+
+    _use_key(monkeypatch, "s3cret")
+    user = users.create_user("qweb@example.com", "Q", provider="email", password="pw12345678")
+    token = users.create_session(user["id"])
+    assert security.require_api_key(None, None, None, s=token) is None
+    with pytest.raises(HTTPException):
+        security.require_api_key(None, None, None, s="s_nope")

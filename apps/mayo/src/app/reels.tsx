@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { addComment, getComments, getExplore } from '@/api/client';
+import { addComment, getComments, getExplore, mediaUrl } from '@/api/client';
 import type { ExploreComment, ExploreItem, ExploreSort } from '@/api/types';
 import { ThemedText } from '@/components/themed-text';
 import { useFavorites } from '@/explore/favorites';
@@ -105,7 +105,7 @@ function Reel({
   const { has, toggle } = useFavorites();
   const follows = useFollows();
   const key = getApiKey();
-  const uri = item.url ? `${getApiBaseUrl()}${item.url}` : '';
+  const uri = item.url ? mediaUrl(item.url) : '';
 
   const player = useVideoPlayer(
     uri ? { uri, headers: key ? { Authorization: `Bearer ${key}` } : undefined } : null,

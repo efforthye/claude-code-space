@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { getExplore } from '@/api/client';
+import { getExplore, mediaUrl } from '@/api/client';
 import type { ExploreItem, ExploreSort } from '@/api/types';
 import { Chip } from '@/components/chip';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
@@ -102,7 +102,7 @@ export default function ExploreScreen() {
         <ThemedView key={item.id} type="backgroundElement" style={styles.card}>
           {exploreAutoplay && item.url ? (
             <AutoPreview
-              uri={`${getApiBaseUrl()}${item.url}`}
+              uri={mediaUrl(item.url)}
               duration={item.durationLabel}
               onPress={() => open(index)}
             />
