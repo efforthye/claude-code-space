@@ -53,6 +53,15 @@ SDK 56 via **TestFlight** external beta, or SDK 57 via `eas go`. The durable fix
 
 Trimmed the template's SDK-57-only extras; fixed `use-theme` for RN 0.81's `useColorScheme`.
 
+**Web target ([[mayo-web-target]], 2026-07-16).** The same codebase now also builds for the **web**
+(react-native-web + expo-router) so it can be the **mayo.im** website, not just the app. `web.output`
+switched `static → single` (client SPA; static output crashed on `resetServerContext`); `npm run
+build:web` (`expo export -p web`) emits `dist/`; `apps/mayo/vercel.json` deploys it (SPA rewrite,
+Root Directory = `apps/mayo`). Native-only modules (notifications, media-library/file-system/sharing,
+`Alert.alert`) are `Platform.OS==='web'`-guarded — web download uses a browser `<a download>`.
+⚠️ Don't bake the shared API key into the public web bundle (it'd leak) — that ties a public mayo.im
+to per-user **accounts**; until then keep it demo/read-mostly. iOS + web `expo export` both pass.
+
 **Navigation:** a root **Stack** (`src/app/_layout.tsx`) wraps the tab group so detail screens and
 modals can stack over the tabs. The root Stack holds three routes: `(tabs)` (the tab bar),
 `library/[id]` (video detail, card push), and `publish` (YouTube publish, **modal** presentation).

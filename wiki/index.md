@@ -62,3 +62,5 @@ _(none yet — postmortems)_
 ## Concepts
 - [[expo-go-vs-dev-build]] — Expo Go (generic container, SDK-locked) vs a development build
   (your own compiled app); why mayo will need a dev build.
+- [[mayo-web-target]] — running the same Expo app on the **web** (react-native-web, `web.output:
+  single`, Vercel) for mayo.im; native-module web guards + the shared-key leak caveat.

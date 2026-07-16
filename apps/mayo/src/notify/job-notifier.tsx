@@ -5,18 +5,24 @@
 
 import * as Notifications from 'expo-notifications';
 import { useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 
 import { listJobs } from '@/api/client';
 import { useSettings } from '@/settings/settings';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+// Local notifications aren't supported on web — skip the handler there.
+const NOTIFY_SUPPORTED = Platform.OS !== 'web';
+
+if (NOTIFY_SUPPORTED) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 export function JobNotifier() {
   const { t, notifyOnDone } = useSettings();
@@ -28,6 +34,7 @@ export function JobNotifier() {
   const grantedRef = useRef(false);
 
   useEffect(() => {
+    if (!NOTIFY_SUPPORTED) return;
     let alive = true;
 
     (async () => {

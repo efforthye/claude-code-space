@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
@@ -43,6 +43,12 @@ export default function VideoDetailScreen() {
     setDownloading(true);
     try {
       const key = getApiKey();
+      // Web: fetch the protected file and trigger a browser download (no camera roll).
+      if (Platform.OS === 'web') {
+        await webDownload(`${getApiBaseUrl()}${video.url}`, key, `${video.title || video.id}.mp4`);
+        toast.show(t('detail.downloaded'));
+        return;
+      }
       const target = `${cacheDirectory}${video.id}.mp4`;
       const { uri } = await downloadAsync(`${getApiBaseUrl()}${video.url}`, target, {
         headers: key ? { Authorization: `Bearer ${key}` } : undefined,
@@ -64,22 +70,25 @@ export default function VideoDetailScreen() {
     }
   };
 
+  const doDelete = async () => {
+    try {
+      await deleteVideo(videoId);
+      router.back();
+      toast.show(t('detail.deleted'));
+    } catch {
+      toast.show(t('common.error'));
+    }
+  };
+
   const confirmDelete = () => {
+    if (Platform.OS === 'web') {
+      const g = globalThis as unknown as { confirm?: (m: string) => boolean };
+      if (!g.confirm || g.confirm(t('detail.deleteConfirm'))) void doDelete();
+      return;
+    }
     Alert.alert(t('detail.deleteTitle'), t('detail.deleteConfirm'), [
       { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('detail.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteVideo(videoId);
-            router.back();
-            toast.show(t('detail.deleted'));
-          } catch {
-            toast.show(t('common.error'));
-          }
-        },
-      },
+      { text: t('detail.delete'), style: 'destructive', onPress: doDelete },
     ]);
   };
 
@@ -236,6 +245,28 @@ export default function VideoDetailScreen() {
       </SafeAreaView>
     </ThemedView>
   );
+}
+
+// Browser download for the web build: fetch the auth-protected file as a blob and
+// click a temporary <a download>. Uses DOM globals guarded behind Platform.OS==='web'.
+async function webDownload(url: string, key: string | undefined, filename: string) {
+  const res = await fetch(url, {
+    headers: key ? { Authorization: `Bearer ${key}` } : undefined,
+  });
+  if (!res.ok) throw new Error('download failed');
+  const blob = await res.blob();
+  const g = globalThis as unknown as {
+    URL: typeof URL;
+    document: { createElement: (t: string) => any; body: any };
+  };
+  const objectUrl = g.URL.createObjectURL(blob);
+  const a = g.document.createElement('a');
+  a.href = objectUrl;
+  a.download = filename;
+  g.document.body.appendChild(a);
+  a.click();
+  a.remove();
+  g.URL.revokeObjectURL(objectUrl);
 }
 
 function FilmPlayer({ uri }: { uri: string }) {
