@@ -41,12 +41,15 @@ is guarded with `Platform.OS === 'web'` so the site doesn't crash:
   build time with `EXPO_PUBLIC_MAYO_API_URL` (Vercel env var).
 - **CORS**: the API's `MAYO_ALLOWED_ORIGINS` must include `https://mayo.im` in prod
   (it's `*` in dev). See [[home-server]] / the API config.
-- ⚠️ **Auth caveat (important):** the API is protected by a *shared* bearer key. A
-  public web bundle is trivially inspectable, so **baking `EXPO_PUBLIC_MAYO_API_KEY`
-  into the web build would leak it**. Don't ship the shared key to the public web —
-  the durable fix is **per-user accounts** (see the accounts work / task) so the web
-  app authenticates each visitor instead of carrying one global key. Until then, treat
-  a public mayo.im as read-mostly / demo, or keep it behind access control.
+- ✅ **Auth (solved 2026-07-16):** the web bundle ships **without** the shared key —
+  `security.py` accepts a **signed-in user's session** (`X-Mayo-Session`) as an equal
+  credential, and the `/v1/auth` router is mounted unguarded (register/login/google
+  verify their own credentials). So web visitors sign in ([[0011-mayo-accounts-sns-login]])
+  and everything works; anonymous visitors get 401s until they do. Never bake
+  `EXPO_PUBLIC_MAYO_API_KEY` into a public web deploy.
+- **Vercel wiring (owner steps):** point the existing mayo.im Vercel project at this
+  repo, set **Root Directory = `apps/mayo`**, and set the **Production Branch** to the
+  working branch (deploys follow pushes from then on).
 
 ## Related
 - Service: [[mayo]] · Mobile stack: [[0003-expo-react-native-for-mobile-app]] ·

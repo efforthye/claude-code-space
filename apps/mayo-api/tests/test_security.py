@@ -52,3 +52,33 @@ def test_protected_endpoint_401_when_key_set(monkeypatch):
     assert ok.status_code == 200
     # health stays open
     assert client.get("/health").status_code == 200
+
+
+def test_valid_session_passes_without_key(monkeypatch):
+    # The public web build carries no shared key — a signed-in user's session
+    # is accepted as the credential instead.
+    from app.auth import store as users
+
+    _use_key(monkeypatch, "s3cret")
+    user = users.create_user("web@example.com", "Web", provider="email", password="pw12345678")
+    token = users.create_session(user["id"])
+    assert security.require_api_key(authorization=None, x_api_key=None, x_mayo_session=token) is None
+
+    with pytest.raises(HTTPException):
+        security.require_api_key(authorization=None, x_api_key=None, x_mayo_session="s_bogus")
+
+
+def test_auth_endpoints_open_without_key(monkeypatch):
+    # register/login must be reachable by a brand-new web visitor (no key, no
+    # session) — the auth router is mounted without the shared-key guard.
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    monkeypatch.setattr(security, "settings", SimpleNamespace(api_key="s3cret"))
+    client = TestClient(app)
+    r = client.post(
+        "/v1/auth/register",
+        json={"email": "openweb@example.com", "password": "pw12345678", "name": "W"},
+    )
+    assert r.status_code in (201, 409)  # reachable (409 if re-run) — not a 401

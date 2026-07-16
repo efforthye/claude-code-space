@@ -27,6 +27,7 @@ from .config import settings
 def require_api_key(
     authorization: Optional[str] = Header(default=None),
     x_api_key: Optional[str] = Header(default=None),
+    x_mayo_session: Optional[str] = Header(default=None),
 ) -> None:
     key = settings.api_key
     if not key:
@@ -38,9 +39,20 @@ def require_api_key(
     elif x_api_key:
         presented = x_api_key.strip()
 
-    if not presented or not secrets.compare_digest(presented, key):
-        raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED,
-            detail="invalid or missing API key",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    if presented and secrets.compare_digest(presented, key):
+        return
+
+    # A signed-in user's session is an equally valid credential — this is what
+    # lets the public web build (mayo.im) ship WITHOUT the shared key baked into
+    # its inspectable JS bundle: web visitors sign in instead (ADR 0011).
+    if x_mayo_session:
+        from .auth import store as users  # lazy — avoids an import cycle
+
+        if users.user_for_session(x_mayo_session):
+            return
+
+    raise HTTPException(
+        status.HTTP_401_UNAUTHORIZED,
+        detail="invalid or missing API key",
+        headers={"WWW-Authenticate": "Bearer"},
+    )

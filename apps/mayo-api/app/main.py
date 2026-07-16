@@ -78,7 +78,10 @@ app.add_middleware(
 # /health stays open (liveness / tunnel probe). Everything else requires the key.
 protected = [Depends(require_api_key)]
 app.include_router(health.router)
-app.include_router(auth.router, dependencies=protected)
+# Auth is public by design: register/login/google verify their own credentials
+# and me/logout/keys require a valid session internally — a new web visitor has
+# no shared key, and the web bundle must not embed one (see security.py).
+app.include_router(auth.router)
 app.include_router(catalog.router, dependencies=protected)
 app.include_router(director.router, dependencies=protected)
 app.include_router(explore.router, dependencies=protected)
