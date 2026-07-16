@@ -58,11 +58,19 @@ export type Video = {
   sizeLabel: string;
   expiresInDays: number;
   accent: string;
+  resolution: string;
+  tierLabel: string;
+  scenes: number;
+  createdLabel: string;
 };
 export const VIDEOS: Video[] = [
-  { id: 'v1', title: 'Product teaser — 3 min', durationLabel: '3:02', sizeLabel: '480 MB', expiresInDays: 11, accent: '#6D5DF6' },
-  { id: 'v2', title: 'Ocean documentary cut', durationLabel: '28:14', sizeLabel: '3.9 GB', expiresInDays: 3, accent: '#1FA2A6' },
-  { id: 'v3', title: 'Wedding recap film', durationLabel: '12:41', sizeLabel: '1.6 GB', expiresInDays: 1, accent: '#E0699A' },
+  { id: 'v1', title: 'Product teaser — 3 min', durationLabel: '3:02', sizeLabel: '480 MB', expiresInDays: 11, accent: '#6D5DF6', resolution: '1080p', tierLabel: 'Premium', scenes: 9, createdLabel: '3 days ago' },
+  { id: 'v2', title: 'Ocean documentary cut', durationLabel: '28:14', sizeLabel: '3.9 GB', expiresInDays: 3, accent: '#1FA2A6', resolution: '1080p', tierLabel: 'Standard', scenes: 64, createdLabel: '1 week ago' },
+  { id: 'v3', title: 'Wedding recap film', durationLabel: '12:41', sizeLabel: '1.6 GB', expiresInDays: 1, accent: '#E0699A', resolution: '4K', tierLabel: 'Premium', scenes: 31, createdLabel: '2 weeks ago' },
 ];
+
+export function getVideo(id: string): Video | undefined {
+  return VIDEOS.find((v) => v.id === id);
+}
 
 export const STORAGE = { usedLabel: '18.2 GB', totalLabel: '50 GB', usedRatio: 0.36 };

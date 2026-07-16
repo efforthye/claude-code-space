@@ -51,16 +51,31 @@ SDK 56 via **TestFlight** external beta, or SDK 57 via `eas go`. The durable fix
 **development build** (bakes our SDK in → immune to Expo Go's review lottery) — see
 [[expo-go-vs-dev-build]]. mayo will need a dev build anyway once native modules arrive.
 
-Trimmed the template's SDK-57-only extras; `_layout` uses plain `Tabs` (no `ThemeProvider`, which
-older expo-router doesn't export); fixed `use-theme` for RN 0.81's `useColorScheme`.
+Trimmed the template's SDK-57-only extras; fixed `use-theme` for RN 0.81's `useColorScheme`.
+
+**Navigation:** a root **Stack** (`src/app/_layout.tsx`) wraps the tab group so detail screens and
+modals can stack over the tabs. The root Stack holds three routes: `(tabs)` (the tab bar),
+`library/[id]` (video detail, card push), and `publish` (YouTube publish, **modal** presentation).
+The tabs themselves live in `src/app/(tabs)/_layout.tsx` — `(tabs)` is a transparent route group,
+so tab URLs are unchanged.
+
 Four tabs built with mock data:
-- **Create** (`src/app/index.tsx`) — prompt, length selector (3m/10m/30m/1hr+), quality & model
+- **Create** (`(tabs)/index.tsx`) — prompt, length selector (3m/10m/30m/1hr+), quality & model
   tier (Draft/Standard/Premium), estimated-cost card, Generate button.
-- **Jobs** (`jobs.tsx`) — per-job scene progress bars + status (queued/generating/done/failed).
-- **Library** (`library.tsx`) — finished videos, size, **retention "expires in N days"**, download;
-  storage-usage bar (ties to [[0004-mayo-storage-local-then-s3]]).
-- **Account** (`account.tsx`) — plan, storage, retention extension, model prefs, **Appearance
+- **Jobs** (`(tabs)/jobs.tsx`) — per-job scene progress bars + status (queued/generating/done/failed).
+- **Library** (`(tabs)/library.tsx`) — finished videos, size, **retention "expires in N days"**;
+  storage-usage bar (ties to [[0004-mayo-storage-local-then-s3]]). Each card taps through to the
+  **video detail** screen; a YouTube icon opens the publish modal directly.
+- **Account** (`(tabs)/account.tsx`) — plan, storage, retention extension, model prefs, **Appearance
   (System/Light/Dark)** and **Language (System/English/한국어)** pickers.
+
+Stacked screens:
+- **Video detail** (`library/[id].tsx`) — poster, spec sheet (duration/size/resolution/quality/
+  scenes/created), retention line, and actions: publish to YouTube, download film, download clips,
+  extend retention. Looks up the video via `getVideo(id)`; shows a not-found state for missing ids.
+- **Publish modal** (`publish.tsx`) — title (prefilled from the video), description, visibility
+  chips (Private/Unlisted/Public), a note about the YouTube upload quota, and a Publish button
+  (disabled until there's a title). Backend wiring (OAuth2 + Data API upload) comes later.
 
 **Theming & i18n:** app-wide **Settings** context (`src/settings/settings.tsx`) holds theme mode +
 language, **persisted via AsyncStorage**. `useTheme()` resolves colors from the chosen scheme

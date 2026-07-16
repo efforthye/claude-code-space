@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ProgressBar } from '@/components/progress-bar';
@@ -12,6 +13,7 @@ import { STORAGE, VIDEOS } from '@/mocks/data';
 
 export default function LibraryScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { t } = useI18n();
 
   const retentionLabel = (days: number) => {
@@ -33,34 +35,36 @@ export default function LibraryScreen() {
       </ThemedView>
 
       {VIDEOS.map((v) => (
-        <ThemedView key={v.id} type="backgroundElement" style={styles.card}>
-          <View style={[styles.thumb, { backgroundColor: v.accent }]}>
-            <Ionicons name="play" size={20} color="#ffffff" />
-          </View>
-          <View style={styles.meta}>
-            <ThemedText type="smallBold" numberOfLines={1}>
-              {v.title}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {v.durationLabel} · {v.sizeLabel}
-            </ThemedText>
-            <ThemedText type="small" themeColor={v.expiresInDays <= 3 ? 'text' : 'textSecondary'}>
-              {retentionLabel(v.expiresInDays)}
-            </ThemedText>
-          </View>
-          <View style={styles.actions}>
-            <Pressable
-              accessibilityLabel="Publish to YouTube"
-              style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
-              <Ionicons name="logo-youtube" size={22} color="#FF0000" />
-            </Pressable>
-            <Pressable
-              accessibilityLabel="Download"
-              style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
-              <Ionicons name="download-outline" size={22} color={theme.text} />
-            </Pressable>
-          </View>
-        </ThemedView>
+        <Pressable
+          key={v.id}
+          onPress={() => router.push(`/library/${v.id}`)}
+          style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+          <ThemedView type="backgroundElement" style={styles.card}>
+            <View style={[styles.thumb, { backgroundColor: v.accent }]}>
+              <Ionicons name="play" size={20} color="#ffffff" />
+            </View>
+            <View style={styles.meta}>
+              <ThemedText type="smallBold" numberOfLines={1}>
+                {v.title}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {v.durationLabel} · {v.sizeLabel}
+              </ThemedText>
+              <ThemedText type="small" themeColor={v.expiresInDays <= 3 ? 'text' : 'textSecondary'}>
+                {retentionLabel(v.expiresInDays)}
+              </ThemedText>
+            </View>
+            <View style={styles.actions}>
+              <Pressable
+                accessibilityLabel="Publish to YouTube"
+                onPress={() => router.push(`/publish?id=${v.id}`)}
+                style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+                <Ionicons name="logo-youtube" size={22} color="#FF0000" />
+              </Pressable>
+              <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
+            </View>
+          </ThemedView>
+        </Pressable>
       ))}
     </Screen>
   );
