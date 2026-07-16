@@ -63,6 +63,9 @@ r                         # reload the app ; m → toggle the dev menu
   latest Expo-Go-supported SDK, or switch to a **development build** (`npx expo run:ios/android`
   / EAS dev build) which isn't tied to Expo Go's version.
 - **Stuck / white screen:** `npx expo start -c` to clear cache; shake the phone → Reload.
+- **Change didn't auto-apply:** Fast Refresh handles most edits, but **adding/removing React
+  hooks or structural changes** can't preserve state and may need a full reload — **shake the
+  phone → Reload** (faster than restarting Expo Go).
 - **arm64:** native tooling is all arm64 here — no emulation concerns for JS-only development.
 
 ## Toward a real app (later)
