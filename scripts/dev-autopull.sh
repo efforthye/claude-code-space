@@ -33,10 +33,10 @@ while true; do
         fi
       fi
 
-      # Restart the API agent when the backend changes. mayo-api-run.sh
-      # self-bootstraps deps (it reinstalls when requirements.txt changes), so a
-      # plain kickstart is enough to pick up code or dependency changes.
-      if echo "$changed" | grep -q '^apps/mayo-api/'; then
+      # Restart the API agent when the backend or its runner changes.
+      # mayo-api-run.sh self-bootstraps deps (reinstalls when requirements.txt
+      # changes), so a plain kickstart picks up code, dep, or runner changes.
+      if echo "$changed" | grep -qE '^apps/mayo-api/|^scripts/mayo-api-run\.sh$'; then
         echo "  mayo-api changed -> restarting mayo api agent"
         launchctl kickstart -k "gui/$(id -u)/com.efforthye.mayo.api" 2>/dev/null || true
       fi

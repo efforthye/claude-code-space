@@ -134,7 +134,14 @@ schemas (`app/schemas.py`) **mirror the app mocks** so the client swaps mocks �
 
 Endpoints (v1): `POST /v1/jobs` (+ `/estimate`), `GET /v1/jobs[/{id}]`, `DELETE /v1/jobs/{id}`;
 `GET /v1/library/videos[/{id}]`, `/storage`, `POST …/extend`, `POST …/publish`;
-`GET /v1/catalog/{tiers,durations,plans,retention-plans,models}`; `GET /health`. Seams built in from
+`GET /v1/catalog/{tiers,durations,plans,retention-plans,models}`; `GET /v1/billing/products` +
+`POST /v1/billing/validate`; `GET /health`.
+
+**Generation backend seam ([[0007-mayo-model-provider-abstraction]]):** per-scene model calls sit
+behind a `ModelBackend` interface (`app/providers.py`), selected by `MAYO_GENERATION_BACKEND`. The
+`mock` backend (default) advances a scene per tick; `external` is the declared seam for real
+image/video providers (keyed to the model registry + price tiers, media via the storage interface,
+keys from env — names only). Swapping mock → real is a backend change, not a pipeline rewrite. Seams built in from
 day one: **storage interface** (local now, S3 stub — [[0004-mayo-storage-local-then-s3]]), a
 **pluggable model registry** (image/video providers keyed to price tiers), and **env-driven
 config/secrets** (values at runtime, names-only in `.env.example`). Tested with `pytest`

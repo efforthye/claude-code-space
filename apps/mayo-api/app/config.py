@@ -30,6 +30,10 @@ class Settings:
     tick_seconds: float = field(
         default_factory=lambda: float(os.getenv("MAYO_TICK_SECONDS", "1.0"))
     )
+    # Generation backend selector — mock (built-in) | external (real providers).
+    generation_backend: str = field(
+        default_factory=lambda: os.getenv("MAYO_GENERATION_BACKEND", "mock")
+    )
 
     @property
     def is_dev(self) -> bool:

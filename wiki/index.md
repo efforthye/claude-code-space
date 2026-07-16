@@ -44,6 +44,8 @@ Updated whenever pages are added/renamed or a service's status changes.
   stack-consistent with [[richclub]]; schemas mirror the app mocks.
 - [[0006-mayo-job-queue-inprocess-then-redis]] — Job queue: in-process asyncio worker first,
   Redis-backed workers + a DB when generation becomes real / needs durability.
+- [[0007-mayo-model-provider-abstraction]] — Model calls behind a `ModelBackend` seam (mock now,
+  external providers later); swapping in real image/video models is a backend change, not a rewrite.
 
 ## Incidents
 _(none yet — postmortems)_
