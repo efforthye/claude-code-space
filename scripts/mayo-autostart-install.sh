@@ -28,21 +28,24 @@ EXPO_LABEL="com.efforthye.mayo.expo"
 PULL_LABEL="com.efforthye.mayo.autopull"
 API_LABEL="com.efforthye.mayo.api"
 TUNNEL_LABEL="com.efforthye.mayo.tunnel"
+COMFY_LABEL="com.efforthye.mayo.comfy"
 EXPO_PLIST="$AGENTS/$EXPO_LABEL.plist"
 PULL_PLIST="$AGENTS/$PULL_LABEL.plist"
 API_PLIST="$AGENTS/$API_LABEL.plist"
 TUNNEL_PLIST="$AGENTS/$TUNNEL_LABEL.plist"
+COMFY_PLIST="$AGENTS/$COMFY_LABEL.plist"
 
 unload() {
   launchctl bootout "gui/$UID_NUM/$EXPO_LABEL" 2>/dev/null || true
   launchctl bootout "gui/$UID_NUM/$PULL_LABEL" 2>/dev/null || true
   launchctl bootout "gui/$UID_NUM/$API_LABEL" 2>/dev/null || true
   launchctl bootout "gui/$UID_NUM/$TUNNEL_LABEL" 2>/dev/null || true
+  launchctl bootout "gui/$UID_NUM/$COMFY_LABEL" 2>/dev/null || true
 }
 
 if [ "${1:-}" = "--uninstall" ]; then
   unload
-  rm -f "$EXPO_PLIST" "$PULL_PLIST" "$API_PLIST" "$TUNNEL_PLIST"
+  rm -f "$EXPO_PLIST" "$PULL_PLIST" "$API_PLIST" "$TUNNEL_PLIST" "$COMFY_PLIST"
   echo "Uninstalled mayo autostart agents."
   exit 0
 fi
@@ -96,6 +99,9 @@ write_plist "$API_PLIST" "$API_LABEL" "$REPO" "/bin/bash $REPO/scripts/mayo-api-
 # Self-provisions a named Cloudflare tunnel at https://mayo-api.efforthye.dev
 # (stable), reusing the existing cloudflared login. The app defaults to that URL.
 write_plist "$TUNNEL_PLIST" "$TUNNEL_LABEL" "$REPO" "/bin/bash $REPO/scripts/mayo-tunnel-run.sh" "$LOGS/mayo-tunnel.log"
+# Local video generation (ComfyUI) — real per-scene clips for the generator. Runs
+# from its own clone at ~/programs/ComfyUI; serves its API on 127.0.0.1:8188.
+write_plist "$COMFY_PLIST" "$COMFY_LABEL" "$REPO" "/bin/bash $REPO/scripts/mayo-comfy-run.sh" "$LOGS/mayo-comfy.log"
 
 # Bootstrap with a retry — launchctl can transiently fail ("Bootstrap failed:
 # 5: Input/output error") if the old agent is still tearing down.
@@ -114,12 +120,14 @@ boot "$EXPO_PLIST"
 boot "$PULL_PLIST"
 boot "$API_PLIST"
 boot "$TUNNEL_PLIST"
+boot "$COMFY_PLIST"
 
 echo "Installed launchd agents:"
 echo "  $EXPO_PLIST"
 echo "  $PULL_PLIST"
 echo "  $API_PLIST"
 echo "  $TUNNEL_PLIST"
+echo "  $COMFY_PLIST"
 echo
 echo "They now run on login, restart on crash, and survive reboots + Termius close."
 echo "Get the Expo tunnel URL (give it ~15s to boot):"

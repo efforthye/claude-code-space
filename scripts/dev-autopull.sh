@@ -47,6 +47,12 @@ while true; do
         launchctl kickstart -k "gui/$(id -u)/com.efforthye.mayo.tunnel" 2>/dev/null || true
       fi
 
+      # Restart the ComfyUI agent when its runner changes.
+      if echo "$changed" | grep -q '^scripts/mayo-comfy-run\.sh$'; then
+        echo "  mayo-comfy-run.sh changed -> restarting mayo comfy agent"
+        launchctl kickstart -k "gui/$(id -u)/com.efforthye.mayo.comfy" 2>/dev/null || true
+      fi
+
       # Self-update: if this script itself changed, restart the autopull agent so
       # the new logic takes effect (no manual step for future improvements).
       if echo "$changed" | grep -q '^scripts/dev-autopull\.sh$'; then
