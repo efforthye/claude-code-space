@@ -83,6 +83,9 @@ Stacked screens:
   retention plans (+7 days / +30 days / keep indefinitely) with per-plan credit cost, from
   `RETENTION_PLANS` in the mock data. Opened from the detail screen's "extend retention" action.
   Billing wiring comes later.
+- **Plans & billing modal** (`plan.tsx`) — subscription tiers (Free / Pro / Studio) from `PLANS`
+  with monthly price + tagline, current plan highlighted, and a Choose-plan CTA (disabled on the
+  current plan). Opened from the Account plan card and the "Billing" row. Payment wiring comes later.
 
 **Generate flow (end-to-end, UI-only):** an in-memory **jobs store** (`src/store/jobs.tsx`,
 `JobsProvider` + `useJobs`) seeds from the mock `JOBS` and lets **Create** add a real "queued" job

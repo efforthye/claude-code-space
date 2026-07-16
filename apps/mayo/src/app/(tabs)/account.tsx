@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Chip } from '@/components/chip';
 import { ProgressBar } from '@/components/progress-bar';
@@ -12,10 +13,16 @@ import { useSettings, type ThemeMode } from '@/settings/settings';
 import { type Lang } from '@/i18n/translations';
 import { STORAGE, TIERS } from '@/mocks/data';
 
-type Row = { icon: keyof typeof Ionicons.glyphMap; label: string; value: string };
+type Row = {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+  onPress?: () => void;
+};
 
 export default function AccountScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { t, themeMode, setThemeMode, lang, setLang, defaultTierId, setDefaultTier } = useSettings();
 
   const themeOptions: { id: ThemeMode; label: string }[] = [
@@ -30,21 +37,33 @@ export default function AccountScreen() {
   ];
   const rows: Row[] = [
     { icon: 'time-outline', label: t('account.retention'), value: t('account.retentionValue') },
-    { icon: 'card-outline', label: t('account.billing'), value: t('account.billingValue') },
+    {
+      icon: 'card-outline',
+      label: t('account.billing'),
+      value: t('account.billingValue'),
+      onPress: () => router.push('/plan'),
+    },
     { icon: 'settings-outline', label: t('account.preferences'), value: '' },
   ];
 
   return (
     <Screen title={t('tab.account')} subtitle={t('account.subtitle')}>
-      <ThemedView type="backgroundElement" style={styles.plan}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('account.plan')}
-        </ThemedText>
-        <ThemedText type="subtitle">Pro</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('account.planDesc')}
-        </ThemedText>
-      </ThemedView>
+      <Pressable
+        onPress={() => router.push('/plan')}
+        style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+        <ThemedView type="backgroundElement" style={styles.plan}>
+          <View style={styles.planTop}>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
+              {t('account.plan')}
+            </ThemedText>
+            <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+          </View>
+          <ThemedText type="subtitle">Pro</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('account.planDesc')}
+          </ThemedText>
+        </ThemedView>
+      </Pressable>
 
       <ThemedText type="smallBold">{t('account.appearance')}</ThemedText>
       <View style={styles.row}>
@@ -95,14 +114,17 @@ export default function AccountScreen() {
 
       <ThemedView type="backgroundElement" style={styles.rows}>
         {rows.map((r, i) => (
-          <View
+          <Pressable
             key={r.label}
-            style={[
+            onPress={r.onPress}
+            disabled={!r.onPress}
+            style={({ pressed }) => [
               styles.rowItem,
               i < rows.length - 1 && {
                 borderBottomWidth: StyleSheet.hairlineWidth,
                 borderBottomColor: theme.backgroundSelected,
               },
+              pressed && r.onPress ? styles.pressed : undefined,
             ]}>
             <Ionicons name={r.icon} size={18} color={theme.textSecondary} />
             <ThemedText type="small" style={styles.rowLabel}>
@@ -114,7 +136,7 @@ export default function AccountScreen() {
               </ThemedText>
             ) : null}
             <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
-          </View>
+          </Pressable>
         ))}
       </ThemedView>
     </Screen>
@@ -126,6 +148,17 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
     padding: Spacing.four,
     borderRadius: Spacing.four,
+  },
+  planTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  flex: {
+    flex: 1,
+  },
+  pressed: {
+    opacity: 0.6,
   },
   row: {
     flexDirection: 'row',

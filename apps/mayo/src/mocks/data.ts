@@ -82,3 +82,12 @@ export const RETENTION_PLANS: RetentionPlan[] = [
 ];
 
 export const STORAGE = { usedLabel: '18.2 GB', totalLabel: '50 GB', usedRatio: 0.36 };
+
+// Subscription plans (UI-only). monthly === 0 is the free tier.
+export type Plan = { id: string; monthly: number };
+export const PLANS: Plan[] = [
+  { id: 'free', monthly: 0 },
+  { id: 'pro', monthly: 19 },
+  { id: 'studio', monthly: 49 },
+];
+export const CURRENT_PLAN_ID = 'pro';
