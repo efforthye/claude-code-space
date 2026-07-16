@@ -122,6 +122,7 @@ const en: Dict = {
 
   'library.subtitle': 'Finished videos are kept for a limited time. Download or extend before they expire.',
   'library.storage': 'Storage',
+  'library.storageFull': 'Almost full — tap to upgrade for more storage.',
   'library.expiresIn': 'Expires in {n} days',
   'library.expiresInOne': 'Expires in 1 day',
   'library.expired': 'Expired',
@@ -340,6 +341,7 @@ const ko: Dict = {
 
   'library.subtitle': '완성된 영상은 일정 기간만 보관돼요. 만료 전에 다운로드하거나 기간을 연장하세요.',
   'library.storage': '저장공간',
+  'library.storageFull': '거의 가득 찼어요 — 눌러서 업그레이드하세요.',
   'library.expiresIn': '{n}일 후 만료',
   'library.expiresInOne': '1일 후 만료',
   'library.expired': '만료됨',

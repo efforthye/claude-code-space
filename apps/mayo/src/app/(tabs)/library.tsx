@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { formatBytes, planStorageBytes } from '@/api/catalog';
 import { getStorage, listVideos } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ProgressBar } from '@/components/progress-bar';
@@ -12,6 +13,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
+import { usePayments } from '@/payments/context';
 import { useI18n } from '@/settings/settings';
 
 export default function LibraryScreen() {
@@ -20,6 +22,12 @@ export default function LibraryScreen() {
   const { t } = useI18n();
   const { data: videos, loading, error, refetch } = useQuery(listVideos, { pollMs: 15000 });
   const { data: storage, refetch: refetchStorage } = useQuery(getStorage);
+  const { entitlement } = usePayments();
+
+  const cap = planStorageBytes(entitlement.planId);
+  const usedBytes = storage?.usedBytes ?? 0;
+  const usedRatio = cap ? Math.min(1, usedBytes / cap) : 0;
+  const nearFull = usedRatio >= 0.85;
 
   // Refresh when returning to the tab so finished/imported videos show up.
   useFocusEffect(
@@ -58,11 +66,18 @@ export default function LibraryScreen() {
         <ThemedView type="backgroundElement" style={styles.storage}>
           <View style={styles.headerRow}>
             <ThemedText type="smallBold">{t('library.storage')}</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {storage.usedLabel} / {storage.totalLabel}
+            <ThemedText type="small" themeColor={nearFull ? 'text' : 'textSecondary'}>
+              {formatBytes(usedBytes)} / {formatBytes(cap)}
             </ThemedText>
           </View>
-          <ProgressBar value={storage.usedRatio} />
+          <ProgressBar value={usedRatio} />
+          {nearFull ? (
+            <Pressable onPress={() => router.push('/plan')}>
+              <ThemedText type="small" themeColor="text">
+                {t('library.storageFull')}
+              </ThemedText>
+            </Pressable>
+          ) : null}
         </ThemedView>
       ) : null}
 

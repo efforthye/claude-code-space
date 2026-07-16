@@ -25,9 +25,9 @@ DURATIONS: list[Duration] = [
 ]
 
 PLANS: list[Plan] = [
-    Plan(id="free", monthly=0),
-    Plan(id="pro", monthly=19),
-    Plan(id="studio", monthly=49),
+    Plan(id="free", monthly=0, storageMb=300),
+    Plan(id="pro", monthly=19, storageMb=5_000),
+    Plan(id="studio", monthly=49, storageMb=50_000),
 ]
 
 RETENTION_PLANS: list[RetentionPlan] = [

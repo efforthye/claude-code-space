@@ -7,7 +7,7 @@ export type ModelKind = 'image' | 'video';
 
 export type Tier = { id: string; label: string; blurb: string; pricePerMin: number };
 export type Duration = { id: string; label: string; seconds: number };
-export type Plan = { id: string; monthly: number };
+export type Plan = { id: string; monthly: number; storageMb?: number };
 export type RetentionPlan = { id: string; days: number; credits: number };
 export type ModelProvider = { id: string; name: string; kind: ModelKind; tier: string; blurb: string };
 
@@ -38,7 +38,12 @@ export type Video = {
   url?: string | null;
 };
 
-export type Storage = { usedLabel: string; totalLabel: string; usedRatio: number };
+export type Storage = {
+  usedLabel: string;
+  totalLabel: string;
+  usedRatio: number;
+  usedBytes?: number;
+};
 export type Estimate = { seconds: number; tier: string; credits: number };
 export type Health = { status: string; env: string; storage: string };
 

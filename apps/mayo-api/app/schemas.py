@@ -32,6 +32,7 @@ class Duration(BaseModel):
 class Plan(BaseModel):
     id: str
     monthly: int
+    storageMb: int = 0  # storage allowance for this plan (MB)
 
 
 class RetentionPlan(BaseModel):
@@ -104,6 +105,7 @@ class Storage(BaseModel):
     usedLabel: str
     totalLabel: str
     usedRatio: float
+    usedBytes: int = 0  # raw usage, so the client can meter against the plan cap
 
 
 class EditClip(BaseModel):

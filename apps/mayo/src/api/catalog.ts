@@ -27,10 +27,22 @@ export const DURATIONS: Duration[] = [
 ];
 
 export const PLANS: Plan[] = [
-  { id: 'free', monthly: 0 },
-  { id: 'pro', monthly: 19 },
-  { id: 'studio', monthly: 49 },
+  { id: 'free', monthly: 0, storageMb: 300 },
+  { id: 'pro', monthly: 19, storageMb: 5_000 },
+  { id: 'studio', monthly: 49, storageMb: 50_000 },
 ];
+
+/** Storage allowance (bytes) for a plan; falls back to the free-tier 300 MB. */
+export function planStorageBytes(planId: string, plans: Plan[] = PLANS): number {
+  const mb = plans.find((p) => p.id === planId)?.storageMb ?? 300;
+  return mb * 1024 * 1024;
+}
+
+export function formatBytes(bytes: number): string {
+  const mb = bytes / (1024 * 1024);
+  if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
+  return `${mb.toFixed(mb < 10 ? 1 : 0)} MB`;
+}
 
 export const RETENTION_PLANS: RetentionPlan[] = [
   { id: 'd7', days: 7, credits: 20 },

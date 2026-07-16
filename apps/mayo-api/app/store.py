@@ -200,11 +200,14 @@ class LibraryStore:
     async def storage(self) -> Storage:
         # Real usage: sum of bytes stored under the local media root vs a cap.
         used = _dir_size(settings.storage_local_path)
-        total = 50 * 1024 * 1024 * 1024  # 50 GB cap (make configurable later)
+        # The client meters `usedBytes` against the current plan's cap; these
+        # labels are a sensible default (free tier) for when it doesn't.
+        cap = 300 * 1024 * 1024  # free-tier default
         return Storage(
             usedLabel=_fmt_size(used),
-            totalLabel="50 GB",
-            usedRatio=min(1.0, used / total) if total else 0.0,
+            totalLabel="300 MB",
+            usedRatio=min(1.0, used / cap) if cap else 0.0,
+            usedBytes=used,
         )
 
 
