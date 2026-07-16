@@ -86,6 +86,12 @@ export const authRegister = (email: string, password: string, name?: string) =>
   });
 export const authLogin = (email: string, password: string) =>
   req<SessionResult>('/v1/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+export const googleLoginStart = () =>
+  req<{ loginId: string; url: string }>('/v1/auth/google/start', { method: 'POST' });
+export const googleLoginResult = (loginId: string) =>
+  req<{ status: 'pending' | 'ready'; token?: string | null; user?: AuthUser | null }>(
+    `/v1/auth/google/result?loginId=${encodeURIComponent(loginId)}`,
+  );
 export const authGoogle = (idToken: string) =>
   req<SessionResult>('/v1/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) });
 export const authMe = () => req<AuthUser>('/v1/auth/me');

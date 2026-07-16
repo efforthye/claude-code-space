@@ -99,3 +99,48 @@ def test_google_token_audience_check(monkeypatch):
         raise AssertionError("expected ValueError")
     except ValueError as exc:
         assert "different app" in str(exc)
+
+
+def test_google_start_and_poll_flow(monkeypatch):
+    # Configured -> start returns a loginId + consent URL; result is pending
+    # until the callback completes it, then one-shot ready.
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        auth_mod,
+        "settings",
+        SimpleNamespace(
+            youtube_client_id="cid.apps.googleusercontent.com",
+            youtube_client_secret="sec",
+            youtube_redirect_uri="https://api.example/cb",
+            google_oauth_client_ids=["cid.apps.googleusercontent.com"],
+        ),
+    )
+    r = client.post("/v1/auth/google/start")
+    assert r.status_code == 200
+    login_id = r.json()["loginId"]
+    assert "accounts.google.com" in r.json()["url"] and "state=login." in r.json()["url"]
+
+    pending = client.get(f"/v1/auth/google/result?loginId={login_id}")
+    assert pending.json()["status"] == "pending"
+
+    # Simulate the callback completing the login.
+    user = auth_mod.store.create_user("gflow@example.com", "G", provider="google", password=None)
+    auth_mod._login_pending[login_id]["result"] = {
+        "token": auth_mod.store.create_session(user["id"]),
+        "user": auth_mod.to_public(user).model_dump(),
+    }
+    ready = client.get(f"/v1/auth/google/result?loginId={login_id}").json()
+    assert ready["status"] == "ready" and ready["token"] and ready["user"]["email"] == "gflow@example.com"
+    # one-shot: second poll is pending/expired again
+    again = client.get(f"/v1/auth/google/result?loginId={login_id}").json()
+    assert again["status"] == "pending"
+
+
+def test_google_start_unconfigured_is_400(monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        auth_mod, "settings", SimpleNamespace(youtube_client_id="", youtube_client_secret="")
+    )
+    assert client.post("/v1/auth/google/start").status_code == 400

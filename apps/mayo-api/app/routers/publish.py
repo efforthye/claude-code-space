@@ -56,6 +56,23 @@ async def yt_connect(x_mayo_session: Optional[str] = Header(default=None)) -> Co
 
 @callback_router.get("/callback")
 async def yt_callback(code: str = "", state: str = "") -> HTMLResponse:
+    # This registered redirect URI serves two flows, split by state prefix:
+    # "login.<...>" = server-driven Google LOGIN (auth.py); else YouTube connect.
+    if state.startswith("login."):
+        from ..auth import complete_google_login, login_id_for_state
+
+        login_id = login_id_for_state(state)
+        if not code or not login_id:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="invalid or expired state")
+        try:
+            await complete_google_login(login_id, code)
+        except ValueError as exc:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
+        return HTMLResponse(
+            "<html><body style='font-family:sans-serif;text-align:center;padding-top:80px'>"
+            "<h2>✅ 로그인 완료</h2><p>이 창을 닫고 앱으로 돌아가세요.</p></body></html>"
+        )
+
     user_id = youtube.consume_state(state)
     if not code or not user_id:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="invalid or expired state")

@@ -41,6 +41,41 @@ async def login(req: LoginRequest) -> SessionResult:
     return SessionResult(token=store.create_session(user["id"]), user=to_public(user))
 
 
+from pydantic import BaseModel  # noqa: E402
+
+from ..auth import start_google_login, take_login_result  # noqa: E402
+
+
+class GoogleStartResult(BaseModel):
+    loginId: str
+    url: str
+
+
+class GoogleLoginPoll(BaseModel):
+    status: str  # "pending" | "ready"
+    token: str | None = None
+    user: AuthUser | None = None
+
+
+@router.post("/google/start", response_model=GoogleStartResult)
+async def google_start() -> GoogleStartResult:
+    """Server-driven Google login (Expo Go-safe): returns a one-time loginId and
+    the Google consent URL; the app opens it and polls /google/result."""
+    try:
+        login_id, url = start_google_login()
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    return GoogleStartResult(loginId=login_id, url=url)
+
+
+@router.get("/google/result", response_model=GoogleLoginPoll)
+async def google_result(loginId: str = "") -> GoogleLoginPoll:
+    result = take_login_result(loginId)
+    if not result:
+        return GoogleLoginPoll(status="pending")
+    return GoogleLoginPoll(status="ready", token=result["token"], user=AuthUser(**result["user"]))
+
+
 @router.post("/google", response_model=SessionResult)
 async def google_login(req: GoogleLoginRequest) -> SessionResult:
     try:

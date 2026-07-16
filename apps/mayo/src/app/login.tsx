@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Google from 'expo-auth-session/providers/google';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
@@ -14,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ApiError } from '@/api/client';
+import { ApiError, googleLoginStart, googleLoginResult } from '@/api/client';
 import { GOOGLE_CLIENT_ID, useAuth } from '@/auth/auth';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -31,7 +30,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { t } = useI18n();
   const toast = useToast();
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, adoptSession } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -39,30 +38,33 @@ export default function LoginScreen() {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // Google sign-in — enabled only when a client id is baked into the build.
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest(
-    GOOGLE_CLIENT_ID
-      ? { clientId: GOOGLE_CLIENT_ID, webClientId: GOOGLE_CLIENT_ID }
-      : { clientId: 'unconfigured.apps.googleusercontent.com' },
-  );
-
-  const adoptIdToken = (idToken: string) => {
+  // NATIVE Google login — server-driven (Expo Go-safe): get a one-time loginId
+  // and consent URL from the API, open the browser sheet, and poll until the
+  // server has minted a session (Google redirects to the API, not the app).
+  const nativeGoogle = async () => {
+    if (busy) return;
     setBusy(true);
-    signInWithGoogle(idToken)
-      .then(() => {
-        toast.show(t('auth.welcome'));
-        router.back();
-      })
-      .catch(() => toast.show(t('auth.googleFailed')))
-      .finally(() => setBusy(false));
+    try {
+      const { loginId, url } = await googleLoginStart();
+      WebBrowser.openBrowserAsync(url).catch(() => {});
+      for (let i = 0; i < 90; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const res = await googleLoginResult(loginId).catch(() => null);
+        if (res?.status === 'ready' && res.token && res.user) {
+          if (Platform.OS !== 'web') WebBrowser.dismissBrowser().catch(() => {});
+          await adoptSession(res.token, res.user);
+          toast.show(t('auth.welcome'));
+          router.back();
+          return;
+        }
+      }
+      toast.show(t('auth.googleFailed'));
+    } catch {
+      toast.show(t('auth.googleFailed'));
+    } finally {
+      setBusy(false);
+    }
   };
-
-  useEffect(() => {
-    if (response?.type !== 'success') return;
-    const idToken = (response.params as { id_token?: string }).id_token;
-    if (idToken) adoptIdToken(idToken);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response]);
 
 
   const submit = async () => {
@@ -176,14 +178,14 @@ export default function LoginScreen() {
             </Pressable>
           ) : GOOGLE_CLIENT_ID ? (
             <Pressable
-              onPress={() => promptAsync()}
-              disabled={!request || busy}
+              onPress={nativeGoogle}
+              disabled={busy}
               style={({ pressed }) => [
                 styles.google,
-                { borderColor: theme.backgroundSelected, opacity: !request || busy ? 0.4 : pressed ? 0.7 : 1 },
+                { borderColor: theme.backgroundSelected, opacity: busy ? 0.4 : pressed ? 0.7 : 1 },
               ]}>
               <Ionicons name="logo-google" size={18} color={theme.text} />
-              <ThemedText type="smallBold">{t('auth.google')}</ThemedText>
+              <ThemedText type="smallBold">{busy ? t('auth.waitingGoogle') : t('auth.google')}</ThemedText>
             </Pressable>
           ) : (
             <ThemedText type="small" themeColor="textSecondary" style={styles.blurb}>

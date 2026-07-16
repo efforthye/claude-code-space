@@ -23,6 +23,8 @@ type AuthValue = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name?: string) => Promise<void>;
   signInWithGoogle: (idToken: string) => Promise<void>;
+  /** Adopt a ready-made session (server-driven login flows). */
+  adoptSession: (token: string, user: AuthUser) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -99,6 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await adopt(res.token, res.user);
   };
 
+  const adoptSession = async (token: string, nextUser: AuthUser) => {
+    await adopt(token, nextUser);
+  };
+
   const signOut = async () => {
     try {
       await authLogout();
@@ -111,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, restoring, signIn, signUp, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, restoring, signIn, signUp, signInWithGoogle, adoptSession, signOut }}>
       {children}
     </AuthContext.Provider>
   );

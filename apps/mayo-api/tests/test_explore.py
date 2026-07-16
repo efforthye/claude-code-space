@@ -26,6 +26,11 @@ def _video(vid: str) -> Video:
 
 
 def test_explore_store_publish_like_and_sort():
+    # Stores persist to SQLite now — start this test from clean kinds.
+    from app import db
+
+    db.replace_kind("explore", [])
+    db.replace_kind("explore_comment", [])
     store = ExploreStore()
     a = asyncio.run(store.publish(_video("a"), "prompt a"))
     b = asyncio.run(store.publish(_video("b"), "prompt b"))

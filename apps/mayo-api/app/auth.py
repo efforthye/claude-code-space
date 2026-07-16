@@ -65,24 +65,35 @@ class SessionResult(BaseModel):
 
 
 class _Store:
-    """Users + sessions, persisted as one JSON blob (best-effort)."""
+    """Users + sessions — in-memory dicts written through to SQLite (app/db.py)."""
 
     def __init__(self) -> None:
-        self.users: dict[str, dict] = {}
-        self.sessions: dict[str, dict] = {}  # token -> {userId, expiresAt}
-        try:
-            with open(_PATH) as fh:
-                data = json.load(fh)
-            self.users = data.get("users", {})
-            self.sessions = data.get("sessions", {})
-        except Exception:
-            pass
+        from . import db
+
+        def _from_legacy(raw: dict) -> list[tuple[str, dict]]:
+            docs: list[tuple[str, dict]] = []
+            for uid, u in raw.get("users", {}).items():
+                docs.append((uid, {"_t": "user", **u}))
+            for tok, s in raw.get("sessions", {}).items():
+                docs.append((tok, {"_t": "session", "token": tok, **s}))
+            return docs
+
+        records = db.migrate_legacy_json("auth", _PATH, _from_legacy) or db.load("auth")
+        self.users = {r["id"]: {k: v for k, v in r.items() if k != "_t"}
+                      for r in records if r.get("_t") == "user"}
+        self.sessions = {r["token"]: {"userId": r["userId"], "expiresAt": r["expiresAt"]}
+                         for r in records if r.get("_t") == "session"}
 
     def save(self) -> None:
+        from . import db
+
         try:
-            os.makedirs(os.path.dirname(_PATH) or ".", exist_ok=True)
-            with open(_PATH, "w") as fh:
-                json.dump({"users": self.users, "sessions": self.sessions}, fh)
+            docs: list[tuple[str, dict]] = []
+            for uid, u in self.users.items():
+                docs.append((uid, {"_t": "user", **u}))
+            for tok, s in self.sessions.items():
+                docs.append((tok, {"_t": "session", "token": tok, **s}))
+            db.replace_kind("auth", docs)
         except Exception:
             pass  # in-memory state still applies
 
@@ -194,6 +205,71 @@ def paid_user_or_none(session_token: str | None) -> Optional[dict]:
     if user and user.get("planId", "free") != "free":
         return user
     return None
+
+
+# --- Server-driven Google login (works in Expo Go, where in-app OAuth redirects
+# hang): the app gets a one-time loginId + Google URL from /google/start, the
+# user approves in a real browser, Google redirects to our (already registered)
+# callback which mints a session under the loginId, and the app polls
+# /google/result until it's ready. Same pattern as the YouTube connect flow.
+_LOGIN_TTL = 600
+_login_pending: dict[str, dict] = {}  # loginId -> {state, expiresAt, result}
+
+
+def start_google_login() -> tuple[str, str]:
+    """Returns (loginId, google_auth_url). Raises ValueError if unconfigured."""
+    from urllib.parse import urlencode
+
+    if not (settings.youtube_client_id and settings.youtube_client_secret):
+        raise ValueError("Google sign-in is not configured on this server")
+    login_id = secrets.token_urlsafe(16)
+    state = "login." + secrets.token_urlsafe(24)
+    _login_pending[login_id] = {"state": state, "expiresAt": time.time() + _LOGIN_TTL, "result": None}
+    url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(
+        {
+            "client_id": settings.youtube_client_id,
+            "redirect_uri": settings.youtube_redirect_uri,  # already registered
+            "response_type": "code",
+            "scope": "openid email profile",
+            "state": state,
+            "prompt": "select_account",
+        }
+    )
+    return login_id, url
+
+
+def login_id_for_state(state: str) -> Optional[str]:
+    now = time.time()
+    for login_id, rec in _login_pending.items():
+        if rec["state"] == state and rec["expiresAt"] > now:
+            return login_id
+    return None
+
+
+async def complete_google_login(login_id: str, code: str) -> None:
+    """Exchange the code, verify the id_token, sign the user in under loginId."""
+    from . import youtube
+
+    tokens = await youtube.exchange_code(code)
+    id_token = tokens.get("id_token", "")
+    claims = await verify_google_id_token(id_token)
+    user = store.by_email(claims["email"])
+    if not user:
+        user = store.create_user(claims["email"], claims.get("name", ""), provider="google", password=None)
+    rec = _login_pending.get(login_id)
+    if rec:
+        rec["result"] = {"token": store.create_session(user["id"]), "user": to_public(user).model_dump()}
+
+
+def take_login_result(login_id: str) -> Optional[dict]:
+    """One-shot: the session once ready, else None (pending/expired)."""
+    rec = _login_pending.get(login_id)
+    if not rec or rec["expiresAt"] < time.time():
+        _login_pending.pop(login_id, None)
+        return None
+    if rec["result"] is None:
+        return None
+    return _login_pending.pop(login_id)["result"]
 
 
 async def verify_google_id_token(id_token: str) -> dict:

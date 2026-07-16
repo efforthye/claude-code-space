@@ -127,30 +127,29 @@ class LibraryStore:
     persisted (media/.library.json) so the Library survives API restarts."""
 
     def __init__(self) -> None:
+        import os as _os
+
+        from . import db
+
         self._videos: dict[str, Video] = {v.id: v.model_copy() for v in _SEED_VIDEOS}
         self._lock = asyncio.Lock()
-        try:
-            import json as _json
-            import os as _os
-
-            path = _os.path.join(settings.storage_local_path, ".library.json")
-            with open(path) as fh:
-                for raw in _json.load(fh):
-                    v = Video.model_validate(raw)
-                    self._videos[v.id] = v
-        except Exception:
-            pass  # first run / unreadable file — start from seeds
+        legacy = _os.path.join(settings.storage_local_path, ".library.json")
+        records = db.migrate_legacy_json(
+            "video", legacy, lambda raw: [(v["id"], v) for v in raw]
+        ) or db.load("video")
+        for raw in records:
+            try:
+                v = Video.model_validate(raw)
+                self._videos[v.id] = v
+            except Exception:
+                continue
 
     def _persist(self) -> None:
-        """Best-effort save; call while holding self._lock (or right after a pop)."""
-        try:
-            import json as _json
-            import os as _os
+        """Write-through to SQLite; call while holding self._lock (or right after a pop)."""
+        from . import db
 
-            path = _os.path.join(settings.storage_local_path, ".library.json")
-            _os.makedirs(_os.path.dirname(path) or ".", exist_ok=True)
-            with open(path, "w") as fh:
-                _json.dump([v.model_dump() for v in self._videos.values()], fh)
+        try:
+            db.replace_kind("video", [(v.id, v.model_dump()) for v in self._videos.values()])
         except Exception:
             pass
 
@@ -285,9 +284,40 @@ class ExploreStore:
     someone publishes a video to it."""
 
     def __init__(self) -> None:
+        from . import db
+
         self._items: dict[str, ExploreItem] = {}
         self._comments: dict[str, list[ExploreComment]] = {}
         self._lock = asyncio.Lock()
+        for raw in db.load("explore"):
+            try:
+                item = ExploreItem.model_validate(raw)
+                self._items[item.id] = item
+            except Exception:
+                continue
+        for raw in db.load("explore_comment"):
+            try:
+                c = ExploreComment.model_validate(raw.get("comment", raw))
+                self._comments.setdefault(raw.get("itemId", ""), []).append(c)
+            except Exception:
+                continue
+
+    def _persist(self) -> None:
+        """Write-through to SQLite; call while holding self._lock."""
+        from . import db
+
+        try:
+            db.replace_kind("explore", [(i.id, i.model_dump()) for i in self._items.values()])
+            db.replace_kind(
+                "explore_comment",
+                [
+                    (c.id, {"itemId": item_id, "comment": c.model_dump()})
+                    for item_id, cl in self._comments.items()
+                    for c in cl
+                ],
+            )
+        except Exception:
+            pass
 
     async def list(self, sort: str = "popular") -> list[ExploreItem]:
         async with self._lock:
@@ -313,6 +343,7 @@ class ExploreStore:
         )
         async with self._lock:
             self._items[item.id] = item
+            self._persist()
         return item.model_copy()
 
     async def like(self, item_id: str) -> Optional[ExploreItem]:
@@ -322,6 +353,7 @@ class ExploreStore:
                 return None
             updated = item.model_copy(update={"likes": item.likes + 1})
             self._items[item_id] = updated
+            self._persist()
             return updated.model_copy()
 
     async def unlike(self, item_id: str) -> Optional[ExploreItem]:
@@ -331,6 +363,7 @@ class ExploreStore:
                 return None
             updated = item.model_copy(update={"likes": max(0, item.likes - 1)})
             self._items[item_id] = updated
+            self._persist()
             return updated.model_copy()
 
     async def comments(self, item_id: str) -> Optional[list[ExploreComment]]:
@@ -347,6 +380,7 @@ class ExploreStore:
             comment = ExploreComment(id=_new_id("c"), author="@me", text=text)
             self._comments.setdefault(item_id, []).append(comment)
             self._items[item_id] = item.model_copy(update={"comments": item.comments + 1})
+            self._persist()
             return comment.model_copy()
 
 
