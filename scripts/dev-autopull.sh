@@ -13,7 +13,35 @@ set -euo pipefail
 INTERVAL="${1:-15}"
 cd "$(git rev-parse --show-toplevel)"
 
+EXPO_LABEL="com.efforthye.mayo.expo"
+EXPO_PLIST="$HOME/Library/LaunchAgents/$EXPO_LABEL.plist"
+PKG_STAMP="apps/mayo/node_modules/.pkg-sha"
+
+pkg_sha() { shasum apps/mayo/package-lock.json 2>/dev/null | awk '{print $1}'; }
+
+# Stop -> install -> start. Restarting expo while npm is mutating node_modules
+# crash-loops Metro (and drops the ngrok tunnel, ERR_NGROK_3200), so take the
+# agent fully down for the install and bring it back clean afterwards.
+sync_app_deps() {
+  echo "  syncing app deps (expo stopped during install)"
+  launchctl bootout "gui/$(id -u)/$EXPO_LABEL" 2>/dev/null || true
+  (cd apps/mayo && npm install --no-audit --no-fund) || true
+  pkg_sha > "$PKG_STAMP" 2>/dev/null || true
+  if [ -f "$EXPO_PLIST" ]; then
+    launchctl bootstrap "gui/$(id -u)" "$EXPO_PLIST" 2>/dev/null \
+      || launchctl kickstart -k "gui/$(id -u)/$EXPO_LABEL" 2>/dev/null || true
+    echo "  expo agent restarted (tunnel comes back in ~30s)"
+  fi
+}
+
 echo "dev-autopull: pulling every ${INTERVAL}s on '$(git rev-parse --abbrev-ref HEAD)' (Ctrl+C to stop)"
+
+# Startup heal: if installed deps don't match package-lock (e.g. a pull landed
+# while this agent was down, or a previous install raced a restart), fix it now.
+if [ "$(cat "$PKG_STAMP" 2>/dev/null)" != "$(pkg_sha)" ]; then
+  echo "[$(date '+%H:%M:%S')] deps out of sync with package-lock -> healing"
+  sync_app_deps
+fi
 
 while true; do
   before="$(git rev-parse HEAD)"
@@ -23,14 +51,12 @@ while true; do
       echo "[$(date '+%H:%M:%S')] pulled ${before:0:7} -> ${after:0:7}"
       changed="$(git diff --name-only "$before" "$after")"
 
-      # Reinstall app deps when the manifest changed, then restart the expo agent
-      # so new native/JS modules are picked up (JS-only edits don't need this).
+      # Reinstall app deps when the manifest changed (expo is stopped during the
+      # install — restarting it mid-install crash-loops Metro and kills the
+      # tunnel). JS-only edits skip this and just Fast-Refresh.
       if echo "$changed" | grep -q '^apps/mayo/package'; then
-        echo "  package manifest changed -> npm install (apps/mayo)"
-        (cd apps/mayo && npm install --no-audit --no-fund) || true
-        if launchctl kickstart -k "gui/$(id -u)/com.efforthye.mayo.expo" 2>/dev/null; then
-          echo "  restarted mayo expo agent (new deps)"
-        fi
+        echo "  package manifest changed -> syncing deps"
+        sync_app_deps
       fi
 
       # Restart the API agent when the backend or its runner changes.
