@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { createJob, directorChat } from '@/api/client';
 import type { DirectorMessage, Screenplay } from '@/api/types';
@@ -31,10 +31,30 @@ export default function DirectorScreen() {
   const seconds = Math.max(1, parseInt(params.seconds ?? '', 10) || 60);
   const tier = params.tier || defaultTierId;
 
+  const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
+  const [kbHeight, setKbHeight] = useState(0);
   const [messages, setMessages] = useState<DirectorMessage[]>([
     { role: 'director', content: t('director.greeting') },
   ]);
+
+  // Lift the input above the keyboard ourselves — KeyboardAvoidingView is
+  // unreliable inside a modal (its offset math is off vs the modal's top gap),
+  // which left the input hidden behind the keyboard. Padding by the measured
+  // keyboard height always works, modal or not.
+  useEffect(() => {
+    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvt, (e) => {
+      setKbHeight(e.endCoordinates?.height ?? 0);
+      requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    });
+    const hideSub = Keyboard.addListener(hideEvt, () => setKbHeight(0));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
   const [input, setInput] = useState('');
   const [screenplay, setScreenplay] = useState<Screenplay | null>(null);
   const [ready, setReady] = useState(false);
@@ -92,12 +112,10 @@ export default function DirectorScreen() {
           </Pressable>
         </View>
 
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
+        <View style={[styles.flex, { paddingBottom: kbHeight > 0 ? kbHeight : insets.bottom }]}>
           <ScrollView
             ref={scrollRef}
+            style={styles.flex}
             contentContainerStyle={styles.messages}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -221,7 +239,7 @@ export default function DirectorScreen() {
               <Ionicons name="arrow-up" size={20} color={theme.background} />
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </SafeAreaView>
     </ThemedView>
   );

@@ -5,6 +5,7 @@ Run locally:  uvicorn app.main:app --reload
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -13,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import __version__
 from .config import settings
+from .planner import get_scenario_planner
 from .routers import billing, catalog, director, health, jobs, library
 from .security import require_api_key
 from .worker import shutdown
@@ -27,6 +29,12 @@ async def lifespan(app: FastAPI):
             "MAYO_API_KEY is not set — the API is UNAUTHENTICATED. Set it before "
             "exposing the API publicly (see .env.example)."
         )
+    # Pre-load a local LLM director model in the background so the first chat turn
+    # doesn't pay cold-start latency (which trips the phone's 60s request timeout).
+    warm = getattr(get_scenario_planner(), "warm", None)
+    if warm is not None:
+        logger.info("warming up local director model in the background…")
+        asyncio.create_task(warm())
     yield
     await shutdown()
 

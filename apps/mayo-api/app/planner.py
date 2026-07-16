@@ -19,6 +19,7 @@ The planner sits in front of per-scene generation; see ADR 0008.
 
 from __future__ import annotations
 
+import contextlib
 from abc import ABC, abstractmethod
 from typing import List, Literal, Optional
 
@@ -286,13 +287,26 @@ class LocalScenarioPlanner(ScenarioPlanner):
             "messages": messages,
             "stream": False,
             "format": schema,  # JSON-schema constrained decoding (Ollama 0.5+)
-            "options": {"temperature": 0.7},
+            # keep_alive holds the model in RAM between turns so only the FIRST
+            # call pays the cold-load cost (which otherwise trips the phone's 60s
+            # request timeout); num_predict caps runaway generation.
+            "keep_alive": "30m",
+            "options": {"temperature": 0.7, "num_predict": 2048},
         }
         async with httpx.AsyncClient(timeout=settings.local_llm_timeout) as client:
             resp = await client.post(url, json=payload)
             resp.raise_for_status()
             data = resp.json()
         return (data.get("message") or {}).get("content", "") or ""
+
+    async def warm(self) -> None:
+        """Best-effort: load the model into memory at startup so the user's first
+        chat turn doesn't pay the cold-load latency (and time out on the phone)."""
+        with contextlib.suppress(Exception):
+            await self._chat(
+                [{"role": "user", "content": "ok"}],
+                {"type": "object", "properties": {"ok": {"type": "boolean"}}, "required": ["ok"]},
+            )
 
     async def plan(self, prompt: str, seconds: int, tier: str) -> Screenplay:
         user = f"Prompt: {prompt}\nTotal length: {seconds} seconds."
