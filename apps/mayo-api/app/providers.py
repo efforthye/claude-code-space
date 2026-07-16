@@ -103,6 +103,10 @@ class ComfyUIModelBackend(ModelBackend):
             wf["5"]["inputs"]["width"] = settings.comfy_width
             wf["5"]["inputs"]["height"] = settings.comfy_height
             wf["5"]["inputs"]["batch_size"] = settings.comfy_frames
+        # Node "9" = VHS_VideoCombine — keep its frame_rate in sync so the clip
+        # length is frames/fps (used for the real duration label).
+        if "9" in wf and "inputs" in wf["9"] and "frame_rate" in wf["9"]["inputs"]:
+            wf["9"]["inputs"]["frame_rate"] = settings.comfy_fps
         return wf
 
     async def generate_scene(self, prompt: str, index: int) -> SceneResult:

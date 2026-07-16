@@ -103,6 +103,9 @@ async def _run(job_id: str) -> None:
             return
         if await jobs.get(job_id) is None:
             return  # cancelled/deleted mid-flight
+        # Expose the just-finished clip so the app can preview it mid-generation.
+        if get_storage().exists(result.media_key):
+            await jobs.append_scene_url(job_id, f"/v1/media/{result.media_key}")
         remaining = total - index - 1
         eta = max(1, round(remaining * settings.tick_seconds / 60)) if remaining > 0 else None
         await jobs.patch(job_id, scenesDone=index + 1, etaMin=eta)
@@ -110,9 +113,15 @@ async def _run(job_id: str) -> None:
     # Stitch the real clips into one film (no-op for the mock backend).
     film_key = await _stitch(job_id, clip_keys)
 
+    # Real duration = number of rendered clips × clip length (frames / fps).
+    store = get_storage()
+    real_clips = sum(1 for k in clip_keys if store.exists(k))
+    clip_seconds = settings.comfy_frames / max(1, settings.comfy_fps)
+    duration_seconds = round(real_clips * clip_seconds) if real_clips else None
+
     done = await jobs.patch(job_id, status="done", etaMin=None)
     if done is not None:
-        await library.add_from_job(done, film_key=film_key)
+        await library.add_from_job(done, film_key=film_key, duration_seconds=duration_seconds)
 
 
 def start_generation(job_id: str) -> None:

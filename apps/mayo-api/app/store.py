@@ -89,6 +89,14 @@ class JobStore:
         async with self._lock:
             return self._jobs.pop(job_id, None) is not None
 
+    async def append_scene_url(self, job_id: str, url: str) -> None:
+        async with self._lock:
+            j = self._jobs.get(job_id)
+            if not j:
+                return
+            urls = list(j.sceneUrls or []) + [url]
+            self._jobs[job_id] = j.model_copy(update={"sceneUrls": urls})
+
     async def retry(self, job_id: str) -> Optional[Job]:
         async with self._lock:
             j = self._jobs.get(job_id)
@@ -122,12 +130,17 @@ class LibraryStore:
             v = self._videos.get(video_id)
             return v.model_copy() if v else None
 
-    async def add_from_job(self, job: Job, film_key: str | None = None) -> Video:
+    async def add_from_job(
+        self, job: Job, film_key: str | None = None, duration_seconds: int | None = None
+    ) -> Video:
         idx = len(self._videos)
+        # Prefer the REAL stitched length (clips × clip-seconds) over the requested
+        # length, which can differ (fixed-length clips, director scene count).
+        label_seconds = duration_seconds if duration_seconds is not None else (job.seconds or 0)
         video = Video(
             id=_new_id("v"),
             title=job.title,
-            durationLabel=_fmt_clock(job.seconds or 0),
+            durationLabel=_fmt_clock(label_seconds),
             sizeLabel="— MB",
             expiresInDays=14,
             accent=_ACCENTS[idx % len(_ACCENTS)],

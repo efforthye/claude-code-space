@@ -68,6 +68,9 @@ class Job(BaseModel):
     # Per-scene generation prompts from the AI director (when a screenplay drove
     # the job); the worker renders scene i from scenePrompts[i]. None -> use title.
     scenePrompts: Optional[list[str]] = None
+    # Playback paths of scene clips already rendered — lets the app preview a job
+    # while it's still generating.
+    sceneUrls: Optional[list[str]] = None
 
 
 class CreateJobRequest(BaseModel):

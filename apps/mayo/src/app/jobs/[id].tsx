@@ -1,8 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getApiKey } from '@/api/api-key';
+import { getApiBaseUrl } from '@/api/base-url';
 import { deleteJob, getJob, retryJob } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ProgressBar } from '@/components/progress-bar';
@@ -15,6 +18,19 @@ import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
 
 const MAX_DOTS = 48;
+
+function PreviewClip({ uri }: { uri: string }) {
+  const key = getApiKey();
+  const player = useVideoPlayer(
+    { uri, headers: key ? { Authorization: `Bearer ${key}` } : undefined },
+    (p) => {
+      p.loop = true;
+      p.muted = true;
+      p.play();
+    },
+  );
+  return <VideoView player={player} style={styles.preview} contentFit="cover" nativeControls={false} />;
+}
 
 export default function JobDetailScreen() {
   const theme = useTheme();
@@ -93,6 +109,20 @@ export default function JobDetailScreen() {
                 {!done && job.etaMin ? t('jobs.eta', { n: job.etaMin }) : ''}
               </ThemedText>
             </ThemedView>
+
+            {job.sceneUrls && job.sceneUrls.length > 0 ? (
+              <>
+                <ThemedText type="smallBold">{t('jobDetail.preview')}</ThemedText>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.previewRow}>
+                  {job.sceneUrls.map((u, i) => (
+                    <PreviewClip key={i} uri={`${getApiBaseUrl()}${u}`} />
+                  ))}
+                </ScrollView>
+              </>
+            ) : null}
 
             <ThemedText type="smallBold">{t('jobDetail.sceneMap')}</ThemedText>
             <View style={styles.dots}>
@@ -200,6 +230,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.two,
+  },
+  previewRow: {
+    gap: Spacing.two,
+    paddingVertical: Spacing.one,
+  },
+  preview: {
+    width: 120,
+    height: 120,
+    borderRadius: Spacing.three,
+    backgroundColor: '#000',
   },
   dot: {
     width: 14,

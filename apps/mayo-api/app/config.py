@@ -54,6 +54,7 @@ class Settings:
     comfy_width: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_WIDTH", "512")))
     comfy_height: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_HEIGHT", "512")))
     comfy_frames: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_FRAMES", "16")))
+    comfy_fps: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_FPS", "8")))
     comfy_steps: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_STEPS", "6")))
     # Directory of clips to auto-import into the Library on startup (e.g. ComfyUI's
     # output), so anything generated — even via the smoke test — shows up in-app.

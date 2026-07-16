@@ -20,6 +20,7 @@ export type Job = {
   etaMin?: number | null;
   tierLabel?: string | null;
   seconds?: number | null;
+  sceneUrls?: string[] | null; // clips rendered so far (live preview)
 };
 
 export type Video = {
