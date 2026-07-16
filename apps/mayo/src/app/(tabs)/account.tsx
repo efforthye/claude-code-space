@@ -2,8 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { useState } from 'react';
+
 import { TIERS } from '@/api/catalog';
-import { getHealth, getStorage } from '@/api/client';
+import { getHealth, getSettings, getStorage, putSettings } from '@/api/client';
 import { Chip } from '@/components/chip';
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
@@ -44,6 +46,18 @@ export default function AccountScreen() {
     pollMs: 10000,
     deps: [apiUrl],
   });
+  const { data: genSettings } = useQuery(getSettings, { deps: [apiUrl] });
+  const [genOverride, setGenOverride] = useState<string | null>(null);
+  const genBackend = genOverride ?? genSettings?.generationBackend ?? 'mock';
+  const chooseGen = async (backend: string) => {
+    setGenOverride(backend);
+    try {
+      await putSettings({ generationBackend: backend });
+    } catch {
+      // revert on failure
+      setGenOverride(genSettings?.generationBackend ?? 'mock');
+    }
+  };
   const { entitlement } = usePayments();
 
   const online = !!health && health.status === 'ok' && !healthError;
@@ -153,6 +167,23 @@ export default function AccountScreen() {
       </View>
       <ThemedText type="small" themeColor="textSecondary">
         {t('account.defaultModelHint')}
+      </ThemedText>
+
+      <ThemedText type="smallBold">{t('account.generation')}</ThemedText>
+      <View style={styles.row}>
+        <Chip
+          label={t('account.genFast')}
+          selected={genBackend === 'mock'}
+          onPress={() => chooseGen('mock')}
+        />
+        <Chip
+          label={t('account.genLocal')}
+          selected={genBackend === 'comfy'}
+          onPress={() => chooseGen('comfy')}
+        />
+      </View>
+      <ThemedText type="small" themeColor="textSecondary">
+        {genBackend === 'comfy' ? t('account.genLocalHint') : t('account.genFastHint')}
       </ThemedText>
 
       <ThemedView type="backgroundElement" style={styles.card}>

@@ -44,6 +44,12 @@ const en: Dict = {
   'create.director': 'Make it with the AI director',
   'create.directorHint': 'Chat to shape the scenario, then generate.',
 
+  'account.generation': 'Generation',
+  'account.genFast': 'Fast (preview)',
+  'account.genLocal': 'Local AI',
+  'account.genFastHint': 'Instant placeholder clips — good for trying the flow.',
+  'account.genLocalHint': 'Real video generated on your home server (slower, a few min per scene).',
+
   'director.title': 'AI Director',
   'director.greeting':
     "Hi — I'll direct your film. Tell me the idea: a theme, a mood, characters, anything. I'll draft it scene by scene and we'll shape it together.",
@@ -221,6 +227,12 @@ const ko: Dict = {
 
   'create.director': 'AI 감독과 대화하며 만들기',
   'create.directorHint': '대화로 시나리오를 잡은 뒤 생성하세요.',
+
+  'account.generation': '영상 생성 모드',
+  'account.genFast': '빠름 (미리보기)',
+  'account.genLocal': '로컬 AI',
+  'account.genFastHint': '즉석 자리표시 클립 — 흐름 테스트용.',
+  'account.genLocalHint': '홈서버에서 진짜 영상 생성 (느림, 씬당 몇 분).',
 
   'director.title': 'AI 감독',
   'director.greeting':

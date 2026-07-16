@@ -20,6 +20,7 @@ import type {
   PublishRequest,
   PublishResult,
   RetentionPlan,
+  RuntimeSettings,
   Storage,
   Tier,
   Video,
@@ -87,6 +88,11 @@ export const deleteJob = (id: string) =>
 // --- Director (conversational scenario flow) ---
 export const directorChat = (body: DirectorChatRequest) =>
   req<DirectorTurn>('/v1/director/chat', { method: 'POST', body: JSON.stringify(body) });
+
+// --- Runtime settings (app-controlled generation mode) ---
+export const getSettings = () => req<RuntimeSettings>('/v1/settings');
+export const putSettings = (body: RuntimeSettings) =>
+  req<RuntimeSettings>('/v1/settings', { method: 'PUT', body: JSON.stringify(body) });
 
 // --- Library ---
 export const listVideos = () => req<Video[]>('/v1/library/videos');

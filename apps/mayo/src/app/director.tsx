@@ -87,7 +87,13 @@ export default function DirectorScreen() {
     setGenerating(true);
     try {
       const prompt = `${screenplay.title}\n${screenplay.logline}`.trim();
-      const job = await createJob({ prompt, seconds, tier });
+      const scenePrompts = screenplay.scenes.map((s) => s.prompt).filter(Boolean);
+      const job = await createJob({
+        prompt,
+        seconds,
+        tier,
+        scenePrompts: scenePrompts.length ? scenePrompts : undefined,
+      });
       router.replace(`/jobs/${job.id}`);
       toast.show(t('director.generating'));
     } catch {
