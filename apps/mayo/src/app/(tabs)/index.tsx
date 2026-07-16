@@ -60,6 +60,20 @@ export default function CreateScreen() {
         />
       </ThemedView>
 
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('create.examples')}
+      </ThemedText>
+      <View style={styles.row}>
+        {['1', '2', '3', '4'].map((n) => (
+          <Chip
+            key={n}
+            label={t(`create.example.${n}.short`)}
+            selected={prompt === t(`create.example.${n}`)}
+            onPress={() => setPrompt(t(`create.example.${n}`))}
+          />
+        ))}
+      </View>
+
       <ThemedText type="smallBold">{t('create.length')}</ThemedText>
       <View style={styles.row}>
         {DURATIONS.map((d) => (
