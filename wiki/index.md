@@ -18,6 +18,7 @@ Updated whenever pages are added/renamed or a service's status changes.
 | RichClub (api + front) | live | `home.efforthye.com:8000` (api) / `:3000` (front) | [[richclub]] |
 | Jenkins (CI) | live | `home.efforthye.com:9090` | [[jenkins]] |
 | Mayo (AI video platform) | building | app + mayo.im (web) | [[mayo]] |
+| mayo-api (orchestration API) | building | `apps/mayo-api/` (FastAPI, Docker) | [[mayo]] |
 
 ## Infra
 - [[home-server]] — Apple M1 Mac mini (8-core, 16 GB, 1 TB, macOS 15.4.1, `arm64`; `m1mini` /
@@ -28,6 +29,7 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[expo-dev-loop]] — Live-preview mobile dev loop: Expo dev server on the mini + Expo Go on phone.
 - [[mayo-dev-autosync]] — push → mini auto-pulls → phone Fast-Refreshes (polling script + webhook option).
 - [[claude-remote-control]] — Operate the home server from your phone (Claude Remote Control / SSH).
+- [[deploy-mayo-api]] — Build & run the mayo-api FastAPI container on the home server _(draft)_.
 
 ## Decisions (ADRs)
 - [[0002-cicd-via-jenkins-webhook]] — **Current** CI/CD: Jenkins builds & deploys, triggered by
@@ -38,6 +40,10 @@ Updated whenever pages are added/renamed or a service's status changes.
   on the M1 mini with Expo Go.
 - [[0004-mayo-storage-local-then-s3]] — Mayo video storage: local filesystem first, migrate to
   S3-compatible object storage past ~half the host disk; abstract storage from day one.
+- [[0005-mayo-backend-fastapi]] — Mayo backend is a FastAPI orchestration API (`apps/mayo-api/`),
+  stack-consistent with [[richclub]]; schemas mirror the app mocks.
+- [[0006-mayo-job-queue-inprocess-then-redis]] — Job queue: in-process asyncio worker first,
+  Redis-backed workers + a DB when generation becomes real / needs durability.
 
 ## Incidents
 _(none yet — postmortems)_

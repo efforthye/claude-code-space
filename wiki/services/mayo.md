@@ -36,8 +36,8 @@ Users pay a premium for high-quality generated video. Output includes **both** t
 ## Platforms
 - **App (primary):** Expo / React Native / TypeScript — distributed to iOS + Android.
 - **Web:** **mayo.im** — same product on the web.
-- **Code location:** Expo app lives in this workspace at **`apps/mayo/`**. Web frontend and the
-  backend location are TBD (see open decisions).
+- **Code location:** Expo app lives in this workspace at **`apps/mayo/`**; the orchestration API
+  lives at **`apps/mayo-api/`** (FastAPI). Web frontend location is TBD (see open decisions).
 
 ## Current state — app shell scaffolded (2026-07-15)
 UI-only shell (no backend yet), **Expo SDK 54** / React Native 0.81 / TypeScript. Typechecks
@@ -111,6 +111,25 @@ cd apps/mayo && npm install && npx expo start
 Then scan the QR with Expo Go (iOS/Android) — see [[expo-dev-loop]]. Backend/model wiring comes
 next; today the screens use `src/mocks/data.ts`.
 
+## Backend — Phase 1 scaffolded (2026-07-16)
+The **orchestration API** now exists at **`apps/mayo-api/`** — **FastAPI + Pydantic v2**, served by
+uvicorn, containerized (`Dockerfile`). Decisions: [[0005-mayo-backend-fastapi]] (why FastAPI) and
+[[0006-mayo-job-queue-inprocess-then-redis]] (queue strategy). Deploy via [[deploy-mayo-api]].
+
+**Phase 1 = real endpoints, mock generation.** The job model, library, retention, and publish
+endpoints are real; the scenario→scenes→clips→stitch core is stood in by an **in-process asyncio
+advancer** (`app/worker.py`) that walks a job scene-by-scene on a timer, then files a finished video
+into the library — so the app's Create → Jobs → Library loop can run against a live server. Wire
+schemas (`app/schemas.py`) **mirror the app mocks** so the client swaps mocks → HTTP mechanically.
+
+Endpoints (v1): `POST /v1/jobs` (+ `/estimate`), `GET /v1/jobs[/{id}]`, `DELETE /v1/jobs/{id}`;
+`GET /v1/library/videos[/{id}]`, `/storage`, `POST …/extend`, `POST …/publish`;
+`GET /v1/catalog/{tiers,durations,plans,retention-plans,models}`; `GET /health`. Seams built in from
+day one: **storage interface** (local now, S3 stub — [[0004-mayo-storage-local-then-s3]]), a
+**pluggable model registry** (image/video providers keyed to price tiers), and **env-driven
+config/secrets** (values at runtime, names-only in `.env.example`). Tested with `pytest`
+(API + full generation lifecycle); **7/7 pass**. Not yet wired to the app or deployed.
+
 ## Architecture sketch (draft — not locked)
 - **Clients:** Expo app + mayo.im web (share a backend API). Web could reuse the RN codebase via
   React Native Web, or be a separate frontend — open decision.
@@ -147,7 +166,6 @@ payment-provider key. **Record names/locations only**, values go in a secret sto
 `HOME_SERVER` env or a dedicated store) — see `CLAUDE.md` security rule.
 
 ## Open decisions (to ADR as we choose)
-- Backend stack (FastAPI?) and job-queue tech (Redis+workers / Celery / RQ / …).
 - Web approach: RN-Web shared codebase vs. separate web frontend for mayo.im.
 - Payment/billing provider and pricing model (per-length? per-model-tier? credits?).
 - Scenario→scenes→clips→stitch pipeline design and how models are abstracted behind the registry.
@@ -156,8 +174,12 @@ payment-provider key. **Record names/locations only**, values go in a secret sto
   increase request); design the pluggable "publisher" interface.
 - **Resolved:** storage strategy — local-first, S3 later ([[0004-mayo-storage-local-then-s3]]).
 - **Resolved:** host — the [[home-server]] M1 mini (the operator's "MacBook" = same machine).
+- **Resolved:** backend stack — FastAPI orchestration API ([[0005-mayo-backend-fastapi]]).
+- **Resolved:** job queue — in-process asyncio first, Redis workers later ([[0006-mayo-job-queue-inprocess-then-redis]]).
 
 ## Related
 - Client decision: [[0003-expo-react-native-for-mobile-app]]
-- Dev loop: [[expo-dev-loop]] · Host: [[home-server]] · CI: [[jenkins]]
+- Backend: [[0005-mayo-backend-fastapi]] · Queue: [[0006-mayo-job-queue-inprocess-then-redis]] ·
+  Storage: [[0004-mayo-storage-local-then-s3]]
+- Dev loop: [[expo-dev-loop]] · Deploy API: [[deploy-mayo-api]] · Host: [[home-server]] · CI: [[jenkins]]
 - Related app in repo: [[richclub]] (existing FastAPI + front — reference for stack)
