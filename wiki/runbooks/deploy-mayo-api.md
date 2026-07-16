@@ -13,22 +13,46 @@ The [[mayo]] orchestration API ([[0005-mayo-backend-fastapi]]) is a Docker conta
 [[home-server]], deployed the same way as [[richclub]] (via [[jenkins]] / [[0002-cicd-via-jenkins-webhook]]).
 Code lives in this repo at **`apps/mayo-api/`**.
 
-> **Status: draft.** The container build/run steps below are verified locally; the Jenkins job
-> wiring on the mini still needs to be created and its exact steps folded back here after the first
-> real deploy.
+> **Status: draft.** Two deploy paths: (A) the **launchd + uvicorn** dev deploy below is the
+> current hands-off path on the mini (mirrors the Expo/autopull agents — auto-restart, survives
+> reboot, no SSH); (B) the **Docker** path is the eventual production shape (via [[jenkins]], like
+> [[richclub]]) and is verified locally but not yet wired on the mini.
 
-## Build & run (manual, on the host)
+## Port
+The API binds **:8001** by default — [[richclub]] already owns **:8000** on the [[home-server]].
+Override with `MAYO_PORT`.
+
+## (A) Dev deploy — launchd agent (current, hands-off)
+The `mayo-autostart-install.sh` installer now manages **three** agents: the Expo dev server,
+`dev-autopull`, and **`com.efforthye.mayo.api`** (runs `scripts/mayo-api-run.sh` → uvicorn on 8001).
+`mayo-api-run.sh` self-bootstraps a Python venv and installs deps (refreshing when
+`requirements.txt` changes), so there's no manual `pip` step. Requires **Python 3.11** on the mini
+(`brew install python@3.11` if missing).
+
+```bash
+# on the mini, in the repo:
+./scripts/mayo-autostart-install.sh
+# first boot builds a venv (~30s), then:
+curl -s localhost:8001/health           # -> {"status":"ok",...}
+# interactive docs (same LAN as the phone): http://home.efforthye.com:8001/docs
+```
+`dev-autopull` restarts the API agent automatically whenever `apps/mayo-api/**` is pushed, so
+backend changes go live on the mini with no manual step (same loop as the app). Logs:
+`~/Library/Logs/mayo-api.log`.
+
+## (B) Prod deploy — Docker (build & run on the host)
 ```bash
 cd apps/mayo-api
 docker build -t mayo-api:latest .
 docker run -d --name mayo-api \
-  -p 8000:8000 \
+  -p 8001:8000 \                     # host 8001 (richclub owns 8000) -> container 8000
   -v mayo-media:/data/media \        # persist local-storage media across restarts (ADR 0004)
   --env-file /path/to/host/.env \    # NEVER in git — lives on the host
   --restart unless-stopped \
   mayo-api:latest
 ```
-Health-check: `curl -s localhost:8000/health` → `{"status":"ok",...}`. Interactive API at `/docs`.
+Health-check: `curl -s localhost:8001/health` → `{"status":"ok",...}`. Interactive API at `/docs`.
+Run the launchd path (A) **or** Docker (B), not both — they'd contend for port 8001.
 
 ## Config / secrets (pointers only)
 Runtime config is env-driven (see `apps/mayo-api/.env.example` for the **names**). Values live in

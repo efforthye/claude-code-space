@@ -128,7 +128,14 @@ Endpoints (v1): `POST /v1/jobs` (+ `/estimate`), `GET /v1/jobs[/{id}]`, `DELETE 
 day one: **storage interface** (local now, S3 stub — [[0004-mayo-storage-local-then-s3]]), a
 **pluggable model registry** (image/video providers keyed to price tiers), and **env-driven
 config/secrets** (values at runtime, names-only in `.env.example`). Tested with `pytest`
-(API + full generation lifecycle); **7/7 pass**. Not yet wired to the app or deployed.
+(API + full generation lifecycle); **7/7 pass**.
+
+**Deploy on the mini (hands-off):** a third launchd agent `com.efforthye.mayo.api` runs the API via
+`scripts/mayo-api-run.sh` (self-bootstrapping venv → uvicorn on **:8001**, since [[richclub]] owns
+:8000). Installed by `mayo-autostart-install.sh` alongside the Expo + autopull agents; `dev-autopull`
+restarts it whenever `apps/mayo-api/**` is pushed, so backend changes go live with no manual step.
+See [[deploy-mayo-api]]. **Not yet wired to the app** (client still on local mocks — that's the next
+step).
 
 ## Architecture sketch (draft — not locked)
 - **Clients:** Expo app + mayo.im web (share a backend API). Web could reuse the RN codebase via

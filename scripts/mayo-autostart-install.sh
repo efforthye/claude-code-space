@@ -26,17 +26,20 @@ LOGS="$HOME/Library/Logs"
 UID_NUM="$(id -u)"
 EXPO_LABEL="com.efforthye.mayo.expo"
 PULL_LABEL="com.efforthye.mayo.autopull"
+API_LABEL="com.efforthye.mayo.api"
 EXPO_PLIST="$AGENTS/$EXPO_LABEL.plist"
 PULL_PLIST="$AGENTS/$PULL_LABEL.plist"
+API_PLIST="$AGENTS/$API_LABEL.plist"
 
 unload() {
   launchctl bootout "gui/$UID_NUM/$EXPO_LABEL" 2>/dev/null || true
   launchctl bootout "gui/$UID_NUM/$PULL_LABEL" 2>/dev/null || true
+  launchctl bootout "gui/$UID_NUM/$API_LABEL" 2>/dev/null || true
 }
 
 if [ "${1:-}" = "--uninstall" ]; then
   unload
-  rm -f "$EXPO_PLIST" "$PULL_PLIST"
+  rm -f "$EXPO_PLIST" "$PULL_PLIST" "$API_PLIST"
   echo "Uninstalled mayo autostart agents."
   exit 0
 fi
@@ -83,6 +86,9 @@ write_plist "$EXPO_PLIST" "$EXPO_LABEL" "$APP" "npx expo start --tunnel" "$LOGS/
 # Invoke the pull script via an explicit bash (not shebang/exec) — launchd
 # returned exit 126 execing the script directly.
 write_plist "$PULL_PLIST" "$PULL_LABEL" "$REPO" "/bin/bash $REPO/scripts/dev-autopull.sh" "$LOGS/mayo-autopull.log"
+# Orchestration API (FastAPI/uvicorn on port 8001 — richclub owns 8000). The
+# run script self-bootstraps a venv + deps, so no manual pip step is needed.
+write_plist "$API_PLIST" "$API_LABEL" "$REPO" "/bin/bash $REPO/scripts/mayo-api-run.sh" "$LOGS/mayo-api.log"
 
 # Bootstrap with a retry — launchctl can transiently fail ("Bootstrap failed:
 # 5: Input/output error") if the old agent is still tearing down.
@@ -99,13 +105,17 @@ unload
 sleep 2
 boot "$EXPO_PLIST"
 boot "$PULL_PLIST"
+boot "$API_PLIST"
 
 echo "Installed launchd agents:"
 echo "  $EXPO_PLIST"
 echo "  $PULL_PLIST"
+echo "  $API_PLIST"
 echo
 echo "They now run on login, restart on crash, and survive reboots + Termius close."
 echo "Get the tunnel URL (give it ~15s to boot):"
 echo "  grep -m1 'exp://' $LOGS/mayo-expo.log"
-echo "Watch logs:  tail -f $LOGS/mayo-expo.log   (and mayo-autopull.log)"
+echo "API health (give it ~30s the first time — it builds a venv):"
+echo "  curl -s localhost:8001/health   (interactive docs at http://<host>:8001/docs)"
+echo "Watch logs:  tail -f $LOGS/mayo-expo.log   (and mayo-autopull.log, mayo-api.log)"
 echo "Uninstall:   $0 --uninstall"
