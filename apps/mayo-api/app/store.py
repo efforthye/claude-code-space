@@ -9,11 +9,24 @@ from __future__ import annotations
 
 import asyncio
 import itertools
+import os
 import time
 from typing import Optional
 
 from .catalog import scenes_for, tier_by_id
+from .config import settings
 from .schemas import ExploreItem, Job, Storage, Video
+
+
+def _dir_size(path: str) -> int:
+    total = 0
+    for root, _dirs, files in os.walk(path):
+        for name in files:
+            try:
+                total += os.path.getsize(os.path.join(root, name))
+            except OSError:
+                pass
+    return total
 
 _counter = itertools.count(1)
 
@@ -22,19 +35,12 @@ def _new_id(prefix: str) -> str:
     return f"{prefix}{int(time.time() * 1000)}{next(_counter)}"
 
 
-# Seed library — mirrors the app's mock VIDEOS so the client sees parity.
-_SEED_VIDEOS: list[Video] = [
-    Video(id="v1", title="Product teaser — 3 min", durationLabel="3:02", sizeLabel="480 MB", expiresInDays=11, accent="#6D5DF6", resolution="1080p", tierLabel="Premium", scenes=9, createdLabel="3 days ago"),
-    Video(id="v2", title="Ocean documentary cut", durationLabel="28:14", sizeLabel="3.9 GB", expiresInDays=3, accent="#1FA2A6", resolution="1080p", tierLabel="Standard", scenes=64, createdLabel="1 week ago"),
-    Video(id="v3", title="Wedding recap film", durationLabel="12:41", sizeLabel="1.6 GB", expiresInDays=1, accent="#E0699A", resolution="4K", tierLabel="Premium", scenes=31, createdLabel="2 weeks ago"),
-]
+# No seed videos/jobs — the Library and Jobs show only REAL content the user
+# generated, imported, or edited (placeholder seeds had no playable file, which
+# was confusing). Fresh installs start empty until the first generation.
+_SEED_VIDEOS: list[Video] = []
 
-_SEED_JOBS: list[Job] = [
-    Job(id="j1", title="Lighthouse keeper — cinematic short", status="generating", scenesDone=7, scenesTotal=18, etaMin=12, tierLabel="Premium", seconds=180),
-    Job(id="j2", title="Neon city chase (30 min)", status="queued", scenesDone=0, scenesTotal=92, tierLabel="Standard", seconds=1800),
-    Job(id="j3", title="Product teaser — 3 min", status="done", scenesDone=9, scenesTotal=9, tierLabel="Premium", seconds=180),
-    Job(id="j4", title="Documentary intro", status="failed", scenesDone=3, scenesTotal=20, tierLabel="Draft", seconds=200),
-]
+_SEED_JOBS: list[Job] = []
 
 _ACCENTS = ["#6D5DF6", "#1FA2A6", "#E0699A", "#E2A43B", "#4C8DF6"]
 
@@ -126,7 +132,15 @@ class LibraryStore:
             self._videos[video.id] = video
         return video.model_copy()
 
-    async def add_imported(self, title: str, film_key: str, size_bytes: int) -> Video:
+    async def add_film(
+        self,
+        title: str,
+        film_key: str,
+        size_bytes: int,
+        tier_label: str = "Local",
+        created_label: str = "just now",
+        scenes: int = 1,
+    ) -> Video:
         idx = len(self._videos)
         video = Video(
             id=_new_id("v"),
@@ -136,14 +150,17 @@ class LibraryStore:
             expiresInDays=14,
             accent=_ACCENTS[idx % len(_ACCENTS)],
             resolution="512p",
-            tierLabel="Local",
-            scenes=1,
-            createdLabel="imported",
+            tierLabel=tier_label,
+            scenes=scenes,
+            createdLabel=created_label,
             url=f"/v1/media/{film_key}",
         )
         async with self._lock:
             self._videos[video.id] = video
         return video.model_copy()
+
+    async def add_imported(self, title: str, film_key: str, size_bytes: int) -> Video:
+        return await self.add_film(title, film_key, size_bytes, "Local", "imported")
 
     async def extend(self, video_id: str, add_days: int) -> Optional[Video]:
         async with self._lock:
@@ -157,8 +174,14 @@ class LibraryStore:
             return updated.model_copy()
 
     async def storage(self) -> Storage:
-        # Static for now; a real backend derives this from the storage interface.
-        return Storage(usedLabel="18.2 GB", totalLabel="50 GB", usedRatio=0.36)
+        # Real usage: sum of bytes stored under the local media root vs a cap.
+        used = _dir_size(settings.storage_local_path)
+        total = 50 * 1024 * 1024 * 1024  # 50 GB cap (make configurable later)
+        return Storage(
+            usedLabel=_fmt_size(used),
+            totalLabel="50 GB",
+            usedRatio=min(1.0, used / total) if total else 0.0,
+        )
 
 
 def _fmt_clock(seconds: int) -> str:

@@ -50,6 +50,9 @@ export type CreateJobRequest = {
 };
 export type RuntimeSettings = { generationBackend: string };
 
+export type EditClip = { videoId: string; start?: number; end?: number };
+export type EditRequest = { title: string; clips: EditClip[] };
+
 export type ExploreItem = {
   id: string;
   title: string;

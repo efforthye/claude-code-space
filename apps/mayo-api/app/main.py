@@ -19,6 +19,7 @@ from .routers import (
     billing,
     catalog,
     director,
+    edit,
     explore,
     health,
     jobs,
@@ -78,6 +79,7 @@ app.include_router(health.router)
 app.include_router(catalog.router, dependencies=protected)
 app.include_router(director.router, dependencies=protected)
 app.include_router(explore.router, dependencies=protected)
+app.include_router(edit.router, dependencies=protected)
 app.include_router(jobs.router, dependencies=protected)
 app.include_router(library.router, dependencies=protected)
 app.include_router(media.router, dependencies=protected)

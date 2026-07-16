@@ -12,6 +12,7 @@ import type {
   DirectorChatRequest,
   DirectorTurn,
   Duration,
+  EditRequest,
   ExploreItem,
   Estimate,
   Health,
@@ -89,6 +90,10 @@ export const deleteJob = (id: string) =>
 // --- Director (conversational scenario flow) ---
 export const directorChat = (body: DirectorChatRequest) =>
   req<DirectorTurn>('/v1/director/chat', { method: 'POST', body: JSON.stringify(body) });
+
+// --- Editor ---
+export const createEdit = (body: EditRequest) =>
+  req<Video>('/v1/edit', { method: 'POST', body: JSON.stringify(body) });
 
 // --- Explore (public feed + remix) ---
 export const getExplore = () => req<ExploreItem[]>('/v1/explore');

@@ -42,6 +42,18 @@ export default function LibraryScreen() {
       onRefresh={async () => {
         await Promise.all([refetch(), refetchStorage()]);
       }}>
+      <Pressable
+        onPress={() => router.push('/edit')}
+        style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+        <ThemedView type="backgroundElement" style={styles.editEntry}>
+          <Ionicons name="cut-outline" size={20} color={theme.text} />
+          <ThemedText type="smallBold" style={styles.flex}>
+            {t('library.newEdit')}
+          </ThemedText>
+          <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+        </ThemedView>
+      </Pressable>
+
       {storage ? (
         <ThemedView type="backgroundElement" style={styles.storage}>
           <View style={styles.headerRow}>
@@ -99,6 +111,16 @@ export default function LibraryScreen() {
 }
 
 const styles = StyleSheet.create({
+  editEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    padding: Spacing.three,
+    borderRadius: Spacing.four,
+  },
+  flex: {
+    flex: 1,
+  },
   storage: {
     gap: Spacing.two,
     padding: Spacing.three,

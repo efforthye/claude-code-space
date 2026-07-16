@@ -106,6 +106,17 @@ class Storage(BaseModel):
     usedRatio: float
 
 
+class EditClip(BaseModel):
+    videoId: str  # a Library video to use as a source clip
+    start: float = Field(default=0, ge=0)  # trim in-point (seconds)
+    end: Optional[float] = Field(default=None, ge=0)  # trim out-point; None = to end
+
+
+class EditRequest(BaseModel):
+    title: str = Field(default="My edit", max_length=100)
+    clips: list[EditClip] = Field(min_length=1)
+
+
 class ExploreItem(BaseModel):
     """A public creation shown in the Explore feed (browse + 'make like this')."""
 
