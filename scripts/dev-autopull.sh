@@ -21,14 +21,23 @@ while true; do
     after="$(git rev-parse HEAD)"
     if [ "$before" != "$after" ]; then
       echo "[$(date '+%H:%M:%S')] pulled ${before:0:7} -> ${after:0:7}"
+      changed="$(git diff --name-only "$before" "$after")"
+
       # Reinstall app deps when the manifest changed, then restart the expo agent
       # so new native/JS modules are picked up (JS-only edits don't need this).
-      if git diff --name-only "$before" "$after" | grep -q '^apps/mayo/package'; then
+      if echo "$changed" | grep -q '^apps/mayo/package'; then
         echo "  package manifest changed -> npm install (apps/mayo)"
         (cd apps/mayo && npm install --no-audit --no-fund) || true
         if launchctl kickstart -k "gui/$(id -u)/com.efforthye.mayo.expo" 2>/dev/null; then
           echo "  restarted mayo expo agent (new deps)"
         fi
+      fi
+
+      # Self-update: if this script itself changed, restart the autopull agent so
+      # the new logic takes effect (no manual step for future improvements).
+      if echo "$changed" | grep -q '^scripts/dev-autopull\.sh$'; then
+        echo "  dev-autopull.sh changed -> restarting self to pick up new logic"
+        launchctl kickstart -k "gui/$(id -u)/com.efforthye.mayo.autopull" 2>/dev/null || true
       fi
     fi
   else
