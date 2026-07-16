@@ -1,33 +1,48 @@
 #!/usr/bin/env bash
-# mayo-tunnel-run — expose the local mayo-api (port 8001) on a public HTTPS URL
-# via a Cloudflare quick tunnel, so the phone app can reach it from anywhere
-# (office / 5G), not just the home LAN. No account or router config needed.
+# mayo-tunnel-run — expose mayo-api on a STABLE public URL via a named Cloudflare
+# tunnel: https://mayo-api.efforthye.dev -> http://localhost:8001.
 #
-# Launched by the com.efforthye.mayo.tunnel launchd agent; also runnable by hand.
-# The public URL is printed to this process's log (~/Library/Logs/mayo-tunnel.log)
-# — look for the trycloudflare.com address:
-#   grep -m1 trycloudflare ~/Library/Logs/mayo-tunnel.log
-# Paste that URL into the app: Account → Server field.
-#
-# NOTE: a quick tunnel's URL is random and changes when the tunnel restarts
-# (e.g. after a reboot). For a permanent, stable address, upgrade to a named
-# Cloudflare tunnel with your domain later (see deploy-mayo-api runbook).
+# Reuses the existing Cloudflare login from the richclub setup
+# (~/.cloudflared/cert.pem), and is fully self-provisioning: on first run it
+# creates the "mayo-api" tunnel and its DNS route, then serves it. Runs under a
+# dedicated config so it never touches the richclub tunnel's config.yml.
+# Launched by the com.efforthye.mayo.tunnel launchd agent.
 
 set -eo pipefail
 
 log() { echo "[mayo-tunnel $(date '+%H:%M:%S')] $*"; }
 
-if ! command -v cloudflared >/dev/null 2>&1; then
-  log "cloudflared not found — installing via Homebrew (one-time)…"
-  if command -v brew >/dev/null 2>&1; then
-    brew install cloudflared || { log "ERROR: 'brew install cloudflared' failed — install it manually"; exit 127; }
-  else
-    log "ERROR: Homebrew not found; install cloudflared manually (brew install cloudflared)"
-    exit 127
-  fi
-fi
-
+HOST="mayo-api.efforthye.dev"
 PORT="${MAYO_PORT:-8001}"
-log "starting Cloudflare quick tunnel -> http://localhost:$PORT"
-log "public URL appears below (look for 'trycloudflare.com'); paste it into the app: Account -> Server"
-exec cloudflared tunnel --no-autoupdate --url "http://localhost:$PORT"
+CFDIR="$HOME/.cloudflared"
+CFG="$CFDIR/mayo-api.yml"
+
+command -v cloudflared >/dev/null 2>&1 || { log "ERROR: cloudflared not found (brew install cloudflared)"; exit 127; }
+[ -f "$CFDIR/cert.pem" ] || { log "ERROR: $CFDIR/cert.pem missing — run 'cloudflared tunnel login' once"; exit 1; }
+
+# Find the named tunnel, creating it if it doesn't exist yet.
+UUID="$(cloudflared tunnel list 2>/dev/null | awk '$2=="mayo-api"{print $1; exit}')"
+if [ -z "$UUID" ]; then
+  log "creating named tunnel 'mayo-api'…"
+  OUT="$(cloudflared tunnel create mayo-api 2>&1)" || { log "create failed:"; echo "$OUT"; exit 1; }
+  echo "$OUT"
+  UUID="$(printf '%s\n' "$OUT" | grep -oiE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)"
+fi
+[ -n "$UUID" ] || { log "ERROR: could not determine tunnel id"; exit 1; }
+log "tunnel id: $UUID"
+
+# Ensure the DNS route exists (idempotent — ignore 'already exists').
+if cloudflared tunnel route dns "$UUID" "$HOST" 2>&1 | sed 's/^/[route] /'; then :; fi
+
+# Dedicated config so we never touch the richclub tunnel's config.yml.
+cat > "$CFG" <<YAML
+tunnel: $UUID
+credentials-file: $CFDIR/$UUID.json
+ingress:
+  - hostname: $HOST
+    service: http://localhost:$PORT
+  - service: http_status:404
+YAML
+
+log "serving https://$HOST -> http://localhost:$PORT"
+exec cloudflared tunnel --config "$CFG" run

@@ -4,7 +4,11 @@
 // anywhere (office / 5G), without an app rebuild. The chosen value is persisted
 // by the Settings store and applied here on launch.
 
-const DEFAULT = (process.env.EXPO_PUBLIC_MAYO_API_URL ?? 'http://home.efforthye.com:8001').replace(
+// Default to the stable Cloudflare-tunnel address so the app reaches the backend
+// from anywhere (office / 5G) with no config. Override at build time with
+// EXPO_PUBLIC_MAYO_API_URL, or at runtime from Account → Server (e.g. the LAN
+// http://localhost:8001 when developing on the mini directly).
+const DEFAULT = (process.env.EXPO_PUBLIC_MAYO_API_URL ?? 'https://mayo-api.efforthye.dev').replace(
   /\/+$/,
   '',
 );

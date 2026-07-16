@@ -92,8 +92,9 @@ write_plist "$PULL_PLIST" "$PULL_LABEL" "$REPO" "/bin/bash $REPO/scripts/dev-aut
 # Orchestration API (FastAPI/uvicorn on port 8001 — richclub owns 8000). The
 # run script self-bootstraps a venv + deps, so no manual pip step is needed.
 write_plist "$API_PLIST" "$API_LABEL" "$REPO" "/bin/bash $REPO/scripts/mayo-api-run.sh" "$LOGS/mayo-api.log"
-# Public tunnel so the phone app can reach the API from anywhere (not just LAN).
-# Prints a trycloudflare.com URL to the log; paste it into the app (Account -> Server).
+# Public tunnel so the phone app reaches the API from anywhere (not just LAN).
+# Self-provisions a named Cloudflare tunnel at https://mayo-api.efforthye.dev
+# (stable), reusing the existing cloudflared login. The app defaults to that URL.
 write_plist "$TUNNEL_PLIST" "$TUNNEL_LABEL" "$REPO" "/bin/bash $REPO/scripts/mayo-tunnel-run.sh" "$LOGS/mayo-tunnel.log"
 
 # Bootstrap with a retry — launchctl can transiently fail ("Bootstrap failed:
@@ -125,8 +126,8 @@ echo "Get the Expo tunnel URL (give it ~15s to boot):"
 echo "  grep -m1 'exp://' $LOGS/mayo-expo.log"
 echo "API health (give it ~30s the first time — it builds a venv):"
 echo "  curl -s localhost:8001/health   (interactive docs at http://<host>:8001/docs)"
-echo "Public API URL for the phone (give it ~15s; cloudflared installs on first run):"
-echo "  grep -m1 trycloudflare $LOGS/mayo-tunnel.log"
-echo "  -> paste that https URL into the app: Account -> Server"
+echo "Public API URL for the phone: https://mayo-api.efforthye.dev (self-provisions on first run)"
+echo "  the app already defaults to it — no pasting needed. Watch it come up:"
+echo "  grep -m1 'serving https' $LOGS/mayo-tunnel.log"
 echo "Watch logs:  tail -f $LOGS/mayo-api.log   (and mayo-expo/autopull/tunnel logs)"
 echo "Uninstall:   $0 --uninstall"

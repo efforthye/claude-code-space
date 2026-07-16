@@ -41,6 +41,12 @@ while true; do
         launchctl kickstart -k "gui/$(id -u)/com.efforthye.mayo.api" 2>/dev/null || true
       fi
 
+      # Restart the tunnel agent when its runner changes.
+      if echo "$changed" | grep -q '^scripts/mayo-tunnel-run\.sh$'; then
+        echo "  mayo-tunnel-run.sh changed -> restarting mayo tunnel agent"
+        launchctl kickstart -k "gui/$(id -u)/com.efforthye.mayo.tunnel" 2>/dev/null || true
+      fi
+
       # Self-update: if this script itself changed, restart the autopull agent so
       # the new logic takes effect (no manual step for future improvements).
       if echo "$changed" | grep -q '^scripts/dev-autopull\.sh$'; then

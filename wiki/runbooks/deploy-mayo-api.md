@@ -47,22 +47,27 @@ backend changes go live on the mini with no manual step (same loop as the app). 
 `~/Library/Logs/mayo-api.log`.
 
 ### Reaching the API from the phone (anywhere)
-The API binds `0.0.0.0:8001` but that's only reachable on the home LAN. So the app can reach it
-from **outside** the house (office / 5G), the installer also runs a **Cloudflare quick tunnel**
-agent (`com.efforthye.mayo.tunnel` → `scripts/mayo-tunnel-run.sh`) that publishes a public HTTPS URL
-(no account/router config; installs `cloudflared` via Homebrew on first run). Get the URL and point
-the app at it:
-```bash
-grep -m1 trycloudflare ~/Library/Logs/mayo-tunnel.log   # -> https://<random>.trycloudflare.com
-```
-Paste that URL into the app: **Account → Server** (it's persisted; the status dot turns green when
-connected). The app's API base URL is runtime-configurable there — default is the LAN
-`http://home.efforthye.com:8001` for on-network use.
+The API binds `0.0.0.0:8001`, reachable only on the home LAN. To reach it from **outside** (office /
+5G), the installer runs a **named Cloudflare tunnel** agent (`com.efforthye.mayo.tunnel` →
+`scripts/mayo-tunnel-run.sh`) that serves a **stable** public URL:
 
-> A quick tunnel's URL is **random and changes on restart/reboot**, so you'll re-paste after a
-> reboot. For a **permanent** address, upgrade to a **named** Cloudflare tunnel bound to the
-> `efforthye.com` domain (stable hostname, e.g. `mayo-api.efforthye.com`) and bake it into
-> `EXPO_PUBLIC_MAYO_API_URL` — a follow-up when the dev URL settles.
+> **`https://mayo-api.efforthye.dev`** → `http://localhost:8001`
+
+It reuses the existing Cloudflare login (`~/.cloudflared/cert.pem`, from the richclub tunnel on the
+`efforthye.dev` zone) and is **self-provisioning**: on first run it creates the `mayo-api` tunnel,
+adds the DNS route, writes a **dedicated** config (`~/.cloudflared/mayo-api.yml` — it never touches
+the richclub `config.yml`), then serves it. Watch it come up:
+```bash
+grep -m1 'serving https' ~/Library/Logs/mayo-tunnel.log
+```
+The app **defaults** to this URL (`EXPO_PUBLIC_MAYO_API_URL`), so no pasting is needed — it connects
+from anywhere over HTTPS. The base URL is still runtime-overridable in the app (**Account → Server**),
+e.g. set it to `http://localhost:8001` when developing on the mini directly. Requires `cloudflared`
+(already installed for richclub) and the `efforthye.dev` zone in Cloudflare.
+
+Existing richclub ingress for reference (`~/.cloudflared/config.yml`): `richclub.efforthye.dev` →
+`:8000`, `richclub-client.efforthye.dev` → `:3000`. mayo-api runs as its **own** tunnel, so those
+are untouched.
 
 ## (B) Prod deploy — Docker (build & run on the host)
 ```bash
