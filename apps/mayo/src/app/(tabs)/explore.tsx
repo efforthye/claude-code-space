@@ -70,24 +70,9 @@ export default function ExploreScreen() {
 
   const list = mode === 'liked' ? favorites : (items ?? []);
 
-  const remix = (item: ExploreItem) =>
-    router.navigate({ pathname: '/', params: { seed: item.prompt } });
-
-  const open = (item: ExploreItem) =>
-    router.push({
-      pathname: '/explore/[id]',
-      params: {
-        id: item.id,
-        url: item.url ?? '',
-        title: item.title,
-        prompt: item.prompt,
-        author: item.author,
-        accent: item.accent,
-        durationLabel: item.durationLabel,
-        tierLabel: item.tierLabel,
-        likes: String(item.likes),
-      },
-    });
+  // Tapping a card opens the full-screen reels player at that position.
+  const open = (index: number) =>
+    router.push({ pathname: '/reels', params: { mode, index: String(index) } });
 
   return (
     <Screen
@@ -120,16 +105,16 @@ export default function ExploreScreen() {
         </ThemedView>
       ) : null}
 
-      {list.map((item) => (
+      {list.map((item, index) => (
         <ThemedView key={item.id} type="backgroundElement" style={styles.card}>
           {exploreAutoplay && item.url ? (
             <AutoPreview
               uri={`${getApiBaseUrl()}${item.url}`}
               duration={item.durationLabel}
-              onPress={() => open(item)}
+              onPress={() => open(index)}
             />
           ) : (
-            <Pressable onPress={() => open(item)}>
+            <Pressable onPress={() => open(index)}>
               <View style={[styles.poster, { backgroundColor: item.accent }]}>
                 <Ionicons name="play" size={40} color="#ffffff" />
                 <View style={styles.durationTag}>
@@ -164,17 +149,6 @@ export default function ExploreScreen() {
               </ThemedText>
             </Pressable>
           </View>
-
-          <Pressable
-            onPress={() => remix(item)}
-            style={({ pressed }) => [
-              styles.remix,
-              { borderColor: theme.backgroundSelected },
-              pressed && styles.pressed,
-            ]}>
-            <Ionicons name="sparkles-outline" size={16} color={theme.text} />
-            <ThemedText type="smallBold">{t('explore.remix')}</ThemedText>
-          </Pressable>
         </ThemedView>
       ))}
     </Screen>

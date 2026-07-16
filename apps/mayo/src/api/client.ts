@@ -13,6 +13,7 @@ import type {
   DirectorTurn,
   Duration,
   EditRequest,
+  ExploreComment,
   ExploreItem,
   ExploreSort,
   Estimate,
@@ -105,6 +106,13 @@ export const publishToExplore = (videoId: string, prompt: string) =>
   req<ExploreItem>('/v1/explore', { method: 'POST', body: JSON.stringify({ videoId, prompt }) });
 export const likeExplore = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/like`, { method: 'POST' });
+export const getComments = (id: string) =>
+  req<ExploreComment[]>(`/v1/explore/${encodeURIComponent(id)}/comments`);
+export const addComment = (id: string, text: string) =>
+  req<ExploreComment>(`/v1/explore/${encodeURIComponent(id)}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ text }),
+  });
 
 // --- Runtime settings (app-controlled generation mode) ---
 export const getSettings = () => req<RuntimeSettings>('/v1/settings');

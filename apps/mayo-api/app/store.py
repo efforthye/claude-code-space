@@ -15,7 +15,7 @@ from typing import Optional
 
 from .catalog import scenes_for, tier_by_id
 from .config import settings
-from .schemas import ExploreItem, Job, Storage, Video
+from .schemas import ExploreComment, ExploreItem, Job, Storage, Video
 
 
 def _dir_size(path: str) -> int:
@@ -229,6 +229,7 @@ class ExploreStore:
 
     def __init__(self) -> None:
         self._items: dict[str, ExploreItem] = {}
+        self._comments: dict[str, list[ExploreComment]] = {}
         self._lock = asyncio.Lock()
 
     async def list(self, sort: str = "popular") -> list[ExploreItem]:
@@ -265,6 +266,22 @@ class ExploreStore:
             updated = item.model_copy(update={"likes": item.likes + 1})
             self._items[item_id] = updated
             return updated.model_copy()
+
+    async def comments(self, item_id: str) -> Optional[list[ExploreComment]]:
+        async with self._lock:
+            if item_id not in self._items:
+                return None
+            return [c.model_copy() for c in self._comments.get(item_id, [])]
+
+    async def add_comment(self, item_id: str, text: str) -> Optional[ExploreComment]:
+        async with self._lock:
+            item = self._items.get(item_id)
+            if not item:
+                return None
+            comment = ExploreComment(id=_new_id("c"), author="@me", text=text)
+            self._comments.setdefault(item_id, []).append(comment)
+            self._items[item_id] = item.model_copy(update={"comments": item.comments + 1})
+            return comment.model_copy()
 
 
 jobs = JobStore()

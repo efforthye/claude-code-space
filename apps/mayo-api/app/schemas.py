@@ -132,6 +132,18 @@ class ExploreItem(BaseModel):
     tierLabel: str
     url: Optional[str] = None  # playback path of the published film
     createdLabel: str = "just now"
+    comments: int = 0  # comment count
+
+
+class ExploreComment(BaseModel):
+    id: str
+    author: str
+    text: str
+    createdLabel: str = "just now"
+
+
+class CommentRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=500)
 
 
 class PublishExploreRequest(BaseModel):

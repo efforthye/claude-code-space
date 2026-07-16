@@ -69,8 +69,10 @@ export type ExploreItem = {
   tierLabel: string;
   url?: string | null;
   createdLabel?: string;
+  comments?: number;
 };
 export type ExploreSort = 'popular' | 'latest';
+export type ExploreComment = { id: string; author: string; text: string; createdLabel?: string };
 
 // --- Conversational director (mirrors app/planner.py) ---
 export type Scene = {

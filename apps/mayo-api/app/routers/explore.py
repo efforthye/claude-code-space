@@ -6,7 +6,7 @@ the "make like this" remix flow; `url` makes items playable.
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from ..schemas import ExploreItem, PublishExploreRequest
+from ..schemas import CommentRequest, ExploreComment, ExploreItem, PublishExploreRequest
 from ..store import explore as explore_store
 from ..store import library as lib
 
@@ -36,3 +36,19 @@ async def like_explore(item_id: str) -> ExploreItem:
     if item is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
     return item
+
+
+@router.get("/{item_id}/comments", response_model=list[ExploreComment])
+async def list_comments(item_id: str) -> list[ExploreComment]:
+    comments = await explore_store.comments(item_id)
+    if comments is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+    return comments
+
+
+@router.post("/{item_id}/comments", response_model=ExploreComment, status_code=status.HTTP_201_CREATED)
+async def add_comment(item_id: str, req: CommentRequest) -> ExploreComment:
+    comment = await explore_store.add_comment(item_id, req.text)
+    if comment is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+    return comment
