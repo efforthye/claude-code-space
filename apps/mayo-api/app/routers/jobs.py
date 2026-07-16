@@ -25,7 +25,7 @@ async def estimate(req: CreateJobRequest) -> Estimate:
 async def create_job(req: CreateJobRequest) -> Job:
     if catalog.tier_by_id(req.tier) is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown tier '{req.tier}'")
-    job = await job_store.create(req.prompt, req.seconds, req.tier)
+    job = await job_store.create(req.prompt, req.seconds, req.tier, req.scenePrompts or None)
     start_generation(job.id)
     return job
 

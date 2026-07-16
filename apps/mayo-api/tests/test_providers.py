@@ -17,9 +17,10 @@ def test_default_backend_is_mock():
 
 
 def test_comfy_backend_is_selected(monkeypatch):
-    monkeypatch.setattr(
-        providers_mod, "settings", SimpleNamespace(generation_backend="comfy")
-    )
+    # Selection now reads the runtime backend (app-switchable), not settings.
+    from app import runtime
+
+    monkeypatch.setattr(runtime, "generation_backend", lambda: "comfy")
     assert isinstance(providers_mod.get_model_backend(), ComfyUIModelBackend)
 
 

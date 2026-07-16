@@ -25,7 +25,6 @@ from .store import jobs, library
 logger = logging.getLogger("mayo")
 
 _tasks: set[asyncio.Task] = set()
-_backend = get_model_backend()
 
 
 def _stitch_sync(job_id: str, clip_keys: list[str]) -> str | None:
@@ -86,11 +85,18 @@ async def _run(job_id: str) -> None:
     if job is None:
         return
     total = job.scenesTotal
+    backend = get_model_backend()  # resolve per job so a live backend switch applies
 
     clip_keys: list[str] = []
     for index in range(job.scenesDone, total):
+        # Prefer the director's per-scene prompt; fall back to the job title.
+        scene_prompt = (
+            job.scenePrompts[index]
+            if job.scenePrompts and index < len(job.scenePrompts)
+            else job.title
+        )
         try:
-            result = await _backend.generate_scene(job.title, index)
+            result = await backend.generate_scene(scene_prompt, index)
             clip_keys.append(result.media_key)
         except Exception:
             await jobs.patch(job_id, status="failed", etaMin=None)

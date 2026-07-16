@@ -49,6 +49,12 @@ class Settings:
     comfy_poll_seconds: float = field(
         default_factory=lambda: float(os.getenv("MAYO_COMFY_POLL_SECONDS", "3"))
     )
+    # Per-clip generation size/length/quality — the main speed levers on the mini.
+    # Smaller/fewer/fewer-steps = faster. Injected into the workflow at run time.
+    comfy_width: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_WIDTH", "512")))
+    comfy_height: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_HEIGHT", "512")))
+    comfy_frames: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_FRAMES", "16")))
+    comfy_steps: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_STEPS", "6")))
     # Max seconds to wait for one scene to render before giving up (a clip can
     # take several minutes on the mini).
     comfy_max_wait: float = field(

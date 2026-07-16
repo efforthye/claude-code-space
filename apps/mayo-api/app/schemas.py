@@ -64,12 +64,18 @@ class Job(BaseModel):
     etaMin: Optional[int] = None
     tierLabel: Optional[str] = None
     seconds: Optional[int] = None
+    # Per-scene generation prompts from the AI director (when a screenplay drove
+    # the job); the worker renders scene i from scenePrompts[i]. None -> use title.
+    scenePrompts: Optional[list[str]] = None
 
 
 class CreateJobRequest(BaseModel):
     prompt: str = Field(default="", max_length=2000)
     seconds: int = Field(ge=1, le=6 * 60 * 60)
     tier: str = "standard"
+    # Optional per-scene prompts (e.g. from the director's screenplay). When set,
+    # the scene count follows this list instead of being derived from seconds.
+    scenePrompts: list[str] = Field(default_factory=list)
 
 
 class Estimate(BaseModel):

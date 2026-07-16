@@ -53,17 +53,27 @@ class JobStore:
             j = self._jobs.get(job_id)
             return j.model_copy() if j else None
 
-    async def create(self, prompt: str, seconds: int, tier_id: str) -> Job:
+    async def create(
+        self,
+        prompt: str,
+        seconds: int,
+        tier_id: str,
+        scene_prompts: list[str] | None = None,
+    ) -> Job:
         tier = tier_by_id(tier_id)
         title = (prompt.strip().splitlines()[0][:60] if prompt.strip() else "Untitled film")
+        # When the director supplied per-scene prompts, the scene count follows
+        # them; otherwise derive it from the requested length.
+        total = len(scene_prompts) if scene_prompts else scenes_for(seconds)
         job = Job(
             id=_new_id("j"),
             title=title,
             status="queued",
             scenesDone=0,
-            scenesTotal=scenes_for(seconds),
+            scenesTotal=total,
             tierLabel=tier.label if tier else tier_id,
             seconds=seconds,
+            scenePrompts=scene_prompts or None,
         )
         async with self._lock:
             self._jobs[job.id] = job

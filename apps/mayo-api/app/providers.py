@@ -89,13 +89,20 @@ class ComfyUIModelBackend(ModelBackend):
     def _build_prompt(self, prompt: str, index: int) -> dict:
         with open(self._workflow_path()) as fh:
             wf = json.load(fh)
-        # Node "6" = positive CLIPTextEncode; node "3" = KSampler (vary the seed
-        # per scene so scenes differ deterministically). Guard on presence so a
-        # customized workflow doesn't crash.
+        # Node "6" = positive CLIPTextEncode; node "3" = KSampler; node "5" =
+        # EmptyLatentImage. Inject the prompt, a per-scene seed, and the size/
+        # length/steps speed levers. Guard on presence so a customized workflow
+        # doesn't crash.
         if "6" in wf and "inputs" in wf["6"]:
             wf["6"]["inputs"]["text"] = prompt
-        if "3" in wf and "seed" in wf.get("3", {}).get("inputs", {}):
+        if "3" in wf and "inputs" in wf["3"]:
             wf["3"]["inputs"]["seed"] = 1000 + index
+            if "steps" in wf["3"]["inputs"]:
+                wf["3"]["inputs"]["steps"] = settings.comfy_steps
+        if "5" in wf and "inputs" in wf["5"]:
+            wf["5"]["inputs"]["width"] = settings.comfy_width
+            wf["5"]["inputs"]["height"] = settings.comfy_height
+            wf["5"]["inputs"]["batch_size"] = settings.comfy_frames
         return wf
 
     async def generate_scene(self, prompt: str, index: int) -> SceneResult:
@@ -146,8 +153,13 @@ class ComfyUIModelBackend(ModelBackend):
 
 
 def get_model_backend() -> ModelBackend:
-    if settings.generation_backend == "comfy":
+    # Read the *runtime* backend so the app can switch mock <-> comfy live
+    # (falls back to the .env default via runtime.py).
+    from . import runtime
+
+    backend = runtime.generation_backend()
+    if backend == "comfy":
         return ComfyUIModelBackend()
-    if settings.generation_backend == "external":
+    if backend == "external":
         return ExternalModelBackend()
     return MockModelBackend()
