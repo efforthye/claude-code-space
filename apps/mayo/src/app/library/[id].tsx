@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { cacheDirectory, downloadAsync } from 'expo-file-system/legacy';
+import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -46,7 +47,12 @@ export default function VideoDetailScreen() {
       const { uri } = await downloadAsync(`${getApiBaseUrl()}${video.url}`, target, {
         headers: key ? { Authorization: `Bearer ${key}` } : undefined,
       });
-      if (await Sharing.isAvailableAsync()) {
+      // Save straight into the device's photo album (camera roll).
+      const perm = await MediaLibrary.requestPermissionsAsync();
+      if (perm.granted) {
+        await MediaLibrary.saveToLibraryAsync(uri);
+        toast.show(t('detail.savedToAlbum'));
+      } else if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: 'video/mp4', UTI: 'public.mpeg-4' });
       } else {
         toast.show(t('detail.downloaded'));
