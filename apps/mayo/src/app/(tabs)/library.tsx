@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { getStorage, listVideos } from '@/api/client';
@@ -17,8 +18,16 @@ export default function LibraryScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
-  const { data: videos, loading, error, refetch } = useQuery(listVideos);
-  const { data: storage } = useQuery(getStorage);
+  const { data: videos, loading, error, refetch } = useQuery(listVideos, { pollMs: 15000 });
+  const { data: storage, refetch: refetchStorage } = useQuery(getStorage);
+
+  // Refresh when returning to the tab so finished/imported videos show up.
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+      refetchStorage();
+    }, [refetch, refetchStorage]),
+  );
 
   const retentionLabel = (days: number) => {
     if (days <= 0) return t('library.expired');
@@ -27,7 +36,12 @@ export default function LibraryScreen() {
   };
 
   return (
-    <Screen title={t('tab.library')} subtitle={t('library.subtitle')}>
+    <Screen
+      title={t('tab.library')}
+      subtitle={t('library.subtitle')}
+      onRefresh={async () => {
+        await Promise.all([refetch(), refetchStorage()]);
+      }}>
       {storage ? (
         <ThemedView type="backgroundElement" style={styles.storage}>
           <View style={styles.headerRow}>

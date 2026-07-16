@@ -40,7 +40,12 @@ export default function ExploreScreen() {
   const likeCount = (item: ExploreItem) => item.likes + (liked.has(item.id) ? 1 : 0);
 
   return (
-    <Screen title={t('tab.explore')} subtitle={t('explore.subtitle')}>
+    <Screen
+      title={t('tab.explore')}
+      subtitle={t('explore.subtitle')}
+      onRefresh={async () => {
+        await refetch();
+      }}>
       {loading && !items ? <LoadingBlock /> : null}
       {error && !items ? <ErrorBlock onRetry={refetch} /> : null}
 

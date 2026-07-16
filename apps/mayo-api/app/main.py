@@ -45,6 +45,16 @@ async def lifespan(app: FastAPI):
     if warm is not None:
         logger.info("warming up local director model in the background…")
         asyncio.create_task(warm())
+    # Import any locally-generated clips (e.g. ComfyUI output) into the Library so
+    # they're viewable in the app.
+    try:
+        from .importer import import_from_dir
+
+        added = await import_from_dir()
+        if added:
+            logger.info("imported %d local clip(s) into the library", added)
+    except Exception:
+        logger.exception("clip import failed")
     yield
     await shutdown()
 

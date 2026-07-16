@@ -55,6 +55,13 @@ class Settings:
     comfy_height: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_HEIGHT", "512")))
     comfy_frames: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_FRAMES", "16")))
     comfy_steps: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_STEPS", "6")))
+    # Directory of clips to auto-import into the Library on startup (e.g. ComfyUI's
+    # output), so anything generated — even via the smoke test — shows up in-app.
+    import_dir: str = field(
+        default_factory=lambda: os.path.expanduser(
+            os.getenv("MAYO_IMPORT_DIR", "~/programs/ComfyUI/output")
+        )
+    )
     # Max seconds to wait for one scene to render before giving up (a clip can
     # take several minutes on the mini).
     comfy_max_wait: float = field(

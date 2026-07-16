@@ -126,6 +126,25 @@ class LibraryStore:
             self._videos[video.id] = video
         return video.model_copy()
 
+    async def add_imported(self, title: str, film_key: str, size_bytes: int) -> Video:
+        idx = len(self._videos)
+        video = Video(
+            id=_new_id("v"),
+            title=title,
+            durationLabel="—",
+            sizeLabel=_fmt_size(size_bytes),
+            expiresInDays=14,
+            accent=_ACCENTS[idx % len(_ACCENTS)],
+            resolution="512p",
+            tierLabel="Local",
+            scenes=1,
+            createdLabel="imported",
+            url=f"/v1/media/{film_key}",
+        )
+        async with self._lock:
+            self._videos[video.id] = video
+        return video.model_copy()
+
     async def extend(self, video_id: str, add_days: int) -> Optional[Video]:
         async with self._lock:
             v = self._videos.get(video_id)
@@ -145,6 +164,13 @@ class LibraryStore:
 def _fmt_clock(seconds: int) -> str:
     m, s = divmod(max(seconds, 0), 60)
     return f"{m}:{s:02d}"
+
+
+def _fmt_size(nbytes: int) -> str:
+    mb = nbytes / (1024 * 1024)
+    if mb >= 1024:
+        return f"{mb / 1024:.1f} GB"
+    return f"{mb:.1f} MB"
 
 
 # Seed a public Explore feed — trending community creations to browse + remix.

@@ -19,16 +19,40 @@ export default function JobsScreen() {
   const router = useRouter();
   const { data: jobs, loading, error, refetch } = useQuery(listJobs, { pollMs: 2500 });
 
+  const statusColor = (status: string) =>
+    status === 'generating'
+      ? '#3BA55D'
+      : status === 'failed'
+        ? '#E5484D'
+        : theme.textSecondary;
+  const rank = (status: string) =>
+    status === 'generating' ? 0 : status === 'queued' ? 1 : status === 'failed' ? 2 : 3;
+  const sorted = [...(jobs ?? [])].sort((a, b) => rank(a.status) - rank(b.status));
+  const active = (jobs ?? []).filter(
+    (j) => j.status === 'generating' || j.status === 'queued',
+  ).length;
+
   return (
-    <Screen title={t('tab.jobs')} subtitle={t('jobs.subtitle')}>
+    <Screen
+      title={t('tab.jobs')}
+      subtitle={t('jobs.subtitle')}
+      onRefresh={async () => {
+        await refetch();
+      }}>
       {loading && !jobs ? <LoadingBlock /> : null}
       {error && !jobs ? <ErrorBlock onRetry={refetch} /> : null}
+      {active ? (
+        <ThemedView type="backgroundElement" style={styles.activeBar}>
+          <View style={[styles.liveDot, { backgroundColor: '#3BA55D' }]} />
+          <ThemedText type="smallBold">{t('jobs.activeCount', { n: active })}</ThemedText>
+        </ThemedView>
+      ) : null}
       {jobs?.length === 0 ? (
         <ThemedText type="small" themeColor="textSecondary">
           {t('common.empty')}
         </ThemedText>
       ) : null}
-      {(jobs ?? []).map((job) => {
+      {sorted.map((job) => {
         const progress = job.scenesTotal ? job.scenesDone / job.scenesTotal : 0;
         const done = job.status === 'done';
         return (
@@ -41,6 +65,7 @@ export default function JobsScreen() {
                 <ThemedText type="smallBold" numberOfLines={1} style={styles.flex}>
                   {job.title}
                 </ThemedText>
+                <View style={[styles.statusDot, { backgroundColor: statusColor(job.status) }]} />
                 <ThemedText type="small" themeColor="textSecondary">
                   {t(`status.${job.status}`)}
                 </ThemedText>
@@ -66,6 +91,24 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     padding: Spacing.three,
     borderRadius: Spacing.four,
+  },
+  activeBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    borderRadius: Spacing.four,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   headerRow: {
     flexDirection: 'row',
