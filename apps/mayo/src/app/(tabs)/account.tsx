@@ -12,6 +12,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
+import { usePayments } from '@/payments/context';
 import { useSettings, type ThemeMode } from '@/settings/settings';
 import { type Lang } from '@/i18n/translations';
 
@@ -27,6 +28,7 @@ export default function AccountScreen() {
   const router = useRouter();
   const { t, themeMode, setThemeMode, lang, setLang, defaultTierId, setDefaultTier } = useSettings();
   const { data: storage } = useQuery(getStorage);
+  const { entitlement } = usePayments();
 
   const themeOptions: { id: ThemeMode; label: string }[] = [
     { id: 'system', label: t('theme.system') },
@@ -61,9 +63,9 @@ export default function AccountScreen() {
             </ThemedText>
             <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
           </View>
-          <ThemedText type="subtitle">Pro</ThemedText>
+          <ThemedText type="subtitle">{t(`plan.${entitlement.planId}.name`)}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            {t('account.planDesc')}
+            {t(`plan.${entitlement.planId}.tagline`)}
           </ThemedText>
         </ThemedView>
       </Pressable>

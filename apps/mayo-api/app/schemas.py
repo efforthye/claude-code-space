@@ -104,3 +104,20 @@ class PublishResult(BaseModel):
     accepted: bool
     videoId: str
     visibility: Visibility
+
+
+class BillingProduct(BaseModel):
+    id: str  # store product id, e.g. 'im.mayo.pro.monthly'
+    planId: str
+    priceLabel: str
+
+
+class ValidateRequest(BaseModel):
+    productId: str
+    platform: Literal["appstore", "playstore", "mock"] = "mock"
+    receipt: Optional[str] = None
+
+
+class ValidateResult(BaseModel):
+    entitled: bool
+    planId: str

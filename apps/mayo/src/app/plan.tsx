@@ -4,24 +4,68 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PLANS } from '@/api/catalog';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/toast';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { CURRENT_PLAN_ID, PLANS } from '@/api/catalog';
 import { useTheme } from '@/hooks/use-theme';
 import { useI18n } from '@/settings/settings';
+import { usePayments } from '@/payments/context';
 
 export default function PlanScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
   const toast = useToast();
-  const [selected, setSelected] = useState<string>(CURRENT_PLAN_ID);
+  const { entitlement, products, purchasing, purchase, selectFree, restore } = usePayments();
+  const currentPlanId = entitlement.planId;
+  const [selected, setSelected] = useState<string>(currentPlanId);
+
+  const priceLabel = (planId: string, monthly: number) => {
+    const product = products.find((p) => p.planId === planId);
+    if (product) return product.priceLabel;
+    return monthly === 0 ? t('plan.stayFree') : `$${monthly}${t('plan.perMonth')}`;
+  };
 
   const selectedName = t(`plan.${selected}.name`);
-  const isCurrent = selected === CURRENT_PLAN_ID;
+  const isCurrent = selected === currentPlanId;
   const isFree = selected === 'free';
+
+  const confirm = async () => {
+    if (isCurrent) return;
+    if (isFree) {
+      selectFree();
+      router.back();
+      toast.show(t('toast.planUpdated'));
+      return;
+    }
+    const product = products.find((p) => p.planId === selected);
+    if (!product) {
+      toast.show(t('common.error'));
+      return;
+    }
+    const result = await purchase(product.id);
+    if (result.ok) {
+      router.back();
+      toast.show(t('toast.purchased'));
+    } else if (!result.canceled) {
+      toast.show(t('common.error'));
+    }
+  };
+
+  const onRestore = async () => {
+    const found = await restore();
+    toast.show(found ? t('toast.restored') : t('toast.noPurchases'));
+  };
+
+  const ctaLabel = isCurrent
+    ? t('plan.current')
+    : purchasing
+      ? t('plan.purchasing')
+      : isFree
+        ? t('plan.switchFree')
+        : t('plan.choose', { name: selectedName });
 
   return (
     <ThemedView style={styles.root}>
@@ -48,7 +92,7 @@ export default function PlanScreen() {
 
           {PLANS.map((p) => {
             const active = p.id === selected;
-            const current = p.id === CURRENT_PLAN_ID;
+            const current = p.id === currentPlanId;
             return (
               <Pressable
                 key={p.id}
@@ -66,10 +110,7 @@ export default function PlanScreen() {
                         {t('plan.current')}
                       </ThemedText>
                     ) : null}
-                    <ThemedText type="smallBold">
-                      {p.monthly === 0 ? t('plan.stayFree') : `$${p.monthly}`}
-                      {p.monthly === 0 ? '' : t('plan.perMonth')}
-                    </ThemedText>
+                    <ThemedText type="smallBold">{priceLabel(p.id, p.monthly)}</ThemedText>
                   </View>
                   <ThemedText type="small" themeColor="textSecondary">
                     {t(`plan.${p.id}.tagline`)}
@@ -80,21 +121,26 @@ export default function PlanScreen() {
           })}
 
           <Pressable
-            onPress={() => {
-              router.back();
-              toast.show(t('toast.planUpdated'));
-            }}
-            disabled={isCurrent}
+            onPress={confirm}
+            disabled={isCurrent || purchasing}
             style={({ pressed }) => [
               styles.primary,
-              { backgroundColor: theme.text, opacity: isCurrent ? 0.4 : pressed ? 0.75 : 1 },
+              {
+                backgroundColor: theme.text,
+                opacity: isCurrent || purchasing ? 0.4 : pressed ? 0.75 : 1,
+              },
             ]}>
             <ThemedText type="smallBold" style={{ color: theme.background }}>
-              {isCurrent
-                ? t('plan.current')
-                : isFree
-                  ? t('plan.stayFree')
-                  : t('plan.choose', { name: selectedName })}
+              {ctaLabel}
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            onPress={onRestore}
+            disabled={purchasing}
+            style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.restore}>
+              {t('plan.restore')}
             </ThemedText>
           </Pressable>
         </ScrollView>
@@ -149,6 +195,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     borderRadius: Spacing.five,
     marginTop: Spacing.two,
+  },
+  restore: {
+    textAlign: 'center',
+    paddingVertical: Spacing.two,
   },
   pressed: {
     opacity: 0.6,

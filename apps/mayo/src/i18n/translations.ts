@@ -125,10 +125,16 @@ const en: Dict = {
   'plan.current': 'Current plan',
   'plan.choose': 'Choose {name}',
   'plan.stayFree': 'Free',
+  'plan.switchFree': 'Switch to Free',
+  'plan.restore': 'Restore purchases',
+  'plan.purchasing': 'Processing…',
 
   'toast.published': 'Published to YouTube',
   'toast.extended': 'Retention extended',
   'toast.planUpdated': 'Plan updated',
+  'toast.purchased': 'Subscription active',
+  'toast.restored': 'Purchases restored',
+  'toast.noPurchases': 'No purchases to restore',
   'toast.jobCanceled': 'Job canceled',
   'toast.jobDeleted': 'Job deleted',
 
@@ -274,10 +280,16 @@ const ko: Dict = {
   'plan.current': '현재 요금제',
   'plan.choose': '{name} 선택',
   'plan.stayFree': '무료',
+  'plan.switchFree': '무료로 전환',
+  'plan.restore': '구매 복원',
+  'plan.purchasing': '처리 중…',
 
   'toast.published': '유튜브에 게시했어요',
   'toast.extended': '보관 기간을 연장했어요',
   'toast.planUpdated': '요금제를 변경했어요',
+  'toast.purchased': '구독이 시작됐어요',
+  'toast.restored': '구매를 복원했어요',
+  'toast.noPurchases': '복원할 구매가 없어요',
   'toast.jobCanceled': '작업을 취소했어요',
   'toast.jobDeleted': '작업을 삭제했어요',
 

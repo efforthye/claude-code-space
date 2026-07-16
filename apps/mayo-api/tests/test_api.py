@@ -74,6 +74,22 @@ def test_delete_job():
     assert client.get(f"/v1/jobs/{job_id}").status_code == 404
 
 
+def test_billing_products_and_validate():
+    products = client.get("/v1/billing/products").json()
+    ids = {p["planId"] for p in products}
+    assert "pro" in ids and "studio" in ids
+    assert "free" not in ids  # free isn't purchasable
+
+    pro = next(p for p in products if p["planId"] == "pro")
+    result = client.post(
+        "/v1/billing/validate", json={"productId": pro["id"], "platform": "mock"}
+    ).json()
+    assert result == {"entitled": True, "planId": "pro"}
+
+    bad = client.post("/v1/billing/validate", json={"productId": "im.mayo.nope.monthly"})
+    assert bad.status_code == 400
+
+
 def test_extend_and_publish():
     videos = client.get("/v1/library/videos").json()
     vid = videos[0]["id"]

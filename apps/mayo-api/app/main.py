@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import __version__
 from .config import settings
-from .routers import catalog, health, jobs, library
+from .routers import billing, catalog, health, jobs, library
 from .worker import shutdown
 
 
@@ -36,6 +36,7 @@ app.include_router(health.router)
 app.include_router(catalog.router)
 app.include_router(jobs.router)
 app.include_router(library.router)
+app.include_router(billing.router)
 
 
 @app.get("/")

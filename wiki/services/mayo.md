@@ -87,6 +87,16 @@ Stacked screens:
   with monthly price + tagline, current plan highlighted, and a Choose-plan CTA (disabled on the
   current plan). Opened from the Account plan card and the "Billing" row. Payment wiring comes later.
 
+**Payments (app-native IAP, scaffolded 2026-07-16):** in-app purchases are coded against a
+`PaymentProvider` interface (`src/payments/`) so a real provider drops in later without touching
+screens. A **mock** provider runs today (Expo Go can't load StoreKit/Play Billing), granting the
+entitlement locally (persisted via AsyncStorage). `usePayments()` exposes the entitlement, products,
+`purchase()`/`selectFree()`/`restore()`; the **Plan** modal drives real purchase/restore flows and
+the **Account** plan card reflects the live entitlement. Going live = a **dev build** + a real
+provider (RevenueCat or `react-native-iap`) selected in `provider.ts`, gated on
+`EXPO_PUBLIC_PAYMENTS`. Server seam exists: **`/v1/billing/products`** + **`/v1/billing/validate`**
+(receipt-validation stub) in mayo-api. See `apps/mayo/src/payments/README.md`.
+
 **Action feedback:** an app-wide **toast** (`src/components/toast.tsx`, `ToastProvider`/`useToast`)
 pops a short confirmation banner after mock actions that otherwise dismiss silently — publish
 ("Published to YouTube"), extend retention, and plan change.
