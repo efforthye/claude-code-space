@@ -160,6 +160,14 @@ def to_public(user: dict) -> AuthUser:
     )
 
 
+def paid_user_or_none(session_token: str | None) -> Optional[dict]:
+    """The session's user if they're on a paid plan, else None."""
+    user = store.user_for_session(session_token or "")
+    if user and user.get("planId", "free") != "free":
+        return user
+    return None
+
+
 async def verify_google_id_token(id_token: str) -> dict:
     """Validate a Google id_token via the tokeninfo endpoint; returns its claims.
 

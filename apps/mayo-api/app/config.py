@@ -114,6 +114,13 @@ class Settings:
         default_factory=lambda: os.getenv("MAYO_EXTERNAL_USE_IMAGE_STAGE", "true").lower()
         in ("1", "true", "yes")
     )
+    # Gate premium backends (Claude director, external paid generation) behind a
+    # paid plan. Off by default so the owner/dev flow isn't blocked; turn on when
+    # real users arrive (their plan comes from accounts + billing, ADR 0011/0012).
+    premium_gating: bool = field(
+        default_factory=lambda: os.getenv("MAYO_PREMIUM_GATING", "false").lower()
+        in ("1", "true", "yes")
+    )
     # Stripe (real card payments for plans on the web/mayo.im). Names only here;
     # values live in the host secret store. Price ids map plans to Stripe Prices.
     stripe_secret_key: str = field(default_factory=lambda: os.getenv("STRIPE_SECRET_KEY", ""))

@@ -1,6 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Optional
+
+from fastapi import APIRouter, Header, HTTPException, status
 
 from .. import catalog, runtime
+from ..auth import paid_user_or_none
+from ..config import settings
 from ..schemas import CreateJobRequest, Estimate, Job
 from ..store import jobs as job_store
 from ..worker import start_generation
@@ -24,9 +28,22 @@ async def estimate(req: CreateJobRequest) -> Estimate:
 
 
 @router.post("", response_model=Job, status_code=status.HTTP_201_CREATED)
-async def create_job(req: CreateJobRequest) -> Job:
+async def create_job(
+    req: CreateJobRequest, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
     if catalog.tier_by_id(req.tier) is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown tier '{req.tier}'")
+    # External generation spends the owner's paid provider keys — when premium
+    # gating is on, it's reserved for signed-in paid-plan users (ADR 0011/0012).
+    if (
+        settings.premium_gating
+        and runtime.generation_backend() == "external"
+        and paid_user_or_none(x_mayo_session) is None
+    ):
+        raise HTTPException(
+            status.HTTP_402_PAYMENT_REQUIRED,
+            detail="external AI generation is for paid plans — upgrade or switch generation mode",
+        )
     job = await job_store.create(req.prompt, req.seconds, req.tier, req.scenePrompts or None)
     start_generation(job.id)
     return job
