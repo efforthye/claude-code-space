@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import time
 import logging
 import os
 import subprocess
@@ -80,6 +81,19 @@ async def _stitch(job_id: str, clip_keys: list[str]) -> str | None:
         return None
 
 
+
+def _eta_clip_seconds() -> float:
+    """Expected seconds per clip before any real measurement, by backend."""
+    from . import runtime
+
+    backend = runtime.generation_backend()
+    if backend == "comfy":
+        return settings.comfy_clip_eta_seconds
+    if backend == "external":
+        return 90.0
+    return settings.tick_seconds
+
+
 async def _run(job_id: str) -> None:
     job = await jobs.patch(job_id, status="generating")
     if job is None:
@@ -88,6 +102,9 @@ async def _run(job_id: str) -> None:
     backend = get_model_backend()  # resolve per job so a live backend switch applies
 
     clip_keys: list[str] = []
+    start_index = job.scenesDone
+    run_started = time.monotonic()
+    await jobs.patch(job_id, etaMin=max(1, round((total - start_index) * _eta_clip_seconds() / 60)))
     for index in range(job.scenesDone, total):
         # Prefer the director's per-scene prompt; fall back to the job title.
         scene_prompt = (
@@ -107,7 +124,11 @@ async def _run(job_id: str) -> None:
         if get_storage().exists(result.media_key):
             await jobs.append_scene_url(job_id, f"/v1/media/{result.media_key}")
         remaining = total - index - 1
-        eta = max(1, round(remaining * settings.tick_seconds / 60)) if remaining > 0 else None
+        # ETA from the measured average scene time so far (real backends take
+        # minutes per clip; before the first scene finishes, the per-backend
+        # default from _eta_clip_seconds applies).
+        avg = (time.monotonic() - run_started) / max(1, index + 1 - start_index)
+        eta = max(1, round(remaining * avg / 60)) if remaining > 0 else None
         await jobs.patch(job_id, scenesDone=index + 1, etaMin=eta)
 
     # Stitch the real clips into one film (no-op for the mock backend).

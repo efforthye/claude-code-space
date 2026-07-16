@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { estimateCredits, formatDuration, useCatalog } from '@/api/catalog';
-import { createJob, getSettings } from '@/api/client';
+import { ApiError, createJob, getSettings } from '@/api/client';
 import { useQuery } from '@/hooks/use-query';
 import { Chip } from '@/components/chip';
 import { Screen } from '@/components/screen';
@@ -48,7 +48,18 @@ export default function CreateScreen() {
     setSubmitting(true);
     const title = prompt.trim().split('\n')[0].slice(0, 60) || t('create.untitled');
     try {
-      const job = await createJob({ prompt: title, seconds, tier: tier.id });
+      let job;
+      try {
+        job = await createJob({ prompt: title, seconds, tier: tier.id });
+      } catch (e) {
+        // Transient network blip (tunnel/API restarting) — retry once before failing.
+        if (e instanceof ApiError && e.status === 0) {
+          await new Promise((r) => setTimeout(r, 1500));
+          job = await createJob({ prompt: title, seconds, tier: tier.id });
+        } else {
+          throw e;
+        }
+      }
       router.push(`/jobs/${job.id}`);
     } catch {
       toast.show(t('common.error'));
@@ -186,8 +197,9 @@ export default function CreateScreen() {
           styles.cta,
           { backgroundColor: theme.text, opacity: submitting ? 0.5 : pressed ? 0.85 : 1 },
         ]}>
+        {submitting ? <ActivityIndicator color={theme.background} /> : null}
         <ThemedText type="smallBold" style={{ color: theme.background }}>
-          {t('create.generate')}
+          {submitting ? t('create.generating') : t('create.generate')}
         </ThemedText>
       </Pressable>
     </Screen>

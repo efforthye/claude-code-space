@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
@@ -99,6 +99,7 @@ export default function JobDetailScreen() {
             <ThemedView type="backgroundElement" style={styles.card}>
               <View style={styles.headerRow}>
                 <ThemedText type="smallBold">{t('jobDetail.status')}</ThemedText>
+                {active ? <ActivityIndicator size="small" /> : null}
                 <ThemedText type="small" themeColor="textSecondary">
                   {t(`status.${job.status}`)}
                 </ThemedText>

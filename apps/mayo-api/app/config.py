@@ -56,6 +56,10 @@ class Settings:
     comfy_frames: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_FRAMES", "16")))
     comfy_fps: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_FPS", "8")))
     comfy_steps: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_STEPS", "6")))
+    # Expected seconds per clip on this machine (ETA shown before measurement).
+    comfy_clip_eta_seconds: float = field(
+        default_factory=lambda: float(os.getenv("MAYO_COMFY_CLIP_ETA_SECONDS", "240"))
+    )
     # Safety cap on clips per film so a long duration can't queue thousands of
     # renders on the mini (each clip is minutes). ~60 clips ≈ 2 min of video.
     max_scenes: int = field(default_factory=lambda: int(os.getenv("MAYO_MAX_SCENES", "60")))
