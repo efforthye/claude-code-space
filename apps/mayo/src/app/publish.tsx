@@ -14,6 +14,7 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
+import { useInbox } from '@/notify/inbox';
 import { useI18n } from '@/settings/settings';
 
 export default function PublishScreen() {
@@ -23,6 +24,7 @@ export default function PublishScreen() {
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const videoId = id ?? '';
+  const inbox = useInbox();
   const { data: video } = useQuery(() => getVideo(videoId), {
     enabled: !!videoId,
     deps: [videoId],
@@ -74,6 +76,11 @@ export default function PublishScreen() {
         : null;
       router.back();
       toast.show(t('toast.published'));
+      inbox.add({
+        icon: 'cloud-upload',
+        title: t('toast.published'),
+        body: result?.url ? `${title} · ${result.url}` : title,
+      });
       // Real upload: pop the fresh YouTube page so the link is obvious.
       if (result?.url) WebBrowser.openBrowserAsync(result.url).catch(() => {});
     } catch {

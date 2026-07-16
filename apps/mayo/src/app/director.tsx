@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { TIERS } from '@/api/catalog';
 import { createJob, directorChat, getDirectors, getSettings, putSettings } from '@/api/client';
 import type {
   DirectorMessage,
@@ -37,8 +38,9 @@ export default function DirectorScreen() {
   const toast = useToast();
   const { defaultTierId } = useSettings();
   const params = useLocalSearchParams<{ seconds?: string; tier?: string }>();
-  const seconds = Math.max(1, parseInt(params.seconds ?? '', 10) || 60);
-  const tier = params.tier || defaultTierId;
+  // Adjustable in-chat: the director replans against whatever is current.
+  const [seconds, setSeconds] = useState(Math.max(1, parseInt(params.seconds ?? '', 10) || 60));
+  const [tier, setTier] = useState(params.tier || defaultTierId);
 
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
@@ -128,6 +130,36 @@ export default function DirectorScreen() {
               <Ionicons name="close" size={24} color={theme.text} />
             </Pressable>
           </View>
+        </View>
+
+        <View style={styles.optionsRow}>
+          {[10, 30, 60, 180].map((s) => (
+            <Pressable
+              key={s}
+              onPress={() => setSeconds(s)}
+              style={[
+                styles.optChip,
+                { borderColor: seconds === s ? theme.text : theme.backgroundSelected },
+              ]}>
+              <ThemedText type="small" themeColor={seconds === s ? 'text' : 'textSecondary'}>
+                {s < 60 ? `${s}s` : `${s / 60}m`}
+              </ThemedText>
+            </Pressable>
+          ))}
+          <View style={styles.optDivider} />
+          {TIERS.map((x) => (
+            <Pressable
+              key={x.id}
+              onPress={() => setTier(x.id)}
+              style={[
+                styles.optChip,
+                { borderColor: tier === x.id ? theme.text : theme.backgroundSelected },
+              ]}>
+              <ThemedText type="small" themeColor={tier === x.id ? 'text' : 'textSecondary'}>
+                {x.label}
+              </ThemedText>
+            </Pressable>
+          ))}
         </View>
 
         <View style={[styles.flex, { paddingBottom: kbHeight > 0 ? kbHeight : insets.bottom }]}>
@@ -458,6 +490,21 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: Spacing.two,
   },
+  optionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.two,
+  },
+  optChip: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 4,
+    borderRadius: Spacing.four,
+    borderWidth: 1,
+  },
+  optDivider: { width: 1, height: 16, backgroundColor: 'rgba(128,128,128,0.35)' },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
