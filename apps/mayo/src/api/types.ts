@@ -33,6 +33,9 @@ export type Video = {
   tierLabel: string;
   scenes: number;
   createdLabel: string;
+  // Playback path of the stitched film (relative to the API base), when a real
+  // backend produced one; null/absent for mock/metadata-only videos.
+  url?: string | null;
 };
 
 export type Storage = { usedLabel: string; totalLabel: string; usedRatio: number };

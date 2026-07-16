@@ -1,8 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getApiKey } from '@/api/api-key';
+import { getApiBaseUrl } from '@/api/base-url';
 import { getVideo } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ThemedText } from '@/components/themed-text';
@@ -59,9 +62,13 @@ export default function VideoDetailScreen() {
           <ScrollView
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}>
-            <View style={[styles.poster, { backgroundColor: video.accent }]}>
-              <Ionicons name="play" size={44} color="#ffffff" />
-            </View>
+            {video.url ? (
+              <FilmPlayer uri={`${getApiBaseUrl()}${video.url}`} />
+            ) : (
+              <View style={[styles.poster, { backgroundColor: video.accent }]}>
+                <Ionicons name="play" size={44} color="#ffffff" />
+              </View>
+            )}
 
             <ThemedText type="subtitle">{video.title}</ThemedText>
             <ThemedText
@@ -139,6 +146,18 @@ export default function VideoDetailScreen() {
       </SafeAreaView>
     </ThemedView>
   );
+}
+
+function FilmPlayer({ uri }: { uri: string }) {
+  // The film is served from a protected endpoint, so pass the API key as a header.
+  const key = getApiKey();
+  const player = useVideoPlayer(
+    { uri, headers: key ? { Authorization: `Bearer ${key}` } : undefined },
+    (p) => {
+      p.loop = true;
+    },
+  );
+  return <VideoView player={player} style={styles.poster} contentFit="contain" nativeControls />;
 }
 
 function SecondaryButton({

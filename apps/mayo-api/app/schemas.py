@@ -89,6 +89,9 @@ class Video(BaseModel):
     tierLabel: str
     scenes: int
     createdLabel: str
+    # Playback path of the stitched film (e.g. "/v1/media/films/<id>.mp4"), when a
+    # real backend produced one. None for mock/metadata-only videos.
+    url: Optional[str] = None
 
 
 class Storage(BaseModel):

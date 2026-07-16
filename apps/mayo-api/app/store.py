@@ -97,7 +97,7 @@ class LibraryStore:
             v = self._videos.get(video_id)
             return v.model_copy() if v else None
 
-    async def add_from_job(self, job: Job) -> Video:
+    async def add_from_job(self, job: Job, film_key: str | None = None) -> Video:
         idx = len(self._videos)
         video = Video(
             id=_new_id("v"),
@@ -106,10 +106,11 @@ class LibraryStore:
             sizeLabel="— MB",
             expiresInDays=14,
             accent=_ACCENTS[idx % len(_ACCENTS)],
-            resolution="1080p",
+            resolution="512p" if film_key else "1080p",
             tierLabel=job.tierLabel or "Standard",
             scenes=job.scenesTotal,
             createdLabel="just now",
+            url=f"/v1/media/{film_key}" if film_key else None,
         )
         async with self._lock:
             self._videos[video.id] = video

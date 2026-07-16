@@ -18,6 +18,9 @@ class StorageBackend(ABC):
     def save(self, key: str, data: bytes) -> str: ...
 
     @abstractmethod
+    def read(self, key: str) -> bytes: ...
+
+    @abstractmethod
     def url(self, key: str) -> str: ...
 
     @abstractmethod
@@ -41,6 +44,10 @@ class LocalStorage(StorageBackend):
             fh.write(data)
         return key
 
+    def read(self, key: str) -> bytes:
+        with open(self._path(key), "rb") as fh:
+            return fh.read()
+
     def url(self, key: str) -> str:
         return f"/media/{key}"
 
@@ -58,6 +65,9 @@ class S3Storage(StorageBackend):
     """Phase 2 stub — wired when media outgrows ~half the host disk (ADR 0004)."""
 
     def save(self, key: str, data: bytes) -> str:  # pragma: no cover - not yet used
+        raise NotImplementedError("S3 backend not wired yet — see ADR 0004")
+
+    def read(self, key: str) -> bytes:  # pragma: no cover
         raise NotImplementedError("S3 backend not wired yet — see ADR 0004")
 
     def url(self, key: str) -> str:  # pragma: no cover
