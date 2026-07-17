@@ -59,18 +59,21 @@ def test_ranking_engagement_ordering_and_time_decay():
     """ADR 0015: comments > likes > views in weight; old winners decay."""
     from app.schemas import ExploreItem
 
-    def item(iid: str, likes=0, comm=0, views=0, age_h=0.0):
+    def item(iid: str, likes=0, comm=0, views=0, shares=0, age_h=0.0):
         import time as _t
 
         return ExploreItem(
             id=iid, title=iid, prompt=iid, author="@t", likes=likes,
             durationLabel="0:02", accent="#000", tierLabel="Local",
-            comments=comm, views=views, createdAt=_t.time() - age_h * 3600,
+            comments=comm, views=views, shares=shares,
+            createdAt=_t.time() - age_h * 3600,
         )
 
     score = ExploreStore._score
     # deeper engagement outweighs shallower at equal age
     assert score(item("c", comm=2)) > score(item("l", likes=2)) > score(item("v", views=2))
+    # shares are the strongest single signal
+    assert score(item("s", shares=2)) > score(item("c2", comm=2))
     # a week-old heavily-liked item loses to a fresh, mildly-engaged one
     old_winner = item("old", likes=10, age_h=24 * 7)
     fresh = item("new", likes=1, age_h=1)
@@ -92,3 +95,5 @@ def test_view_ping_and_recipe_on_published_item():
     assert item.createdAt > 0
     viewed = asyncio.run(store.view(item.id))
     assert viewed is not None and viewed.views == 1
+    shared = asyncio.run(store.share(item.id))
+    assert shared is not None and shared.shares == 1

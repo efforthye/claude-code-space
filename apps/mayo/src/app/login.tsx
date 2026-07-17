@@ -225,7 +225,9 @@ export default function LoginScreen() {
               <Ionicons name="logo-google" size={18} color={theme.text} />
               <ThemedText type="smallBold">{t('auth.google')}</ThemedText>
             </Pressable>
-          ) : GOOGLE_CLIENT_ID ? (
+          ) : Platform.OS !== 'web' ? (
+            // Native Google is SERVER-driven — no client id needed on the app,
+            // so the button always shows (the server explains if unconfigured).
             <Pressable
               onPress={nativeGoogle}
               disabled={busy}

@@ -3,7 +3,9 @@
 // standalone /reels route (liked collection, deep links).
 
 import { Ionicons } from '@expo/vector-icons';
+import { cacheDirectory, downloadAsync } from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
@@ -20,7 +22,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
-import { addComment, getComments, getExplore, mediaUrl, viewExplore } from '@/api/client';
+import {
+  addComment,
+  getComments,
+  getExplore,
+  mediaHeaders,
+  mediaUrl,
+  shareExplore,
+  viewExplore,
+} from '@/api/client';
 import type { ExploreComment, ExploreItem, ExploreSort } from '@/api/types';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -151,6 +161,52 @@ function Reel({
     viewExplore(item.id).catch(() => {});
   }, [active, item.id]);
 
+  // External share: hand the actual mp4 to the OS share sheet (KakaoTalk,
+  // Messages, …) so the recipient needs no mayo account. Completions feed the
+  // `shares` ranking signal.
+  const [sharing, setSharing] = useState(false);
+  const [shareBump, setShareBump] = useState(0);
+  const share = async () => {
+    if (!uri || sharing) return;
+    setSharing(true);
+    try {
+      if (Platform.OS === 'web') {
+        const res = await fetch(uri, { headers: mediaHeaders() });
+        if (!res.ok) throw new Error('fetch failed');
+        const blob = await res.blob();
+        const g = globalThis as unknown as {
+          File: typeof File;
+          URL: typeof URL;
+          navigator: { share?: (d: unknown) => Promise<void>; canShare?: (d: unknown) => boolean };
+          document: { createElement: (t: string) => any; body: any };
+        };
+        const file = new g.File([blob], `${item.title || 'mayo'}.mp4`, { type: 'video/mp4' });
+        if (g.navigator.share && g.navigator.canShare?.({ files: [file] })) {
+          await g.navigator.share({ files: [file], title: item.title });
+        } else {
+          const objectUrl = g.URL.createObjectURL(blob);
+          const a = g.document.createElement('a');
+          a.href = objectUrl;
+          a.download = `${item.title || 'mayo'}.mp4`;
+          g.document.body.appendChild(a);
+          a.click();
+          a.remove();
+          g.URL.revokeObjectURL(objectUrl);
+        }
+      } else {
+        const target = `${cacheDirectory}share-${item.id}.mp4`;
+        const { uri: local } = await downloadAsync(uri, target, { headers: mediaHeaders() });
+        await Sharing.shareAsync(local, { mimeType: 'video/mp4', UTI: 'public.mpeg-4' });
+      }
+      setShareBump((n) => n + 1);
+      shareExplore(item.id).catch(() => {});
+    } catch {
+      // user cancelled the sheet or download failed — no ping either way
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
     <View style={{ width, height, backgroundColor: '#000' }}>
       {uri ? (
@@ -168,6 +224,12 @@ function Reel({
           onPress={() => toggle(item)}
         />
         <Action icon="chatbubble-outline" color="#ffffff" label={String(item.comments ?? 0)} onPress={onComment} />
+        <Action
+          icon={sharing ? 'hourglass-outline' : 'paper-plane-outline'}
+          color="#ffffff"
+          label={String((item.shares ?? 0) + shareBump)}
+          onPress={share}
+        />
       </View>
 
       {/* bottom info */}

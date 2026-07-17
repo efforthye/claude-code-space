@@ -60,6 +60,15 @@ async def view_explore(item_id: str) -> ExploreItem:
     return item
 
 
+@router.post("/{item_id}/share", response_model=ExploreItem)
+async def share_explore(item_id: str) -> ExploreItem:
+    """Completed external share ping — the strongest ranking signal (ADR 0015)."""
+    item = await explore_store.share(item_id)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+    return item
+
+
 @router.post("/{item_id}/like", response_model=ExploreItem)
 async def like_explore(item_id: str) -> ExploreItem:
     item = await explore_store.like(item_id)

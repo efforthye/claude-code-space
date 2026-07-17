@@ -103,6 +103,7 @@ export type ExploreItem = {
   createdLabel?: string;
   comments?: number;
   views?: number;
+  shares?: number;
   createdAt?: number;
   // Full recipe — powers "use this template" in the director.
   scenePrompts?: string[] | null;

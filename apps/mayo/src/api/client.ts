@@ -218,6 +218,9 @@ export const getExploreItem = (id: string) =>
 // Reel impression ping — feeds the popular ranking's `views` signal (ADR 0015).
 export const viewExplore = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/view`, { method: 'POST' });
+// Completed external share — the strongest ranking signal.
+export const shareExplore = (id: string) =>
+  req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/share`, { method: 'POST' });
 export const likeExplore = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/like`, { method: 'POST' });
 export const unlikeExplore = (id: string) =>

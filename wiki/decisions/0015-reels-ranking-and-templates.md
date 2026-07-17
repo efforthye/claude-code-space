@@ -36,14 +36,17 @@ to be reusable as a template by other users.
 `ExploreStore._score` (mayo-api `store.py`):
 
 ```
-score = (likes×3 + comments×5 + views×0.3 + 1) / (age_hours + 2)^1.5
+score = (likes×3 + comments×5 + shares×8 + views×0.3 + 1) / (age_hours + 2)^1.5
 ```
 
-- **Signal weights** follow the industrial ordering: comments (deep) > likes >
-  views (shallow impressions). Views are captured by an app-side impression
-  ping (`POST /v1/explore/{id}/view`) fired when a reel becomes the active
-  page. Watch-completion is the acknowledged missing signal — noted as the
-  next upgrade once the player reports position.
+- **Signal weights** follow the industrial ordering: shares (deepest — the
+  user vouches for the content outside the app) > comments > likes > views
+  (shallow impressions). Views come from an app-side impression ping
+  (`POST /v1/explore/{id}/view`) when a reel becomes the active page; shares
+  from a completion ping (`POST /v1/explore/{id}/share`) after the OS share
+  sheet succeeds (the app hands the actual mp4 to the sheet, so recipients
+  need no mayo account). Watch-completion is the acknowledged missing signal —
+  the next upgrade once the player reports position.
 - **HN-form decay** with a softer gravity (1.5 vs 1.8) because the feed is
   small; the `+2` hour offset stops brand-new items from having infinite score.
 - **`+1` numerator floor** gives zero-engagement new items a real score while

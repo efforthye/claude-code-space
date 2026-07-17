@@ -412,14 +412,14 @@ class ExploreStore:
         """Popular ranking (ADR 0015) = engagement value × time decay.
 
         Signal weights follow the industrial short-video ordering (deep actions
-        outweigh shallow ones: comments > likes > views — TikTok's ranking is a
-        weighted sum of predicted engagement probabilities), and the decay is
-        Hacker News' gravity form score/(age+2)^g with a softer g for a small
-        feed. The +1 numerator floor lets brand-new zero-engagement items
-        surface near the top while they're fresh, then fade unless they earn
-        engagement — no more feed frozen by early winners.
+        outweigh shallow ones: shares > comments > likes > views — TikTok's
+        ranking is a weighted sum of predicted engagement probabilities), and
+        the decay is Hacker News' gravity form score/(age+2)^g with a softer g
+        for a small feed. The +1 numerator floor lets brand-new zero-engagement
+        items surface near the top while they're fresh, then fade unless they
+        earn engagement — no more feed frozen by early winners.
         """
-        engagement = e.likes * 3.0 + e.comments * 5.0 + e.views * 0.3
+        engagement = e.likes * 3.0 + e.comments * 5.0 + e.shares * 8.0 + e.views * 0.3
         age_hours = max(0.0, ((now or time.time()) - (e.createdAt or 0)) / 3600)
         return (engagement + 1.0) / (age_hours + 2.0) ** 1.5
 
@@ -430,6 +430,17 @@ class ExploreStore:
             if not item:
                 return None
             updated = item.model_copy(update={"views": item.views + 1})
+            self._items[item_id] = updated
+            self._persist()
+            return updated.model_copy()
+
+    async def share(self, item_id: str) -> Optional[ExploreItem]:
+        """Count a completed external share — the strongest ranking signal."""
+        async with self._lock:
+            item = self._items.get(item_id)
+            if not item:
+                return None
+            updated = item.model_copy(update={"shares": item.shares + 1})
             self._items[item_id] = updated
             self._persist()
             return updated.model_copy()
