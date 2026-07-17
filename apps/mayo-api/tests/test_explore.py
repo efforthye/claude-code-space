@@ -123,3 +123,29 @@ def test_seed_endpoint_fills_and_clears_samples(monkeypatch):
     feed = client.get("/v1/explore?sort=latest").json()
     samples = [i for i in feed if i["author"] == "@mayo-sample"]
     assert len(samples) == 6
+
+
+def test_public_reel_endpoints_open_but_gated_on_published(monkeypatch):
+    """Shared links work with NO auth — but only for explore-published items."""
+    from fastapi.testclient import TestClient as TC
+
+    from app import db
+    from app.main import app as app_
+    from app.storage import get_storage
+
+    db.replace_kind("explore", [])
+    db.replace_kind("explore_comment", [])
+    store = ExploreStore()
+    monkeypatch.setattr("app.routers.public.explore_store", store)
+    get_storage().save("films/pub-test.mp4", b"fake-mp4-bytes")
+    video = _video("pub").model_copy(update={"url": "/v1/media/films/pub-test.mp4"})
+    item = asyncio.run(store.publish(video, "public prompt"))
+
+    anon = TC(app_)  # no API key, no session — like a share recipient
+    meta = anon.get(f"/v1/public/reels/{item.id}")
+    assert meta.status_code == 200 and meta.json()["title"] == video.title
+    media = anon.get(f"/v1/public/media/{item.id}")
+    assert media.status_code == 200 and media.content == b"fake-mp4-bytes"
+    # unpublished/unknown ids stay closed
+    assert anon.get("/v1/public/reels/e-nope").status_code == 404
+    assert anon.get("/v1/public/media/e-nope").status_code == 404

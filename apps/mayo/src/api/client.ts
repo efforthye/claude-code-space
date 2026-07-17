@@ -223,6 +223,11 @@ export const publishToExplore = (videoId: string, prompt: string) =>
   req<ExploreItem>('/v1/explore', { method: 'POST', body: JSON.stringify({ videoId, prompt }) });
 export const getExploreItem = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}`);
+// Public shared-reel endpoints — no account/key needed (explore-published only).
+export const getPublicReel = (id: string) =>
+  req<ExploreItem>(`/v1/public/reels/${encodeURIComponent(id)}`);
+export const publicReelMediaUrl = (id: string) =>
+  `${getApiBaseUrl()}/v1/public/media/${encodeURIComponent(id)}`;
 // Dev helper: fill the feed with generated sample reels (server needs ffmpeg).
 export const seedExplore = (clear = false) =>
   req<ExploreItem[]>(`/v1/explore/seed${clear ? '?clear=true' : ''}`, { method: 'POST' });

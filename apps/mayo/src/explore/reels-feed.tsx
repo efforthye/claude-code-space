@@ -3,9 +3,7 @@
 // standalone /reels route (liked collection, deep links).
 
 import { Ionicons } from '@expo/vector-icons';
-import { cacheDirectory, downloadAsync } from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
-import * as Sharing from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
@@ -15,6 +13,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  Share,
   StyleSheet,
   TextInput,
   View,
@@ -26,7 +25,6 @@ import {
   addComment,
   getComments,
   getExplore,
-  mediaHeaders,
   mediaUrl,
   seedExplore,
   shareExplore,
@@ -34,6 +32,7 @@ import {
 } from '@/api/client';
 import type { ExploreComment, ExploreItem, ExploreSort } from '@/api/types';
 import { ThemedText } from '@/components/themed-text';
+import { useToast } from '@/components/toast';
 import { Spacing } from '@/constants/theme';
 import { useFavorites } from '@/explore/favorites';
 import { useFollows } from '@/explore/follows';
@@ -184,6 +183,7 @@ function Reel({
   onRemix: () => void;
 }) {
   const { t } = useI18n();
+  const toast = useToast();
   const { has, toggle } = useFavorites();
   const follows = useFollows();
   const key = getApiKey();
@@ -208,49 +208,31 @@ function Reel({
     viewExplore(item.id).catch(() => {});
   }, [active, item.id]);
 
-  // External share: hand the actual mp4 to the OS share sheet (KakaoTalk,
-  // Messages, …) so the recipient needs no mayo account. Completions feed the
-  // `shares` ranking signal.
-  const [sharing, setSharing] = useState(false);
+  // External share: an INSTANT share sheet carrying a promo message + the
+  // public reel link (mayo.im/reel/<id>) — recipients watch without an account
+  // and land on mayo branding, so every share markets the product. Completions
+  // feed the `shares` ranking signal.
   const [shareBump, setShareBump] = useState(0);
   const share = async () => {
-    if (!uri || sharing) return;
-    setSharing(true);
+    const url = `https://mayo.im/reel/${item.id}`;
+    const message = t('reels.shareMessage', { title: item.title });
     try {
       if (Platform.OS === 'web') {
-        const res = await fetch(uri, { headers: mediaHeaders() });
-        if (!res.ok) throw new Error('fetch failed');
-        const blob = await res.blob();
-        const g = globalThis as unknown as {
-          File: typeof File;
-          URL: typeof URL;
-          navigator: { share?: (d: unknown) => Promise<void>; canShare?: (d: unknown) => boolean };
-          document: { createElement: (t: string) => any; body: any };
-        };
-        const file = new g.File([blob], `${item.title || 'mayo'}.mp4`, { type: 'video/mp4' });
-        if (g.navigator.share && g.navigator.canShare?.({ files: [file] })) {
-          await g.navigator.share({ files: [file], title: item.title });
+        const nav = (globalThis as { navigator?: { share?: (d: unknown) => Promise<void>; clipboard?: { writeText: (s: string) => Promise<void> } } }).navigator;
+        if (nav?.share) {
+          await nav.share({ title: 'mayo', text: message, url });
         } else {
-          const objectUrl = g.URL.createObjectURL(blob);
-          const a = g.document.createElement('a');
-          a.href = objectUrl;
-          a.download = `${item.title || 'mayo'}.mp4`;
-          g.document.body.appendChild(a);
-          a.click();
-          a.remove();
-          g.URL.revokeObjectURL(objectUrl);
+          await nav?.clipboard?.writeText(`${message}\n${url}`);
+          toast.show(t('reels.linkCopied'));
         }
       } else {
-        const target = `${cacheDirectory}share-${item.id}.mp4`;
-        const { uri: local } = await downloadAsync(uri, target, { headers: mediaHeaders() });
-        await Sharing.shareAsync(local, { mimeType: 'video/mp4', UTI: 'public.mpeg-4' });
+        // iOS shows both; Android uses message — include the link in it.
+        await Share.share({ message: `${message}\n${url}`, url });
       }
       setShareBump((n) => n + 1);
       shareExplore(item.id).catch(() => {});
     } catch {
-      // user cancelled the sheet or download failed — no ping either way
-    } finally {
-      setSharing(false);
+      // user closed the sheet — not a share, no ping
     }
   };
 
@@ -272,7 +254,7 @@ function Reel({
         />
         <Action icon="chatbubble-outline" color="#ffffff" label={String(item.comments ?? 0)} onPress={onComment} />
         <Action
-          icon={sharing ? 'hourglass-outline' : 'paper-plane-outline'}
+          icon="paper-plane-outline"
           color="#ffffff"
           label={String((item.shares ?? 0) + shareBump)}
           onPress={share}

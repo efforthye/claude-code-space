@@ -27,6 +27,7 @@ from .routers import (
     jobs,
     library,
     media,
+    public,
     settings as settings_router,
 )
 from .security import require_api_key
@@ -99,6 +100,9 @@ app.include_router(jobs.router, dependencies=protected)
 app.include_router(library.router, dependencies=protected)
 app.include_router(media.router, dependencies=protected)
 app.include_router(media.thumb_router, dependencies=protected)
+# Shared-reel pages are for people WITHOUT accounts — open by design, but they
+# serve only explore-published content (the item id is the capability).
+app.include_router(public.router)
 app.include_router(settings_router.router, dependencies=protected)
 app.include_router(billing.router, dependencies=protected)
 # Stripe webhook: no shared-key guard — the verified signature is its auth.
