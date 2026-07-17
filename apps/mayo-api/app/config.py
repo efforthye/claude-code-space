@@ -55,6 +55,10 @@ class Settings:
     comfy_height: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_HEIGHT", "512")))
     comfy_frames: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_FRAMES", "16")))
     comfy_fps: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_FPS", "8")))
+    # Frames per storyboard preview render (short on purpose — it's a preview).
+    storyboard_frames: int = field(
+        default_factory=lambda: int(os.getenv("MAYO_STORYBOARD_FRAMES", "8"))
+    )
     comfy_steps: int = field(default_factory=lambda: int(os.getenv("MAYO_COMFY_STEPS", "6")))
     # Expected seconds per clip on this machine (ETA shown before measurement).
     comfy_clip_eta_seconds: float = field(

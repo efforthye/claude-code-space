@@ -177,6 +177,11 @@ class ComfyUIModelBackend(ModelBackend):
 
     id = "comfy"
 
+    def __init__(self, frames: int | None = None) -> None:
+        # Optional per-instance frame-count override — storyboard previews render
+        # a handful of frames instead of a full clip (see storyboard.py).
+        self.frames = frames
+
     def _workflow_path(self) -> str:
         path = settings.comfy_workflow
         if not os.path.isabs(path):
@@ -200,7 +205,7 @@ class ComfyUIModelBackend(ModelBackend):
         if "5" in wf and "inputs" in wf["5"]:
             wf["5"]["inputs"]["width"] = settings.comfy_width
             wf["5"]["inputs"]["height"] = settings.comfy_height
-            wf["5"]["inputs"]["batch_size"] = settings.comfy_frames
+            wf["5"]["inputs"]["batch_size"] = self.frames or settings.comfy_frames
         # Node "9" = VHS_VideoCombine — keep its frame_rate in sync so the clip
         # length is frames/fps (used for the real duration label).
         if "9" in wf and "inputs" in wf["9"] and "frame_rate" in wf["9"]["inputs"]:

@@ -119,6 +119,15 @@ export type Scene = {
 // looking identical — see ADR 0014).
 export type Screenplay = { title: string; logline: string; style: string; characters?: string[]; scenes: Scene[] };
 export type DirectorMessage = { role: 'user' | 'director'; content: string };
+// Per-scene still previews rendered BEFORE the (expensive) video job.
+export type StoryboardRequest = { scenePrompts: string[]; stylePrompt?: string };
+export type Storyboard = {
+  id: string;
+  status: 'generating' | 'done' | 'failed';
+  total: number;
+  done: number;
+  images: (string | null)[]; // playback paths per scene; null while rendering
+};
 export type DirectorChatRequest = { messages: DirectorMessage[]; seconds: number; tier: string };
 export type DirectorTurn = { reply: string; screenplay?: Screenplay | null; ready: boolean };
 // --- Accounts (mirrors app/auth.py) ---

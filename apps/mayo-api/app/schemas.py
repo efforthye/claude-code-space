@@ -94,6 +94,23 @@ class Estimate(BaseModel):
     credits: int
 
 
+class StoryboardRequest(BaseModel):
+    """Per-scene still previews rendered BEFORE the (expensive) video job."""
+
+    scenePrompts: list[str] = Field(min_length=1, max_length=24)
+    stylePrompt: str = Field(default="", max_length=1500)
+
+
+class Storyboard(BaseModel):
+    id: str
+    status: str  # generating | done | failed
+    total: int
+    done: int
+    # One playback path per scene ("/v1/media/storyboards/..."), null while that
+    # scene is still rendering (or failed). Video paths show via /v1/thumb.
+    images: list[Optional[str]]
+
+
 class Video(BaseModel):
     id: str
     title: str

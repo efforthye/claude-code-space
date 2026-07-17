@@ -194,18 +194,35 @@ export default function VideoDetailScreen() {
               ))}
             </ThemedView>
 
-            <Pressable
-              onPress={() => router.push(`/publish?id=${video.id}`)}
-              style={({ pressed }) => [
-                styles.primary,
-                { backgroundColor: theme.text },
-                pressed && styles.pressed,
-              ]}>
-              <Ionicons name="logo-youtube" size={20} color={theme.background} />
-              <ThemedText type="smallBold" style={{ color: theme.background }}>
-                {t('detail.publish')}
-              </ThemedText>
-            </Pressable>
+            {/* Already on YouTube → the primary action is watching it there;
+                re-publishing moves to a secondary button below. */}
+            {video.youtubeUrl ? (
+              <Pressable
+                onPress={() => WebBrowser.openBrowserAsync(video.youtubeUrl!).catch(() => {})}
+                style={({ pressed }) => [
+                  styles.primary,
+                  { backgroundColor: '#FF0000' },
+                  pressed && styles.pressed,
+                ]}>
+                <Ionicons name="logo-youtube" size={20} color="#ffffff" />
+                <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+                  {t('detail.viewOnYoutube')}
+                </ThemedText>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => router.push(`/publish?id=${video.id}`)}
+                style={({ pressed }) => [
+                  styles.primary,
+                  { backgroundColor: theme.text },
+                  pressed && styles.pressed,
+                ]}>
+                <Ionicons name="logo-youtube" size={20} color={theme.background} />
+                <ThemedText type="smallBold" style={{ color: theme.background }}>
+                  {t('detail.publish')}
+                </ThemedText>
+              </Pressable>
+            )}
 
             <View style={styles.secondaryRow}>
               <SecondaryButton
@@ -246,11 +263,11 @@ export default function VideoDetailScreen() {
 
             {video.youtubeUrl ? (
               <SecondaryButton
-                icon="logo-youtube"
-                label={t('detail.viewOnYoutube')}
+                icon="cloud-upload-outline"
+                label={t('detail.publishAgain')}
                 color={theme.text}
                 border={theme.backgroundSelected}
-                onPress={() => WebBrowser.openBrowserAsync(video.youtubeUrl!).catch(() => {})}
+                onPress={() => router.push(`/publish?id=${video.id}`)}
                 full
               />
             ) : null}

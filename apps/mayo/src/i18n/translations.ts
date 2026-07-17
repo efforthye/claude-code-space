@@ -142,6 +142,10 @@ const en: Dict = {
   'director.sceneCount': '{n} scenes · {sec}s total',
   'director.moreScenes': '+{n} more scenes',
   'director.generate': 'Generate this film',
+  'director.storyboard': 'Storyboard',
+  'director.storyboardStarting': 'Preparing storyboard…',
+  'director.storyboardRendering': 'Rendering previews… {done}/{total}',
+  'director.storyboardHint': 'Not the look you want? Ask for changes in chat — generate when it feels right.',
   'director.generating': 'Sent to the render queue.',
   'account.myKeysHint':
     'Your own provider keys (BYOK): generation runs on your keys and you pay only 10% in credits. Stored only on the server and always shown masked.',
@@ -151,6 +155,7 @@ const en: Dict = {
   'account.keySaveBtn': 'Save my keys',
 
   'detail.viewOnYoutube': 'View on YouTube',
+  'detail.publishAgain': 'Publish again',
   'publish.tags': 'Tags',
   'publish.tagsPlaceholder': 'comma, separated, tags',
   'publish.connect': 'Connect YouTube',
@@ -484,6 +489,10 @@ const ko: Dict = {
   'director.sceneCount': '씬 {n}개 · 총 {sec}초',
   'director.moreScenes': '+{n}개 씬 더',
   'director.generate': '이 영상 생성하기',
+  'director.storyboard': '스토리보드',
+  'director.storyboardStarting': '스토리보드 준비 중…',
+  'director.storyboardRendering': '장면 미리보기 렌더링 중… {done}/{total}',
+  'director.storyboardHint': '마음에 안 드는 장면이 있으면 채팅으로 수정 요청하세요. 좋으면 아래 버튼으로 생성!',
   'director.generating': '렌더 대기열로 보냈어요.',
   'account.myKeysHint':
     '내 API 키 (BYOK): 등록하면 생성이 내 키로 돌아가고 크레딧은 10%만 차감돼요. 키는 서버에만 보관되고 항상 마스킹되어 표시돼요.',
@@ -493,6 +502,7 @@ const ko: Dict = {
   'account.keySaveBtn': '내 키 저장',
 
   'detail.viewOnYoutube': 'YouTube에서 보기',
+  'detail.publishAgain': '유튜브에 다시 올리기',
   'publish.tags': '태그',
   'publish.tagsPlaceholder': '쉼표로, 구분해서, 입력',
   'publish.connect': 'YouTube 연결하기',

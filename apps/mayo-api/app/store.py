@@ -251,6 +251,44 @@ class LibraryStore:
     async def add_imported(self, title: str, film_key: str, size_bytes: int) -> Video:
         return await self.add_film(title, film_key, size_bytes, "Local", "imported")
 
+    async def backfill_labels(self) -> int:
+        """One-time repair for records created before real duration/size labels
+        existed ("—" / "— MB"): probe the stored file and fill them in."""
+        from .storage import get_storage
+
+        async with self._lock:
+            items = [v.model_copy() for v in self._videos.values()]
+        fixed = 0
+        for v in items:
+            if not v.url:
+                continue
+            key = v.url.split("/v1/media/", 1)[-1]
+            updates: dict = {}
+            if v.durationLabel in ("—", "-", ""):
+                try:
+                    from .worker import _probe  # lazy — worker imports this module
+
+                    secs = await _probe(key)
+                    if secs > 0:
+                        updates["durationLabel"] = _fmt_clock(int(round(secs)))
+                except Exception:
+                    pass
+            if v.sizeLabel in ("— MB", "—", "-", ""):
+                try:
+                    store = get_storage()
+                    if store.exists(key):
+                        updates["sizeLabel"] = _fmt_size(len(store.read(key)))
+                except Exception:
+                    pass
+            if updates:
+                async with self._lock:
+                    cur = self._videos.get(v.id)
+                    if cur:
+                        self._videos[v.id] = cur.model_copy(update=updates)
+                        self._persist()
+                        fixed += 1
+        return fixed
+
     async def remove(self, video_id: str) -> bool:
         async with self._lock:
             video = self._videos.pop(video_id, None)

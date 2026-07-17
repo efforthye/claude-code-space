@@ -58,6 +58,15 @@ async def lifespan(app: FastAPI):
             logger.info("imported %d local clip(s) into the library", added)
     except Exception:
         logger.exception("clip import failed")
+    # Repair pre-existing records that still show "—" duration / "— MB" size.
+    try:
+        from .store import library
+
+        fixed = await library.backfill_labels()
+        if fixed:
+            logger.info("backfilled duration/size labels on %d video(s)", fixed)
+    except Exception:
+        logger.exception("label backfill failed")
     yield
     await shutdown()
 

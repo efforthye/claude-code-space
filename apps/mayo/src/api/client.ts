@@ -30,6 +30,8 @@ import type {
   RuntimeSettings,
   SessionResult,
   Storage,
+  Storyboard,
+  StoryboardRequest,
   Tier,
   Video,
 } from './types';
@@ -164,6 +166,11 @@ export const retryJob = (id: string) =>
 // --- Director (conversational scenario flow) ---
 export const directorChat = (body: DirectorChatRequest) =>
   req<DirectorTurn>('/v1/director/chat', { method: 'POST', body: JSON.stringify(body) });
+// Storyboard previews: cheap per-scene stills BEFORE the video job is paid for.
+export const createStoryboard = (body: StoryboardRequest) =>
+  req<Storyboard>('/v1/director/storyboard', { method: 'POST', body: JSON.stringify(body) });
+export const getStoryboard = (id: string) =>
+  req<Storyboard>(`/v1/director/storyboard/${encodeURIComponent(id)}`);
 
 // --- Editor ---
 export const createEdit = (body: EditRequest) =>

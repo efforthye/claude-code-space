@@ -9,10 +9,11 @@ from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException, status
 
-from .. import runtime
+from .. import runtime, storyboard
 from ..auth import paid_user_or_none, store as users
 from ..config import settings
 from ..planner import DirectorChatRequest, DirectorTurn, get_scenario_planner
+from ..schemas import Storyboard, StoryboardRequest
 
 router = APIRouter(prefix="/v1/director", tags=["director"])
 
@@ -40,3 +41,33 @@ async def chat(
         )
     planner = get_scenario_planner()
     return await planner.converse(req.messages, req.seconds, req.tier, api_key=own_key or None)
+
+
+@router.post("/storyboard", response_model=Storyboard, status_code=status.HTTP_201_CREATED)
+async def create_storyboard(
+    req: StoryboardRequest, x_mayo_session: Optional[str] = Header(default=None)
+) -> Storyboard:
+    """Kick off per-scene still previews; poll GET /storyboard/{id} for images.
+
+    Free of credit charges by design — the point is to let the user judge the
+    scenario BEFORE paying for the video job. External mode still burns the
+    owner's image-API quota, so it shares the premium gate with external jobs.
+    """
+    if (
+        settings.premium_gating
+        and runtime.generation_backend() == "external"
+        and paid_user_or_none(x_mayo_session) is None
+    ):
+        raise HTTPException(
+            status.HTTP_402_PAYMENT_REQUIRED,
+            detail="external AI preview is for paid plans — upgrade or switch generation mode",
+        )
+    return storyboard.create(req.scenePrompts, req.stylePrompt)
+
+
+@router.get("/storyboard/{sb_id}", response_model=Storyboard)
+async def get_storyboard(sb_id: str) -> Storyboard:
+    board = storyboard.get(sb_id)
+    if board is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="storyboard not found")
+    return board

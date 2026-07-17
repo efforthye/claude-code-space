@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Keyboard,
   Modal,
   Platform,
@@ -15,13 +16,27 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TIERS } from '@/api/catalog';
-import { ApiError, createJob, directorChat, getDirectors, getSettings, getVideo, putSettings } from '@/api/client';
+import {
+  ApiError,
+  createJob,
+  createStoryboard,
+  directorChat,
+  getDirectors,
+  getSettings,
+  getStoryboard,
+  getVideo,
+  mediaHeaders,
+  mediaUrl,
+  putSettings,
+  thumbUrl,
+} from '@/api/client';
 import type {
   DirectorMessage,
   DirectorModel,
   PlannerBackend,
   RuntimeSettings,
   Screenplay,
+  Storyboard,
 } from '@/api/types';
 import { useToast } from '@/components/toast';
 import { ThemedText } from '@/components/themed-text';
@@ -34,6 +49,16 @@ import { useI18n, useSettings } from '@/settings/settings';
 // Context messages carry the film being revised; they feed the model but stay
 // out of the visible transcript.
 const HIDDEN_PREFIX = '[영상 수정 컨텍스트]';
+
+// Consistency block: the screenplay's style + character sheet — sent with jobs
+// and storyboards so every render shares one look (ADR 0014).
+const stylePromptOf = (sp: Screenplay) =>
+  [sp.style, ...(sp.characters ?? [])].filter(Boolean).join(', ').slice(0, 1400);
+
+// Storyboard entries are images (external/mock) or short clips (comfy) — show
+// clips via their server-generated poster frame.
+const sbImageUri = (path: string) =>
+  path.endsWith('.mp4') ? (thumbUrl(path) ?? mediaUrl(path)) : mediaUrl(path);
 
 export default function DirectorScreen() {
   const theme = useTheme();
@@ -104,6 +129,38 @@ export default function DirectorScreen() {
   const [sending, setSending] = useState(false);
   const [generating, setGenerating] = useState(false);
 
+  // STORYBOARD-FIRST: when a screenplay is ready, render cheap per-scene stills
+  // automatically so the user can judge the look and give feedback BEFORE the
+  // (paid) video job. Feedback = normal chat; a revised screenplay re-renders.
+  const [board, setBoard] = useState<Storyboard | null>(null);
+  const boardForRef = useRef('');
+  useEffect(() => {
+    if (!screenplay || !ready) return;
+    const scenePrompts = screenplay.scenes.map((s) => s.prompt).filter(Boolean);
+    if (!scenePrompts.length) return;
+    const sig = scenePrompts.join('|') + '::' + stylePromptOf(screenplay);
+    if (boardForRef.current === sig) return;
+    boardForRef.current = sig;
+    setBoard(null);
+    createStoryboard({ scenePrompts, stylePrompt: stylePromptOf(screenplay) || undefined })
+      .then(setBoard)
+      .catch(() => {
+        boardForRef.current = ''; // let a later revision retry
+      });
+  }, [screenplay, ready]);
+  useEffect(() => {
+    if (!board || board.status !== 'generating') return;
+    const iv = setInterval(async () => {
+      try {
+        setBoard(await getStoryboard(board.id));
+      } catch {
+        // transient — next tick retries
+      }
+    }, 1500);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [board?.id, board?.status]);
+
   const send = async () => {
     const text = input.trim();
     if (!text || sending) return;
@@ -131,13 +188,9 @@ export default function DirectorScreen() {
     try {
       const prompt = `${screenplay.title}\n${screenplay.logline}`.trim();
       const scenePrompts = screenplay.scenes.map((s) => s.prompt).filter(Boolean);
-      // Consistency block: the screenplay's style + character sheet rides along
-      // and is prepended to EVERY scene render, so recurring characters keep
-      // the same look across independently generated clips (ADR 0014).
-      const stylePrompt = [screenplay.style, ...(screenplay.characters ?? [])]
-        .filter(Boolean)
-        .join(', ')
-        .slice(0, 1400);
+      // Consistency block: prepended to EVERY scene render so recurring
+      // characters keep the same look across independent clips (ADR 0014).
+      const stylePrompt = stylePromptOf(screenplay);
       const job = await createJob({
         prompt,
         seconds,
@@ -286,6 +339,53 @@ export default function DirectorScreen() {
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('director.moreScenes', { n: screenplay.scenes.length - 6 })}
                   </ThemedText>
+                ) : null}
+
+                {/* Storyboard: judge the look BEFORE paying for the video job. */}
+                {ready ? (
+                  <>
+                    <ThemedText type="smallBold">{t('director.storyboard')}</ThemedText>
+                    {board ? (
+                      <>
+                        <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                          contentContainerStyle={styles.sbRow}>
+                          {board.images.map((img, i) => (
+                            <View
+                              key={i}
+                              style={[styles.sbCard, { backgroundColor: theme.backgroundSelected }]}>
+                              {img ? (
+                                <Image
+                                  source={{ uri: sbImageUri(img), headers: mediaHeaders() }}
+                                  style={StyleSheet.absoluteFill}
+                                  resizeMode="cover"
+                                />
+                              ) : board.status === 'generating' ? (
+                                <ActivityIndicator size="small" />
+                              ) : (
+                                <Ionicons name="image-outline" size={18} color={theme.textSecondary} />
+                              )}
+                              <View style={styles.sbBadge}>
+                                <ThemedText type="small" style={styles.sbBadgeText}>
+                                  {i + 1}
+                                </ThemedText>
+                              </View>
+                            </View>
+                          ))}
+                        </ScrollView>
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {board.status === 'generating'
+                            ? t('director.storyboardRendering', { done: board.done, total: board.total })
+                            : t('director.storyboardHint')}
+                        </ThemedText>
+                      </>
+                    ) : (
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {t('director.storyboardStarting')}
+                      </ThemedText>
+                    )}
+                  </>
                 ) : null}
 
                 <Pressable
@@ -585,6 +685,24 @@ const styles = StyleSheet.create({
   },
   sceneRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   sceneNo: { minWidth: 16 },
+  sbRow: { gap: Spacing.two, paddingVertical: Spacing.one },
+  sbCard: {
+    width: 104,
+    height: 64,
+    borderRadius: Spacing.two,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  sbBadge: {
+    position: 'absolute',
+    left: 4,
+    top: 4,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 4,
+    paddingHorizontal: 4,
+  },
+  sbBadgeText: { color: '#fff' },
   generate: {
     flexDirection: 'row',
     alignItems: 'center',
