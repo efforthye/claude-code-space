@@ -98,3 +98,16 @@ def test_mock_planner_scenes_sum_to_length():
     # Scenes are indexed in order and carry a generation prompt.
     assert [s.index for s in plan.scenes] == list(range(len(plan.scenes)))
     assert all(s.prompt for s in plan.scenes)
+
+
+def test_clean_reply_strips_leaked_meta():
+    from app.planner import _clean_reply
+
+    # complete bracketed stage direction
+    assert _clean_reply("[reply warmly in Korean] 안녕하세요! 뭘 만들까요?") == "안녕하세요! 뭘 만들까요?"
+    # truncated leading meta (opening bracket lost) — the production case
+    leaked = " you fun greeting. Reply in kind. Keep in Korean.] 안녕하세요! 😊 어떻게 손볼까요?"
+    assert _clean_reply(leaked) == "안녕하세요! 😊 어떻게 손볼까요?"
+    # normal replies pass through untouched
+    assert _clean_reply("바다 위 일출로 시작할까요?") == "바다 위 일출로 시작할까요?"
+    assert _clean_reply("Let's open on a sunrise.") == "Let's open on a sunrise."

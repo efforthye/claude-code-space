@@ -35,6 +35,27 @@ def _is_korean(text: str) -> bool:
     return any("가" <= ch <= "힣" for ch in text)
 
 
+def _clean_reply(text: str) -> str:
+    """Strip leaked meta/planning text from a model's chat reply.
+
+    Models occasionally prefix the actual answer with stage directions like
+    "[user greets; reply warmly, keep in Korean]" — sometimes with the opening
+    bracket lost to truncation (seen in production: "…Keep in Korean.] 안녕하세요!").
+    Drop complete [ … ] blocks anywhere, plus a leading Hangul-free fragment
+    that ends at an early ']' when the remaining reply IS Korean.
+    """
+    import re
+
+    t = (text or "").strip()
+    t = re.sub(r"\[[^\[\]]{0,400}\]", " ", t)
+    i = t.find("]")
+    if 0 <= i < 400:
+        head, tail = t[:i], t[i + 1 :]
+        if not _is_korean(head) and _is_korean(tail):
+            t = tail
+    return re.sub(r"[ \t]{2,}", " ", t).strip()
+
+
 class Scene(BaseModel):
     index: int
     heading: str  # short scene slug, e.g. "Dawn over the harbor"
@@ -228,6 +249,9 @@ _DIRECTOR_CHAT_SYSTEM = (
     "for an AI video generator.\n"
     "LANGUAGE: Reply in EXACTLY the same language the user writes in. If they write Korean, reply "
     "in natural, fluent Korean (존댓말) — do NOT mix in English or Chinese characters.\n"
+    "`reply` is ONLY the director's spoken message to the user. NEVER include meta notes, planning, "
+    "stage directions, bracketed text like [ ... ], or descriptions of what you are about to do — "
+    "the user sees `reply` verbatim as a chat bubble.\n"
     "NEVER echo, repeat, or paraphrase the user's message back at them — that is useless. Every "
     "reply must ADD something: either one focused question when the brief is genuinely too thin, or "
     "(preferably) a concrete creative proposal.\n"
@@ -355,7 +379,8 @@ class ClaudeScenarioPlanner(ScenarioPlanner):
                 messages=convo,
                 output_format=DirectorTurn,
             )
-            return resp.parsed_output
+            turn = resp.parsed_output
+            return turn.model_copy(update={"reply": _clean_reply(turn.reply)})
         except Exception:
             # Missing/invalid ANTHROPIC_API_KEY, network, refusal, or off-shape output.
             # Degrade to a helpful nudge in the user's language rather than 500.
@@ -449,7 +474,8 @@ class LocalScenarioPlanner(ScenarioPlanner):
         ko = _is_korean("\n".join(m.content for m in messages))
         try:
             content = await self._chat(convo)
-            return DirectorTurn.model_validate_json(content)
+            turn = DirectorTurn.model_validate_json(content)
+            return turn.model_copy(update={"reply": _clean_reply(turn.reply)})
         except Exception:
             # Server unreachable, timeout, or a small model returned off-shape JSON.
             # Degrade to a plain nudge rather than 500 the whole chat.
