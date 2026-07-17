@@ -317,6 +317,7 @@ const en: Dict = {
   'toast.restored': 'Purchases restored',
   'toast.noPurchases': 'No purchases to restore',
   'toast.jobCanceled': 'Job canceled',
+  'toast.jobCanceledRefund': 'Job canceled · {n} credits refunded',
   'toast.jobDeleted': 'Job deleted',
 
   'account.subtitle': 'Your plan, storage, and generation preferences.',
@@ -658,6 +659,7 @@ const ko: Dict = {
   'toast.restored': '구매를 복원했어요',
   'toast.noPurchases': '복원할 구매가 없어요',
   'toast.jobCanceled': '작업을 취소했어요',
+  'toast.jobCanceledRefund': '작업을 취소했어요 · 크레딧 {n} 환불됨',
   'toast.jobDeleted': '작업을 삭제했어요',
 
   'account.subtitle': '요금제, 저장공간, 생성 설정.',

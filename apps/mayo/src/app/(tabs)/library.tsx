@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { formatBytes, planStorageBytes } from '@/api/catalog';
-import { getStorage, listVideos, thumbUrl } from '@/api/client';
+import { getStorage, listVideos, mediaHeaders, thumbUrl } from '@/api/client';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
@@ -97,7 +97,7 @@ export default function LibraryScreen() {
           <ThemedView type="backgroundElement" style={styles.card}>
             <View style={[styles.thumb, styles.thumbClip, { backgroundColor: v.accent }]}>
               {thumbUrl(v.url) ? (
-                <Image source={{ uri: thumbUrl(v.url)! }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                <Image source={{ uri: thumbUrl(v.url)!, headers: mediaHeaders() }} style={StyleSheet.absoluteFill} resizeMode="cover" />
               ) : null}
               <Ionicons name="play" size={20} color="#ffffff" />
             </View>

@@ -25,6 +25,10 @@ export type Job = {
   tierLabel?: string | null;
   seconds?: number | null;
   sceneUrls?: string[] | null; // clips rendered so far (live preview)
+  // Consistency block (style + character sheet) prepended to every scene render.
+  stylePrompt?: string | null;
+  // Credits charged at create — cancelling refunds the unrendered share.
+  chargedCredits?: number | null;
 };
 
 export type Video = {
@@ -61,6 +65,9 @@ export type CreateJobRequest = {
   seconds: number;
   tier: string;
   scenePrompts?: string[];
+  // Style + character-sheet block repeated into every scene render so recurring
+  // characters keep the same look across independently generated clips.
+  stylePrompt?: string;
 };
 export type RuntimeSettings = {
   generationBackend: string;
@@ -106,7 +113,11 @@ export type Scene = {
   motion: string;
   seconds: number;
 };
-export type Screenplay = { title: string; logline: string; style: string; scenes: Scene[] };
+// `characters`: one canonical visual descriptor per recurring character; the
+// director repeats it VERBATIM in every scene prompt featuring that character
+// (each clip renders independently, so exact repetition is what keeps them
+// looking identical — see ADR 0014).
+export type Screenplay = { title: string; logline: string; style: string; characters?: string[]; scenes: Scene[] };
 export type DirectorMessage = { role: 'user' | 'director'; content: string };
 export type DirectorChatRequest = { messages: DirectorMessage[]; seconds: number; tier: string };
 export type DirectorTurn = { reply: string; screenplay?: Screenplay | null; ready: boolean };
@@ -117,6 +128,8 @@ export type AuthUser = {
   name: string;
   provider: 'email' | 'google';
   createdAt: number;
+  planId?: string;
+  credits?: number; // spendable generation credits (signup grants 100)
 };
 export type SessionResult = { token: string; user: AuthUser };
 

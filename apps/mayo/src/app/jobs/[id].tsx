@@ -63,9 +63,13 @@ export default function JobDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteJob(job.id);
+              const res = await deleteJob(job.id);
               router.back();
-              toast.show(t(active ? 'toast.jobCanceled' : 'toast.jobDeleted'));
+              toast.show(
+                active && res?.refundedCredits
+                  ? t('toast.jobCanceledRefund', { n: res.refundedCredits })
+                  : t(active ? 'toast.jobCanceled' : 'toast.jobDeleted'),
+              );
             } catch {
               toast.show(t('common.error'));
             }

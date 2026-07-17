@@ -4,12 +4,12 @@ import { useRouter } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Image, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { createEdit, listVideos, mediaUrl, uploadEditAudio } from '@/api/client';
+import { createEdit, listVideos, mediaHeaders, mediaUrl, thumbUrl, uploadEditAudio } from '@/api/client';
 import type { ClipFilter, EditClip, TextPosition, Video } from '@/api/types';
 import { useToast } from '@/components/toast';
 import { ThemedText } from '@/components/themed-text';
@@ -25,6 +25,7 @@ type Clip = {
   title: string;
   accent: string;
   url: string; // full playback URL
+  thumb: string | null; // poster-frame URL for the timeline filmstrip
   duration: number; // source length in seconds (parsed from label)
   start: number;
   end: number;
@@ -47,6 +48,17 @@ function fmt(s: number): string {
   const sec = total % 60;
   return `${m}:${String(sec).padStart(2, '0')}`;
 }
+
+// Live filter preview (CapCut-style): approximate each export filter with a
+// blend-mode overlay so the choice is visible before exporting. The export
+// itself still uses the real ffmpeg filter chain server-side.
+const FILTER_OVERLAYS: Record<ClipFilter, ViewStyle | null> = {
+  none: null,
+  mono: { backgroundColor: '#808080', mixBlendMode: 'saturation' },
+  warm: { backgroundColor: 'rgba(255,150,70,0.6)', mixBlendMode: 'soft-light' },
+  cool: { backgroundColor: 'rgba(70,140,255,0.6)', mixBlendMode: 'soft-light' },
+  vivid: { backgroundColor: 'rgba(255,0,80,0.45)', mixBlendMode: 'saturation' },
+};
 
 export default function EditScreen() {
   const theme = useTheme();
@@ -150,6 +162,36 @@ export default function EditScreen() {
     return () => clearInterval(iv);
   }, [sel?.url, sel?.start, sel?.end, player]);
 
+  // The label-derived length is unknown ("—" → 0) for edited/imported films;
+  // once the player has real metadata, adopt it so trim/split/timeline work.
+  useEffect(() => {
+    if (!sel || sel.duration > 0) return;
+    const iv = setInterval(() => {
+      try {
+        const d = player.duration;
+        if (d && Number.isFinite(d) && d > 0.1) {
+          setClips((c) =>
+            c.map((clip, idx) =>
+              idx === selected && clip.duration === 0 ? { ...clip, duration: d, end: d } : clip,
+            ),
+          );
+        }
+      } catch {
+        // player still loading — try again on the next tick
+      }
+    }, 300);
+    return () => clearInterval(iv);
+  }, [sel?.key, sel?.duration, player, selected, sel]);
+
+  // Speed applies to the preview immediately, exactly like the export will.
+  useEffect(() => {
+    try {
+      player.playbackRate = sel?.speed ?? 1;
+    } catch {
+      // player not ready — the next selection change re-applies it
+    }
+  }, [sel?.speed, player]);
+
   const addClip = (v: Video) => {
     const dur = parseDuration(v.durationLabel) || 0;
     const clip: Clip = {
@@ -158,6 +200,7 @@ export default function EditScreen() {
       title: v.title,
       accent: v.accent,
       url: mediaUrl(v.url!),
+      thumb: thumbUrl(v.url),
       duration: dur,
       start: 0,
       end: dur,
@@ -288,7 +331,28 @@ export default function EditScreen() {
         <View style={styles.main}>
           <View style={styles.previewWrap}>
             {sel?.url ? (
-              <VideoView player={player} style={styles.preview} contentFit="contain" nativeControls={false} />
+              <View style={[styles.preview, styles.previewBox]}>
+                <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="contain" nativeControls={false} />
+                {FILTER_OVERLAYS[sel.filter] ? (
+                  <View pointerEvents="none" style={[StyleSheet.absoluteFill, FILTER_OVERLAYS[sel.filter]!]} />
+                ) : null}
+                {sel.text.trim() ? (
+                  <View
+                    pointerEvents="none"
+                    style={[
+                      styles.captionWrap,
+                      sel.textPos === 'top'
+                        ? styles.captionTop
+                        : sel.textPos === 'center'
+                          ? styles.captionCenter
+                          : styles.captionBottom,
+                    ]}>
+                    <ThemedText type="smallBold" style={styles.captionText}>
+                      {sel.text.trim()}
+                    </ThemedText>
+                  </View>
+                ) : null}
+              </View>
             ) : (
               <View style={[styles.preview, styles.previewEmpty, { borderColor: theme.backgroundSelected }]}>
                 <Ionicons name="film-outline" size={28} color={theme.textSecondary} />
@@ -441,8 +505,17 @@ export default function EditScreen() {
                 onPress={() => setSelected(i)}
                 style={[
                   styles.tlClip,
+                  // Width tracks the clip's effective length, like a real NLE timeline.
+                  { width: Math.max(64, Math.min(200, Math.round(((clip.end - clip.start) / (clip.speed || 1)) * 14))) },
                   { backgroundColor: clip.accent, borderColor: i === selected ? theme.text : 'transparent' },
                 ]}>
+                {clip.thumb ? (
+                  <Image
+                    source={{ uri: clip.thumb, headers: mediaHeaders() }}
+                    style={[StyleSheet.absoluteFill, styles.tlThumb]}
+                    resizeMode="cover"
+                  />
+                ) : null}
                 <ThemedText type="small" numberOfLines={1} style={styles.tlTitle}>
                   {clip.title}
                 </ThemedText>
@@ -481,8 +554,16 @@ export default function EditScreen() {
               editable.map((v) => (
                 <Pressable key={v.id} onPress={() => addClip(v)}>
                   <ThemedView type="backgroundElement" style={styles.sourceRow}>
-                    <View style={[styles.thumb, { backgroundColor: v.accent }]}>
-                      <Ionicons name="add" size={20} color="#ffffff" />
+                    <View style={[styles.thumb, styles.thumbClip, { backgroundColor: v.accent }]}>
+                      {thumbUrl(v.url) ? (
+                        <Image
+                          source={{ uri: thumbUrl(v.url)!, headers: mediaHeaders() }}
+                          style={StyleSheet.absoluteFill}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <Ionicons name="add" size={20} color="#ffffff" />
+                      )}
                     </View>
                     <ThemedText type="small" numberOfLines={1} style={styles.flex}>
                       {v.title}
@@ -588,7 +669,19 @@ const styles = StyleSheet.create({
   main: { flex: 1, flexDirection: 'row', paddingHorizontal: Spacing.four, gap: Spacing.three },
   previewWrap: { flex: 1.3, justifyContent: 'center' },
   preview: { width: '100%', aspectRatio: 16 / 9, borderRadius: Spacing.three, backgroundColor: '#000' },
+  previewBox: { overflow: 'hidden' },
   previewEmpty: { alignItems: 'center', justifyContent: 'center', gap: Spacing.two, borderWidth: 1 },
+  captionWrap: { position: 'absolute', left: 12, right: 12, alignItems: 'center' },
+  captionTop: { top: 10 },
+  captionCenter: { top: 0, bottom: 0, justifyContent: 'center' },
+  captionBottom: { bottom: 10 },
+  captionText: {
+    color: '#ffffff',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.85)',
+    textShadowRadius: 4,
+    textShadowOffset: { width: 0, height: 1 },
+  },
   inspector: { flex: 1 },
   inspectorInner: { gap: Spacing.two, paddingBottom: Spacing.three },
   trimGrid: { flexDirection: 'row', gap: Spacing.two },
@@ -639,8 +732,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     padding: Spacing.one,
     justifyContent: 'space-between',
+    overflow: 'hidden',
   },
   tlTitle: { color: '#fff' },
+  tlThumb: { borderRadius: Spacing.two - 2 },
   tlDur: { alignSelf: 'flex-start', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 4, paddingHorizontal: 4 },
   tlDurText: { color: '#fff' },
   tlText: { position: 'absolute', right: 4, top: 4 },
@@ -683,4 +778,5 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.four,
   },
   thumb: { width: 44, height: 44, borderRadius: Spacing.three, alignItems: 'center', justifyContent: 'center' },
+  thumbClip: { overflow: 'hidden' },
 });

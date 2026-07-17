@@ -93,6 +93,20 @@ export function thumbUrl(playbackPath?: string | null): string | null {
   return mediaUrl(playbackPath.replace('/v1/media/', '/v1/thumb/'));
 }
 
+/** Auth headers for media loaders that take a `headers` option (native RN Image
+ * / expo-video). Needed because those requests bypass req() — without this a
+ * signed-out device gets 401s on thumbnails. react-native-web ignores headers
+ * (the ?s= query param from mediaUrl covers signed-in web instead). */
+export function mediaHeaders(): Record<string, string> | undefined {
+  const key = getApiKey();
+  const session = getSessionToken();
+  const h: Record<string, string> = {
+    ...(key ? { Authorization: `Bearer ${key}` } : {}),
+    ...(session ? { 'X-Mayo-Session': session } : {}),
+  };
+  return Object.keys(h).length ? h : undefined;
+}
+
 // --- Health ---
 export const getHealth = () => req<Health>('/health');
 
@@ -137,8 +151,13 @@ export const estimateJob = (body: CreateJobRequest) =>
   req<Estimate>('/v1/jobs/estimate', { method: 'POST', body: JSON.stringify(body) });
 export const createJob = (body: CreateJobRequest) =>
   req<Job>('/v1/jobs', { method: 'POST', body: JSON.stringify(body) });
+// Cancelling a charged job refunds the unrendered share pro-rata (e.g. cancel a
+// 6-scene job after 2 scenes → 4/6 of the charge back to the credit balance).
 export const deleteJob = (id: string) =>
-  req<void>(`/v1/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  req<{ deleted: boolean; refundedCredits: number; credits: number | null }>(
+    `/v1/jobs/${encodeURIComponent(id)}`,
+    { method: 'DELETE' },
+  );
 export const retryJob = (id: string) =>
   req<Job>(`/v1/jobs/${encodeURIComponent(id)}/retry`, { method: 'POST' });
 

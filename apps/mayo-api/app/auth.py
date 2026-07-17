@@ -42,6 +42,7 @@ class AuthUser(BaseModel):
     provider: str  # "email" | "google"
     createdAt: float
     planId: str = "free"  # entitlement, granted by billing (e.g. Stripe webhook)
+    credits: int = 0  # spendable generation credits
 
 
 class RegisterRequest(BaseModel):
@@ -110,6 +111,7 @@ class _Store:
             "name": name.strip() or email.split("@")[0],
             "provider": provider,
             "createdAt": time.time(),
+            "credits": 100,  # signup grant — plans/billing top this up
         }
         if password is not None:
             salt = secrets.token_bytes(16)
@@ -176,6 +178,15 @@ class _Store:
         self.save()
         return True
 
+    def add_credits(self, user_id: str, delta: int) -> Optional[int]:
+        """Adjust a user's credit balance (never below 0); returns the new balance."""
+        user = self.users.get(user_id)
+        if not user:
+            return None
+        user["credits"] = max(0, int(user.get("credits", 0)) + delta)
+        self.save()
+        return user["credits"]
+
     def set_plan(self, user_id: str, plan_id: str) -> bool:
         user = self.users.get(user_id)
         if not user:
@@ -196,6 +207,7 @@ def to_public(user: dict) -> AuthUser:
         provider=user["provider"],
         createdAt=user["createdAt"],
         planId=user.get("planId", "free"),
+        credits=int(user.get("credits", 0)),
     )
 
 

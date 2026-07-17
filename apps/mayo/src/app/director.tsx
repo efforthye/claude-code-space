@@ -15,7 +15,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TIERS } from '@/api/catalog';
-import { createJob, directorChat, getDirectors, getSettings, getVideo, putSettings } from '@/api/client';
+import { ApiError, createJob, directorChat, getDirectors, getSettings, getVideo, putSettings } from '@/api/client';
 import type {
   DirectorMessage,
   DirectorModel,
@@ -131,16 +131,25 @@ export default function DirectorScreen() {
     try {
       const prompt = `${screenplay.title}\n${screenplay.logline}`.trim();
       const scenePrompts = screenplay.scenes.map((s) => s.prompt).filter(Boolean);
+      // Consistency block: the screenplay's style + character sheet rides along
+      // and is prepended to EVERY scene render, so recurring characters keep
+      // the same look across independently generated clips (ADR 0014).
+      const stylePrompt = [screenplay.style, ...(screenplay.characters ?? [])]
+        .filter(Boolean)
+        .join(', ')
+        .slice(0, 1400);
       const job = await createJob({
         prompt,
         seconds,
         tier,
         scenePrompts: scenePrompts.length ? scenePrompts : undefined,
+        ...(stylePrompt ? { stylePrompt } : {}),
       });
       router.replace(`/jobs/${job.id}`);
       toast.show(t('director.generating'));
-    } catch {
-      toast.show(t('common.error'));
+    } catch (e) {
+      // 402 carries a human-readable reason (e.g. not enough credits) — show it.
+      toast.show(e instanceof ApiError && e.status === 402 && e.message ? e.message : t('common.error'));
       setGenerating(false);
     }
   };

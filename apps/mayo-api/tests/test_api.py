@@ -77,7 +77,10 @@ def test_create_job_generates_and_completes():
 def test_delete_job():
     created = client.post("/v1/jobs", json={"seconds": 600, "tier": "standard"}).json()
     job_id = created["id"]
-    assert client.delete(f"/v1/jobs/{job_id}").status_code == 204
+    deleted = client.delete(f"/v1/jobs/{job_id}")
+    assert deleted.status_code == 200
+    # anonymous job -> nothing was charged, nothing refunded
+    assert deleted.json()["refundedCredits"] == 0
     assert client.get(f"/v1/jobs/{job_id}").status_code == 404
 
 

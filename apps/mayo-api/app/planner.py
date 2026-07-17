@@ -46,7 +46,12 @@ class Scene(BaseModel):
 class Screenplay(BaseModel):
     title: str
     logline: str
-    style: str  # style guide: palette, mood, characters — for cross-scene continuity
+    style: str  # style guide: palette, mood, lighting — for cross-scene continuity
+    # Character sheet: ONE canonical visual descriptor per recurring character
+    # (e.g. "a small orange tabby cat with a red scarf"). Scene prompts must
+    # repeat these descriptors VERBATIM — that repetition is what keeps the
+    # character visually consistent across separately-generated clips.
+    characters: List[str] = Field(default_factory=list)
     scenes: List[Scene] = Field(default_factory=list)
 
 
@@ -211,7 +216,10 @@ _DIRECTOR_SYSTEM = (
     "via a shared style guide (palette, mood, recurring characters). For each "
     "scene, write a vivid, self-contained image/video-generation prompt, camera "
     "motion notes, and a duration in seconds. The scene durations must sum to the "
-    "requested total. Keep scenes short (a few seconds each) so they render well."
+    "requested total. Keep scenes short (a few seconds each) so they render well. "
+    "CONSISTENCY: define each recurring character ONCE in `characters` as an exact "
+    "visual descriptor (species/hair/outfit/colors), and repeat that descriptor "
+    "VERBATIM in every scene prompt that features the character."
 )
 
 
@@ -230,7 +238,11 @@ _DIRECTOR_CHAT_SYSTEM = (
     "over asking questions. Revise the screenplay as the user gives feedback. Set `ready` to true only "
     "when the user clearly approves (e.g. says to generate/make it). Keep `reply` to ONE or TWO short "
     "sentences describing what you drafted or changed; put the actual film in `screenplay`, not in the "
-    "reply."
+    "reply.\n"
+    "CHARACTER CONSISTENCY: define each recurring character ONCE in `characters` as one exact visual "
+    "descriptor phrase (species/hair/outfit/colors, e.g. 'a small orange tabby cat wearing a tiny red "
+    "scarf'), and repeat that descriptor VERBATIM inside every scene prompt featuring the character — "
+    "each clip renders independently, so only exact repetition keeps them looking identical."
 )
 
 
@@ -238,14 +250,14 @@ _DIRECTOR_CHAT_SYSTEM = (
 # shape is described in the prompt. Kept compact to keep small models on-track.
 _SCREENPLAY_JSON_SHAPE = (
     ' Respond with ONLY a JSON object, no markdown, exactly: '
-    '{"title": string, "logline": string, "style": string, "scenes": '
+    '{"title": string, "logline": string, "style": string, "characters": [string], "scenes": '
     '[{"index": integer, "heading": string, "prompt": string, "motion": string, '
     '"seconds": integer}]}.'
 )
 _TURN_JSON_SHAPE = (
     ' Respond with ONLY a JSON object, no markdown, exactly: '
     '{"reply": string, "ready": boolean, "screenplay": null OR '
-    '{"title": string, "logline": string, "style": string, "scenes": '
+    '{"title": string, "logline": string, "style": string, "characters": [string], "scenes": '
     '[{"index": integer, "heading": string, "prompt": string, "motion": string, '
     '"seconds": integer}]}}. Put a short chat message in "reply". If the user has '
     'described any concept, fill "screenplay" with a CONCISE draft — at most 2-4 '

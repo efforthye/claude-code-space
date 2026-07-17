@@ -61,8 +61,9 @@ export default function CreateScreen() {
         }
       }
       router.push(`/jobs/${job.id}`);
-    } catch {
-      toast.show(t('common.error'));
+    } catch (e) {
+      // 402 carries a human-readable reason (e.g. not enough credits) — show it.
+      toast.show(e instanceof ApiError && e.status === 402 && e.message ? e.message : t('common.error'));
     } finally {
       setSubmitting(false);
     }

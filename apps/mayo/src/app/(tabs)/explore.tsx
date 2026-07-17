@@ -6,7 +6,7 @@ import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
-import { getExplore, mediaUrl, thumbUrl } from '@/api/client';
+import { getExplore, mediaHeaders, mediaUrl, thumbUrl } from '@/api/client';
 import type { ExploreItem, ExploreSort } from '@/api/types';
 import { Chip } from '@/components/chip';
 import { ErrorBlock, LoadingBlock } from '@/components/feedback';
@@ -110,7 +110,7 @@ export default function ExploreScreen() {
             <Pressable onPress={() => open(index)}>
               <View style={[styles.poster, styles.posterClipped, { backgroundColor: item.accent }]}>
                 {thumbUrl(item.url) ? (
-                  <Image source={{ uri: thumbUrl(item.url)! }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                  <Image source={{ uri: thumbUrl(item.url)!, headers: mediaHeaders() }} style={StyleSheet.absoluteFill} resizeMode="cover" />
                 ) : null}
                 <Ionicons name="play" size={40} color="#ffffff" />
                 <View style={styles.durationTag}>

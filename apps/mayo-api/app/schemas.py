@@ -71,6 +71,10 @@ class Job(BaseModel):
     # Playback paths of scene clips already rendered — lets the app preview a job
     # while it's still generating.
     sceneUrls: Optional[list[str]] = None
+    # Consistency block (style + character sheet) prepended to EVERY scene render.
+    stylePrompt: Optional[str] = None
+    # Credits charged at creation (refunded pro-rata on cancel).
+    chargedCredits: Optional[int] = None
 
 
 class CreateJobRequest(BaseModel):
@@ -80,6 +84,8 @@ class CreateJobRequest(BaseModel):
     # Optional per-scene prompts (e.g. from the director's screenplay). When set,
     # the scene count follows this list instead of being derived from seconds.
     scenePrompts: list[str] = Field(default_factory=list)
+    # Style + character-sheet block applied to every scene for visual consistency.
+    stylePrompt: str = Field(default="", max_length=1500)
 
 
 class Estimate(BaseModel):

@@ -142,9 +142,17 @@ async def _run(job_id: str) -> None:
     start_index = job.scenesDone
     run_started = time.monotonic()
     await jobs.patch(job_id, etaMin=max(1, round((total - start_index) * _eta_clip_seconds() / 60)))
+    # Character/style consistency: the same style + character-sheet block is
+    # prepended to EVERY scene prompt (prompt anchoring — the exact descriptor
+    # phrases repeating verbatim is what keeps subjects consistent, ADR 0014).
+    style = (job.stylePrompt or "").strip()
+
+    def _full_prompt(scene: str) -> str:
+        return f"{style}. {scene}" if style else scene
+
     for index in range(job.scenesDone, total):
         # Prefer the director's per-scene prompt; fall back to the job title.
-        scene_prompt = (
+        scene_prompt = _full_prompt(
             job.scenePrompts[index]
             if job.scenePrompts and index < len(job.scenePrompts)
             else job.title
@@ -188,7 +196,7 @@ async def _run(job_id: str) -> None:
         await jobs.patch(job_id, scenesTotal=total)
         for _ in range(extra):
             index = len(clip_keys)
-            scene_prompt = (
+            scene_prompt = _full_prompt(
                 job.scenePrompts[index % len(job.scenePrompts)]
                 if job.scenePrompts
                 else job.title

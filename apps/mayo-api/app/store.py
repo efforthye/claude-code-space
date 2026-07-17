@@ -48,7 +48,11 @@ _ACCENTS = ["#6D5DF6", "#1FA2A6", "#E0699A", "#E2A43B", "#4C8DF6"]
 class JobStore:
     def __init__(self) -> None:
         self._jobs: dict[str, Job] = {j.id: j.model_copy() for j in _SEED_JOBS}
+        self._owners: dict[str, str] = {}  # job id -> user id (for cancel refunds)
         self._lock = asyncio.Lock()
+
+    def owner_of(self, job_id: str) -> Optional[str]:
+        return self._owners.get(job_id)
 
     async def list(self) -> list[Job]:
         async with self._lock:
@@ -65,6 +69,9 @@ class JobStore:
         seconds: int,
         tier_id: str,
         scene_prompts: list[str] | None = None,
+        style_prompt: str = "",
+        charged_credits: int | None = None,
+        owner_id: str | None = None,
     ) -> Job:
         tier = tier_by_id(tier_id)
         title = (prompt.strip().splitlines()[0][:60] if prompt.strip() else "Untitled film")
@@ -86,13 +93,18 @@ class JobStore:
             tierLabel=tier.label if tier else tier_id,
             seconds=seconds,
             scenePrompts=scene_prompts or None,
+            stylePrompt=style_prompt or None,
+            chargedCredits=charged_credits,
         )
         async with self._lock:
             self._jobs[job.id] = job
+            if owner_id:
+                self._owners[job.id] = owner_id
         return job.model_copy()
 
     async def remove(self, job_id: str) -> bool:
         async with self._lock:
+            self._owners.pop(job_id, None)
             return self._jobs.pop(job_id, None) is not None
 
     async def append_scene_url(self, job_id: str, url: str) -> None:
@@ -169,11 +181,19 @@ class LibraryStore:
         # Prefer the REAL stitched length (clips × clip-seconds) over the requested
         # length, which can differ (fixed-length clips, director scene count).
         label_seconds = duration_seconds if duration_seconds is not None else (job.seconds or 0)
+        size_label = "— MB"
+        if film_key:
+            try:
+                from .storage import get_storage
+
+                size_label = _fmt_size(len(get_storage().read(film_key)))
+            except Exception:
+                pass  # metadata-only / storage hiccup — keep the placeholder
         video = Video(
             id=_new_id("v"),
             title=job.title,
             durationLabel=_fmt_clock(label_seconds),
-            sizeLabel="— MB",
+            sizeLabel=size_label,
             expiresInDays=14,
             accent=_ACCENTS[idx % len(_ACCENTS)],
             resolution="512p" if film_key else "1080p",
@@ -199,10 +219,21 @@ class LibraryStore:
         scenes: int = 1,
     ) -> Video:
         idx = len(self._videos)
+        # Measure the real length (ffprobe) so edited/imported films don't show
+        # "—" — an unknown duration also breaks trim/split in the editor.
+        duration_label = "—"
+        try:
+            from .worker import _probe  # lazy — worker imports this module
+
+            secs = await _probe(film_key)
+            if secs > 0:
+                duration_label = _fmt_clock(int(round(secs)))
+        except Exception:
+            pass  # no ffprobe (dev container) — keep the placeholder
         video = Video(
             id=_new_id("v"),
             title=title,
-            durationLabel="—",
+            durationLabel=duration_label,
             sizeLabel=_fmt_size(size_bytes),
             expiresInDays=14,
             accent=_ACCENTS[idx % len(_ACCENTS)],
