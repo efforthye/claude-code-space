@@ -73,6 +73,17 @@ tmux (don't restart)** and the URL never changes — bookmark the `exp://…exp.
 phone and reuse it. `npx expo login` (Expo account) pins it deterministically (subdomain uses the
 account name instead of `anonymous`).
 
+> **Expo account (2026-07-17):** the mini's CLI is logged in as **`efforthyee`** (a fresh
+> email+password account — the owner's original Gmail-SSO Expo account was unusable for CLI
+> login because SSO signup collides with the pre-existing email account; a new account created
+> at expo.dev/signup with the email+password form sidesteps it). With the CLI logged in, the
+> phone's Expo Go (same account) can list the running server under *Development servers*, and
+> the tunnel URL becomes account-pinned. Note: the non-TTY launchd log prints only
+> `Tunnel ready.` — to recover the URL, either query the dev server
+> (`curl -s localhost:8081 -H "expo-platform: ios"` → `hostUri`) or read
+> `apps/mayo/.expo/settings.json` (`urlRandomness`) and compose
+> `exp://<urlRandomness>-<account>-8081.exp.direct`.
+
 ### True permanence — launchd (survives Termius close AND reboot)
 `scripts/mayo-autostart-install.sh` installs two macOS **LaunchAgents** (`com.efforthye.mayo.expo`
 and `.autopull`) that run `expo start --tunnel` and `dev-autopull.sh` on login, **auto-restart on
