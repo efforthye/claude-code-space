@@ -19,6 +19,7 @@ export default function ExploreScreen() {
     <View style={styles.root}>
       <ReelsFeed
         mode={sort}
+        seedable
         overlay={
           <SafeAreaView edges={['top']} style={styles.chipsWrap} pointerEvents="box-none">
             <View style={styles.chips}>

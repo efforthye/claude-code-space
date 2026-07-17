@@ -434,6 +434,24 @@ class ExploreStore:
             self._persist()
             return updated.model_copy()
 
+    async def insert(self, item: ExploreItem) -> ExploreItem:
+        """Add a fully-built item (used by the sample seeder)."""
+        async with self._lock:
+            self._items[item.id] = item
+            self._persist()
+        return item.model_copy()
+
+    async def remove_by_author(self, author: str) -> int:
+        """Remove all items by an author (used to clear '@mayo-sample' seeds)."""
+        async with self._lock:
+            doomed = [i for i, e in self._items.items() if e.author == author]
+            for item_id in doomed:
+                self._items.pop(item_id, None)
+                self._comments.pop(item_id, None)
+            if doomed:
+                self._persist()
+        return len(doomed)
+
     async def share(self, item_id: str) -> Optional[ExploreItem]:
         """Count a completed external share — the strongest ranking signal."""
         async with self._lock:

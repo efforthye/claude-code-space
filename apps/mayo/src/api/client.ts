@@ -215,6 +215,9 @@ export const publishToExplore = (videoId: string, prompt: string) =>
   req<ExploreItem>('/v1/explore', { method: 'POST', body: JSON.stringify({ videoId, prompt }) });
 export const getExploreItem = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}`);
+// Dev helper: fill the feed with generated sample reels (server needs ffmpeg).
+export const seedExplore = (clear = false) =>
+  req<ExploreItem[]>(`/v1/explore/seed${clear ? '?clear=true' : ''}`, { method: 'POST' });
 // Reel impression ping — feeds the popular ranking's `views` signal (ADR 0015).
 export const viewExplore = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/view`, { method: 'POST' });

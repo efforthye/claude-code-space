@@ -97,3 +97,29 @@ def test_view_ping_and_recipe_on_published_item():
     assert viewed is not None and viewed.views == 1
     shared = asyncio.run(store.share(item.id))
     assert shared is not None and shared.shares == 1
+
+
+def test_seed_endpoint_fills_and_clears_samples(monkeypatch):
+    from app import db
+    from app.routers import explore as explore_router
+
+    db.replace_kind("explore", [])
+    db.replace_kind("explore_comment", [])
+    # no ffmpeg in the dev container — stub the clip generator
+    monkeypatch.setattr(explore_router, "_gen_sample_clip_sync", lambda hue, label: b"fake-mp4")
+
+    r = client.post("/v1/explore/seed")
+    assert r.status_code == 200
+    items = r.json()
+    assert len(items) == 6
+    assert all(i["author"] == "@mayo-sample" for i in items)
+    assert all(i["url"] and i["url"].startswith("/v1/media/films/sample-") for i in items)
+    # varied engagement + ages so the popular ranking is visible
+    assert any(i["likes"] > 0 for i in items) and any(i["views"] > 0 for i in items)
+
+    # re-seeding with clear replaces instead of duplicating
+    r2 = client.post("/v1/explore/seed?clear=true")
+    assert r2.status_code == 200
+    feed = client.get("/v1/explore?sort=latest").json()
+    samples = [i for i in feed if i["author"] == "@mayo-sample"]
+    assert len(samples) == 6

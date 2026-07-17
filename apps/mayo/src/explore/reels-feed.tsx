@@ -28,6 +28,7 @@ import {
   getExplore,
   mediaHeaders,
   mediaUrl,
+  seedExplore,
   shareExplore,
   viewExplore,
 } from '@/api/client';
@@ -45,11 +46,14 @@ export function ReelsFeed({
   mode,
   startIndex = 0,
   overlay,
+  seedable = false,
 }: {
   mode: ReelsMode;
   startIndex?: number;
   /** Rendered above the pager (sort chips, close button…) — position absolutely. */
   overlay?: ReactNode;
+  /** Show the sample-seeding flask (dev helper) even when the feed has items. */
+  seedable?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -66,6 +70,7 @@ export function ReelsFeed({
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [activeIndex, setActiveIndex] = useState(startIndex);
   const [commentsFor, setCommentsFor] = useState<ExploreItem | null>(null);
+  const [seeding, setSeeding] = useState(false);
 
   const onViewRef = useRef(({ viewableItems }: { viewableItems: { index: number | null }[] }) => {
     if (viewableItems.length > 0 && viewableItems[0].index != null) {
@@ -112,10 +117,52 @@ export function ReelsFeed({
           <ThemedText type="small" style={styles.emptyText}>
             {t('reels.empty')}
           </ThemedText>
+          {mode !== 'liked' ? (
+            <Pressable
+              onPress={async () => {
+                if (seeding) return;
+                setSeeding(true);
+                try {
+                  await seedExplore();
+                  await refetch();
+                } catch {
+                  // server without ffmpeg, or network blip — leave the empty state
+                } finally {
+                  setSeeding(false);
+                }
+              }}
+              style={styles.seedBtn}>
+              <Ionicons name="flask-outline" size={16} color="#000" />
+              <ThemedText type="smallBold" style={styles.seedText}>
+                {seeding ? t('reels.seeding') : t('reels.seed')}
+              </ThemedText>
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
 
       {overlay}
+      {seedable && mode !== 'liked' && items.length > 0 ? (
+        <SafeAreaView edges={['top']} style={styles.seedFabWrap} pointerEvents="box-none">
+          <Pressable
+            onPress={async () => {
+              if (seeding) return;
+              setSeeding(true);
+              try {
+                await seedExplore();
+                await refetch();
+              } catch {
+                // server without ffmpeg — quietly ignore
+              } finally {
+                setSeeding(false);
+              }
+            }}
+            hitSlop={8}
+            style={styles.seedFab}>
+            <Ionicons name={seeding ? 'hourglass-outline' : 'flask-outline'} size={18} color="#fff" />
+          </Pressable>
+        </SafeAreaView>
+      ) : null}
       <CommentsSheet item={commentsFor} onClose={() => setCommentsFor(null)} />
     </View>
   );
@@ -370,6 +417,26 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.three },
   emptyText: { color: '#999', textAlign: 'center', paddingHorizontal: Spacing.five },
+  seedBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.five,
+  },
+  seedText: { color: '#000000' },
+  seedFabWrap: { position: 'absolute', top: 0, right: 0 },
+  seedFab: {
+    margin: Spacing.three,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   rail: {
     position: 'absolute',
     right: Spacing.three,
