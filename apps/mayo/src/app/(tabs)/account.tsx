@@ -16,7 +16,6 @@ import { Spacing } from '@/constants/theme';
 import { useFavorites } from '@/explore/favorites';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
-import { useInbox } from '@/notify/inbox';
 import { usePayments } from '@/payments/context';
 import { useI18n } from '@/settings/settings';
 
@@ -27,7 +26,6 @@ export default function MyScreen() {
   const { user, signOut } = useAuth();
   const { entitlement } = usePayments();
   const { favorites } = useFavorites();
-  const { unread } = useInbox();
   const { data: storage } = useQuery(getStorage);
 
   const Row = ({
@@ -107,14 +105,8 @@ export default function MyScreen() {
         </Pressable>
       )}
 
-      {/* My stuff: inbox, liked collection */}
+      {/* My stuff (notifications live in the header bell now, like every app) */}
       <ThemedView type="backgroundElement" style={styles.rows}>
-        <Row
-          icon="notifications-outline"
-          label={t('my.inbox')}
-          badge={unread}
-          onPress={() => router.push('/notifications')}
-        />
         <Row
           icon="heart-outline"
           label={t('my.liked')}
