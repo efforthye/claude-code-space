@@ -175,6 +175,7 @@ class PublishRequest(BaseModel):
     title: str = Field(min_length=1, max_length=100)
     description: str = Field(default="", max_length=5000)
     visibility: Visibility = "private"
+    tags: list[str] = Field(default_factory=list, max_length=30)
 
 
 class PublishResult(BaseModel):

@@ -337,12 +337,12 @@ class ExploreStore:
             items = [e for _, e in ranked]
         return items
 
-    async def publish(self, video: Video, prompt: str) -> ExploreItem:
+    async def publish(self, video: Video, prompt: str, author: str = "@me") -> ExploreItem:
         item = ExploreItem(
             id=_new_id("e"),
             title=video.title,
             prompt=(prompt.strip() or video.title),
-            author="@me",
+            author=author,
             likes=0,
             durationLabel=video.durationLabel,
             accent=video.accent,
@@ -381,12 +381,12 @@ class ExploreStore:
                 return None
             return [c.model_copy() for c in self._comments.get(item_id, [])]
 
-    async def add_comment(self, item_id: str, text: str) -> Optional[ExploreComment]:
+    async def add_comment(self, item_id: str, text: str, author: str = "@me") -> Optional[ExploreComment]:
         async with self._lock:
             item = self._items.get(item_id)
             if not item:
                 return None
-            comment = ExploreComment(id=_new_id("c"), author="@me", text=text)
+            comment = ExploreComment(id=_new_id("c"), author=author, text=text)
             self._comments.setdefault(item_id, []).append(comment)
             self._items[item_id] = item.model_copy(update={"comments": item.comments + 1})
             self._persist()

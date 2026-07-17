@@ -97,13 +97,25 @@ async def refresh_access_token(refresh_token: str) -> str:
 
 
 async def upload_video(
-    refresh_token: str, data: bytes, title: str, description: str, visibility: str
+    refresh_token: str,
+    data: bytes,
+    title: str,
+    description: str,
+    visibility: str,
+    tags: list[str] | None = None,
 ) -> str:
     """Resumable upload; returns the new YouTube video id."""
     access = await refresh_access_token(refresh_token)
+    snippet: dict = {"title": title[:100] or "mayo film", "description": description[:4900]}
+    if tags:
+        # YouTube caps tags at ~500 chars total; keep the first 30 clean ones.
+        snippet["tags"] = [t.strip()[:75] for t in tags if t.strip()][:30]
     meta = {
-        "snippet": {"title": title[:100] or "mayo film", "description": description[:4900]},
-        "status": {"privacyStatus": visibility if visibility in ("private", "unlisted", "public") else "private"},
+        "snippet": snippet,
+        "status": {
+            "privacyStatus": visibility if visibility in ("private", "unlisted", "public") else "private",
+            "selfDeclaredMadeForKids": False,
+        },
     }
     async with httpx.AsyncClient(timeout=600) as client:
         start = await client.post(

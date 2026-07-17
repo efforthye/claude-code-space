@@ -71,7 +71,8 @@ async def publish(
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="video file missing")
         try:
             yt_id = await youtube.upload_video(
-                refresh, store.read(key), req.title, req.description, req.visibility
+                refresh, store.read(key), req.title, req.description, req.visibility,
+                tags=req.tags,
             )
         except ValueError as exc:
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=str(exc))

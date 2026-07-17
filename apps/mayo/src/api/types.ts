@@ -117,5 +117,5 @@ export type AuthUser = {
 };
 export type SessionResult = { token: string; user: AuthUser };
 
-export type PublishRequest = { title: string; description?: string; visibility: Visibility };
+export type PublishRequest = { title: string; description?: string; visibility: Visibility; tags?: string[] };
 export type PublishResult = { accepted: boolean; videoId: string; visibility: Visibility; url?: string | null };

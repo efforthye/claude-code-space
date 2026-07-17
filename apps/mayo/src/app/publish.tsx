@@ -59,6 +59,7 @@ export default function PublishScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('private');
+  const [tagsText, setTagsText] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   // Prefill the title from the video once it loads, unless the user already typed.
@@ -72,7 +73,12 @@ export default function PublishScreen() {
     setSubmitting(true);
     try {
       const result = videoId
-        ? await publishVideo(videoId, { title, description, visibility })
+        ? await publishVideo(videoId, {
+            title,
+            description,
+            visibility,
+            tags: tagsText.split(',').map((x) => x.trim()).filter(Boolean),
+          })
         : null;
       router.back();
       toast.show(t('toast.published'));
@@ -165,6 +171,19 @@ export default function PublishScreen() {
             style={[
               styles.input,
               styles.multiline,
+              { color: theme.text, backgroundColor: theme.backgroundElement },
+            ]}
+          />
+
+          <ThemedText type="smallBold">{t('publish.tags')}</ThemedText>
+          <TextInput
+            value={tagsText}
+            onChangeText={setTagsText}
+            placeholder={t('publish.tagsPlaceholder')}
+            placeholderTextColor={theme.textSecondary}
+            autoCapitalize="none"
+            style={[
+              styles.input,
               { color: theme.text, backgroundColor: theme.backgroundElement },
             ]}
           />

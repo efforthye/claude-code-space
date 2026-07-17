@@ -151,6 +151,8 @@ const en: Dict = {
   'account.keySaveBtn': 'Save my keys',
 
   'detail.viewOnYoutube': 'View on YouTube',
+  'publish.tags': 'Tags',
+  'publish.tagsPlaceholder': 'comma, separated, tags',
   'publish.connect': 'Connect YouTube',
   'publish.connectHint': 'One-time Google sign-in so mayo can upload to your channel.',
   'publish.connected': 'YouTube connected — publishing uploads for real.',
@@ -486,6 +488,8 @@ const ko: Dict = {
   'account.keySaveBtn': '내 키 저장',
 
   'detail.viewOnYoutube': 'YouTube에서 보기',
+  'publish.tags': '태그',
+  'publish.tagsPlaceholder': '쉼표로, 구분해서, 입력',
   'publish.connect': 'YouTube 연결하기',
   'publish.connectHint': '한 번만 구글로 승인하면 내 채널로 실제 업로드돼요.',
   'publish.connected': 'YouTube 연결됨 — 게시하면 실제로 업로드됩니다.',

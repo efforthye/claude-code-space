@@ -4,7 +4,11 @@ No dummy seed: the feed is empty until users publish. `prompt` on each item powe
 the "make like this" remix flow; `url` makes items playable.
 """
 
-from fastapi import APIRouter, HTTPException, Query, status
+from typing import Optional
+
+from fastapi import APIRouter, Header, HTTPException, Query, status
+
+from ..auth import store as users
 
 from ..schemas import CommentRequest, ExploreComment, ExploreItem, PublishExploreRequest
 from ..store import explore as explore_store
@@ -18,8 +22,16 @@ async def list_explore(sort: str = Query("popular", pattern="^(popular|latest)$"
     return await explore_store.list(sort)
 
 
+def _author(session: Optional[str]) -> str:
+    """Display name of the signed-in caller; anonymous fallback otherwise."""
+    user = users.user_for_session(session or "")
+    return f"@{user['name']}" if user else "@me"
+
+
 @router.post("", response_model=ExploreItem, status_code=status.HTTP_201_CREATED)
-async def publish_explore(req: PublishExploreRequest) -> ExploreItem:
+async def publish_explore(
+    req: PublishExploreRequest, x_mayo_session: Optional[str] = Header(default=None)
+) -> ExploreItem:
     video = await lib.get(req.videoId)
     if video is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="video not found")
@@ -27,7 +39,7 @@ async def publish_explore(req: PublishExploreRequest) -> ExploreItem:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST, detail="only a real (playable) video can be published"
         )
-    return await explore_store.publish(video, req.prompt)
+    return await explore_store.publish(video, req.prompt, author=_author(x_mayo_session))
 
 
 @router.post("/{item_id}/like", response_model=ExploreItem)
@@ -55,8 +67,10 @@ async def list_comments(item_id: str) -> list[ExploreComment]:
 
 
 @router.post("/{item_id}/comments", response_model=ExploreComment, status_code=status.HTTP_201_CREATED)
-async def add_comment(item_id: str, req: CommentRequest) -> ExploreComment:
-    comment = await explore_store.add_comment(item_id, req.text)
+async def add_comment(
+    item_id: str, req: CommentRequest, x_mayo_session: Optional[str] = Header(default=None)
+) -> ExploreComment:
+    comment = await explore_store.add_comment(item_id, req.text, author=_author(x_mayo_session))
     if comment is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
     return comment
