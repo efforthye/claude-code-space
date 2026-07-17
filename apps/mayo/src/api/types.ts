@@ -146,6 +146,7 @@ export type AuthUser = {
   createdAt: number;
   planId?: string;
   credits?: number; // spendable generation credits (signup grants 100)
+  providers?: string[]; // every login method connected to this account
 };
 export type SessionResult = { token: string; user: AuthUser };
 

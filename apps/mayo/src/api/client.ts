@@ -120,26 +120,34 @@ export const authRegister = (email: string, password: string, name?: string) =>
   });
 export const authLogin = (email: string, password: string) =>
   req<SessionResult>('/v1/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-export const googleLoginStart = () =>
-  req<{ loginId: string; url: string }>('/v1/auth/google/start', { method: 'POST' });
+// Server-driven SNS start/poll. `link=true` (signed in) LINKS the provider to
+// the current account instead of signing in — poll returns `linked` then.
+export type SnsPoll = {
+  status: 'pending' | 'ready';
+  token?: string | null;
+  user?: AuthUser | null;
+  linked?: string | null;
+};
+export const googleLoginStart = (link = false) =>
+  req<{ loginId: string; url: string }>(`/v1/auth/google/start${link ? '?link=true' : ''}`, {
+    method: 'POST',
+  });
 export const googleLoginResult = (loginId: string) =>
-  req<{ status: 'pending' | 'ready'; token?: string | null; user?: AuthUser | null }>(
-    `/v1/auth/google/result?loginId=${encodeURIComponent(loginId)}`,
-  );
+  req<SnsPoll>(`/v1/auth/google/result?loginId=${encodeURIComponent(loginId)}`);
 export const authGoogle = (idToken: string) =>
   req<SessionResult>('/v1/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) });
 // GitHub — same server-driven start/poll flow as Google.
-export const githubLoginStart = () =>
-  req<{ loginId: string; url: string }>('/v1/auth/github/start', { method: 'POST' });
+export const githubLoginStart = (link = false) =>
+  req<{ loginId: string; url: string }>(`/v1/auth/github/start${link ? '?link=true' : ''}`, {
+    method: 'POST',
+  });
 export const githubLoginResult = (loginId: string) =>
-  req<{ status: 'pending' | 'ready'; token?: string | null; user?: AuthUser | null }>(
-    `/v1/auth/github/result?loginId=${encodeURIComponent(loginId)}`,
-  );
+  req<SnsPoll>(`/v1/auth/github/result?loginId=${encodeURIComponent(loginId)}`);
 // Apple — the device obtains an identityToken (expo-apple-authentication).
-export const authApple = (identityToken: string, name?: string) =>
+export const authApple = (identityToken: string, name?: string, link = false) =>
   req<SessionResult>('/v1/auth/apple', {
     method: 'POST',
-    body: JSON.stringify({ identityToken, name: name ?? '' }),
+    body: JSON.stringify({ identityToken, name: name ?? '', link }),
   });
 export const authMe = () => req<AuthUser>('/v1/auth/me');
 // BYOK — per-account provider keys; reads are masked ("…1234"), writes are raw.

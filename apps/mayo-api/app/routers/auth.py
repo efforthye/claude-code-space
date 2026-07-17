@@ -55,25 +55,45 @@ class GoogleLoginPoll(BaseModel):
     status: str  # "pending" | "ready"
     token: str | None = None
     user: AuthUser | None = None
+    linked: str | None = None  # set instead of token/user for a link request
+
+
+def _link_user_id(link: bool, session: str | None) -> str | None:
+    """The signed-in caller's id when this start is a LINK request (?link=1)."""
+    if not link:
+        return None
+    user = store.user_for_session(session or "")
+    if not user:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="sign in first to link accounts")
+    return user["id"]
 
 
 @router.post("/google/start", response_model=GoogleStartResult)
-async def google_start() -> GoogleStartResult:
+async def google_start(
+    link: bool = False, x_mayo_session: Optional[str] = Header(default=None)
+) -> GoogleStartResult:
     """Server-driven Google login (Expo Go-safe): returns a one-time loginId and
-    the Google consent URL; the app opens it and polls /google/result."""
+    the Google consent URL; the app opens it and polls /google/result.
+    With ?link=1 (signed in), completion links Google to the current account."""
     try:
-        login_id, url = start_google_login()
+        login_id, url = start_google_login(link_user_id=_link_user_id(link, x_mayo_session))
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return GoogleStartResult(loginId=login_id, url=url)
 
 
-@router.get("/google/result", response_model=GoogleLoginPoll)
-async def google_result(loginId: str = "") -> GoogleLoginPoll:
+def _poll(loginId: str) -> GoogleLoginPoll:
     result = take_login_result(loginId)
     if not result:
         return GoogleLoginPoll(status="pending")
+    if "linked" in result:
+        return GoogleLoginPoll(status="ready", linked=result["linked"])
     return GoogleLoginPoll(status="ready", token=result["token"], user=AuthUser(**result["user"]))
+
+
+@router.get("/google/result", response_model=GoogleLoginPoll)
+async def google_result(loginId: str = "") -> GoogleLoginPoll:
+    return _poll(loginId)
 
 
 @router.post("/google", response_model=SessionResult)
@@ -103,9 +123,11 @@ from ..auth import (  # noqa: E402
 
 
 @router.post("/github/start", response_model=GoogleStartResult)
-async def github_start() -> GoogleStartResult:
+async def github_start(
+    link: bool = False, x_mayo_session: Optional[str] = Header(default=None)
+) -> GoogleStartResult:
     try:
-        login_id, url = start_github_login()
+        login_id, url = start_github_login(link_user_id=_link_user_id(link, x_mayo_session))
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return GoogleStartResult(loginId=login_id, url=url)
@@ -113,10 +135,7 @@ async def github_start() -> GoogleStartResult:
 
 @router.get("/github/result", response_model=GoogleLoginPoll)
 async def github_result(loginId: str = "") -> GoogleLoginPoll:
-    result = take_login_result(loginId)
-    if not result:
-        return GoogleLoginPoll(status="pending")
-    return GoogleLoginPoll(status="ready", token=result["token"], user=AuthUser(**result["user"]))
+    return _poll(loginId)
 
 
 @router.get("/github/callback", response_class=HTMLResponse)
@@ -141,15 +160,23 @@ async def github_callback(code: str = "", state: str = "") -> HTMLResponse:
 class AppleLoginRequest(BaseModel):
     identityToken: str
     name: str = ""
+    link: bool = False  # signed-in caller wants to LINK Apple to this account
 
 
 @router.post("/apple", response_model=SessionResult)
-async def apple_signin(req: AppleLoginRequest) -> SessionResult:
+async def apple_signin(
+    req: AppleLoginRequest, x_mayo_session: Optional[str] = Header(default=None)
+) -> SessionResult:
+    link_user = store.user_for_session(x_mayo_session or "") if req.link else None
+    if req.link and not link_user:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="sign in first to link accounts")
     try:
-        result = await apple_login(req.identityToken, req.name)
+        result = await apple_login(req.identityToken, req.name, link_user=link_user)
     except ValueError as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail=str(exc))
-    return SessionResult(token=result["token"], user=AuthUser(**result["user"]))
+    # For a link request there's no new session — hand the caller's back.
+    token = result["token"] or (x_mayo_session or "")
+    return SessionResult(token=token, user=AuthUser(**result["user"]))
 
 
 from pydantic import BaseModel, Field  # noqa: E402  (router-local wire types)

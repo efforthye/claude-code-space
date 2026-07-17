@@ -25,6 +25,8 @@ type AuthValue = {
   signInWithGoogle: (idToken: string) => Promise<void>;
   /** Adopt a ready-made session (server-driven login flows). */
   adoptSession: (token: string, user: AuthUser) => Promise<void>;
+  /** Re-fetch the profile (e.g. after linking another SNS provider). */
+  refreshUser: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -105,6 +107,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await adopt(token, nextUser);
   };
 
+  const refreshUser = async () => {
+    try {
+      setUser(await authMe());
+    } catch {
+      // session gone — keep current state; the next guarded call will surface it
+    }
+  };
+
   const signOut = async () => {
     try {
       await authLogout();
@@ -117,7 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, restoring, signIn, signUp, signInWithGoogle, adoptSession, signOut }}>
+    <AuthContext.Provider
+      value={{ user, restoring, signIn, signUp, signInWithGoogle, adoptSession, refreshUser, signOut }}>
       {children}
     </AuthContext.Provider>
   );

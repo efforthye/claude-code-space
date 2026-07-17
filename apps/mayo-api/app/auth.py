@@ -39,10 +39,12 @@ class AuthUser(BaseModel):
     id: str
     email: str
     name: str
-    provider: str  # "email" | "google"
+    provider: str  # original sign-up provider: "email" | "google" | "github" | "apple"
     createdAt: float
     planId: str = "free"  # entitlement, granted by billing (e.g. Stripe webhook)
     credits: int = 0  # spendable generation credits
+    # Every login method connected to this account (original + linked SNS).
+    providers: list[str] = []
 
 
 class RegisterRequest(BaseModel):
@@ -102,6 +104,33 @@ class _Store:
     def by_email(self, email: str) -> Optional[dict]:
         e = email.strip().lower()
         return next((u for u in self.users.values() if u["email"] == e), None)
+
+    def by_identity(self, provider: str, email: str) -> Optional[dict]:
+        """The account a linked SNS identity belongs to (provider+email match).
+        Lets one account carry Google/GitHub/Apple logins with DIFFERENT emails."""
+        e = email.strip().lower()
+        for u in self.users.values():
+            for ident in u.get("identities", []):
+                if ident.get("provider") == provider and ident.get("email") == e:
+                    return u
+        return None
+
+    def add_identity(self, user_id: str, provider: str, email: str) -> bool:
+        """Record a login method on an account (idempotent). A given
+        provider+email pair can belong to only one account."""
+        user = self.users.get(user_id)
+        if not user:
+            return False
+        owner = self.by_identity(provider, email)
+        if owner and owner["id"] != user_id:
+            return False  # already linked to a different account
+        e = email.strip().lower()
+        idents = list(user.get("identities", []))
+        if not any(i.get("provider") == provider and i.get("email") == e for i in idents):
+            idents.append({"provider": provider, "email": e})
+            user["identities"] = idents
+            self.save()
+        return True
 
     def create_user(self, email: str, name: str, provider: str, password: str | None) -> dict:
         uid = f"u_{secrets.token_hex(8)}"
@@ -200,6 +229,13 @@ store = _Store()
 
 
 def to_public(user: dict) -> AuthUser:
+    providers = [user["provider"]] + [
+        i.get("provider", "") for i in user.get("identities", [])
+    ]
+    seen: list[str] = []
+    for p in providers:
+        if p and p not in seen:
+            seen.append(p)
     return AuthUser(
         id=user["id"],
         email=user["email"],
@@ -208,6 +244,7 @@ def to_public(user: dict) -> AuthUser:
         createdAt=user["createdAt"],
         planId=user.get("planId", "free"),
         credits=int(user.get("credits", 0)),
+        providers=seen,
     )
 
 
@@ -228,15 +265,22 @@ _LOGIN_TTL = 600
 _login_pending: dict[str, dict] = {}  # loginId -> {state, expiresAt, result}
 
 
-def start_google_login() -> tuple[str, str]:
-    """Returns (loginId, google_auth_url). Raises ValueError if unconfigured."""
+def start_google_login(link_user_id: str | None = None) -> tuple[str, str]:
+    """Returns (loginId, google_auth_url). Raises ValueError if unconfigured.
+    With link_user_id set, completion LINKS the Google identity to that account
+    instead of signing in (multi-SNS on one account)."""
     from urllib.parse import urlencode
 
     if not (settings.youtube_client_id and settings.youtube_client_secret):
         raise ValueError("Google sign-in is not configured on this server")
     login_id = secrets.token_urlsafe(16)
     state = "login." + secrets.token_urlsafe(24)
-    _login_pending[login_id] = {"state": state, "expiresAt": time.time() + _LOGIN_TTL, "result": None}
+    _login_pending[login_id] = {
+        "state": state,
+        "expiresAt": time.time() + _LOGIN_TTL,
+        "result": None,
+        "linkUserId": link_user_id,
+    }
     url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(
         {
             "client_id": settings.youtube_client_id,
@@ -259,16 +303,25 @@ def login_id_for_state(state: str) -> Optional[str]:
 
 
 async def complete_google_login(login_id: str, code: str) -> None:
-    """Exchange the code, verify the id_token, sign the user in under loginId."""
+    """Exchange the code, verify the id_token, sign the user in under loginId —
+    or, for a link request, attach the Google identity to the linking account."""
     from . import youtube
 
     tokens = await youtube.exchange_code(code)
     id_token = tokens.get("id_token", "")
     claims = await verify_google_id_token(id_token)
-    user = store.by_email(claims["email"])
-    if not user:
-        user = store.create_user(claims["email"], claims.get("name", ""), provider="google", password=None)
+    email = claims["email"]
     rec = _login_pending.get(login_id)
+    link_uid = (rec or {}).get("linkUserId")
+    if link_uid:
+        ok = store.add_identity(link_uid, "google", email)
+        if rec:
+            rec["result"] = {"linked": "google" if ok else None}
+        return
+    user = store.by_identity("google", email) or store.by_email(email)
+    if not user:
+        user = store.create_user(email, claims.get("name", ""), provider="google", password=None)
+    store.add_identity(user["id"], "google", email)
     if rec:
         rec["result"] = {"token": store.create_session(user["id"]), "user": to_public(user).model_dump()}
 
@@ -288,15 +341,21 @@ def take_login_result(login_id: str) -> Optional[dict]:
 # dedicated OAuth app + callback: /v1/auth/github/callback) ---
 
 
-def start_github_login() -> tuple[str, str]:
-    """Returns (loginId, github_authorize_url). Raises ValueError if unconfigured."""
+def start_github_login(link_user_id: str | None = None) -> tuple[str, str]:
+    """Returns (loginId, github_authorize_url). Raises ValueError if unconfigured.
+    With link_user_id set, completion links the identity instead of signing in."""
     from urllib.parse import urlencode
 
     if not (settings.github_oauth_client_id and settings.github_oauth_client_secret):
         raise ValueError("GitHub sign-in is not configured on this server")
     login_id = secrets.token_urlsafe(16)
     state = "ghlogin." + secrets.token_urlsafe(24)
-    _login_pending[login_id] = {"state": state, "expiresAt": time.time() + _LOGIN_TTL, "result": None}
+    _login_pending[login_id] = {
+        "state": state,
+        "expiresAt": time.time() + _LOGIN_TTL,
+        "result": None,
+        "linkUserId": link_user_id,
+    }
     url = "https://github.com/login/oauth/authorize?" + urlencode(
         {
             "client_id": settings.github_oauth_client_id,
@@ -337,11 +396,18 @@ async def complete_github_login(login_id: str, code: str) -> None:
             email = (primary or {}).get("email", "")
     if not email:
         raise ValueError("GitHub account has no verified email")
-    user = store.by_email(email)
+    rec = _login_pending.get(login_id)
+    link_uid = (rec or {}).get("linkUserId")
+    if link_uid:
+        ok = store.add_identity(link_uid, "github", email)
+        if rec:
+            rec["result"] = {"linked": "github" if ok else None}
+        return
+    user = store.by_identity("github", email) or store.by_email(email)
     if not user:
         name = profile.get("name") or profile.get("login") or ""
         user = store.create_user(email, name, provider="github", password=None)
-    rec = _login_pending.get(login_id)
+    store.add_identity(user["id"], "github", email)
     if rec:
         rec["result"] = {"token": store.create_session(user["id"]), "user": to_public(user).model_dump()}
 
@@ -390,13 +456,21 @@ async def verify_apple_id_token(id_token: str) -> dict:
     return claims
 
 
-async def apple_login(id_token: str, name: str = "") -> dict:
-    """Verify the token and mint a session; returns {token, user} like Google."""
+async def apple_login(id_token: str, name: str = "", link_user: dict | None = None) -> dict:
+    """Verify the token and mint a session; returns {token, user} like Google.
+    With link_user set (caller already signed in), the Apple identity is linked
+    to that account instead of creating/signing into another one."""
     claims = await verify_apple_id_token(id_token)
-    user = store.by_email(claims["email"])
+    email = claims["email"]
+    if link_user is not None:
+        if not store.add_identity(link_user["id"], "apple", email):
+            raise ValueError("this Apple account is already linked to another user")
+        return {"token": None, "user": to_public(store.users[link_user["id"]]).model_dump()}
+    user = store.by_identity("apple", email) or store.by_email(email)
     if not user:
         # Apple only shares the name on the FIRST authorization — persist it now.
-        user = store.create_user(claims["email"], name, provider="apple", password=None)
+        user = store.create_user(email, name, provider="apple", password=None)
+    store.add_identity(user["id"], "apple", email)
     return {"token": store.create_session(user["id"]), "user": to_public(user).model_dump()}
 
 

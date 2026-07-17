@@ -3,11 +3,23 @@
 // used to crowd this tab live in the /settings modal now.
 
 import { Ionicons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { useState } from 'react';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
-import { getStorage } from '@/api/client';
+import {
+  authApple,
+  getStorage,
+  githubLoginStart,
+  githubLoginResult,
+  googleLoginStart,
+  googleLoginResult,
+  type SnsPoll,
+} from '@/api/client';
 import { useAuth } from '@/auth/auth';
+import { useToast } from '@/components/toast';
 import { ProgressBar } from '@/components/progress-bar';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
@@ -23,10 +35,69 @@ export default function MyScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
-  const { user, signOut } = useAuth();
+  const toast = useToast();
+  const { user, signOut, refreshUser } = useAuth();
   const { entitlement } = usePayments();
   const { favorites } = useFavorites();
   const { data: storage } = useQuery(getStorage);
+  const [linking, setLinking] = useState<string | null>(null);
+
+  const linked = (p: string) => !!user?.providers?.includes(p);
+
+  // Link another SNS to THIS account (server-driven start/poll with ?link=1).
+  const linkVia = async (
+    provider: string,
+    start: (link: boolean) => Promise<{ loginId: string; url: string }>,
+    poll: (loginId: string) => Promise<SnsPoll>,
+  ) => {
+    if (linking) return;
+    setLinking(provider);
+    try {
+      const { loginId, url } = await start(true);
+      WebBrowser.openBrowserAsync(url).catch(() => {});
+      for (let i = 0; i < 90; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const res = await poll(loginId).catch(() => null);
+        if (res?.status === 'ready') {
+          if (Platform.OS !== 'web') WebBrowser.dismissBrowser().catch(() => {});
+          if (res.linked) {
+            await refreshUser();
+            toast.show(t('my.linkDone'));
+          } else {
+            toast.show(t('my.linkFailed'));
+          }
+          return;
+        }
+      }
+      toast.show(t('my.linkFailed'));
+    } catch {
+      toast.show(t('my.linkFailed'));
+    } finally {
+      setLinking(null);
+    }
+  };
+
+  const linkApple = async () => {
+    if (linking) return;
+    setLinking('apple');
+    try {
+      const cred = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (!cred.identityToken) throw new Error('no identity token');
+      await authApple(cred.identityToken, '', true);
+      await refreshUser();
+      toast.show(t('my.linkDone'));
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code !== 'ERR_REQUEST_CANCELED') toast.show(t('my.linkFailed'));
+    } finally {
+      setLinking(null);
+    }
+  };
 
   const Row = ({
     icon,
@@ -81,7 +152,12 @@ export default function MyScreen() {
           <View style={styles.flex}>
             <ThemedText type="smallBold">{user.name}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              {user.email} · {user.provider === 'google' ? 'Google' : t('auth.emailProvider')}
+              {user.email} ·{' '}
+              {(user.providers?.length ? user.providers : [user.provider])
+                .map((p) =>
+                  p === 'google' ? 'Google' : p === 'github' ? 'GitHub' : p === 'apple' ? 'Apple' : t('auth.emailProvider'),
+                )
+                .join(' · ')}
             </ThemedText>
           </View>
           <Pressable onPress={signOut} hitSlop={8}>
@@ -104,6 +180,46 @@ export default function MyScreen() {
           </ThemedView>
         </Pressable>
       )}
+
+      {/* Linked logins: one account, many SNS — sign in with any of them. */}
+      {user ? (
+        <ThemedView type="backgroundElement" style={styles.rows}>
+          {(
+            [
+              { p: 'google', icon: 'logo-google' as const, label: 'Google', onLink: () => linkVia('google', googleLoginStart, googleLoginResult) },
+              { p: 'github', icon: 'logo-github' as const, label: 'GitHub', onLink: () => linkVia('github', githubLoginStart, githubLoginResult) },
+              ...(Platform.OS === 'ios'
+                ? [{ p: 'apple', icon: 'logo-apple' as const, label: 'Apple', onLink: linkApple }]
+                : []),
+            ] as const
+          ).map((row, i, arr) => (
+            <Pressable
+              key={row.p}
+              disabled={linked(row.p) || !!linking}
+              onPress={row.onLink}
+              style={({ pressed }) => [
+                styles.rowItem,
+                i < arr.length - 1 && {
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: theme.backgroundSelected,
+                },
+                pressed && styles.pressed,
+              ]}>
+              <Ionicons name={row.icon} size={18} color={theme.textSecondary} />
+              <ThemedText type="small" style={styles.rowLabel}>
+                {row.label}
+              </ThemedText>
+              <ThemedText type="small" themeColor={linked(row.p) ? 'text' : 'textSecondary'}>
+                {linking === row.p
+                  ? t('my.linking')
+                  : linked(row.p)
+                    ? t('my.linked')
+                    : t('my.link')}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </ThemedView>
+      ) : null}
 
       {/* My stuff (notifications live in the header bell now, like every app) */}
       <ThemedView type="backgroundElement" style={styles.rows}>
