@@ -9,3 +9,7 @@ pydantic>=2.11,<3.0
 # Async HTTP client — used by the `local` director backend to talk to a local
 # LLM server (Ollama). Pure-Python (no native build), so fine on 3.14.
 httpx>=0.27,<1.0
+# Apple sign-in id_token verification (RS256 against Apple's JWKS). PyJWT is
+# pure-Python; cryptography ships abi3 wheels that cover 3.14. The import is
+# lazy (app/auth.py) so a failed install degrades Apple login, never the API.
+PyJWT[crypto]>=2.8,<3.0

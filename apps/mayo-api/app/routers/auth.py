@@ -90,6 +90,68 @@ async def google_login(req: GoogleLoginRequest) -> SessionResult:
     return SessionResult(token=store.create_session(user["id"]), user=to_public(user))
 
 
+# --- GitHub sign-in (server-driven start/poll — same pattern as Google) ---
+
+from fastapi.responses import HTMLResponse  # noqa: E402
+
+from ..auth import (  # noqa: E402
+    apple_login,
+    complete_github_login,
+    login_id_for_state,
+    start_github_login,
+)
+
+
+@router.post("/github/start", response_model=GoogleStartResult)
+async def github_start() -> GoogleStartResult:
+    try:
+        login_id, url = start_github_login()
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    return GoogleStartResult(loginId=login_id, url=url)
+
+
+@router.get("/github/result", response_model=GoogleLoginPoll)
+async def github_result(loginId: str = "") -> GoogleLoginPoll:
+    result = take_login_result(loginId)
+    if not result:
+        return GoogleLoginPoll(status="pending")
+    return GoogleLoginPoll(status="ready", token=result["token"], user=AuthUser(**result["user"]))
+
+
+@router.get("/github/callback", response_class=HTMLResponse)
+async def github_callback(code: str = "", state: str = "") -> HTMLResponse:
+    """GitHub's browser redirect — one-time state is its auth (no shared key)."""
+    login_id = login_id_for_state(state) if state.startswith("ghlogin.") else None
+    if not code or not login_id:
+        return HTMLResponse("<h3>로그인 요청이 만료됐어요. 앱에서 다시 시도해주세요.</h3>", status_code=400)
+    try:
+        await complete_github_login(login_id, code)
+    except Exception:
+        return HTMLResponse("<h3>GitHub 로그인에 실패했어요. 앱에서 다시 시도해주세요.</h3>", status_code=400)
+    return HTMLResponse(
+        "<h3>로그인 완료! 이 창을 닫고 앱으로 돌아가세요.</h3>"
+        "<script>setTimeout(function(){window.close()},1200)</script>"
+    )
+
+
+# --- Apple sign-in (identityToken from expo-apple-authentication) ---
+
+
+class AppleLoginRequest(BaseModel):
+    identityToken: str
+    name: str = ""
+
+
+@router.post("/apple", response_model=SessionResult)
+async def apple_signin(req: AppleLoginRequest) -> SessionResult:
+    try:
+        result = await apple_login(req.identityToken, req.name)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail=str(exc))
+    return SessionResult(token=result["token"], user=AuthUser(**result["user"]))
+
+
 from pydantic import BaseModel, Field  # noqa: E402  (router-local wire types)
 
 _BYOK_PROVIDERS = ("anthropic", "gemini", "higgsfield")

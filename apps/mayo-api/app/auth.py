@@ -284,6 +284,122 @@ def take_login_result(login_id: str) -> Optional[dict]:
     return _login_pending.pop(login_id)["result"]
 
 
+# --- GitHub login (same server-driven start/poll pattern as Google, but with a
+# dedicated OAuth app + callback: /v1/auth/github/callback) ---
+
+
+def start_github_login() -> tuple[str, str]:
+    """Returns (loginId, github_authorize_url). Raises ValueError if unconfigured."""
+    from urllib.parse import urlencode
+
+    if not (settings.github_oauth_client_id and settings.github_oauth_client_secret):
+        raise ValueError("GitHub sign-in is not configured on this server")
+    login_id = secrets.token_urlsafe(16)
+    state = "ghlogin." + secrets.token_urlsafe(24)
+    _login_pending[login_id] = {"state": state, "expiresAt": time.time() + _LOGIN_TTL, "result": None}
+    url = "https://github.com/login/oauth/authorize?" + urlencode(
+        {
+            "client_id": settings.github_oauth_client_id,
+            "redirect_uri": settings.github_redirect_uri,
+            "scope": "read:user user:email",
+            "state": state,
+        }
+    )
+    return login_id, url
+
+
+async def complete_github_login(login_id: str, code: str) -> None:
+    """Exchange the code, fetch the GitHub profile, sign the user in under loginId."""
+    async with httpx.AsyncClient(timeout=20) as client:
+        token_resp = await client.post(
+            "https://github.com/login/oauth/access_token",
+            data={
+                "client_id": settings.github_oauth_client_id,
+                "client_secret": settings.github_oauth_client_secret,
+                "code": code,
+                "redirect_uri": settings.github_redirect_uri,
+            },
+            headers={"Accept": "application/json"},
+        )
+        token_resp.raise_for_status()
+        access = token_resp.json().get("access_token", "")
+        if not access:
+            raise ValueError("GitHub did not return an access token")
+        gh_headers = {"Authorization": f"Bearer {access}", "Accept": "application/vnd.github+json"}
+        profile = (await client.get("https://api.github.com/user", headers=gh_headers)).json()
+        email = profile.get("email") or ""
+        if not email:
+            emails = (await client.get("https://api.github.com/user/emails", headers=gh_headers)).json()
+            primary = next(
+                (e for e in emails if e.get("primary") and e.get("verified")),
+                next((e for e in emails if e.get("verified")), None),
+            )
+            email = (primary or {}).get("email", "")
+    if not email:
+        raise ValueError("GitHub account has no verified email")
+    user = store.by_email(email)
+    if not user:
+        name = profile.get("name") or profile.get("login") or ""
+        user = store.create_user(email, name, provider="github", password=None)
+    rec = _login_pending.get(login_id)
+    if rec:
+        rec["result"] = {"token": store.create_session(user["id"]), "user": to_public(user).model_dump()}
+
+
+# --- Apple login: the app (expo-apple-authentication) obtains an identityToken
+# JWT on-device; we verify its signature against Apple's JWKS and its audience
+# against APPLE_OAUTH_AUDIENCES. ---
+
+
+async def verify_apple_id_token(id_token: str) -> dict:
+    """Validate an Apple identityToken; returns its claims.
+
+    Needs PyJWT[crypto] on the host (lazy import so a missing wheel can never
+    take the API down). Raises ValueError with a user-facing reason on failure.
+    """
+    import asyncio
+
+    try:
+        import jwt
+        from jwt import PyJWKClient
+    except ImportError as exc:  # pragma: no cover - dep present in CI
+        raise ValueError("Apple sign-in needs PyJWT[crypto] installed on the server") from exc
+
+    allowed = [a for a in settings.apple_oauth_audiences if a]
+    if not allowed:
+        raise ValueError("Apple sign-in is not configured on this server")
+
+    def _verify() -> dict:
+        key = PyJWKClient("https://appleid.apple.com/auth/keys").get_signing_key_from_jwt(id_token)
+        return jwt.decode(
+            id_token,
+            key.key,
+            algorithms=["RS256"],
+            audience=allowed,
+            issuer="https://appleid.apple.com",
+        )
+
+    try:
+        claims = await asyncio.to_thread(_verify)
+    except ValueError:
+        raise
+    except Exception as exc:
+        raise ValueError("invalid Apple token") from exc
+    if not claims.get("email"):
+        raise ValueError("Apple token has no email")
+    return claims
+
+
+async def apple_login(id_token: str, name: str = "") -> dict:
+    """Verify the token and mint a session; returns {token, user} like Google."""
+    claims = await verify_apple_id_token(id_token)
+    user = store.by_email(claims["email"])
+    if not user:
+        # Apple only shares the name on the FIRST authorization — persist it now.
+        user = store.create_user(claims["email"], name, provider="apple", password=None)
+    return {"token": store.create_session(user["id"]), "user": to_public(user).model_dump()}
+
+
 async def verify_google_id_token(id_token: str) -> dict:
     """Validate a Google id_token via the tokeninfo endpoint; returns its claims.
 

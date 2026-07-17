@@ -144,3 +144,20 @@ def test_google_start_unconfigured_is_400(monkeypatch):
         auth_mod, "settings", SimpleNamespace(youtube_client_id="", youtube_client_secret="")
     )
     assert client.post("/v1/auth/google/start").status_code == 400
+
+
+def test_github_start_unconfigured_is_400():
+    r = client.post("/v1/auth/github/start")
+    assert r.status_code == 400
+
+
+def test_github_callback_bad_state_is_400():
+    r = client.get("/v1/auth/github/callback", params={"code": "x", "state": "ghlogin.nope"})
+    assert r.status_code == 400
+
+
+def test_apple_login_rejects_malformed_token():
+    # PyJWT parses the token header before any network fetch, so a malformed
+    # token fails fast with 401 (no JWKS round trip).
+    r = client.post("/v1/auth/apple", json={"identityToken": "not-a-jwt"})
+    assert r.status_code == 401

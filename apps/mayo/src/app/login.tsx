@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -13,7 +15,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ApiError, googleLoginStart, googleLoginResult } from '@/api/client';
+import {
+  ApiError,
+  authApple,
+  githubLoginStart,
+  githubLoginResult,
+  googleLoginStart,
+  googleLoginResult,
+} from '@/api/client';
 import { GOOGLE_CLIENT_ID, useAuth } from '@/auth/auth';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -38,18 +47,22 @@ export default function LoginScreen() {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // NATIVE Google login — server-driven (Expo Go-safe): get a one-time loginId
-  // and consent URL from the API, open the browser sheet, and poll until the
-  // server has minted a session (Google redirects to the API, not the app).
-  const nativeGoogle = async () => {
+  // Server-driven SNS login (Expo Go-safe, used by native Google and GitHub on
+  // every platform): get a one-time loginId + consent URL from the API, open
+  // the browser, and poll until the server has minted a session (the provider
+  // redirects to the API, not the app).
+  const snsLogin = async (
+    start: () => Promise<{ loginId: string; url: string }>,
+    poll: (loginId: string) => Promise<{ status: string; token?: string | null; user?: any } | null>,
+  ) => {
     if (busy) return;
     setBusy(true);
     try {
-      const { loginId, url } = await googleLoginStart();
+      const { loginId, url } = await start();
       WebBrowser.openBrowserAsync(url).catch(() => {});
       for (let i = 0; i < 90; i++) {
         await new Promise((r) => setTimeout(r, 2000));
-        const res = await googleLoginResult(loginId).catch(() => null);
+        const res = await poll(loginId).catch(() => null);
         if (res?.status === 'ready' && res.token && res.user) {
           if (Platform.OS !== 'web') WebBrowser.dismissBrowser().catch(() => {});
           await adoptSession(res.token, res.user);
@@ -59,8 +72,44 @@ export default function LoginScreen() {
         }
       }
       toast.show(t('auth.googleFailed'));
-    } catch {
-      toast.show(t('auth.googleFailed'));
+    } catch (e) {
+      // 400 = provider not configured on the server — show its reason.
+      toast.show(e instanceof ApiError && e.status === 400 && e.message ? e.message : t('auth.googleFailed'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const nativeGoogle = () => snsLogin(googleLoginStart, googleLoginResult);
+  const githubLogin = () => snsLogin(githubLoginStart, githubLoginResult);
+
+  // Apple sign-in — native module (works inside Expo Go on iOS); the resulting
+  // identityToken is verified server-side against Apple's JWKS.
+  const [appleAvailable, setAppleAvailable] = useState(false);
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    AppleAuthentication.isAvailableAsync().then(setAppleAvailable).catch(() => {});
+  }, []);
+  const appleLogin = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const cred = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (!cred.identityToken) throw new Error('no identity token');
+      const name = [cred.fullName?.givenName, cred.fullName?.familyName].filter(Boolean).join(' ');
+      const res = await authApple(cred.identityToken, name);
+      await adoptSession(res.token, res.user);
+      toast.show(t('auth.welcome'));
+      router.back();
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code !== 'ERR_REQUEST_CANCELED') {
+        toast.show(e instanceof ApiError && e.message ? e.message : t('auth.appleFailed'));
+      }
     } finally {
       setBusy(false);
     }
@@ -98,7 +147,7 @@ export default function LoginScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Ionicons name="person-circle-outline" size={56} color={theme.textSecondary} style={styles.icon} />
+          <Image source={require('../../assets/images/icon.png')} style={styles.logo} />
           <ThemedText type="small" themeColor="textSecondary" style={styles.blurb}>
             {t('auth.blurb')}
           </ThemedText>
@@ -193,6 +242,30 @@ export default function LoginScreen() {
             </ThemedText>
           )}
 
+          {appleAvailable ? (
+            <Pressable
+              onPress={appleLogin}
+              disabled={busy}
+              style={({ pressed }) => [
+                styles.google,
+                { borderColor: theme.backgroundSelected, opacity: busy ? 0.4 : pressed ? 0.7 : 1 },
+              ]}>
+              <Ionicons name="logo-apple" size={18} color={theme.text} />
+              <ThemedText type="smallBold">{t('auth.apple')}</ThemedText>
+            </Pressable>
+          ) : null}
+
+          <Pressable
+            onPress={githubLogin}
+            disabled={busy}
+            style={({ pressed }) => [
+              styles.google,
+              { borderColor: theme.backgroundSelected, opacity: busy ? 0.4 : pressed ? 0.7 : 1 },
+            ]}>
+            <Ionicons name="logo-github" size={18} color={theme.text} />
+            <ThemedText type="smallBold">{t('auth.github')}</ThemedText>
+          </Pressable>
+
           <Pressable onPress={() => setMode((m) => (m === 'login' ? 'register' : 'login'))} hitSlop={8}>
             <ThemedText type="small" themeColor="textSecondary" style={styles.switch}>
               {mode === 'login' ? t('auth.toRegister') : t('auth.toLogin')}
@@ -222,6 +295,7 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   icon: { alignSelf: 'center' },
+  logo: { alignSelf: 'center', width: 72, height: 72, borderRadius: 18 },
   blurb: { textAlign: 'center' },
   input: {
     borderRadius: Spacing.three,

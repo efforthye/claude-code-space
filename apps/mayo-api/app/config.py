@@ -165,6 +165,25 @@ class Settings:
     google_oauth_client_ids: list[str] = field(
         default_factory=lambda: _split(os.getenv("GOOGLE_OAUTH_CLIENT_IDS", ""))
     )
+    # GitHub sign-in (server-driven OAuth app; register the callback below as the
+    # OAuth app's Authorization callback URL). Names only in the repo.
+    github_oauth_client_id: str = field(
+        default_factory=lambda: os.getenv("GITHUB_OAUTH_CLIENT_ID", "")
+    )
+    github_oauth_client_secret: str = field(
+        default_factory=lambda: os.getenv("GITHUB_OAUTH_CLIENT_SECRET", "")
+    )
+    github_redirect_uri: str = field(
+        default_factory=lambda: os.getenv(
+            "GITHUB_OAUTH_REDIRECT_URI",
+            "https://mayo-api.efforthye.dev/v1/auth/github/callback",
+        )
+    )
+    # Apple sign-in: accepted id_token audiences (comma-sep). Expo Go runs under
+    # Apple's own bundle id; a standalone build adds the app's bundle id here.
+    apple_oauth_audiences: list[str] = field(
+        default_factory=lambda: _split(os.getenv("APPLE_OAUTH_AUDIENCES", "host.exp.Exponent"))
+    )
     # Font for burned-in editor captions (ffmpeg drawtext). Default a macOS font
     # with Hangul glyphs; if missing, captions are skipped (render never fails).
     edit_font: str = field(

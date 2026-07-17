@@ -128,6 +128,19 @@ export const googleLoginResult = (loginId: string) =>
   );
 export const authGoogle = (idToken: string) =>
   req<SessionResult>('/v1/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) });
+// GitHub — same server-driven start/poll flow as Google.
+export const githubLoginStart = () =>
+  req<{ loginId: string; url: string }>('/v1/auth/github/start', { method: 'POST' });
+export const githubLoginResult = (loginId: string) =>
+  req<{ status: 'pending' | 'ready'; token?: string | null; user?: AuthUser | null }>(
+    `/v1/auth/github/result?loginId=${encodeURIComponent(loginId)}`,
+  );
+// Apple — the device obtains an identityToken (expo-apple-authentication).
+export const authApple = (identityToken: string, name?: string) =>
+  req<SessionResult>('/v1/auth/apple', {
+    method: 'POST',
+    body: JSON.stringify({ identityToken, name: name ?? '' }),
+  });
 export const authMe = () => req<AuthUser>('/v1/auth/me');
 // BYOK — per-account provider keys; reads are masked ("…1234"), writes are raw.
 export const getMyKeys = () => req<{ keys: Record<string, string> }>('/v1/auth/me/keys');

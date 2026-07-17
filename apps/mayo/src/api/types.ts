@@ -135,7 +135,7 @@ export type AuthUser = {
   id: string;
   email: string;
   name: string;
-  provider: 'email' | 'google';
+  provider: 'email' | 'google' | 'github' | 'apple';
   createdAt: number;
   planId?: string;
   credits?: number; // spendable generation credits (signup grants 100)
