@@ -1,231 +1,62 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useVideoPlayer, VideoView } from 'expo-video';
+// Explore = the reels feed itself (IG Reels-style, per owner request): a full-
+// screen vertical video pager with a floating sort toggle. The old card grid is
+// gone — browsing IS watching.
+
 import { useState } from 'react';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getApiKey } from '@/api/api-key';
-import { getApiBaseUrl } from '@/api/base-url';
-import { getExplore, mediaHeaders, mediaUrl, thumbUrl } from '@/api/client';
-import type { ExploreItem, ExploreSort } from '@/api/types';
-import { Chip } from '@/components/chip';
-import { ErrorBlock, LoadingBlock } from '@/components/feedback';
-import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { useFavorites } from '@/explore/favorites';
-import { useTheme } from '@/hooks/use-theme';
-import { useQuery } from '@/hooks/use-query';
-import { useI18n, useSettings } from '@/settings/settings';
-
-function AutoPreview({
-  uri,
-  duration,
-  onPress,
-}: {
-  uri: string;
-  duration: string;
-  onPress: () => void;
-}) {
-  const key = getApiKey();
-  const player = useVideoPlayer(
-    { uri, headers: key ? { Authorization: `Bearer ${key}` } : undefined },
-    (p) => {
-      p.muted = true;
-      p.loop = true;
-      p.play();
-    },
-  );
-  return (
-    <Pressable onPress={onPress}>
-      <View style={styles.posterClip}>
-        <VideoView
-          player={player}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          nativeControls={false}
-        />
-        <View style={styles.durationTag}>
-          <ThemedText type="small" style={styles.durationText}>
-            {duration}
-          </ThemedText>
-        </View>
-      </View>
-    </Pressable>
-  );
-}
-
-type Mode = 'popular' | 'latest';
+import { ReelsFeed } from '@/explore/reels-feed';
+import { useI18n } from '@/settings/settings';
 
 export default function ExploreScreen() {
-  const theme = useTheme();
-  const router = useRouter();
   const { t } = useI18n();
-  const { has, toggle } = useFavorites();
-  const { exploreAutoplay } = useSettings();
-  const [mode, setMode] = useState<Mode>('popular');
-  const sort: ExploreSort = mode === 'latest' ? 'latest' : 'popular';
-  const { data: items, loading, error, refetch } = useQuery(() => getExplore(sort), { deps: [sort] });
-
-  const list = items ?? [];
-
-  // Tapping a card opens the full-screen reels player at that position.
-  const open = (index: number) =>
-    router.push({ pathname: '/reels', params: { mode, index: String(index) } });
+  const [sort, setSort] = useState<'popular' | 'latest'>('popular');
 
   return (
-    <Screen
-      title={t('tab.explore')}
-      subtitle={t('explore.subtitle')}
-      onRefresh={async () => {
-        await refetch();
-      }}>
-      <View style={styles.sortRow}>
-        <Chip label={t('explore.popular')} selected={mode === 'popular'} onPress={() => setMode('popular')} />
-        <Chip label={t('explore.latest')} selected={mode === 'latest'} onPress={() => setMode('latest')} />
-      </View>
-
-      {loading && !items ? <LoadingBlock /> : null}
-      {error && !items ? <ErrorBlock onRetry={refetch} error={error} /> : null}
-      {list.length === 0 && !(loading && !items) ? (
-        <ThemedView type="backgroundElement" style={styles.empty}>
-          <Ionicons name="compass-outline" size={36} color={theme.textSecondary} />
-          <ThemedText type="smallBold">{t('explore.emptyTitle')}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
-            {t('explore.emptyBody')}
-          </ThemedText>
-        </ThemedView>
-      ) : null}
-
-      {list.map((item, index) => (
-        <ThemedView key={item.id} type="backgroundElement" style={styles.card}>
-          {exploreAutoplay && item.url ? (
-            <AutoPreview
-              uri={mediaUrl(item.url)}
-              duration={item.durationLabel}
-              onPress={() => open(index)}
-            />
-          ) : (
-            <Pressable onPress={() => open(index)}>
-              <View style={[styles.poster, styles.posterClipped, { backgroundColor: item.accent }]}>
-                {thumbUrl(item.url) ? (
-                  <Image source={{ uri: thumbUrl(item.url)!, headers: mediaHeaders() }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-                ) : null}
-                <Ionicons name="play" size={40} color="#ffffff" />
-                <View style={styles.durationTag}>
-                  <ThemedText type="small" style={styles.durationText}>
-                    {item.durationLabel}
+    <View style={styles.root}>
+      <ReelsFeed
+        mode={sort}
+        overlay={
+          <SafeAreaView edges={['top']} style={styles.chipsWrap} pointerEvents="box-none">
+            <View style={styles.chips}>
+              {(['popular', 'latest'] as const).map((s) => (
+                <Pressable
+                  key={s}
+                  onPress={() => setSort(s)}
+                  style={[styles.chip, sort === s && styles.chipActive]}>
+                  <ThemedText type="smallBold" style={sort === s ? styles.chipTextActive : styles.chipText}>
+                    {t(`explore.${s}`)}
                   </ThemedText>
-                </View>
-              </View>
-            </Pressable>
-          )}
-
-          <View style={styles.metaRow}>
-            <View style={styles.meta}>
-              <ThemedText type="smallBold" numberOfLines={1}>
-                {item.title}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {item.author} · {item.tierLabel}
-              </ThemedText>
+                </Pressable>
+              ))}
             </View>
-            <Pressable
-              onPress={async () => {
-                await toggle(item);
-                refetch();
-              }}
-              accessibilityLabel={t('explore.like')}
-              style={({ pressed }) => [styles.like, pressed && styles.pressed]}>
-              <Ionicons
-                name={has(item.id) ? 'heart' : 'heart-outline'}
-                size={18}
-                color={has(item.id) ? '#E5484D' : theme.textSecondary}
-              />
-              <ThemedText type="small" themeColor="textSecondary">
-                {item.likes}
-              </ThemedText>
-            </Pressable>
-          </View>
-        </ThemedView>
-      ))}
-    </Screen>
+          </SafeAreaView>
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  sortRow: {
+  root: { flex: 1, backgroundColor: '#000' },
+  chipsWrap: { position: 'absolute', top: 0, left: 0, right: 0, alignItems: 'center' },
+  chips: {
     flexDirection: 'row',
     gap: Spacing.two,
+    marginTop: Spacing.two,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderRadius: Spacing.five,
+    padding: 4,
   },
-  empty: {
-    alignItems: 'center',
-    gap: Spacing.two,
-    padding: Spacing.five,
-    borderRadius: Spacing.four,
-  },
-  emptyText: {
-    textAlign: 'center',
-  },
-  card: {
-    gap: Spacing.two,
-    padding: Spacing.three,
-    borderRadius: Spacing.four,
-  },
-  posterClipped: { overflow: 'hidden' },
-  poster: {
-    width: '100%',
-    aspectRatio: 16 / 9,
-    borderRadius: Spacing.three,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  posterClip: {
-    width: '100%',
-    aspectRatio: 16 / 9,
-    borderRadius: Spacing.three,
-    overflow: 'hidden',
-    backgroundColor: '#000',
-  },
-  durationTag: {
-    position: 'absolute',
-    right: Spacing.two,
-    bottom: Spacing.two,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 2,
-    borderRadius: Spacing.two,
-  },
-  durationText: {
-    color: '#ffffff',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  meta: {
-    flex: 1,
-    gap: Spacing.one,
-  },
-  like: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.one,
-    paddingHorizontal: Spacing.two,
+  chip: {
+    paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.one,
+    borderRadius: Spacing.five,
   },
-  remix: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.two,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.four,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  pressed: {
-    opacity: 0.6,
-  },
+  chipActive: { backgroundColor: 'rgba(255,255,255,0.92)' },
+  chipText: { color: '#ffffff' },
+  chipTextActive: { color: '#000000' },
 });
