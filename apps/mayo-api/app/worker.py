@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import math
 import time
 import logging
 import os
@@ -94,6 +95,42 @@ def _eta_clip_seconds() -> float:
     return settings.tick_seconds
 
 
+def _probe_seconds_sync(key: str) -> float:
+    """Measured duration (s) of a stored video via ffprobe; 0.0 on any failure."""
+    from .storage import get_storage
+
+    store = get_storage()
+    if not key or not store.exists(key):
+        return 0.0
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".mp4") as fh:
+            fh.write(store.read(key))
+            fh.flush()
+            out = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                 "-of", "default=noprint_wrappers=1:nokey=1", fh.name],
+                capture_output=True, timeout=60,
+            )
+        return max(0.0, float(out.stdout.strip() or 0))
+    except Exception:
+        return 0.0
+
+
+async def _probe(key: str | None) -> float:
+    if not key:
+        return 0.0
+    return await asyncio.to_thread(_probe_seconds_sync, key)
+
+
+def _extra_clips_needed(requested: float, measured: float, have: int, cap: int) -> int:
+    """How many more clips to render so the film reaches `requested` seconds,
+    based on the measured average clip length; bounded by the scene cap."""
+    if requested <= 0 or measured <= 0 or measured + 0.25 >= requested or have >= cap:
+        return 0
+    avg = measured / max(1, have)
+    return max(0, min(math.ceil((requested - measured) / max(avg, 0.1)), cap - have))
+
+
 async def _run(job_id: str) -> None:
     job = await jobs.patch(job_id, status="generating")
     if job is None:
@@ -134,11 +171,52 @@ async def _run(job_id: str) -> None:
     # Stitch the real clips into one film (no-op for the mock backend).
     film_key = await _stitch(job_id, clip_keys)
 
-    # Real duration = number of rendered clips × clip length (frames / fps).
+    # VERIFY the result length against the request: clips can come out shorter
+    # than planned (provider/backend variance), so probe the stitched film and,
+    # while it falls short, render more scenes and re-stitch — the requested
+    # duration is a floor, not a hope. Bounded by max_scenes and 5 top-up rounds.
     store = get_storage()
+    measured = await _probe(film_key)
+    requested = float(job.seconds or 0)
+    rounds = 0
+    while film_key and rounds < 5:
+        extra = _extra_clips_needed(requested, measured, len(clip_keys), settings.max_scenes)
+        if extra <= 0:
+            break
+        rounds += 1
+        total += extra
+        await jobs.patch(job_id, scenesTotal=total)
+        for _ in range(extra):
+            index = len(clip_keys)
+            scene_prompt = (
+                job.scenePrompts[index % len(job.scenePrompts)]
+                if job.scenePrompts
+                else job.title
+            )
+            try:
+                result = await backend.generate_scene(scene_prompt, index)
+            except Exception:
+                logger.exception("top-up scene %s failed for job %s", index, job_id)
+                rounds = 5  # keep what we have instead of failing the job
+                break
+            clip_keys.append(result.media_key)
+            if await jobs.get(job_id) is None:
+                return  # cancelled/deleted mid-extension
+            if store.exists(result.media_key):
+                await jobs.append_scene_url(job_id, f"/v1/media/{result.media_key}")
+            await jobs.patch(job_id, scenesDone=len(clip_keys))
+        film_key = await _stitch(job_id, clip_keys) or film_key
+        measured = await _probe(film_key)
+
+    # Duration label: prefer the MEASURED stitched length; fall back to the
+    # configured clips × clip-length estimate when probing isn't possible.
     real_clips = sum(1 for k in clip_keys if store.exists(k))
     clip_seconds = settings.comfy_frames / max(1, settings.comfy_fps)
-    duration_seconds = round(real_clips * clip_seconds) if real_clips else None
+    duration_seconds = (
+        round(measured)
+        if measured > 0
+        else (round(real_clips * clip_seconds) if real_clips else None)
+    )
 
     done = await jobs.patch(job_id, status="done", etaMin=None)
     if done is not None:
