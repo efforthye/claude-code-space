@@ -205,6 +205,8 @@ const en: Dict = {
   'director.reviseTitle': 'Revise with AI Director',
   'director.reviseGreeting':
     "Loaded '{title}'. Tell me what to change — a scene, the mood, the pacing — and I'll rework the screenplay; then Generate renders the new cut.",
+  'director.templateGreeting':
+    "Loaded the template '{title}'. Tell me your twist — subject, mood, style — and I'll craft your own version of it.",
   'detail.reviseWithDirector': 'Revise with AI Director',
   'director.pickTitle': 'Choose your director',
   'director.pickHint': 'The AI that writes your screenplay. Claude is best for Korean.',
@@ -556,6 +558,8 @@ const ko: Dict = {
   'director.reviseTitle': 'AI 감독과 수정',
   'director.reviseGreeting':
     "'{title}' 영상을 불러왔어요. 바꾸고 싶은 걸 말씀해 주세요 — 특정 장면, 분위기, 페이스 뭐든요. 각본을 고쳐드리고, 생성을 누르면 수정판이 새로 렌더링됩니다.",
+  'director.templateGreeting':
+    "'{title}' 템플릿을 불러왔어요. 어떤 변형을 원하는지 말씀해 주세요 — 주인공, 분위기, 스타일 뭐든요. 이 구성을 바탕으로 나만의 버전을 만들어드릴게요.",
   'detail.reviseWithDirector': 'AI 감독과 수정',
   'director.pickTitle': '감독 모델 선택',
   'director.pickHint': '각본을 쓰는 AI예요. 한국어는 Claude가 가장 자연스러워요.',

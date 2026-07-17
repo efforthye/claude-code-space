@@ -53,3 +53,42 @@ def test_explore_endpoint_returns_list_and_validates_sort():
 
 def test_publish_unknown_video_404():
     assert client.post("/v1/explore", json={"videoId": "nope"}).status_code == 404
+
+
+def test_ranking_engagement_ordering_and_time_decay():
+    """ADR 0015: comments > likes > views in weight; old winners decay."""
+    from app.schemas import ExploreItem
+
+    def item(iid: str, likes=0, comm=0, views=0, age_h=0.0):
+        import time as _t
+
+        return ExploreItem(
+            id=iid, title=iid, prompt=iid, author="@t", likes=likes,
+            durationLabel="0:02", accent="#000", tierLabel="Local",
+            comments=comm, views=views, createdAt=_t.time() - age_h * 3600,
+        )
+
+    score = ExploreStore._score
+    # deeper engagement outweighs shallower at equal age
+    assert score(item("c", comm=2)) > score(item("l", likes=2)) > score(item("v", views=2))
+    # a week-old heavily-liked item loses to a fresh, mildly-engaged one
+    old_winner = item("old", likes=10, age_h=24 * 7)
+    fresh = item("new", likes=1, age_h=1)
+    assert score(fresh) > score(old_winner)
+
+
+def test_view_ping_and_recipe_on_published_item():
+    from app import db
+
+    db.replace_kind("explore", [])
+    db.replace_kind("explore_comment", [])
+    store = ExploreStore()
+    video = _video("t").model_copy(
+        update={"scenePrompts": ["scene one"], "stylePrompt": "watercolor, a tabby cat"}
+    )
+    item = asyncio.run(store.publish(video, "prompt t"))
+    assert item.scenePrompts == ["scene one"]  # recipe published for template reuse
+    assert item.stylePrompt == "watercolor, a tabby cat"
+    assert item.createdAt > 0
+    viewed = asyncio.run(store.view(item.id))
+    assert viewed is not None and viewed.views == 1

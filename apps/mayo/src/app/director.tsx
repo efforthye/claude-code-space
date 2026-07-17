@@ -22,6 +22,7 @@ import {
   createStoryboard,
   directorChat,
   getDirectors,
+  getExploreItem,
   getSettings,
   getStoryboard,
   getVideo,
@@ -66,7 +67,12 @@ export default function DirectorScreen() {
   const { t } = useI18n();
   const toast = useToast();
   const { defaultTierId } = useSettings();
-  const params = useLocalSearchParams<{ seconds?: string; tier?: string; videoId?: string }>();
+  const params = useLocalSearchParams<{
+    seconds?: string;
+    tier?: string;
+    videoId?: string;
+    templateId?: string;
+  }>();
   // Adjustable in-chat: the director replans against whatever is current.
   const [seconds, setSeconds] = useState(Math.max(1, parseInt(params.seconds ?? '', 10) || 60));
   const [tier, setTier] = useState(params.tier || defaultTierId);
@@ -105,6 +111,34 @@ export default function DirectorScreen() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.videoId]);
+
+  // TEMPLATE MODE: opened from a reel's "use this template" — load the public
+  // creation's recipe (scenes + style) as hidden context so the user can make
+  // their own variation of it.
+  useEffect(() => {
+    if (!params.templateId) return;
+    let alive = true;
+    getExploreItem(params.templateId)
+      .then((item) => {
+        if (!alive) return;
+        const scenes = (item.scenePrompts ?? []).map((p, i) => `${i + 1}. ${p}`).join('\n');
+        const context =
+          `${HIDDEN_PREFIX} 커뮤니티 템플릿을 참고해 새 영상을 만듭니다. 템플릿 제목: ${item.title}\n` +
+          (item.prompt ? `템플릿 프롬프트: ${item.prompt}\n` : '') +
+          (item.stylePrompt ? `템플릿 스타일: ${item.stylePrompt}\n` : '') +
+          (scenes ? `템플릿 씬 구성:\n${scenes}\n` : '') +
+          '이 구성을 출발점으로 삼되, 사용자가 말하는 취향/변형을 반영해 새 screenplay를 만들어주세요.';
+        setMessages([
+          { role: 'user', content: context },
+          { role: 'director', content: t('director.templateGreeting', { title: item.title }) },
+        ]);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.templateId]);
 
   // Lift the input above the keyboard ourselves — KeyboardAvoidingView is
   // unreliable inside a modal (its offset math is off vs the modal's top gap),

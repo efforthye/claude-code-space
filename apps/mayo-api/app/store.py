@@ -203,6 +203,7 @@ class LibraryStore:
             url=f"/v1/media/{film_key}" if film_key else None,
             prompt=job.title,
             scenePrompts=job.scenePrompts,
+            stylePrompt=job.stylePrompt,
         )
         async with self._lock:
             self._videos[video.id] = video
@@ -360,9 +361,16 @@ class ExploreStore:
         self._items: dict[str, ExploreItem] = {}
         self._comments: dict[str, list[ExploreComment]] = {}
         self._lock = asyncio.Lock()
-        for raw in db.load("explore"):
+        records = db.load("explore")
+        for idx, raw in enumerate(records):
             try:
                 item = ExploreItem.model_validate(raw)
+                if not item.createdAt:
+                    # Legacy record without a timestamp: stagger by stored order
+                    # (newest last) so the decayed ranking keeps their order.
+                    item = item.model_copy(
+                        update={"createdAt": time.time() - (len(records) - idx) * 3600}
+                    )
                 self._items[item.id] = item
             except Exception:
                 continue
@@ -396,17 +404,35 @@ class ExploreStore:
         if sort == "latest":
             items.reverse()  # dict preserves insertion order; newest last
         else:
-            # Popular = engagement + freshness: likes weigh most, comments count
-            # double-ish, and newer items get a decaying boost so the feed isn't
-            # frozen by early winners (position n from the end ~ freshness).
-            total = len(items)
-            def score(pair: tuple[int, ExploreItem]) -> float:
-                idx, e = pair
-                freshness = (idx + 1) / total * 3 if total else 0  # newest -> +3
-                return e.likes * 3 + e.comments * 2 + freshness
-            ranked = sorted(enumerate(items), key=score, reverse=True)
-            items = [e for _, e in ranked]
+            items.sort(key=self._score, reverse=True)
         return items
+
+    @staticmethod
+    def _score(e: ExploreItem, now: float | None = None) -> float:
+        """Popular ranking (ADR 0015) = engagement value × time decay.
+
+        Signal weights follow the industrial short-video ordering (deep actions
+        outweigh shallow ones: comments > likes > views — TikTok's ranking is a
+        weighted sum of predicted engagement probabilities), and the decay is
+        Hacker News' gravity form score/(age+2)^g with a softer g for a small
+        feed. The +1 numerator floor lets brand-new zero-engagement items
+        surface near the top while they're fresh, then fade unless they earn
+        engagement — no more feed frozen by early winners.
+        """
+        engagement = e.likes * 3.0 + e.comments * 5.0 + e.views * 0.3
+        age_hours = max(0.0, ((now or time.time()) - (e.createdAt or 0)) / 3600)
+        return (engagement + 1.0) / (age_hours + 2.0) ** 1.5
+
+    async def view(self, item_id: str) -> Optional[ExploreItem]:
+        """Count a reel impression (the app pings when a reel becomes active)."""
+        async with self._lock:
+            item = self._items.get(item_id)
+            if not item:
+                return None
+            updated = item.model_copy(update={"views": item.views + 1})
+            self._items[item_id] = updated
+            self._persist()
+            return updated.model_copy()
 
     async def publish(self, video: Video, prompt: str, author: str = "@me") -> ExploreItem:
         item = ExploreItem(
@@ -420,6 +446,10 @@ class ExploreStore:
             tierLabel=video.tierLabel,
             url=video.url,
             createdLabel="just now",
+            createdAt=time.time(),
+            # Publish the recipe too — anyone can reuse this as a template.
+            scenePrompts=video.scenePrompts,
+            stylePrompt=video.stylePrompt,
         )
         async with self._lock:
             self._items[item.id] = item

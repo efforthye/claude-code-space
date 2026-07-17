@@ -20,7 +20,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
-import { addComment, getComments, getExplore, mediaUrl } from '@/api/client';
+import { addComment, getComments, getExplore, mediaUrl, viewExplore } from '@/api/client';
 import type { ExploreComment, ExploreItem, ExploreSort } from '@/api/types';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -90,7 +90,9 @@ export function ReelsFeed({
               height={size.h}
               active={index === activeIndex}
               onComment={() => setCommentsFor(item)}
-              onRemix={() => router.navigate({ pathname: '/', params: { seed: item.prompt } })}
+              // Template flow: open the director with this creation's full
+              // recipe (scenes + style) preloaded as context.
+              onRemix={() => router.navigate({ pathname: '/director', params: { templateId: item.id } })}
             />
           )}
         />
@@ -142,6 +144,12 @@ function Reel({
     if (active) player.play();
     else player.pause();
   }, [active, player, uri]);
+
+  // Impression ping once per activation — the `views` ranking signal.
+  useEffect(() => {
+    if (!active) return;
+    viewExplore(item.id).catch(() => {});
+  }, [active, item.id]);
 
   return (
     <View style={{ width, height, backgroundColor: '#000' }}>

@@ -131,6 +131,7 @@ class Video(BaseModel):
     # ("2번 장면을 밤으로" -> updated screenplay -> re-render as a new video).
     prompt: Optional[str] = None
     scenePrompts: Optional[list[str]] = None
+    stylePrompt: Optional[str] = None  # consistency block used at render time
 
 
 class Storage(BaseModel):
@@ -176,6 +177,11 @@ class ExploreItem(BaseModel):
     url: Optional[str] = None  # playback path of the published film
     createdLabel: str = "just now"
     comments: int = 0  # comment count
+    views: int = 0  # reel impressions (app pings /view when a reel becomes active)
+    createdAt: float = 0.0  # unix seconds; drives the ranking's time decay
+    # Full recipe so anyone can REUSE this creation as a template in the director.
+    scenePrompts: Optional[list[str]] = None
+    stylePrompt: Optional[str] = None
 
 
 class ExploreComment(BaseModel):

@@ -49,6 +49,7 @@ export type Video = {
   // Generation recipe — lets the AI director load and revise this film.
   prompt?: string | null;
   scenePrompts?: string[] | null;
+  stylePrompt?: string | null;
 };
 
 export type Storage = {
@@ -101,6 +102,11 @@ export type ExploreItem = {
   url?: string | null;
   createdLabel?: string;
   comments?: number;
+  views?: number;
+  createdAt?: number;
+  // Full recipe — powers "use this template" in the director.
+  scenePrompts?: string[] | null;
+  stylePrompt?: string | null;
 };
 export type ExploreSort = 'popular' | 'latest';
 export type ExploreComment = { id: string; author: string; text: string; createdLabel?: string };

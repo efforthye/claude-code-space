@@ -213,6 +213,11 @@ export const getExplore = (sort: ExploreSort = 'popular') =>
   req<ExploreItem[]>(`/v1/explore?sort=${sort}`);
 export const publishToExplore = (videoId: string, prompt: string) =>
   req<ExploreItem>('/v1/explore', { method: 'POST', body: JSON.stringify({ videoId, prompt }) });
+export const getExploreItem = (id: string) =>
+  req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}`);
+// Reel impression ping — feeds the popular ranking's `views` signal (ADR 0015).
+export const viewExplore = (id: string) =>
+  req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/view`, { method: 'POST' });
 export const likeExplore = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/like`, { method: 'POST' });
 export const unlikeExplore = (id: string) =>

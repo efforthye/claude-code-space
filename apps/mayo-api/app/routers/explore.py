@@ -42,6 +42,24 @@ async def publish_explore(
     return await explore_store.publish(video, req.prompt, author=_author(x_mayo_session))
 
 
+@router.get("/{item_id}", response_model=ExploreItem)
+async def get_explore_item(item_id: str) -> ExploreItem:
+    """One item with its full recipe — powers the 'use this template' flow."""
+    for item in await explore_store.list("latest"):
+        if item.id == item_id:
+            return item
+    raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+
+
+@router.post("/{item_id}/view", response_model=ExploreItem)
+async def view_explore(item_id: str) -> ExploreItem:
+    """Reel impression ping — feeds the popular ranking's `views` signal."""
+    item = await explore_store.view(item_id)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+    return item
+
+
 @router.post("/{item_id}/like", response_model=ExploreItem)
 async def like_explore(item_id: str) -> ExploreItem:
     item = await explore_store.like(item_id)
