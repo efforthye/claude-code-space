@@ -15,7 +15,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TIERS } from '@/api/catalog';
-import { createJob, directorChat, getDirectors, getSettings, putSettings } from '@/api/client';
+import { createJob, directorChat, getDirectors, getSettings, getVideo, putSettings } from '@/api/client';
 import type {
   DirectorMessage,
   DirectorModel,
@@ -31,13 +31,17 @@ import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
 import { useI18n, useSettings } from '@/settings/settings';
 
+// Context messages carry the film being revised; they feed the model but stay
+// out of the visible transcript.
+const HIDDEN_PREFIX = '[영상 수정 컨텍스트]';
+
 export default function DirectorScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
   const toast = useToast();
   const { defaultTierId } = useSettings();
-  const params = useLocalSearchParams<{ seconds?: string; tier?: string }>();
+  const params = useLocalSearchParams<{ seconds?: string; tier?: string; videoId?: string }>();
   // Adjustable in-chat: the director replans against whatever is current.
   const [seconds, setSeconds] = useState(Math.max(1, parseInt(params.seconds ?? '', 10) || 60));
   const [tier, setTier] = useState(params.tier || defaultTierId);
@@ -48,6 +52,34 @@ export default function DirectorScreen() {
   const [messages, setMessages] = useState<DirectorMessage[]>([
     { role: 'director', content: t('director.greeting') },
   ]);
+
+  // REVISION MODE: opened from a library video — load its scene recipe as hidden
+  // context so the user can say "2번 장면을 밤으로 바꿔줘" and the director
+  // revises the existing screenplay instead of starting from scratch.
+  const revising = !!params.videoId;
+  useEffect(() => {
+    if (!params.videoId) return;
+    let alive = true;
+    getVideo(params.videoId)
+      .then((v) => {
+        if (!alive) return;
+        const scenes = (v.scenePrompts ?? []).map((p, i) => `${i + 1}. ${p}`).join('\n');
+        const context =
+          `${HIDDEN_PREFIX} 기존 영상을 수정합니다. 제목: ${v.title}\n` +
+          (v.prompt ? `원본 프롬프트: ${v.prompt}\n` : '') +
+          (scenes ? `기존 씬 구성:\n${scenes}\n` : '') +
+          '사용자가 말하는 수정사항을 반영해 이 구성을 바탕으로 screenplay를 갱신하세요.';
+        setMessages([
+          { role: 'user', content: context },
+          { role: 'director', content: t('director.reviseGreeting', { title: v.title }) },
+        ]);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.videoId]);
 
   // Lift the input above the keyboard ourselves — KeyboardAvoidingView is
   // unreliable inside a modal (its offset math is off vs the modal's top gap),
@@ -119,7 +151,7 @@ export default function DirectorScreen() {
         <View style={styles.topBar}>
           <View style={styles.titleWrap}>
             <Ionicons name="film-outline" size={20} color={theme.text} />
-            <ThemedText type="smallBold">{t('director.title')}</ThemedText>
+            <ThemedText type="smallBold">{revising ? t('director.reviseTitle') : t('director.title')}</ThemedText>
           </View>
           <View style={styles.topRight}>
             <DirectorPicker />
@@ -171,6 +203,7 @@ export default function DirectorScreen() {
             showsVerticalScrollIndicator={false}
             onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}>
             {messages.map((m, i) => {
+              if (m.content.startsWith(HIDDEN_PREFIX)) return null;
               const mine = m.role === 'user';
               return (
                 <View

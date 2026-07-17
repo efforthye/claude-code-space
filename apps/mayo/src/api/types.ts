@@ -42,6 +42,9 @@ export type Video = {
   // backend produced one; null/absent for mock/metadata-only videos.
   url?: string | null;
   youtubeUrl?: string | null;
+  // Generation recipe — lets the AI director load and revise this film.
+  prompt?: string | null;
+  scenePrompts?: string[] | null;
 };
 
 export type Storage = {

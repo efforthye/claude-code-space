@@ -104,6 +104,10 @@ class Video(BaseModel):
     url: Optional[str] = None
     # Where this video was published (e.g. https://youtu.be/<id>), once it was.
     youtubeUrl: Optional[str] = None
+    # Generation recipe — kept so the AI director can load and REVISE this film
+    # ("2번 장면을 밤으로" -> updated screenplay -> re-render as a new video).
+    prompt: Optional[str] = None
+    scenePrompts: Optional[list[str]] = None
 
 
 class Storage(BaseModel):

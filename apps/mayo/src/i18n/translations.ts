@@ -193,6 +193,10 @@ const en: Dict = {
   'auth.invalidInput': 'Check the email format and password length (8+).',
   'auth.emailProvider': 'Email',
 
+  'director.reviseTitle': 'Revise with AI Director',
+  'director.reviseGreeting':
+    "Loaded '{title}'. Tell me what to change — a scene, the mood, the pacing — and I'll rework the screenplay; then Generate renders the new cut.",
+  'detail.reviseWithDirector': 'Revise with AI Director',
   'director.pickTitle': 'Choose your director',
   'director.pickHint': 'The AI that writes your screenplay. Claude is best for Korean.',
   'director.backendMock': 'Basic',
@@ -530,6 +534,10 @@ const ko: Dict = {
   'auth.invalidInput': '이메일 형식과 비밀번호 길이(8자 이상)를 확인해 주세요.',
   'auth.emailProvider': '이메일',
 
+  'director.reviseTitle': 'AI 감독과 수정',
+  'director.reviseGreeting':
+    "'{title}' 영상을 불러왔어요. 바꾸고 싶은 걸 말씀해 주세요 — 특정 장면, 분위기, 페이스 뭐든요. 각본을 고쳐드리고, 생성을 누르면 수정판이 새로 렌더링됩니다.",
+  'detail.reviseWithDirector': 'AI 감독과 수정',
   'director.pickTitle': '감독 모델 선택',
   'director.pickHint': '각본을 쓰는 AI예요. 한국어는 Claude가 가장 자연스러워요.',
   'director.backendMock': '기본',

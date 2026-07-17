@@ -225,6 +225,17 @@ export default function VideoDetailScreen() {
             </View>
 
             <SecondaryButton
+              icon="film-outline"
+              label={t('detail.reviseWithDirector')}
+              color={theme.text}
+              border={theme.backgroundSelected}
+              onPress={() =>
+                router.push({ pathname: '/director', params: { videoId: video.id } })
+              }
+              full
+            />
+
+            <SecondaryButton
               icon="compass-outline"
               label={t('detail.shareToExplore')}
               color={theme.text}

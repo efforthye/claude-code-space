@@ -181,6 +181,8 @@ class LibraryStore:
             scenes=job.scenesTotal,
             createdLabel="just now",
             url=f"/v1/media/{film_key}" if film_key else None,
+            prompt=job.title,
+            scenePrompts=job.scenePrompts,
         )
         async with self._lock:
             self._videos[video.id] = video
