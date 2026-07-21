@@ -62,6 +62,17 @@ Updated whenever pages are added/renamed or a service's status changes.
   manual webhook signature verification; plan granted to the signed-in account), mobile IAP deferred
   to a dev build.
 
+- [[0013-mayo-sqlite-database]] — SQLite doc-store (`app/db.py`) replaces JSON files; kinds:
+  auth/video/explore/…; legacy JSON auto-migrated.
+- [[0014-character-consistency-and-credits]] — Character/style consistency anchoring across scenes
+  + credit charging with pro-rata refunds on cancel.
+- [[0015-reels-ranking-and-templates]] — Research-grounded reels ranking (likes/comments/shares/
+  views with time decay) + template remix from published recipes.
+- [[0016-admin-console]] — Admin console (`/v1/admin`, MAYO_ADMIN_EMAILS): stats, user board,
+  credit/plan controls, moderation; app `/admin` screen; premium gate bypass for admins.
+- [[0017-pricing-credits-subscriptions]] — **Pricing**: hybrid credits + subscriptions (Free/Pro
+  ₩9,900/Studio ₩29,900 + credit packs, BYOK free-of-credits); launch numbers to revisit.
+
 ## Incidents
 _(none yet — postmortems)_
 

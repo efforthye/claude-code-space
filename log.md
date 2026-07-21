@@ -158,3 +158,5 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   Telegram, WhatsApp, search bots) — share links now unfurl with the reel's
   poster frame. New env names: MAYO_PUBLIC_API_BASE / MAYO_PUBLIC_WEB_BASE.
 - Verified: pytest 109 passed (OG page assertions added to the public-reels test).
+
+## [2026-07-21] decision | ADR 0017 — pricing: hybrid credits + subscriptions (Free/Pro/Studio + packs)
