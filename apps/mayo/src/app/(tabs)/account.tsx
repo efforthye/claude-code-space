@@ -30,13 +30,14 @@ import { useFavorites } from '@/explore/favorites';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
 import { usePayments } from '@/payments/context';
-import { useI18n } from '@/settings/settings';
+import { useI18n, useSettings } from '@/settings/settings';
 
 export default function MyScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useI18n();
   const toast = useToast();
+  const { previewAsUser } = useSettings();
   const { user, signOut, refreshUser } = useAuth();
   const { entitlement } = usePayments();
   const { favorites } = useFavorites();
@@ -278,7 +279,7 @@ export default function MyScreen() {
 
       {/* Settings + billing */}
       <ThemedView type="backgroundElement" style={styles.rows}>
-        {adminStats ? (
+        {adminStats && !previewAsUser ? (
           <Row
             icon="shield-checkmark-outline"
             label={t('admin.title')}

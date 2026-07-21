@@ -12,11 +12,12 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { ReelsFeed } from '@/explore/reels-feed';
 import { useQuery } from '@/hooks/use-query';
-import { useI18n } from '@/settings/settings';
+import { useI18n, useSettings } from '@/settings/settings';
 
 export default function ExploreScreen() {
   const { t } = useI18n();
   const { user } = useAuth();
+  const { previewAsUser } = useSettings();
   const [sort, setSort] = useState<'popular' | 'latest'>('popular');
   // PROD RULE: sample seeding is a dev tool — admins only (server 403s others).
   const { data: adminStats } = useQuery(getAdminStats, { enabled: !!user, deps: [user?.id] });
@@ -25,7 +26,7 @@ export default function ExploreScreen() {
     <View style={styles.root}>
       <ReelsFeed
         mode={sort}
-        seedable={!!adminStats}
+        seedable={!!adminStats && !previewAsUser}
         overlay={
           <SafeAreaView edges={['top']} style={styles.chipsWrap} pointerEvents="box-none">
             <View style={styles.chips}>

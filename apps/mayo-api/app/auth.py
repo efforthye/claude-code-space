@@ -248,10 +248,24 @@ def to_public(user: dict) -> AuthUser:
     )
 
 
+def is_admin_user(user: dict | None) -> bool:
+    allowed = [e.strip().lower() for e in settings.admin_emails if e.strip()]
+    return bool(user) and user.get("email", "").lower() in allowed
+
+
 def paid_user_or_none(session_token: str | None) -> Optional[dict]:
     """The session's user if they're on a paid plan, else None."""
     user = store.user_for_session(session_token or "")
     if user and user.get("planId", "free") != "free":
+        return user
+    return None
+
+
+def premium_user_or_none(session_token: str | None) -> Optional[dict]:
+    """Who may use PAID features: a paying plan, or an admin account (the owner
+    tests everything without buying their own product). Free users: None."""
+    user = store.user_for_session(session_token or "")
+    if user and (user.get("planId", "free") != "free" or is_admin_user(user)):
         return user
     return None
 

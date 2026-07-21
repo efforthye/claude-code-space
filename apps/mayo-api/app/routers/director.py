@@ -10,7 +10,7 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException, status
 
 from .. import runtime, storyboard
-from ..auth import paid_user_or_none, store as users
+from ..auth import premium_user_or_none, store as users
 from ..config import settings
 from ..planner import DirectorChatRequest, DirectorTurn, get_scenario_planner
 from ..schemas import Storyboard, StoryboardRequest
@@ -33,7 +33,7 @@ async def chat(
         settings.premium_gating
         and runtime.planner_backend() == "claude"
         and not own_key
-        and paid_user_or_none(x_mayo_session) is None
+        and premium_user_or_none(x_mayo_session) is None
     ):
         raise HTTPException(
             status.HTTP_402_PAYMENT_REQUIRED,
@@ -56,7 +56,7 @@ async def create_storyboard(
     if (
         settings.premium_gating
         and runtime.generation_backend() == "external"
-        and paid_user_or_none(x_mayo_session) is None
+        and premium_user_or_none(x_mayo_session) is None
     ):
         raise HTTPException(
             status.HTTP_402_PAYMENT_REQUIRED,

@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException, status
 
 from .. import catalog, runtime
-from ..auth import paid_user_or_none
+from ..auth import premium_user_or_none
 from ..config import settings
 from ..schemas import CreateJobRequest, Estimate, Job
 from ..store import jobs as job_store
@@ -63,7 +63,7 @@ async def create_job(
     if (
         settings.premium_gating
         and runtime.generation_backend() == "external"
-        and paid_user_or_none(x_mayo_session) is None
+        and premium_user_or_none(x_mayo_session) is None
     ):
         raise HTTPException(
             status.HTTP_402_PAYMENT_REQUIRED,

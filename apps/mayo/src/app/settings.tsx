@@ -14,6 +14,7 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
+import { useToast } from '@/components/toast';
 import { useI18n, useSettings, type ThemeMode } from '@/settings/settings';
 import { type Lang } from '@/i18n/translations';
 
@@ -36,7 +37,10 @@ export default function SettingsScreen() {
     setExploreAutoplay,
     notifyOnDone,
     setNotifyOnDone,
+    previewAsUser,
+    setPreviewAsUser,
   } = useSettings();
+  const toast = useToast();
   const { user } = useAuth();
 
   const { data: health, error: healthError } = useQuery(getHealth, {
@@ -47,7 +51,10 @@ export default function SettingsScreen() {
   // PROD RULE: the mock ("fast preview") backend is a dev tool — only admins
   // see the chip (the server 403s this probe for everyone else).
   const { data: adminStats } = useQuery(getAdminStats, { enabled: !!user, deps: [user?.id] });
-  const isAdmin = !!adminStats;
+  const realAdmin = !!adminStats;
+  const isAdmin = realAdmin && !previewAsUser;
+  // PAID GATE mirror of the server: paid plan OR (admin not previewing).
+  const premium = (user?.planId ?? 'free') !== 'free' || isAdmin;
   const [genOverride, setGenOverride] = useState<string | null>(null);
   const [byokOverride, setByokOverride] = useState<boolean | null>(null);
   const genBackend = genOverride ?? genSettings?.generationBackend ?? 'mock';
@@ -132,13 +139,30 @@ export default function SettingsScreen() {
             {t('account.defaultModelHint')}
           </ThemedText>
 
+          {realAdmin ? (
+            <>
+              <ThemedText type="smallBold">{t('admin.previewMode')}</ThemedText>
+              <View style={styles.row}>
+                <Chip label={t('admin.previewOff')} selected={!previewAsUser} onPress={() => setPreviewAsUser(false)} />
+                <Chip label={t('admin.previewOn')} selected={previewAsUser} onPress={() => setPreviewAsUser(true)} />
+              </View>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('admin.previewHint')}
+              </ThemedText>
+            </>
+          ) : null}
+
           <ThemedText type="smallBold">{t('account.generation')}</ThemedText>
           <View style={styles.row}>
             {isAdmin || genBackend === 'mock' ? (
               <Chip label={t('account.genFast')} selected={genBackend === 'mock'} onPress={() => chooseGen('mock')} />
             ) : null}
             <Chip label={t('account.genLocal')} selected={genBackend === 'comfy'} onPress={() => chooseGen('comfy')} />
-            <Chip label={t('account.genExternal')} selected={genBackend === 'external'} onPress={() => chooseGen('external')} />
+            <Chip
+              label={premium ? t('account.genExternal') : `${t('account.genExternal')} · ${t('common.paidTag')}`}
+              selected={genBackend === 'external'}
+              onPress={() => (premium ? chooseGen('external') : toast.show(t('common.premiumOnly')))}
+            />
           </View>
           <ThemedText type="small" themeColor="textSecondary">
             {genBackend === 'comfy'

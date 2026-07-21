@@ -21,6 +21,7 @@ import {
   createJob,
   createStoryboard,
   directorChat,
+  getAdminStats,
   getDirectors,
   getExploreItem,
   getSettings,
@@ -40,6 +41,7 @@ import type {
   Screenplay,
   Storyboard,
 } from '@/api/types';
+import { useAuth } from '@/auth/auth';
 import { useToast } from '@/components/toast';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -482,12 +484,18 @@ function DirectorPicker() {
   const theme = useTheme();
   const { t } = useI18n();
   const toast = useToast();
+  const { user } = useAuth();
+  const { previewAsUser } = useSettings();
   const [open, setOpen] = useState(false);
   const [sel, setSel] = useState<RuntimeSettings | null>(null);
   const [saving, setSaving] = useState(false);
 
   const { data: settings } = useQuery(() => getSettings());
   const { data: directors } = useQuery(() => getDirectors());
+  // PAID GATE: Claude directors are for paying users; admins pass too unless
+  // they preview as a normal user. (The server enforces this as well — 402.)
+  const { data: adminStats } = useQuery(getAdminStats, { enabled: !!user, deps: [user?.id] });
+  const premium = (user?.planId ?? 'free') !== 'free' || (!!adminStats && !previewAsUser);
 
   useEffect(() => {
     if (settings && !sel) setSel(settings);
@@ -502,6 +510,10 @@ function DirectorPicker() {
         : t('director.backendMock');
 
   const choose = async (next: PlannerBackend, model?: string) => {
+    if (next === 'claude' && !premium) {
+      toast.show(t('common.premiumOnly'));
+      return;
+    }
     if (!sel || !settings || saving) return; // wait for server state before writing
     const updated: RuntimeSettings = {
       ...sel,
@@ -561,7 +573,11 @@ function DirectorPicker() {
           {desc}
         </ThemedText>
       </View>
-      {isSel(b, model) ? <Ionicons name="checkmark-circle" size={20} color={theme.text} /> : null}
+      {b === 'claude' && !premium ? (
+        <Ionicons name="lock-closed-outline" size={18} color={theme.textSecondary} />
+      ) : isSel(b, model) ? (
+        <Ionicons name="checkmark-circle" size={20} color={theme.text} />
+      ) : null}
     </Pressable>
   );
 

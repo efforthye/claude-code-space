@@ -28,6 +28,9 @@ type SettingsValue = {
   setExploreAutoplay: (v: boolean) => void;
   notifyOnDone: boolean;
   setNotifyOnDone: (v: boolean) => void;
+  /** Admin-only: preview the app as a normal (non-admin, free) user. */
+  previewAsUser: boolean;
+  setPreviewAsUser: (v: boolean) => void;
   t: TFn;
 };
 
@@ -54,6 +57,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [apiKey, setApiKeyState] = useState<string>(DEFAULT_API_KEY);
   const [exploreAutoplay, setExploreAutoplayState] = useState<boolean>(false);
   const [notifyOnDone, setNotifyOnDoneState] = useState<boolean>(true);
+  const [previewAsUser, setPreviewAsUserState] = useState<boolean>(false);
 
   useEffect(() => {
     let active = true;
@@ -69,6 +73,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             apiKey?: string;
             exploreAutoplay?: boolean;
             notifyOnDone?: boolean;
+            previewAsUser?: boolean;
           };
           if (parsed.themeMode) setThemeModeState(parsed.themeMode);
           if (parsed.lang) setLangState(parsed.lang);
@@ -76,6 +81,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           if (typeof parsed.exploreAutoplay === 'boolean')
             setExploreAutoplayState(parsed.exploreAutoplay);
           if (typeof parsed.notifyOnDone === 'boolean') setNotifyOnDoneState(parsed.notifyOnDone);
+          if (typeof parsed.previewAsUser === 'boolean') setPreviewAsUserState(parsed.previewAsUser);
           if (parsed.apiUrl) {
             setApiUrlState(parsed.apiUrl);
             setApiBaseUrl(parsed.apiUrl); // apply to the API client on launch
@@ -102,6 +108,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     apiKey?: string;
     exploreAutoplay?: boolean;
     notifyOnDone?: boolean;
+    previewAsUser?: boolean;
   }) => {
     const data = {
       themeMode,
@@ -111,6 +118,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       apiKey,
       exploreAutoplay,
       notifyOnDone,
+      previewAsUser,
       ...next,
     };
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => {});
@@ -146,6 +154,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setNotifyOnDoneState(v);
     persist({ notifyOnDone: v });
   };
+  const setPreviewAsUser = (v: boolean) => {
+    setPreviewAsUserState(v);
+    persist({ previewAsUser: v });
+  };
 
   const scheme: Scheme = themeMode === 'system' ? (system === 'dark' ? 'dark' : 'light') : themeMode;
   const activeLang: ActiveLang = lang === 'system' ? deviceLang() : lang;
@@ -168,6 +180,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setExploreAutoplay,
     notifyOnDone,
     setNotifyOnDone,
+    previewAsUser,
+    setPreviewAsUser,
     t,
   };
 
