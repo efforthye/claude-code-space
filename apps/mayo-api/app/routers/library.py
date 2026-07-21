@@ -89,5 +89,8 @@ async def publish(
         await lib.set_youtube_url(video_id, yt_url)
         return PublishResult(accepted=True, videoId=yt_id, visibility=req.visibility, url=yt_url)
 
-    # Not connected / not configured — keep the previous no-op acceptance.
-    return PublishResult(accepted=True, videoId=video_id, visibility=req.visibility)
+    # PROD RULE: no fake successes — publishing REQUIRES a connected channel.
+    raise HTTPException(
+        status.HTTP_400_BAD_REQUEST,
+        detail="유튜브 채널 연결이 필요해요 — 게시 화면에서 연결한 뒤 다시 시도해주세요",
+    )

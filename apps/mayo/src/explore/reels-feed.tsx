@@ -37,7 +37,6 @@ import { ThemedText } from '@/components/themed-text';
 import { useToast } from '@/components/toast';
 import { Spacing } from '@/constants/theme';
 import { useFavorites } from '@/explore/favorites';
-import { useFollows } from '@/explore/follows';
 import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
 
@@ -146,7 +145,7 @@ export function ReelsFeed({
           <ThemedText type="small" style={styles.emptyText}>
             {t('reels.empty')}
           </ThemedText>
-          {mode !== 'liked' ? (
+          {mode !== 'liked' && seedable ? (
             <Pressable
               onPress={async () => {
                 if (seeding) return;
@@ -231,7 +230,6 @@ function Reel({
   const { t } = useI18n();
   const toast = useToast();
   const { has, toggle } = useFavorites();
-  const follows = useFollows();
   // Published reels stream from the credential-free public endpoint, so the
   // feed plays for signed-out mayo.im visitors too.
   const uri = item.url ? publicReelMediaUrl(item.id) : '';
@@ -332,13 +330,8 @@ function Reel({
           <ThemedText type="smallBold" style={styles.white}>
             {item.author}
           </ThemedText>
-          <Pressable
-            onPress={() => follows.toggle(item.author)}
-            style={[styles.followBtn, follows.isFollowing(item.author) && styles.followingBtn]}>
-            <ThemedText type="small" style={follows.isFollowing(item.author) ? styles.followingText : styles.followText}>
-              {follows.isFollowing(item.author) ? t('reels.following') : t('reels.follow')}
-            </ThemedText>
-          </Pressable>
+          {/* PROD RULE: the follow button is hidden until follows are server-backed
+              (they were device-local only — a fake social feature). */}
         </View>
         <ThemedText type="small" style={styles.white} numberOfLines={2}>
           {item.title}

@@ -90,14 +90,11 @@ def test_billing_products_and_validate():
     assert "pro" in ids and "studio" in ids
     assert "free" not in ids  # free isn't purchasable
 
+    # PROD RULE: receipt validation refuses (501) until real store verification
+    # exists — no fake entitlements. Plans come from Stripe checkout.
     pro = next(p for p in products if p["planId"] == "pro")
-    result = client.post(
-        "/v1/billing/validate", json={"productId": pro["id"], "platform": "mock"}
-    ).json()
-    assert result == {"entitled": True, "planId": "pro"}
-
-    bad = client.post("/v1/billing/validate", json={"productId": "im.mayo.nope.monthly"})
-    assert bad.status_code == 400
+    result = client.post("/v1/billing/validate", json={"productId": pro["id"], "platform": "mock"})
+    assert result.status_code == 501
 
 
 def test_extend_and_publish():
@@ -107,12 +104,14 @@ def test_extend_and_publish():
     extended = client.post(f"/v1/library/videos/{vid}/extend", json={"plan": "d7"}).json()
     assert extended["expiresInDays"] == before + 7
 
+    # PROD RULE: publishing without a connected YouTube channel is an honest 400,
+    # not a fake acceptance.
     pub = client.post(
         f"/v1/library/videos/{vid}/publish",
         json={"title": "My film", "visibility": "unlisted"},
-    ).json()
-    assert pub["accepted"] is True
-    assert pub["visibility"] == "unlisted"
+    )
+    assert pub.status_code == 400
+    assert "유튜브" in pub.json()["detail"]
 
 
 def test_library_and_jobs_are_scoped_per_user():

@@ -72,10 +72,11 @@ async def stripe_webhook(
 
 @router.post("/validate", response_model=ValidateResult)
 async def validate(req: ValidateRequest) -> ValidateResult:
-    # Seam for real receipt validation: a live impl verifies req.receipt with the
-    # App Store / Play Developer API, then records the entitlement against the
-    # user. Here it just maps the product id back to a plan.
-    plan_id = next((p.id for p in PLANS if f".{p.id}." in req.productId), None)
-    if plan_id is None:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown product '{req.productId}'")
-    return ValidateResult(entitled=True, planId=plan_id)
+    # PROD RULE: no fake successes. Until real App Store / Play receipt
+    # verification is wired (needs a store build — Expo Go can't do IAP), this
+    # endpoint refuses instead of pretending the receipt checked out. Plans are
+    # granted through the REAL path: Stripe card checkout + verified webhook.
+    raise HTTPException(
+        status.HTTP_501_NOT_IMPLEMENTED,
+        detail="store receipt validation is not live yet — purchase plans via card checkout",
+    )

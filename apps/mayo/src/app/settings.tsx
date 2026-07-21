@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TIERS } from '@/api/catalog';
-import { getHealth, getMyKeys, getSettings, putMyKeys, putSettings } from '@/api/client';
+import { getAdminStats, getHealth, getMyKeys, getSettings, putMyKeys, putSettings } from '@/api/client';
 import type { RuntimeSettings } from '@/api/types';
 import { useAuth } from '@/auth/auth';
 import { Chip } from '@/components/chip';
@@ -44,6 +44,10 @@ export default function SettingsScreen() {
     deps: [apiUrl],
   });
   const { data: genSettings } = useQuery(getSettings, { deps: [apiUrl] });
+  // PROD RULE: the mock ("fast preview") backend is a dev tool — only admins
+  // see the chip (the server 403s this probe for everyone else).
+  const { data: adminStats } = useQuery(getAdminStats, { enabled: !!user, deps: [user?.id] });
+  const isAdmin = !!adminStats;
   const [genOverride, setGenOverride] = useState<string | null>(null);
   const [byokOverride, setByokOverride] = useState<boolean | null>(null);
   const genBackend = genOverride ?? genSettings?.generationBackend ?? 'mock';
@@ -130,7 +134,9 @@ export default function SettingsScreen() {
 
           <ThemedText type="smallBold">{t('account.generation')}</ThemedText>
           <View style={styles.row}>
-            <Chip label={t('account.genFast')} selected={genBackend === 'mock'} onPress={() => chooseGen('mock')} />
+            {isAdmin || genBackend === 'mock' ? (
+              <Chip label={t('account.genFast')} selected={genBackend === 'mock'} onPress={() => chooseGen('mock')} />
+            ) : null}
             <Chip label={t('account.genLocal')} selected={genBackend === 'comfy'} onPress={() => chooseGen('comfy')} />
             <Chip label={t('account.genExternal')} selected={genBackend === 'external'} onPress={() => chooseGen('external')} />
           </View>

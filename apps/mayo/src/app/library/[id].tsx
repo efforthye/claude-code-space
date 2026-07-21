@@ -224,22 +224,15 @@ export default function VideoDetailScreen() {
               </Pressable>
             )}
 
-            <View style={styles.secondaryRow}>
-              <SecondaryButton
-                icon="download-outline"
-                label={downloading ? t('detail.downloading') : t('detail.download')}
-                color={theme.text}
-                border={theme.backgroundSelected}
-                onPress={download}
-              />
-              <SecondaryButton
-                icon="albums-outline"
-                label={t('detail.downloadClips', { n: video.scenes })}
-                color={theme.text}
-                border={theme.backgroundSelected}
-                onPress={() => toast.show(t('detail.clipsSoon'))}
-              />
-            </View>
+            {/* PROD RULE: no dead buttons — per-clip export returns when it's real. */}
+            <SecondaryButton
+              icon="download-outline"
+              label={downloading ? t('detail.downloading') : t('detail.download')}
+              color={theme.text}
+              border={theme.backgroundSelected}
+              onPress={download}
+              full
+            />
 
             <SecondaryButton
               icon="film-outline"
