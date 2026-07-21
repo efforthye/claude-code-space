@@ -32,6 +32,7 @@ import {
   thumbUrl,
 } from '@/api/client';
 import type {
+  Aspect,
   DirectorMessage,
   DirectorModel,
   PlannerBackend,
@@ -70,9 +71,11 @@ export default function DirectorScreen() {
   const params = useLocalSearchParams<{
     seconds?: string;
     tier?: string;
+    aspect?: string;
     videoId?: string;
     templateId?: string;
   }>();
+  const aspect = (params.aspect as Aspect | undefined) ?? '16:9';
   // Adjustable in-chat: the director replans against whatever is current.
   const [seconds, setSeconds] = useState(Math.max(1, parseInt(params.seconds ?? '', 10) || 60));
   const [tier, setTier] = useState(params.tier || defaultTierId);
@@ -229,6 +232,7 @@ export default function DirectorScreen() {
         prompt,
         seconds,
         tier,
+        aspect,
         scenePrompts: scenePrompts.length ? scenePrompts : undefined,
         ...(stylePrompt ? { stylePrompt } : {}),
       });

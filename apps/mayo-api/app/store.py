@@ -71,6 +71,7 @@ class JobStore:
         style_prompt: str = "",
         charged_credits: int | None = None,
         owner_id: str | None = None,
+        aspect: str = "16:9",
     ) -> Job:
         tier = tier_by_id(tier_id)
         title = (prompt.strip().splitlines()[0][:60] if prompt.strip() else "Untitled film")
@@ -94,6 +95,7 @@ class JobStore:
             scenePrompts=scene_prompts or None,
             stylePrompt=style_prompt or None,
             chargedCredits=charged_credits,
+            aspect=aspect,
         )
         async with self._lock:
             self._jobs[job.id] = job
@@ -202,6 +204,9 @@ class LibraryStore:
                 size_label = _fmt_size(len(get_storage().read(film_key)))
             except Exception:
                 pass  # metadata-only / storage hiccup — keep the placeholder
+        from .providers import size_for_aspect
+
+        size = size_for_aspect(job.aspect) if film_key else None
         video = Video(
             id=_new_id("v"),
             title=job.title,
@@ -209,7 +214,7 @@ class LibraryStore:
             sizeLabel=size_label,
             expiresInDays=14,
             accent=_ACCENTS[idx % len(_ACCENTS)],
-            resolution="512p" if film_key else "1080p",
+            resolution=f"{size[0]}×{size[1]}" if size else ("512p" if film_key else "1080p"),
             tierLabel=job.tierLabel or "Standard",
             scenes=job.scenesTotal,
             createdLabel="just now",

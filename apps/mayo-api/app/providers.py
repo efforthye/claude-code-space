@@ -41,6 +41,21 @@ class ModelBackend(ABC):
         """Render scene `index` for `prompt` (image → clip) and return its media."""
 
 
+# Aspect presets → render size. Dimensions are multiples of 8 (SD latent
+# requirement), sized around the ~512px sweet spot of AnimateLCM.
+ASPECT_SIZES: dict[str, tuple[int, int]] = {
+    "16:9": (640, 360),   # YouTube / landscape
+    "9:16": (360, 640),   # Shorts / Reels
+    "1:1": (512, 512),    # square
+    "4:5": (448, 560),    # portrait feed
+    "21:9": (768, 328),   # cinematic (~2.34:1, rounded to /8)
+}
+
+
+def size_for_aspect(aspect: str | None) -> tuple[int, int] | None:
+    return ASPECT_SIZES.get(aspect or "")
+
+
 class MockModelBackend(ModelBackend):
     """Timed stand-in — advances a scene per tick so progress is observable."""
 
@@ -51,7 +66,7 @@ class MockModelBackend(ModelBackend):
         return SceneResult(media_key=f"mock/{index:04d}.mp4")
 
 
-async def nano_banana_image(prompt: str) -> tuple[bytes, str]:
+async def nano_banana_image(prompt: str, aspect: str | None = None) -> tuple[bytes, str]:
     """Generate one still with **Nano Banana** (Google Gemini 2.5 Flash Image) via
     the REST `generateContent` endpoint. Returns (image_bytes, mime_type).
 
@@ -71,7 +86,7 @@ async def nano_banana_image(prompt: str) -> tuple[bytes, str]:
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
             "responseModalities": ["Image"],
-            "imageConfig": {"aspectRatio": settings.external_aspect_ratio},
+            "imageConfig": {"aspectRatio": aspect or settings.external_aspect_ratio},
         },
     }
     async with httpx.AsyncClient(timeout=120) as client:
@@ -145,6 +160,9 @@ class ExternalModelBackend(ModelBackend):
 
     id = "external"
 
+    def __init__(self, aspect: str | None = None) -> None:
+        self.aspect = aspect  # per-job output shape for the image stage
+
     async def generate_scene(self, prompt: str, index: int) -> SceneResult:  # pragma: no cover
         import httpx
 
@@ -152,7 +170,7 @@ class ExternalModelBackend(ModelBackend):
 
         image_bytes: bytes | None = None
         if settings.external_use_image_stage:
-            image_bytes, _mime = await nano_banana_image(prompt)
+            image_bytes, _mime = await nano_banana_image(prompt, aspect=self.aspect)
 
         url = await asyncio.to_thread(_higgsfield_video_sync, prompt, image_bytes)
         async with httpx.AsyncClient(timeout=settings.higgsfield_max_wait) as client:
@@ -177,10 +195,11 @@ class ComfyUIModelBackend(ModelBackend):
 
     id = "comfy"
 
-    def __init__(self, frames: int | None = None) -> None:
-        # Optional per-instance frame-count override — storyboard previews render
-        # a handful of frames instead of a full clip (see storyboard.py).
+    def __init__(self, frames: int | None = None, size: tuple[int, int] | None = None) -> None:
+        # Optional per-instance overrides: frame count (storyboard previews) and
+        # render size (per-job aspect ratio — the film really ships this shape).
         self.frames = frames
+        self.size = size
 
     def _workflow_path(self) -> str:
         path = settings.comfy_workflow
@@ -203,8 +222,9 @@ class ComfyUIModelBackend(ModelBackend):
             if "steps" in wf["3"]["inputs"]:
                 wf["3"]["inputs"]["steps"] = settings.comfy_steps
         if "5" in wf and "inputs" in wf["5"]:
-            wf["5"]["inputs"]["width"] = settings.comfy_width
-            wf["5"]["inputs"]["height"] = settings.comfy_height
+            width, height = self.size or (settings.comfy_width, settings.comfy_height)
+            wf["5"]["inputs"]["width"] = width
+            wf["5"]["inputs"]["height"] = height
             wf["5"]["inputs"]["batch_size"] = self.frames or settings.comfy_frames
         # Node "9" = VHS_VideoCombine — keep its frame_rate in sync so the clip
         # length is frames/fps (used for the real duration label).
@@ -259,14 +279,15 @@ class ComfyUIModelBackend(ModelBackend):
         return SceneResult(media_key=key)
 
 
-def get_model_backend() -> ModelBackend:
+def get_model_backend(aspect: str | None = None) -> ModelBackend:
     # Read the *runtime* backend so the app can switch mock <-> comfy live
-    # (falls back to the .env default via runtime.py).
+    # (falls back to the .env default via runtime.py). `aspect` carries the
+    # job's output shape into whichever backend renders it.
     from . import runtime
 
     backend = runtime.generation_backend()
     if backend == "comfy":
-        return ComfyUIModelBackend()
+        return ComfyUIModelBackend(size=size_for_aspect(aspect))
     if backend == "external":
-        return ExternalModelBackend()
+        return ExternalModelBackend(aspect=aspect)
     return MockModelBackend()

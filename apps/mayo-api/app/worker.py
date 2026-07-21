@@ -136,7 +136,7 @@ async def _run(job_id: str) -> None:
     if job is None:
         return
     total = job.scenesTotal
-    backend = get_model_backend()  # resolve per job so a live backend switch applies
+    backend = get_model_backend(job.aspect)  # per job: live backend switch + output shape
 
     clip_keys: list[str] = []
     start_index = job.scenesDone

@@ -92,6 +92,7 @@ async def create_job(
         style_prompt=req.stylePrompt,
         charged_credits=charge,
         owner_id=caller["id"] if caller else None,
+        aspect=req.aspect,
     )
     start_generation(job.id)
     return job

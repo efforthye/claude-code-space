@@ -61,6 +61,8 @@ export type Storage = {
 export type Estimate = { seconds: number; tier: string; credits: number };
 export type Health = { status: string; env: string; storage: string };
 
+// Output aspect ratio — the film really renders at this shape.
+export type Aspect = '16:9' | '9:16' | '1:1' | '4:5' | '21:9';
 export type CreateJobRequest = {
   prompt: string;
   seconds: number;
@@ -69,6 +71,7 @@ export type CreateJobRequest = {
   // Style + character-sheet block repeated into every scene render so recurring
   // characters keep the same look across independently generated clips.
   stylePrompt?: string;
+  aspect?: Aspect;
 };
 export type RuntimeSettings = {
   generationBackend: string;

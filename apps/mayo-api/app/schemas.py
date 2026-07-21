@@ -75,6 +75,8 @@ class Job(BaseModel):
     stylePrompt: Optional[str] = None
     # Credits charged at creation (refunded pro-rata on cancel).
     chargedCredits: Optional[int] = None
+    # Output aspect ratio the scenes render at (see CreateJobRequest.aspect).
+    aspect: str = "16:9"
 
 
 class CreateJobRequest(BaseModel):
@@ -86,6 +88,9 @@ class CreateJobRequest(BaseModel):
     scenePrompts: list[str] = Field(default_factory=list)
     # Style + character-sheet block applied to every scene for visual consistency.
     stylePrompt: str = Field(default="", max_length=1500)
+    # Output aspect ratio — the film really renders at this shape (shorts 9:16,
+    # square 1:1, YouTube 16:9, portrait 4:5, cinema 21:9).
+    aspect: Literal["16:9", "9:16", "1:1", "4:5", "21:9"] = "16:9"
 
 
 class Estimate(BaseModel):

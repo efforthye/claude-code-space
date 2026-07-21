@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react
 
 import { estimateCredits, formatDuration, useCatalog } from '@/api/catalog';
 import { ApiError, createJob, getSettings } from '@/api/client';
+import type { Aspect } from '@/api/types';
 import { useQuery } from '@/hooks/use-query';
 import { Chip } from '@/components/chip';
 import { Screen } from '@/components/screen';
@@ -33,6 +34,7 @@ export default function CreateScreen() {
   }, [seed]);
   const [seconds, setSeconds] = useState(60);
   const [tierId, setTierId] = useState(defaultTierId);
+  const [aspect, setAspect] = useState<Aspect>('16:9');
   const [customMode, setCustomMode] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState<Unit>('min');
@@ -50,12 +52,12 @@ export default function CreateScreen() {
     try {
       let job;
       try {
-        job = await createJob({ prompt: title, seconds, tier: tier.id });
+        job = await createJob({ prompt: title, seconds, tier: tier.id, aspect });
       } catch (e) {
         // Transient network blip (tunnel/API restarting) — retry once before failing.
         if (e instanceof ApiError && e.status === 0) {
           await new Promise((r) => setTimeout(r, 1500));
-          job = await createJob({ prompt: title, seconds, tier: tier.id });
+          job = await createJob({ prompt: title, seconds, tier: tier.id, aspect });
         } else {
           throw e;
         }
@@ -97,7 +99,7 @@ export default function CreateScreen() {
         onPress={() =>
           router.push({
             pathname: '/director',
-            params: { seconds: String(seconds), tier: tier.id },
+            params: { seconds: String(seconds), tier: tier.id, aspect },
           })
         }
         style={({ pressed }) => (pressed ? styles.directorPressed : undefined)}>
@@ -124,6 +126,22 @@ export default function CreateScreen() {
             selected={prompt === t(`create.example.${n}`)}
             onPress={() => setPrompt(t(`create.example.${n}`))}
           />
+        ))}
+      </View>
+
+      {/* Output shape — the film really renders at this aspect ratio. */}
+      <ThemedText type="smallBold">{t('create.aspect')}</ThemedText>
+      <View style={styles.row}>
+        {(
+          [
+            ['16:9', t('create.aspect.youtube')],
+            ['9:16', t('create.aspect.shorts')],
+            ['1:1', t('create.aspect.square')],
+            ['4:5', t('create.aspect.portrait')],
+            ['21:9', t('create.aspect.cinema')],
+          ] as [Aspect, string][]
+        ).map(([a, label]) => (
+          <Chip key={a} label={label} selected={aspect === a} onPress={() => setAspect(a)} />
         ))}
       </View>
 
