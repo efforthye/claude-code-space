@@ -15,6 +15,7 @@ import type {
   AdminUser,
   AuthUser,
   CreateJobRequest,
+  CreditPack,
   DirectorChatRequest,
   DirectorModel,
   DirectorTurn,
@@ -321,6 +322,10 @@ export const addComment = (id: string, text: string) =>
 // --- Billing (web card payments via Stripe Checkout) ---
 export const startCheckout = (planId: string) =>
   req<{ url: string }>('/v1/billing/checkout', { method: 'POST', body: JSON.stringify({ planId }) });
+// One-time credit packs (no subscription needed) — list + card checkout.
+export const getCreditPacks = () => req<CreditPack[]>('/v1/billing/packs');
+export const startPackCheckout = (packId: string) =>
+  req<{ url: string }>('/v1/billing/checkout', { method: 'POST', body: JSON.stringify({ packId }) });
 
 // --- YouTube publish (per-user OAuth) ---
 export const youtubeStatus = () =>

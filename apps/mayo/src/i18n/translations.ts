@@ -374,6 +374,11 @@ const en: Dict = {
   'plan.stayFree': 'Free',
   'plan.switchFree': 'Switch to Free',
   'plan.restore': 'Restore purchases',
+  'plan.monthlyCredits': '{n} credits every month',
+  'plan.packs': 'Credit packs',
+  'plan.packsHint': 'One-time purchase, no subscription needed — credits never expire and unlock paid features.',
+  'plan.packCredits': '{n} credits',
+  'plan.buyPack': 'Buy',
   'plan.purchasing': 'Processing…',
 
   'toast.published': 'Published to YouTube',
@@ -809,6 +814,11 @@ const ko: Dict = {
   'plan.stayFree': '무료',
   'plan.switchFree': '무료로 전환',
   'plan.restore': '구매 복원',
+  'plan.monthlyCredits': '매월 {n} 크레딧 지급',
+  'plan.packs': '크레딧 팩',
+  'plan.packsHint': '구독 없이 1회 구매 — 크레딧은 소멸되지 않고, 구매 즉시 유료 기능이 열려요.',
+  'plan.packCredits': '{n} 크레딧',
+  'plan.buyPack': '구매',
   'plan.purchasing': '처리 중…',
 
   'toast.published': '유튜브에 게시했어요',

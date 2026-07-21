@@ -137,6 +137,17 @@ class Settings:
     )
     stripe_price_pro: str = field(default_factory=lambda: os.getenv("STRIPE_PRICE_PRO", ""))
     stripe_price_studio: str = field(default_factory=lambda: os.getenv("STRIPE_PRICE_STUDIO", ""))
+    # One-time credit packs (mode=payment Prices) — purchasable WITHOUT any
+    # subscription; the webhook grants the credits (ADR 0017 v2).
+    stripe_price_pack_100: str = field(
+        default_factory=lambda: os.getenv("STRIPE_PRICE_PACK_100", "")
+    )
+    stripe_price_pack_300: str = field(
+        default_factory=lambda: os.getenv("STRIPE_PRICE_PACK_300", "")
+    )
+    stripe_price_pack_1000: str = field(
+        default_factory=lambda: os.getenv("STRIPE_PRICE_PACK_1000", "")
+    )
     checkout_success_url: str = field(
         default_factory=lambda: os.getenv(
             "MAYO_CHECKOUT_SUCCESS_URL", "https://mayo.im/plan?checkout=success"

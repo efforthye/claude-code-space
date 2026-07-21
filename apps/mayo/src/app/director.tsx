@@ -575,7 +575,8 @@ function DirectorPicker() {
   // PAID GATE: Claude directors are for paying users; admins pass too unless
   // they preview as a normal user. (The server enforces this as well — 402.)
   const { data: adminStats } = useQuery(getAdminStats, { enabled: !!user, deps: [user?.id] });
-  const premium = (user?.planId ?? 'free') !== 'free' || (!!adminStats && !previewAsUser);
+  const premium =
+    (user?.planId ?? 'free') !== 'free' || !!user?.premium || (!!adminStats && !previewAsUser);
 
   useEffect(() => {
     if (settings && !sel) setSel(settings);

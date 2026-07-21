@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 
-from .schemas import DirectorModel, Duration, ModelProvider, Plan, RetentionPlan, Tier
+from .schemas import CreditPack, DirectorModel, Duration, ModelProvider, Plan, RetentionPlan, Tier
 
 TIERS: list[Tier] = [
     Tier(id="draft", label="Draft", blurb="Fastest, cheapest models — good for rough cuts.", pricePerMin=6),
@@ -26,10 +26,19 @@ DURATIONS: list[Duration] = [
     Duration(id="h1", label="1 hr+", seconds=3600),
 ]
 
+# Pricing v2 (ADR 0017): subscriptions grant monthly credits; packs below are
+# one-time top-ups that need NO subscription. Subscription credits are the
+# better per-credit deal on purpose.
 PLANS: list[Plan] = [
     Plan(id="free", monthly=0, storageMb=300),
-    Plan(id="pro", monthly=19, storageMb=5_000),
-    Plan(id="studio", monthly=49, storageMb=50_000),
+    Plan(id="pro", monthly=24, storageMb=5_000, monthlyCredits=700),
+    Plan(id="studio", monthly=59, storageMb=50_000, monthlyCredits=2_500),
+]
+
+CREDIT_PACKS: list[CreditPack] = [
+    CreditPack(id="pack100", credits=100, usd=12),
+    CreditPack(id="pack300", credits=300, usd=30),
+    CreditPack(id="pack1000", credits=1_000, usd=85),
 ]
 
 RETENTION_PLANS: list[RetentionPlan] = [

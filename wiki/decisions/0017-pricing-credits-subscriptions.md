@@ -67,3 +67,31 @@ spend them only after upgrading OR when gating is relaxed for a promo).
    regulars.
 3. **Hybrid subscription + packs (chosen)** — industry standard for genAI video
    (Runway/Pika/Kling all do this); aligns revenue with cost.
+
+## v2 — 2026-07-21 (owner: "too cheap"; packs must not require a subscription)
+
+The v1 table above is superseded. **Implemented** prices (USD on Stripe; ₩
+shown approximate):
+
+| Plan | Price (월) | Monthly credits |
+|---|---|---|
+| Free | $0 | 100 signup grant (one-time) |
+| Pro | **$24 (~₩33,000)** | **700** |
+| Studio | **$59 (~₩81,000)** | **2,500** |
+
+**Credit packs — one-time, NO subscription required** (`GET /v1/billing/packs`,
+checkout `{packId}` → Stripe `mode=payment`, webhook grants):
+
+| Pack | Credits | Price |
+|---|---|---|
+| pack100 | 100 | $12 |
+| pack300 | 300 | $30 |
+| pack1000 | 1,000 | $85 |
+
+Buying any pack sets a lifetime `purchasedCredits` marker on the account —
+`premium_user_or_none` now passes **paid plan OR purchasedCredits > 0 OR
+admin**, so pay-as-you-go buyers use the Claude director / external generation
+without subscribing. Subscription checkout also grants the first month's
+credits at the webhook (renewal grants: wire `invoice.paid` later). Env names:
+`STRIPE_PRICE_PACK_100/300/1000`. Per-credit: Pro $0.034 / Studio $0.024 vs
+packs $0.085–0.12 — subscriptions stay the better deal by design.

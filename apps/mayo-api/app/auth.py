@@ -45,6 +45,9 @@ class AuthUser(BaseModel):
     credits: int = 0  # spendable generation credits
     # Every login method connected to this account (original + linked SNS).
     providers: list[str] = []
+    # Paid-capable: a paid plan OR any purchased credit pack — unlocks premium
+    # features (Claude director, external generation). ADR 0017 v2.
+    premium: bool = False
 
 
 class RegisterRequest(BaseModel):
@@ -230,6 +233,18 @@ class _Store:
         self.save()
         return user["credits"]
 
+    def add_purchased_credits(self, user_id: str, amount: int) -> Optional[int]:
+        """Grant PURCHASED credits (a paid pack): tops up the balance and bumps
+        the lifetime `purchasedCredits` marker that makes the account
+        premium-capable without a subscription (ADR 0017 v2)."""
+        user = self.users.get(user_id)
+        if not user or amount <= 0:
+            return None
+        user["credits"] = int(user.get("credits", 0)) + amount
+        user["purchasedCredits"] = int(user.get("purchasedCredits", 0)) + amount
+        self.save()
+        return user["credits"]
+
     def set_plan(self, user_id: str, plan_id: str) -> bool:
         user = self.users.get(user_id)
         if not user:
@@ -259,6 +274,8 @@ def to_public(user: dict) -> AuthUser:
         planId=user.get("planId", "free"),
         credits=int(user.get("credits", 0)),
         providers=seen,
+        premium=user.get("planId", "free") != "free"
+        or int(user.get("purchasedCredits", 0)) > 0,
     )
 
 
@@ -276,10 +293,15 @@ def paid_user_or_none(session_token: str | None) -> Optional[dict]:
 
 
 def premium_user_or_none(session_token: str | None) -> Optional[dict]:
-    """Who may use PAID features: a paying plan, or an admin account (the owner
-    tests everything without buying their own product). Free users: None."""
+    """Who may use PAID features: a paying plan, a purchased credit pack (pay-
+    as-you-go, ADR 0017 v2), or an admin account (the owner tests everything
+    without buying their own product). Free users: None."""
     user = store.user_for_session(session_token or "")
-    if user and (user.get("planId", "free") != "free" or is_admin_user(user)):
+    if user and (
+        user.get("planId", "free") != "free"
+        or int(user.get("purchasedCredits", 0)) > 0
+        or is_admin_user(user)
+    ):
         return user
     return None
 

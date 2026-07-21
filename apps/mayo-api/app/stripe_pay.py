@@ -33,6 +33,14 @@ def price_for_plan(plan_id: str) -> str:
     )
 
 
+def price_for_pack(pack_id: str) -> str:
+    return {
+        "pack100": settings.stripe_price_pack_100,
+        "pack300": settings.stripe_price_pack_300,
+        "pack1000": settings.stripe_price_pack_1000,
+    }.get(pack_id, "")
+
+
 def is_configured() -> bool:
     return bool(settings.stripe_secret_key)
 
@@ -95,8 +103,43 @@ def verify_webhook_signature(payload: bytes, sig_header: str, *, now: float | No
     return hmac.compare_digest(expected, signature)
 
 
-def parse_completed_checkout(payload: bytes) -> tuple[str, str] | None:
-    """If the event is a completed checkout, return (user_id, plan_id)."""
+async def create_pack_checkout(pack_id: str, credits: int, user_id: str) -> str:
+    """One-time (mode=payment) Checkout Session for a credit pack — no
+    subscription involved; the webhook grants the credits (ADR 0017 v2)."""
+    if not is_configured():
+        raise ValueError("card payments are not configured on this server")
+    price = price_for_pack(pack_id)
+    if not price:
+        raise ValueError(f"no Stripe price configured for pack '{pack_id}'")
+
+    form = {
+        "mode": "payment",
+        "line_items[0][price]": price,
+        "line_items[0][quantity]": "1",
+        "success_url": settings.checkout_success_url,
+        "cancel_url": settings.checkout_cancel_url,
+        "client_reference_id": user_id,
+        "metadata[packId]": pack_id,
+        "metadata[credits]": str(credits),
+    }
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(
+            f"{_API}/checkout/sessions",
+            data=form,
+            headers={"Authorization": f"Bearer {settings.stripe_secret_key}"},
+        )
+    if resp.status_code != 200:
+        raise ValueError("could not start the card checkout — try again")
+    url = resp.json().get("url")
+    if not url:
+        raise ValueError("Stripe returned no checkout URL")
+    return url
+
+
+def parse_completed_checkout(payload: bytes) -> dict | None:
+    """If the event is a completed checkout, return what to grant:
+    {"userId", "planId"} for a subscription or {"userId", "credits"} for a
+    credit pack (metadata decides which)."""
     try:
         event = json.loads(payload)
     except ValueError:
@@ -105,7 +148,16 @@ def parse_completed_checkout(payload: bytes) -> tuple[str, str] | None:
         return None
     session = event.get("data", {}).get("object", {})
     user_id = session.get("client_reference_id") or ""
-    plan_id = (session.get("metadata") or {}).get("planId") or ""
-    if not user_id or not plan_id:
+    meta = session.get("metadata") or {}
+    if not user_id:
         return None
-    return user_id, plan_id
+    if meta.get("planId"):
+        return {"userId": user_id, "planId": meta["planId"]}
+    if meta.get("packId"):
+        try:
+            credits = int(meta.get("credits", "0"))
+        except ValueError:
+            return None
+        if credits > 0:
+            return {"userId": user_id, "credits": credits}
+    return None

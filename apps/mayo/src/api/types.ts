@@ -7,7 +7,9 @@ export type ModelKind = 'image' | 'video';
 
 export type Tier = { id: string; label: string; blurb: string; pricePerMin: number };
 export type Duration = { id: string; label: string; seconds: number };
-export type Plan = { id: string; monthly: number; storageMb?: number };
+export type Plan = { id: string; monthly: number; storageMb?: number; monthlyCredits?: number };
+// One-time credit pack — purchasable WITHOUT a subscription (ADR 0017 v2).
+export type CreditPack = { id: string; credits: number; usd: number };
 export type RetentionPlan = { id: string; days: number; credits: number };
 export type ModelProvider = { id: string; name: string; kind: ModelKind; tier: string; blurb: string };
 // AI director ("screenwriter") model — a Claude model id, e.g. "claude-opus-4-8".
@@ -158,6 +160,7 @@ export type AuthUser = {
   planId?: string;
   credits?: number; // spendable generation credits (signup grants 100)
   providers?: string[]; // every login method connected to this account
+  premium?: boolean; // paid plan OR purchased credit pack — unlocks paid features
 };
 export type SessionResult = { token: string; user: AuthUser };
 

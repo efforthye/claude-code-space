@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { PLANS } from '@/api/catalog';
-import { ApiError, startCheckout } from '@/api/client';
+import { CREDIT_PACKS, PLANS } from '@/api/catalog';
+import { ApiError, startCheckout, startPackCheckout } from '@/api/client';
 import { useAuth } from '@/auth/auth';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -64,6 +64,28 @@ export default function PlanScreen() {
 
   const { user } = useAuth();
   const [checkingOut, setCheckingOut] = useState(false);
+  const [packBusy, setPackBusy] = useState<string | null>(null);
+
+  // Credit packs: one-time card purchase, NO subscription needed — buying any
+  // pack also unlocks the paid features (pay-as-you-go, ADR 0017 v2).
+  const buyPack = async (packId: string) => {
+    if (packBusy) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    setPackBusy(packId);
+    try {
+      const { url } = await startPackCheckout(packId);
+      await WebBrowser.openBrowserAsync(url);
+    } catch (e) {
+      toast.show(
+        e instanceof ApiError && e.status === 400 ? t('plan.cardUnavailable') : t('common.error'),
+      );
+    } finally {
+      setPackBusy(null);
+    }
+  };
 
   // Card payment (Stripe Checkout, web path) — needs a signed-in account so the
   // webhook can grant the plan to the right user.
@@ -142,6 +164,11 @@ export default function PlanScreen() {
                   <ThemedText type="small" themeColor="textSecondary">
                     {t(`plan.${p.id}.tagline`)}
                   </ThemedText>
+                  {p.monthlyCredits ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {t('plan.monthlyCredits', { n: p.monthlyCredits })}
+                    </ThemedText>
+                  ) : null}
                 </ThemedView>
               </Pressable>
             );
@@ -176,6 +203,38 @@ export default function PlanScreen() {
               </ThemedText>
             </Pressable>
           ) : null}
+
+          {/* Credit packs — one-time purchase, no subscription required. */}
+          <ThemedText type="smallBold" style={styles.packsTitle}>
+            {t('plan.packs')}
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('plan.packsHint')}
+          </ThemedText>
+          {CREDIT_PACKS.map((pk) => (
+            <ThemedView key={pk.id} type="backgroundElement" style={styles.plan}>
+              <View style={styles.planHead}>
+                <ThemedText type="smallBold" style={styles.flex}>
+                  {t('plan.packCredits', { n: pk.credits })}
+                </ThemedText>
+                <ThemedText type="smallBold">${pk.usd}</ThemedText>
+                <Pressable
+                  onPress={() => buyPack(pk.id)}
+                  disabled={!!packBusy}
+                  style={({ pressed }) => [
+                    styles.packBtn,
+                    {
+                      borderColor: theme.backgroundSelected,
+                      opacity: packBusy === pk.id ? 0.4 : pressed ? 0.7 : 1,
+                    },
+                  ]}>
+                  <ThemedText type="small">
+                    {packBusy === pk.id ? t('plan.purchasing') : t('plan.buyPack')}
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </ThemedView>
+          ))}
 
           <Pressable
             onPress={onRestore}
@@ -250,6 +309,13 @@ const styles = StyleSheet.create({
   restore: {
     textAlign: 'center',
     paddingVertical: Spacing.two,
+  },
+  packsTitle: { marginTop: Spacing.three },
+  packBtn: {
+    borderWidth: 1,
+    borderRadius: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
   },
   pressed: {
     opacity: 0.6,

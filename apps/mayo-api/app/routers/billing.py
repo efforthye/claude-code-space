@@ -5,8 +5,8 @@ from pydantic import BaseModel
 
 from .. import stripe_pay
 from ..auth import store as users
-from ..catalog import PLANS
-from ..schemas import BillingProduct, Plan, ValidateRequest, ValidateResult
+from ..catalog import CREDIT_PACKS, PLANS
+from ..schemas import BillingProduct, CreditPack, Plan, ValidateRequest, ValidateResult
 
 router = APIRouter(prefix="/v1/billing", tags=["billing"])
 
@@ -29,8 +29,15 @@ async def products() -> list[BillingProduct]:
     return [_product_for(p) for p in PLANS if p.monthly > 0]
 
 
+@router.get("/packs", response_model=list[CreditPack])
+async def packs() -> list[CreditPack]:
+    """One-time credit packs — purchasable with or WITHOUT a subscription."""
+    return CREDIT_PACKS
+
+
 class CheckoutRequest(BaseModel):
-    planId: str
+    planId: str | None = None  # subscription checkout ...
+    packId: str | None = None  # ... OR a one-time credit pack (exactly one)
 
 
 class CheckoutResult(BaseModel):
@@ -41,15 +48,29 @@ class CheckoutResult(BaseModel):
 async def checkout(
     req: CheckoutRequest, x_mayo_session: Optional[str] = Header(default=None)
 ) -> CheckoutResult:
-    """Start a card payment (web) for a plan. Requires a signed-in user so the
-    webhook can grant the plan to the right account."""
+    """Start a card payment (web) for a plan OR a credit pack. Requires a
+    signed-in user so the webhook can grant to the right account."""
     user = users.user_for_session(x_mayo_session or "")
     if not user:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="sign in to purchase a plan")
-    if req.planId not in {p.id for p in PLANS if p.monthly > 0}:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown plan '{req.planId}'")
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="sign in to purchase")
+    if bool(req.planId) == bool(req.packId):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, detail="pass exactly one of planId or packId"
+        )
     try:
-        url = await stripe_pay.create_checkout_session(req.planId, user["id"])
+        if req.planId:
+            if req.planId not in {p.id for p in PLANS if p.monthly > 0}:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST, detail=f"unknown plan '{req.planId}'"
+                )
+            url = await stripe_pay.create_checkout_session(req.planId, user["id"])
+        else:
+            pack = next((p for p in CREDIT_PACKS if p.id == req.packId), None)
+            if pack is None:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST, detail=f"unknown pack '{req.packId}'"
+                )
+            url = await stripe_pay.create_pack_checkout(pack.id, pack.credits, user["id"])
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return CheckoutResult(url=url)
@@ -64,8 +85,16 @@ async def stripe_webhook(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="bad signature")
     completed = stripe_pay.parse_completed_checkout(payload)
     if completed:
-        user_id, plan_id = completed
-        users.set_plan(user_id, plan_id)
+        if completed.get("planId"):
+            plan_id = completed["planId"]
+            users.set_plan(completed["userId"], plan_id)
+            # First month's subscription credits land immediately (renewal
+            # grants arrive with the invoice-paid webhook when we wire it).
+            plan = next((p for p in PLANS if p.id == plan_id), None)
+            if plan and plan.monthlyCredits:
+                users.add_credits(completed["userId"], plan.monthlyCredits)
+        elif completed.get("credits"):
+            users.add_purchased_credits(completed["userId"], int(completed["credits"]))
     # Other event types are acknowledged and ignored.
     return {"received": True}
 

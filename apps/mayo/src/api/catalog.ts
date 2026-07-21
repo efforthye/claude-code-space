@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 
 import { getDurations, getPlans, getRetentionPlans, getTiers } from './client';
-import type { Duration, Plan, RetentionPlan, Tier } from './types';
+import type { CreditPack, Duration, Plan, RetentionPlan, Tier } from './types';
 
 export const TIERS: Tier[] = [
   { id: 'draft', label: 'Draft', blurb: 'Fastest, cheapest models — good for rough cuts.', pricePerMin: 6 },
@@ -28,8 +28,15 @@ export const DURATIONS: Duration[] = [
 
 export const PLANS: Plan[] = [
   { id: 'free', monthly: 0, storageMb: 300 },
-  { id: 'pro', monthly: 19, storageMb: 5_000 },
-  { id: 'studio', monthly: 49, storageMb: 50_000 },
+  { id: 'pro', monthly: 24, storageMb: 5_000, monthlyCredits: 700 },
+  { id: 'studio', monthly: 59, storageMb: 50_000, monthlyCredits: 2_500 },
+];
+
+// One-time credit packs (no subscription needed) — mirrors the server catalog.
+export const CREDIT_PACKS: CreditPack[] = [
+  { id: 'pack100', credits: 100, usd: 12 },
+  { id: 'pack300', credits: 300, usd: 30 },
+  { id: 'pack1000', credits: 1_000, usd: 85 },
 ];
 
 /** Storage allowance (bytes) for a plan; falls back to the free-tier 300 MB. */

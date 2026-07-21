@@ -192,3 +192,15 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   views/shares/watches/credits/storage. `GET /v1/admin/timeseries` serves the
   history; the console shows the last 14 days + the audit log.
 - Verified: pytest 112 passed, tsc clean, iOS + web exports OK.
+
+## [2026-07-21] deploy | mayo → pricing v2: raised plans + standalone credit packs (batch 40)
+- Owner: v1 was too cheap, and credits must be buyable WITHOUT a subscription.
+  Plans now Pro $24/월 + 700크레딧, Studio $59/월 + 2,500크레딧 (first month's
+  credits granted at the checkout webhook). New credit packs pack100 $12 /
+  pack300 $30 / pack1000 $85 — one-time Stripe `mode=payment` checkout, webhook
+  grants credits + lifetime `purchasedCredits` marker.
+- Premium gate now passes paid plan OR purchased pack OR admin (server AND app
+  UI — AuthUser.premium). Plan screen gained a "크레딧 팩" section; plan cards
+  show monthly credit grants. Env names: STRIPE_PRICE_PACK_100/300/1000.
+- ADR 0017 v2 + index updated. Verified: pytest 113 passed, tsc clean, both
+  exports OK.

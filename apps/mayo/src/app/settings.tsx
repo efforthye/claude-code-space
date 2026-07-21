@@ -54,7 +54,8 @@ export default function SettingsScreen() {
   const realAdmin = !!adminStats;
   const isAdmin = realAdmin && !previewAsUser;
   // PAID GATE mirror of the server: paid plan OR (admin not previewing).
-  const premium = (user?.planId ?? 'free') !== 'free' || isAdmin;
+  // Premium = paid plan OR a purchased credit pack (server-computed) OR admin.
+  const premium = (user?.planId ?? 'free') !== 'free' || !!user?.premium || isAdmin;
   const [genOverride, setGenOverride] = useState<string | null>(null);
   const [byokOverride, setByokOverride] = useState<boolean | null>(null);
   const genBackend = genOverride ?? genSettings?.generationBackend ?? 'mock';

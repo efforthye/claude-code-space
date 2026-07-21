@@ -33,6 +33,17 @@ class Plan(BaseModel):
     id: str
     monthly: int
     storageMb: int = 0  # storage allowance for this plan (MB)
+    # Credits granted each month with the subscription (ADR 0017 v2).
+    monthlyCredits: int = 0
+
+
+class CreditPack(BaseModel):
+    """One-time credit purchase — NO subscription required (ADR 0017 v2).
+    Buying any pack marks the account premium-capable (paid usage)."""
+
+    id: str
+    credits: int
+    usd: int  # one-time price in USD
 
 
 class RetentionPlan(BaseModel):

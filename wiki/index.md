@@ -70,8 +70,9 @@ Updated whenever pages are added/renamed or a service's status changes.
   views with time decay) + template remix from published recipes.
 - [[0016-admin-console]] — Admin console (`/v1/admin`, MAYO_ADMIN_EMAILS): stats, user board,
   credit/plan controls, moderation; app `/admin` screen; premium gate bypass for admins.
-- [[0017-pricing-credits-subscriptions]] — **Pricing**: hybrid credits + subscriptions (Free/Pro
-  ₩9,900/Studio ₩29,900 + credit packs, BYOK free-of-credits); launch numbers to revisit.
+- [[0017-pricing-credits-subscriptions]] — **Pricing v2**: Pro $24/700cr, Studio $59/2,500cr
+  monthly + standalone credit packs ($12/100 · $30/300 · $85/1,000, no subscription needed —
+  packs unlock premium); BYOK free-of-credits.
 
 ## Incidents
 _(none yet — postmortems)_
