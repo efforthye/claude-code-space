@@ -4,5 +4,18 @@
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/reel/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|kakaotalk-scrap|Discordbot|WhatsApp|LinkedInBot|TelegramBot|Pinterestbot|SkypeUriPreview|redditbot|Applebot|Googlebot|bingbot|Yeti|Daum).*"
+        }
+      ],
+      "destination": "https://mayo-api.efforthye.dev/v1/public/reel-og/:id"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

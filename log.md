@@ -149,3 +149,12 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   uniform, speed changes sync audio via atempo, and a voiceover now MIXES over
   the original sound (amix) instead of replacing it. App: "원본 소리 유지" toggle.
 - Verified: pytest 109 passed, tsc clean, iOS + web exports OK.
+
+## [2026-07-21] deploy | mayo → share-link OG thumbnails (batch 36)
+- `GET /v1/public/reel-og/{id}` serves a crawler-facing HTML page: og:title/
+  description/image (public thumb)/video (public media) + instant redirect to
+  mayo.im/reel/<id> for humans. mayo.im's vercel.json rewrites /reel/:id to it
+  ONLY for crawler user-agents (Kakao, iMessage/Facebook, X, Slack, Discord,
+  Telegram, WhatsApp, search bots) — share links now unfurl with the reel's
+  poster frame. New env names: MAYO_PUBLIC_API_BASE / MAYO_PUBLIC_WEB_BASE.
+- Verified: pytest 109 passed (OG page assertions added to the public-reels test).

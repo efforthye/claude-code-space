@@ -7,8 +7,12 @@ on explore membership: the item id is the capability, and the media it serves
 is exactly the published film (never arbitrary storage keys).
 """
 
-from fastapi import APIRouter, HTTPException, Query, Request, Response, status
+import html
 
+from fastapi import APIRouter, HTTPException, Query, Request, Response, status
+from fastapi.responses import HTMLResponse
+
+from ..config import settings
 from ..schemas import ExploreComment, ExploreItem
 from ..store import explore as explore_store
 
@@ -75,6 +79,50 @@ async def public_media(item_id: str, request: Request) -> Response:
 
     item = await _published(item_id)
     return await serve_media(_media_key(item), request)
+
+
+@router.get("/reel-og/{item_id}", response_class=HTMLResponse)
+async def public_reel_og(item_id: str) -> HTMLResponse:
+    """Link-preview page for a shared reel: OG/Twitter meta tags (thumbnail,
+    title, video) for crawlers, plus an instant redirect for humans. mayo.im's
+    Vercel config rewrites crawler traffic on /reel/<id> to this page, so a
+    pasted share link unfurls with the reel's poster frame in KakaoTalk,
+    iMessage, Slack, X, Discord, etc."""
+    item = await _published(item_id)
+    page_url = f"{settings.public_web_base}/reel/{item.id}"
+    image_url = f"{settings.public_api_base}/v1/public/thumb/{item.id}"
+    video_url = f"{settings.public_api_base}/v1/public/media/{item.id}"
+    title = html.escape(item.title or "mayo reel")
+    desc = html.escape(
+        (item.prompt or "AI-generated video on mayo")[:160] + f" — {item.author}"
+    )
+    doc = f"""<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>{title} — mayo</title>
+<meta name="description" content="{desc}">
+<meta property="og:type" content="video.other">
+<meta property="og:site_name" content="mayo">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{desc}">
+<meta property="og:url" content="{page_url}">
+<meta property="og:image" content="{image_url}">
+<meta property="og:image:width" content="640">
+<meta property="og:image:height" content="360">
+<meta property="og:video" content="{video_url}">
+<meta property="og:video:type" content="video/mp4">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{desc}">
+<meta name="twitter:image" content="{image_url}">
+<meta http-equiv="refresh" content="0;url={page_url}">
+</head>
+<body>
+<p><a href="{page_url}">mayo에서 이 영상 보기</a></p>
+</body>
+</html>"""
+    return HTMLResponse(doc)
 
 
 @router.get("/thumb/{item_id}")

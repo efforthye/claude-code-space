@@ -150,6 +150,15 @@ def test_public_reel_endpoints_open_but_gated_on_published(monkeypatch):
     assert anon.get("/v1/public/reels/e-nope").status_code == 404
     assert anon.get("/v1/public/media/e-nope").status_code == 404
 
+    # OG preview page: crawler-facing HTML with absolute image/video meta tags
+    # and a human redirect to the mayo.im reel page.
+    og = anon.get(f"/v1/public/reel-og/{item.id}")
+    assert og.status_code == 200 and "text/html" in og.headers["content-type"]
+    assert f'content="https://mayo.im/reel/{item.id}"' in og.text
+    assert f"/v1/public/thumb/{item.id}" in og.text
+    assert 'property="og:image"' in og.text and 'property="og:video"' in og.text
+    assert anon.get("/v1/public/reel-og/e-nope").status_code == 404
+
 
 def test_anonymous_explore_reads_via_public_mirror():
     from fastapi.testclient import TestClient as TC

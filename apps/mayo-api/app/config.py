@@ -184,6 +184,16 @@ class Settings:
     apple_oauth_audiences: list[str] = field(
         default_factory=lambda: _split(os.getenv("APPLE_OAUTH_AUDIENCES", "host.exp.Exponent"))
     )
+    # Public absolute bases — used to build og: meta URLs for link previews
+    # (crawlers need absolute image/video URLs, not relative paths).
+    public_api_base: str = field(
+        default_factory=lambda: os.getenv(
+            "MAYO_PUBLIC_API_BASE", "https://mayo-api.efforthye.dev"
+        )
+    )
+    public_web_base: str = field(
+        default_factory=lambda: os.getenv("MAYO_PUBLIC_WEB_BASE", "https://mayo.im")
+    )
     # Outbound mail (password-reset codes). Unset host -> reset endpoints answer
     # an honest 501 instead of pretending to send. Names only in the repo.
     smtp_host: str = field(default_factory=lambda: os.getenv("MAYO_SMTP_HOST", ""))
