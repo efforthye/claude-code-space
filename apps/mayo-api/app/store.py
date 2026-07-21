@@ -43,6 +43,11 @@ class JobStore:
     def owner_of(self, job_id: str) -> Optional[str]:
         return self._owners.get(job_id)
 
+    async def list_all(self) -> list[Job]:
+        """Every job regardless of owner — admin console only."""
+        async with self._lock:
+            return [j.model_copy() for j in self._jobs.values()]
+
     async def list(self, owner_id: str | None = None) -> list[Job]:
         """Jobs visible to a caller: their own plus ownerless (legacy/anonymous)."""
         async with self._lock:
@@ -167,6 +172,11 @@ class LibraryStore:
                 for v in self._videos.values()
                 if v.ownerId in (None, owner_id)
             ]
+
+    async def list_all(self) -> list[Video]:
+        """Every video regardless of owner — admin console only."""
+        async with self._lock:
+            return [v.model_copy() for v in self._videos.values()]
 
     async def get(self, video_id: str) -> Optional[Video]:
         async with self._lock:
@@ -332,13 +342,18 @@ class LibraryStore:
             return updated.model_copy()
 
     async def storage(self, owner_id: str | None = None) -> Storage:
-        # Per-user usage: sum of the caller's OWN video files (plus legacy
-        # ownerless ones) — not the whole media dir, which mixes every user.
+        # Per-user usage: a signed-in user is metered over ONLY their own files
+        # (a fresh account starts at 0 — legacy ownerless files don't count
+        # against them); the anonymous/dev caller is metered over the ownerless
+        # pool it actually sees.
         from .storage import get_storage
 
         store = get_storage()
+        videos = await self.list(owner_id)
+        if owner_id:
+            videos = [v for v in videos if v.ownerId == owner_id]
         used = 0
-        for v in await self.list(owner_id):
+        for v in videos:
             if v.url and "/v1/media/" in v.url:
                 try:
                     used += store.size(v.url.split("/v1/media/", 1)[-1])
@@ -456,6 +471,15 @@ class ExploreStore:
             self._items[item.id] = item
             self._persist()
         return item.model_copy()
+
+    async def remove(self, item_id: str) -> bool:
+        """Remove a published item (admin moderation)."""
+        async with self._lock:
+            existed = self._items.pop(item_id, None) is not None
+            self._comments.pop(item_id, None)
+            if existed:
+                self._persist()
+        return existed
 
     async def remove_by_author(self, author: str) -> int:
         """Remove all items by an author (used to clear '@mayo-sample' seeds)."""

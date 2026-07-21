@@ -184,6 +184,10 @@ class Settings:
     apple_oauth_audiences: list[str] = field(
         default_factory=lambda: _split(os.getenv("APPLE_OAUTH_AUDIENCES", "host.exp.Exponent"))
     )
+    # Admin console: signed-in accounts with these emails may call /v1/admin.
+    admin_emails: list[str] = field(
+        default_factory=lambda: _split(os.getenv("MAYO_ADMIN_EMAILS", "efforthye@gmail.com"))
+    )
     # Font for burned-in editor captions (ffmpeg drawtext). Default a macOS font
     # with Hangul glyphs; if missing, captions are skipped (render never fails).
     edit_font: str = field(

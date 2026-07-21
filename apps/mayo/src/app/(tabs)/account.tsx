@@ -11,6 +11,7 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import {
   authApple,
+  getAdminStats,
   getStorage,
   githubLoginStart,
   githubLoginResult,
@@ -40,6 +41,9 @@ export default function MyScreen() {
   const { entitlement } = usePayments();
   const { favorites } = useFavorites();
   const { data: storage } = useQuery(getStorage);
+  // Admin probe: the server 403s for everyone but MAYO_ADMIN_EMAILS accounts —
+  // success is what reveals the console entry below.
+  const { data: adminStats } = useQuery(getAdminStats, { enabled: !!user, deps: [user?.id] });
   const [linking, setLinking] = useState<string | null>(null);
 
   const linked = (p: string) => !!user?.providers?.includes(p);
@@ -274,6 +278,14 @@ export default function MyScreen() {
 
       {/* Settings + billing */}
       <ThemedView type="backgroundElement" style={styles.rows}>
+        {adminStats ? (
+          <Row
+            icon="shield-checkmark-outline"
+            label={t('admin.title')}
+            value={t('admin.rowValue', { n: adminStats.users })}
+            onPress={() => router.push('/admin')}
+          />
+        ) : null}
         <Row
           icon="settings-outline"
           label={t('settings.title')}

@@ -16,6 +16,7 @@ from . import __version__
 from .config import settings
 from .planner import get_scenario_planner
 from .routers import (
+    admin,
     auth,
     publish,
     billing,
@@ -105,6 +106,8 @@ app.include_router(media.thumb_router, dependencies=protected)
 app.include_router(public.router)
 app.include_router(settings_router.router, dependencies=protected)
 app.include_router(billing.router, dependencies=protected)
+# Admin console — shared-key gate plus its own session/email check inside.
+app.include_router(admin.router, dependencies=protected)
 # Stripe webhook: no shared-key guard — the verified signature is its auth.
 app.include_router(billing.webhook_router)
 app.include_router(publish.router, dependencies=protected)

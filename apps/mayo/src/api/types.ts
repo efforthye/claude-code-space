@@ -154,5 +154,37 @@ export type AuthUser = {
 };
 export type SessionResult = { token: string; user: AuthUser };
 
+// --- Admin console (mirrors app/routers/admin.py, ADR 0016) ---
+export type AdminStats = {
+  users: number;
+  signups7d: number;
+  activeSessions: number;
+  videos: number;
+  jobsQueued: number;
+  jobsGenerating: number;
+  jobsDone: number;
+  jobsFailed: number;
+  explorePosts: number;
+  likes: number;
+  comments: number;
+  views: number;
+  shares: number;
+  storageBytes: number;
+  creditsOutstanding: number;
+  generationBackend: string;
+  plannerBackend: string;
+};
+export type AdminUser = {
+  id: string;
+  email: string;
+  name: string;
+  providers: string[];
+  planId: string;
+  credits: number;
+  createdAt: number;
+  videos: number;
+  hasByok: boolean;
+};
+
 export type PublishRequest = { title: string; description?: string; visibility: Visibility; tags?: string[] };
 export type PublishResult = { accepted: boolean; videoId: string; visibility: Visibility; url?: string | null };

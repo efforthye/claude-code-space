@@ -9,6 +9,8 @@ import { getSessionToken } from '@/auth/session';
 import { getApiKey } from './api-key';
 import { getApiBaseUrl } from './base-url';
 import type {
+  AdminStats,
+  AdminUser,
   AuthUser,
   CreateJobRequest,
   DirectorChatRequest,
@@ -111,6 +113,23 @@ export function mediaHeaders(): Record<string, string> | undefined {
 
 // --- Health ---
 export const getHealth = () => req<Health>('/health');
+
+// --- Admin console (403 unless the signed-in email is in MAYO_ADMIN_EMAILS;
+// the 마이 page uses that 403 as the probe to hide the entry) ---
+export const getAdminStats = () => req<AdminStats>('/v1/admin/stats');
+export const getAdminUsers = () => req<AdminUser[]>('/v1/admin/users');
+export const adminAdjustCredits = (userId: string, delta: number) =>
+  req<AdminUser>(`/v1/admin/users/${encodeURIComponent(userId)}/credits`, {
+    method: 'POST',
+    body: JSON.stringify({ delta }),
+  });
+export const adminSetPlan = (userId: string, planId: string) =>
+  req<AdminUser>(`/v1/admin/users/${encodeURIComponent(userId)}/plan`, {
+    method: 'POST',
+    body: JSON.stringify({ planId }),
+  });
+export const adminDeleteExplore = (id: string) =>
+  req<{ deleted: boolean }>(`/v1/admin/explore/${encodeURIComponent(id)}`, { method: 'DELETE' });
 
 // --- Auth (accounts + sessions; session token via X-Mayo-Session) ---
 export const authRegister = (email: string, password: string, name?: string) =>
