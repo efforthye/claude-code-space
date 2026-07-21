@@ -162,3 +162,29 @@ def test_anonymous_explore_reads_via_public_mirror():
     assert anon.get("/v1/public/explore?sort=bogus").status_code == 422
     assert anon.get("/v1/public/explore/e-nope/comments").status_code == 404
     assert anon.post("/v1/public/explore/e-nope/view").status_code == 404
+
+
+def test_one_like_per_account_and_annotation():
+    from app import db
+    from app.auth import store as users
+
+    db.replace_kind("explore", [])
+    db.replace_kind("explore_comment", [])
+    db.replace_kind("explore_like", [])
+    store = ExploreStore()
+    item = asyncio.run(store.publish(_video("likeme"), "p"))
+    user = users.create_user("liker@example.com", "L", provider="email", password="pw12345678")
+
+    first = asyncio.run(store.like(item.id, user["id"]))
+    second = asyncio.run(store.like(item.id, user["id"]))  # idempotent
+    assert first.likes == 1 and second.likes == 1 and second.likedByMe
+
+    annotated = store.annotate_liked(asyncio.run(store.list("latest")), user["id"])
+    assert annotated[0].likedByMe is True
+    other = store.annotate_liked(asyncio.run(store.list("latest")), "someone-else")
+    assert other[0].likedByMe is False
+
+    asyncio.run(store.unlike(item.id, user["id"]))
+    asyncio.run(store.unlike(item.id, user["id"]))  # second undo is a no-op
+    final = asyncio.run(store.list("latest"))[0]
+    assert final.likes == 0

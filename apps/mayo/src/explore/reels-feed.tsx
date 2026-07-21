@@ -25,9 +25,11 @@ import {
   addComment,
   getComments,
   getExplore,
+  likeExplore,
   publicReelMediaUrl,
   seedExplore,
   shareExplore,
+  unlikeExplore,
   viewExplore,
 } from '@/api/client';
 import type { ExploreComment, ExploreItem, ExploreSort } from '@/api/types';
@@ -234,6 +236,21 @@ function Reel({
   // feed plays for signed-out mayo.im visitors too.
   const uri = item.url ? publicReelMediaUrl(item.id) : '';
 
+  // LIKE (heart) — a server signal, one per account when signed in; separate
+  // from SAVE (bookmark), which is a private local collection.
+  const [liked, setLiked] = useState(!!item.likedByMe);
+  const [likeCount, setLikeCount] = useState(item.likes);
+  useEffect(() => {
+    setLiked(!!item.likedByMe);
+    setLikeCount(item.likes);
+  }, [item.id, item.likedByMe, item.likes]);
+  const doLike = () => {
+    const next = !liked;
+    setLiked(next);
+    setLikeCount((c) => Math.max(0, c + (next ? 1 : -1)));
+    (next ? likeExplore(item.id) : unlikeExplore(item.id)).catch(() => {});
+  };
+
   const player = useVideoPlayer(uri ? { uri } : null, (p) => {
     p.loop = true;
   });
@@ -289,9 +306,15 @@ function Reel({
       {/* right action rail */}
       <View style={styles.rail} pointerEvents="box-none">
         <Action
-          icon={has(item.id) ? 'heart' : 'heart-outline'}
-          color={has(item.id) ? '#E5484D' : '#ffffff'}
-          label={String(item.likes)}
+          icon={liked ? 'heart' : 'heart-outline'}
+          color={liked ? '#E5484D' : '#ffffff'}
+          label={String(likeCount)}
+          onPress={doLike}
+        />
+        <Action
+          icon={has(item.id) ? 'bookmark' : 'bookmark-outline'}
+          color={has(item.id) ? '#E2A43B' : '#ffffff'}
+          label={t(has(item.id) ? 'reels.saved' : 'reels.save')}
           onPress={() => toggle(item)}
         />
         <Action icon="chatbubble-outline" color="#ffffff" label={String(item.comments ?? 0)} onPress={onComment} />

@@ -1,17 +1,17 @@
-// Local "liked" collection for Explore. No accounts yet, so favorites live on the
-// device (AsyncStorage). Liking also increments the server like count; unliking
-// just removes it locally.
+// SAVED collection ("저장") for Explore — a local bookmark list (AsyncStorage),
+// separate from likes: the heart talks to the server (one like per account,
+// feeds the ranking), while saving is a private, device-local collection with
+// no server side effects — like Instagram's bookmark.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
-import { likeExplore, unlikeExplore } from '@/api/client';
 import type { ExploreItem } from '@/api/types';
 
 type FavoritesValue = {
   favorites: ExploreItem[];
   has: (id: string) => boolean;
-  /** Toggle like: one per device. Returns when the server call settles. */
+  /** Toggle saved state (local only — likes are a separate action). */
   toggle: (item: ExploreItem) => Promise<void>;
 };
 
@@ -40,17 +40,9 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   const has = (id: string) => favorites.some((f) => f.id === id);
 
-  const toggle = (item: ExploreItem): Promise<void> => {
-    if (has(item.id)) {
-      persist(favorites.filter((f) => f.id !== item.id));
-      return unlikeExplore(item.id)
-        .then(() => {})
-        .catch(() => {});
-    }
-    persist([item, ...favorites]);
-    return likeExplore(item.id)
-      .then(() => {})
-      .catch(() => {});
+  const toggle = async (item: ExploreItem): Promise<void> => {
+    if (has(item.id)) persist(favorites.filter((f) => f.id !== item.id));
+    else persist([item, ...favorites]);
   };
 
   return (

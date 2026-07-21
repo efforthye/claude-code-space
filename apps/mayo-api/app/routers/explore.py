@@ -18,8 +18,13 @@ router = APIRouter(prefix="/v1/explore", tags=["explore"])
 
 
 @router.get("", response_model=list[ExploreItem])
-async def list_explore(sort: str = Query("popular", pattern="^(popular|latest)$")) -> list[ExploreItem]:
-    return await explore_store.list(sort)
+async def list_explore(
+    sort: str = Query("popular", pattern="^(popular|latest)$"),
+    x_mayo_session: Optional[str] = Header(default=None),
+) -> list[ExploreItem]:
+    items = await explore_store.list(sort)
+    user = users.user_for_session(x_mayo_session or "")
+    return explore_store.annotate_liked(items, user["id"] if user else None)
 
 
 def _author(session: Optional[str]) -> str:
@@ -153,16 +158,23 @@ async def share_explore(item_id: str) -> ExploreItem:
 
 
 @router.post("/{item_id}/like", response_model=ExploreItem)
-async def like_explore(item_id: str) -> ExploreItem:
-    item = await explore_store.like(item_id)
+async def like_explore(
+    item_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> ExploreItem:
+    """One like per ACCOUNT (idempotent) when signed in; plain counter otherwise."""
+    user = users.user_for_session(x_mayo_session or "")
+    item = await explore_store.like(item_id, user["id"] if user else None)
     if item is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
     return item
 
 
 @router.post("/{item_id}/unlike", response_model=ExploreItem)
-async def unlike_explore(item_id: str) -> ExploreItem:
-    item = await explore_store.unlike(item_id)
+async def unlike_explore(
+    item_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> ExploreItem:
+    user = users.user_for_session(x_mayo_session or "")
+    item = await explore_store.unlike(item_id, user["id"] if user else None)
     if item is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
     return item

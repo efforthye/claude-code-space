@@ -228,7 +228,7 @@ export default function MyScreen() {
       {/* My stuff (notifications live in the header bell now, like every app) */}
       <ThemedView type="backgroundElement" style={styles.rows}>
         <Row
-          icon="heart-outline"
+          icon="bookmark-outline"
           label={t('my.liked')}
           value={favorites.length ? String(favorites.length) : undefined}
           onPress={() =>

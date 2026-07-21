@@ -405,6 +405,13 @@ class ExploreStore:
                 self._items[item.id] = item
             except Exception:
                 continue
+        # Per-account likes (one like per user per item, ADR 0015 follow-up).
+        self._liked: dict[str, set[str]] = {}
+        for raw in db.load("explore_like"):
+            try:
+                self._liked.setdefault(raw["itemId"], set()).add(raw["userId"])
+            except Exception:
+                continue
         for raw in db.load("explore_comment"):
             try:
                 c = ExploreComment.model_validate(raw.get("comment", raw))
@@ -424,6 +431,14 @@ class ExploreStore:
                     (c.id, {"itemId": item_id, "comment": c.model_dump()})
                     for item_id, cl in self._comments.items()
                     for c in cl
+                ],
+            )
+            db.replace_kind(
+                "explore_like",
+                [
+                    (f"{item_id}:{user_id}", {"itemId": item_id, "userId": user_id})
+                    for item_id, likers in self._liked.items()
+                    for user_id in likers
                 ],
             )
         except Exception:
@@ -525,25 +540,46 @@ class ExploreStore:
             self._persist()
         return item.model_copy()
 
-    async def like(self, item_id: str) -> Optional[ExploreItem]:
+    async def like(self, item_id: str, user_id: str | None = None) -> Optional[ExploreItem]:
+        """Signed-in likes are one-per-account (idempotent); anonymous likes
+        keep the plain counter (the app's device guard limits repeats)."""
         async with self._lock:
             item = self._items.get(item_id)
             if not item:
                 return None
+            if user_id:
+                likers = self._liked.setdefault(item_id, set())
+                if user_id in likers:
+                    return item.model_copy(update={"likedByMe": True})  # already liked
+                likers.add(user_id)
             updated = item.model_copy(update={"likes": item.likes + 1})
             self._items[item_id] = updated
             self._persist()
-            return updated.model_copy()
+            return updated.model_copy(update={"likedByMe": bool(user_id)})
 
-    async def unlike(self, item_id: str) -> Optional[ExploreItem]:
+    async def unlike(self, item_id: str, user_id: str | None = None) -> Optional[ExploreItem]:
         async with self._lock:
             item = self._items.get(item_id)
             if not item:
                 return None
+            if user_id:
+                likers = self._liked.get(item_id, set())
+                if user_id not in likers:
+                    return item.model_copy()  # nothing to undo for this account
+                likers.discard(user_id)
             updated = item.model_copy(update={"likes": max(0, item.likes - 1)})
             self._items[item_id] = updated
             self._persist()
             return updated.model_copy()
+
+    def annotate_liked(self, items: list[ExploreItem], user_id: str | None) -> list[ExploreItem]:
+        """Stamp likedByMe for the calling account (no-op for anonymous)."""
+        if not user_id:
+            return items
+        return [
+            i.model_copy(update={"likedByMe": user_id in self._liked.get(i.id, set())})
+            for i in items
+        ]
 
     async def comments(self, item_id: str) -> Optional[list[ExploreComment]]:
         async with self._lock:
