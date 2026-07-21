@@ -70,8 +70,12 @@ export default function AdminScreen() {
           `${stats.jobsQueued + stats.jobsGenerating}`,
           `done ${stats.jobsDone} · fail ${stats.jobsFailed}`,
         ],
-        [t('admin.posts'), `${stats.explorePosts}`, `❤️${stats.likes} 💬${stats.comments}`],
-        [t('admin.engagement'), `${stats.views}`, `↗️ ${stats.shares}`],
+        [
+          t('admin.posts'),
+          `${stats.explorePosts}`,
+          `${t('admin.likesShort')} ${stats.likes} · ${t('admin.commentsShort')} ${stats.comments}`,
+        ],
+        [t('admin.engagement'), `${stats.views}`, `${t('admin.sharesShort')} ${stats.shares}`],
         [t('admin.credits'), `${stats.creditsOutstanding}`, ''],
         [t('admin.backends'), stats.generationBackend, stats.plannerBackend],
       ] as const)
@@ -146,7 +150,8 @@ export default function AdminScreen() {
                   {p.title}
                 </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
-                  {p.author} · ❤️{p.likes} 💬{p.comments ?? 0} 👁{p.views ?? 0}
+                  {p.author} · {t('admin.likesShort')} {p.likes} · {t('admin.commentsShort')}{' '}
+                  {p.comments ?? 0} · {t('admin.viewsShort')} {p.views ?? 0}
                 </ThemedText>
               </View>
               <Pressable

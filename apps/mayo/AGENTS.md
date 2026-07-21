@@ -1,3 +1,9 @@
+# Design rules (owner directives)
+
+- **No emoji anywhere in the product** — not as icons, not in stat labels, not in
+  notification titles or share copy. Use Ionicons for icons and plain text for
+  labels. (Owner: "아이콘 이모지로 넣지 마, 앞으로도.")
+
 # Expo SDK 54
 
 This app is pinned to **Expo SDK 54** so it runs in the App Store **Expo Go** (SDK 55 & 57 are

@@ -64,7 +64,8 @@ export default function PublicReelScreen() {
               </View>
               <ThemedText type="subtitle">{reel.title}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                {reel.author} · ❤️ {reel.likes} · 💬 {reel.comments ?? 0}
+                {reel.author} · {t('reel.likes', { n: reel.likes })} ·{' '}
+                {t('reel.comments', { n: reel.comments ?? 0 })}
               </ThemedText>
               <ThemedView type="backgroundElement" style={styles.promptCard}>
                 <ThemedText type="small" themeColor="textSecondary">
