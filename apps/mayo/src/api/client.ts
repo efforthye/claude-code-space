@@ -277,6 +277,13 @@ export const viewExplore = (id: string) =>
     `/v1/public/explore/${encodeURIComponent(id)}/view`,
     { method: 'POST' },
   );
+// Completed watch (played to the end) — completion-rate ranking signal.
+export const watchExplore = (id: string) =>
+  reqPublic<ExploreItem>(
+    `/v1/explore/${encodeURIComponent(id)}/watch`,
+    `/v1/public/explore/${encodeURIComponent(id)}/watch`,
+    { method: 'POST' },
+  );
 // Completed external share — the strongest ranking signal.
 export const shareExplore = (id: string) =>
   reqPublic<ExploreItem>(

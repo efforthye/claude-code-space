@@ -36,7 +36,7 @@ to be reusable as a template by other users.
 `ExploreStore._score` (mayo-api `store.py`):
 
 ```
-score = (likes×3 + comments×5 + shares×8 + views×0.3 + 1) / (age_hours + 2)^1.5
+score = (likes×3 + comments×5 + shares×8 + watches×1.5 + views×0.3 + 1) / (age_hours + 2)^1.5
 ```
 
 - **Signal weights** follow the industrial ordering: shares (deepest — the
@@ -78,3 +78,11 @@ Sources: [Hacker News ranking](https://medium.com/hacking-and-gonzo/how-hacker-n
 [TikTok engagement study, CHI 2024](https://dl.acm.org/doi/10.1145/3613904.3642433).
 
 Related: [[mayo]], [[mayo-api]], [[0014-character-consistency-and-credits]].
+
+## Update 2026-07-21 — completion-rate signal
+
+`watches` counts COMPLETED plays (the app pings `POST /v1/explore/{id}/watch`
+once per activation when the reel plays to its end — `playToEnd` from the
+player; the anonymous web mirror is `/v1/public/explore/{id}/watch`). Weighted
+1.5: deeper than a view (0.3), shallower than a like (3) — completion rate is a
+core signal in industrial short-video rankers.

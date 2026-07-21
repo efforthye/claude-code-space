@@ -31,6 +31,7 @@ import {
   shareExplore,
   unlikeExplore,
   viewExplore,
+  watchExplore,
 } from '@/api/client';
 import type { ExploreComment, ExploreItem, ExploreSort } from '@/api/types';
 import { ThemedText } from '@/components/themed-text';
@@ -277,6 +278,21 @@ function Reel({
     if (!active) return;
     viewExplore(item.id).catch(() => {});
   }, [active, item.id]);
+
+  // Completed-watch ping: the player fires playToEnd each time the reel plays
+  // through (loop restarts it after). Count at most ONE completion per
+  // activation — the completion-rate ranking signal, not a loop counter.
+  const watchedRef = useRef(false);
+  useEffect(() => {
+    watchedRef.current = false; // re-arm when the reel becomes active again
+    if (!active || !uri) return;
+    const sub = player.addListener('playToEnd', () => {
+      if (watchedRef.current) return;
+      watchedRef.current = true;
+      watchExplore(item.id).catch(() => {});
+    });
+    return () => sub.remove();
+  }, [active, uri, player, item.id]);
 
   // External share: an INSTANT share sheet carrying a promo message + the
   // public reel link (mayo.im/reel/<id>) — recipients watch without an account

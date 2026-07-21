@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -53,6 +54,8 @@ import { useI18n, useSettings } from '@/settings/settings';
 // Context messages carry the film being revised; they feed the model but stay
 // out of the visible transcript.
 const HIDDEN_PREFIX = '[영상 수정 컨텍스트]';
+// Saved director conversation (plain opens only — see the persistence effect).
+const DIRECTOR_SAVE_KEY = 'mayo.director.chat.v1';
 
 // Consistency block: the screenplay's style + character sheet — sent with jobs
 // and storyboards so every render shares one look (ADR 0014).
@@ -168,11 +171,79 @@ export default function DirectorScreen() {
   const [sending, setSending] = useState(false);
   const [generating, setGenerating] = useState(false);
 
+  // Storyboard state lives up here so the persistence block below can save it.
+  const [board, setBoard] = useState<Storyboard | null>(null);
+  const boardForRef = useRef('');
+
+  // PERSISTENCE (owner directive): a plain-open director restores the last
+  // conversation + screenplay + storyboard, so closing the modal never loses
+  // work. Revision/template opens start their own context instead.
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (params.videoId || params.templateId) {
+      restoredRef.current = true; // dedicated context — don't overwrite it
+      return;
+    }
+    AsyncStorage.getItem(DIRECTOR_SAVE_KEY)
+      .then((raw) => {
+        if (!raw) return;
+        const saved = JSON.parse(raw) as {
+          messages?: DirectorMessage[];
+          screenplay?: Screenplay | null;
+          ready?: boolean;
+          board?: Storyboard | null;
+          boardSig?: string;
+          seconds?: number;
+          tier?: string;
+        };
+        if (saved.messages && saved.messages.length > 1) setMessages(saved.messages);
+        if (saved.screenplay) setScreenplay(saved.screenplay);
+        if (typeof saved.ready === 'boolean') setReady(saved.ready);
+        if (saved.seconds) setSeconds(saved.seconds);
+        if (saved.tier) setTier(saved.tier);
+        if (saved.board) {
+          setBoard(saved.board);
+          // Match the auto-render signature so restoring does NOT re-render
+          // (and re-bill) the same storyboard.
+          boardForRef.current = saved.boardSig ?? '';
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        restoredRef.current = true;
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!restoredRef.current || params.videoId || params.templateId) return;
+    if (messages.length <= 1 && !screenplay) return;
+    AsyncStorage.setItem(
+      DIRECTOR_SAVE_KEY,
+      JSON.stringify({
+        messages,
+        screenplay,
+        ready,
+        board,
+        boardSig: boardForRef.current,
+        seconds,
+        tier,
+      }),
+    ).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, screenplay, ready, board, seconds, tier]);
+
+  const resetChat = () => {
+    AsyncStorage.removeItem(DIRECTOR_SAVE_KEY).catch(() => {});
+    setMessages([{ role: 'director', content: t('director.greeting') }]);
+    setScreenplay(null);
+    setReady(false);
+    setBoard(null);
+    boardForRef.current = '';
+  };
+
   // STORYBOARD-FIRST: when a screenplay is ready, render cheap per-scene stills
   // automatically so the user can judge the look and give feedback BEFORE the
   // (paid) video job. Feedback = normal chat; a revised screenplay re-renders.
-  const [board, setBoard] = useState<Storyboard | null>(null);
-  const boardForRef = useRef('');
   useEffect(() => {
     if (!screenplay || !ready) return;
     const scenePrompts = screenplay.scenes.map((s) => s.prompt).filter(Boolean);
@@ -257,6 +328,15 @@ export default function DirectorScreen() {
           </View>
           <View style={styles.topRight}>
             <DirectorPicker />
+            {!revising && !params.templateId && (messages.length > 1 || screenplay) ? (
+              <Pressable
+                onPress={resetChat}
+                hitSlop={8}
+                accessibilityLabel={t('director.newChat')}
+                style={({ pressed }) => (pressed ? styles.pressed : undefined)}>
+                <Ionicons name="refresh-outline" size={22} color={theme.text} />
+              </Pressable>
+            ) : null}
             <Pressable
               onPress={() => router.back()}
               accessibilityLabel={t('common.close')}

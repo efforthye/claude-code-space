@@ -172,3 +172,13 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   silently snaps back a copy when the viewer crosses the seam — infinite loop
   on both native paging and web scroll-snap (web down-arrow never disables).
 - Verified: pytest 110 passed, tsc clean, iOS + web exports OK.
+
+## [2026-07-21] deploy | mayo → director chat persists + watch-completion signal (batch 38)
+- Director: plain opens now save/restore the whole conversation, screenplay,
+  and rendered storyboard (AsyncStorage; the restored storyboard's signature is
+  kept so it is NOT re-rendered/re-billed). New-chat reset button in the top
+  bar. Revision/template opens keep their dedicated context.
+- Ranking: `ExploreItem.watches` — completed plays via `POST /{id}/watch`
+  (+ public mirror); app pings once per activation on the player's playToEnd;
+  weight 1.5 in the score (ADR 0015 updated).
+- Verified: pytest 111 passed, tsc clean, iOS + web exports OK.

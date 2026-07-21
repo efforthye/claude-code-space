@@ -111,6 +111,7 @@ export type ExploreItem = {
   comments?: number;
   views?: number;
   shares?: number;
+  watches?: number; // completed watches (played to the end)
   likedByMe?: boolean; // whether the calling account liked it (signed in only)
   createdAt?: number;
   // Full recipe — powers "use this template" in the director.

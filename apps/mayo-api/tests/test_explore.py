@@ -253,3 +253,29 @@ def test_my_posts_hide_unhide_and_owner_delete(monkeypatch):
     assert client.get("/v1/explore/mine", headers=oh).json() == []
     assert client.get(f"/v1/public/reels/{item.id}").status_code == 404
     assert live_store is not None  # silence unused-import lint in minimal runs
+
+
+def test_watch_ping_and_completion_weight():
+    """Completed watches count via /watch and outrank plain views (ADR 0015)."""
+    from app import db
+    from app.schemas import ExploreItem as _EI
+    import time as _t
+
+    db.replace_kind("explore", [])
+    db.replace_kind("explore_comment", [])
+    store = ExploreStore()
+    item = asyncio.run(store.publish(_video("watchme"), "p"))
+    watched = asyncio.run(store.watch(item.id))
+    assert watched is not None and watched.watches == 1
+    assert asyncio.run(store.watch("e-nope")) is None
+
+    def mk(iid, **kw):
+        return _EI(
+            id=iid, title=iid, prompt=iid, author="@t",
+            durationLabel="0:02", accent="#000", tierLabel="Local",
+            createdAt=_t.time(), **{"likes": 0, **kw},
+        )
+
+    # a completed watch is worth more than a view, less than a like
+    assert ExploreStore._score(mk("w", watches=2)) > ExploreStore._score(mk("v", views=2))
+    assert ExploreStore._score(mk("l", likes=2)) > ExploreStore._score(mk("w2", watches=2))

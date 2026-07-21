@@ -45,6 +45,14 @@ async def public_view(item_id: str) -> ExploreItem:
     return item
 
 
+@router.post("/explore/{item_id}/watch", response_model=ExploreItem)
+async def public_watch(item_id: str) -> ExploreItem:
+    item = await explore_store.watch(item_id)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+    return item
+
+
 @router.post("/explore/{item_id}/share", response_model=ExploreItem)
 async def public_share(item_id: str) -> ExploreItem:
     item = await explore_store.share(item_id)

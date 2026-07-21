@@ -192,6 +192,7 @@ class ExploreItem(BaseModel):
     comments: int = 0  # comment count
     views: int = 0  # reel impressions (app pings /view when a reel becomes active)
     shares: int = 0  # external shares (share-sheet completions) — deepest signal
+    watches: int = 0  # completed watches (played to the end) — completion-rate signal
     # Whether the CALLING account liked this — annotated per request, never stored.
     likedByMe: bool = False
     createdAt: float = 0.0  # unix seconds; drives the ranking's time decay

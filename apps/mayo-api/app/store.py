@@ -501,7 +501,12 @@ class ExploreStore:
         items surface near the top while they're fresh, then fade unless they
         earn engagement — no more feed frozen by early winners.
         """
-        engagement = e.likes * 3.0 + e.comments * 5.0 + e.shares * 8.0 + e.views * 0.3
+        engagement = (
+            e.likes * 3.0 + e.comments * 5.0 + e.shares * 8.0 + e.views * 0.3
+            # Completed watches: deeper than a view, shallower than a like —
+            # short-video rankers treat completion rate as a core signal.
+            + e.watches * 1.5
+        )
         age_hours = max(0.0, ((now or time.time()) - (e.createdAt or 0)) / 3600)
         return (engagement + 1.0) / (age_hours + 2.0) ** 1.5
 
@@ -512,6 +517,17 @@ class ExploreStore:
             if not item:
                 return None
             updated = item.model_copy(update={"views": item.views + 1})
+            self._items[item_id] = updated
+            self._persist()
+            return updated.model_copy()
+
+    async def watch(self, item_id: str) -> Optional[ExploreItem]:
+        """Count a COMPLETED watch (the reel played to its end)."""
+        async with self._lock:
+            item = self._items.get(item_id)
+            if not item:
+                return None
+            updated = item.model_copy(update={"watches": item.watches + 1})
             self._items[item_id] = updated
             self._persist()
             return updated.model_copy()
