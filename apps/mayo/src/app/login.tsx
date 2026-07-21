@@ -22,6 +22,8 @@ import {
   githubLoginResult,
   googleLoginStart,
   googleLoginResult,
+  resetComplete,
+  resetStart,
 } from '@/api/client';
 import { GOOGLE_CLIENT_ID, useAuth } from '@/auth/auth';
 import { ThemedText } from '@/components/themed-text';
@@ -41,11 +43,45 @@ export default function LoginScreen() {
   const toast = useToast();
   const { signIn, signUp, adoptSession } = useAuth();
 
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'reset'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  // Password reset: request a code by email, then enter code + new password.
+  const [resetSent, setResetSent] = useState(false);
+  const [resetCode, setResetCode] = useState('');
+
+  const sendResetCode = async () => {
+    if (busy || !email.trim()) return;
+    setBusy(true);
+    try {
+      await resetStart(email.trim());
+      setResetSent(true);
+      toast.show(t('auth.resetSent'));
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 501) toast.show(t('auth.resetUnavailable'));
+      else toast.show(t('auth.resetFailed'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitReset = async () => {
+    if (busy || !email.trim() || !resetCode.trim() || password.length < 8) return;
+    setBusy(true);
+    try {
+      const res = await resetComplete(email.trim(), resetCode.trim(), password);
+      await adoptSession(res.token, res.user);
+      toast.show(t('auth.resetDone'));
+      router.back();
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 400) toast.show(t('auth.resetWrongCode'));
+      else toast.show(t('auth.resetFailed'));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   // Server-driven SNS login (Expo Go-safe, used by native Google and GitHub on
   // every platform): get a one-time loginId + consent URL from the API, open
@@ -139,7 +175,7 @@ export default function LoginScreen() {
       <SafeAreaView edges={['top']} style={styles.safe}>
         <View style={styles.topBar}>
           <ThemedText type="smallBold">
-            {mode === 'login' ? t('auth.signIn') : t('auth.signUp')}
+            {mode === 'login' ? t('auth.signIn') : mode === 'register' ? t('auth.signUp') : t('auth.resetTitle')}
           </ThemedText>
           <Pressable onPress={() => router.back()} hitSlop={10} accessibilityLabel={t('common.close')}>
             <Ionicons name="close" size={24} color={theme.text} />
@@ -172,36 +208,98 @@ export default function LoginScreen() {
             keyboardType="email-address"
             style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
           />
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder={t('auth.password')}
-            placeholderTextColor={theme.textSecondary}
-            secureTextEntry
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
-            onSubmitEditing={submit}
-          />
+          {mode === 'reset' && resetSent ? (
+            <TextInput
+              value={resetCode}
+              onChangeText={setResetCode}
+              placeholder={t('auth.resetCode')}
+              placeholderTextColor={theme.textSecondary}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="number-pad"
+              style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            />
+          ) : null}
+          {mode !== 'reset' || resetSent ? (
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder={mode === 'reset' ? t('auth.newPassword') : t('auth.password')}
+              placeholderTextColor={theme.textSecondary}
+              secureTextEntry
+              style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+              onSubmitEditing={mode === 'reset' ? submitReset : submit}
+            />
+          ) : null}
 
-          <Pressable
-            onPress={submit}
-            disabled={busy || !email.trim() || !password}
-            style={({ pressed }) => [
-              styles.primary,
-              {
-                backgroundColor: theme.text,
-                opacity: busy || !email.trim() || !password ? 0.4 : pressed ? 0.85 : 1,
-              },
-            ]}>
-            {busy ? (
-              <ActivityIndicator color={theme.background} />
-            ) : (
-              <ThemedText type="smallBold" style={{ color: theme.background }}>
-                {mode === 'login' ? t('auth.signIn') : t('auth.signUp')}
+          {mode === 'reset' ? (
+            <Pressable
+              onPress={resetSent ? submitReset : sendResetCode}
+              disabled={busy || !email.trim() || (resetSent && (!resetCode.trim() || password.length < 8))}
+              style={({ pressed }) => [
+                styles.primary,
+                {
+                  backgroundColor: theme.text,
+                  opacity:
+                    busy || !email.trim() || (resetSent && (!resetCode.trim() || password.length < 8))
+                      ? 0.4
+                      : pressed
+                        ? 0.85
+                        : 1,
+                },
+              ]}>
+              {busy ? (
+                <ActivityIndicator color={theme.background} />
+              ) : (
+                <ThemedText type="smallBold" style={{ color: theme.background }}>
+                  {resetSent ? t('auth.resetSubmit') : t('auth.resetSend')}
+                </ThemedText>
+              )}
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={submit}
+              disabled={busy || !email.trim() || !password}
+              style={({ pressed }) => [
+                styles.primary,
+                {
+                  backgroundColor: theme.text,
+                  opacity: busy || !email.trim() || !password ? 0.4 : pressed ? 0.85 : 1,
+                },
+              ]}>
+              {busy ? (
+                <ActivityIndicator color={theme.background} />
+              ) : (
+                <ThemedText type="smallBold" style={{ color: theme.background }}>
+                  {mode === 'login' ? t('auth.signIn') : t('auth.signUp')}
+                </ThemedText>
+              )}
+            </Pressable>
+          )}
+
+          {mode === 'reset' && resetSent ? (
+            <Pressable onPress={sendResetCode} disabled={busy} hitSlop={8}>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.switch}>
+                {t('auth.resetResend')}
               </ThemedText>
-            )}
-          </Pressable>
+            </Pressable>
+          ) : null}
+          {mode === 'login' ? (
+            <Pressable
+              onPress={() => {
+                setMode('reset');
+                setResetSent(false);
+                setResetCode('');
+                setPassword('');
+              }}
+              hitSlop={8}>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.switch}>
+                {t('auth.forgot')}
+              </ThemedText>
+            </Pressable>
+          ) : null}
 
-          {GOOGLE_CLIENT_ID && Platform.OS === 'web' ? (
+          {mode !== 'reset' && GOOGLE_CLIENT_ID && Platform.OS === 'web' ? (
             // Full-page OAuth redirect — survives mobile-Safari popup/cookie
             // blocking (the GIS popup hung at gsi/transform). The id_token comes
             // back in the URL fragment and AuthProvider adopts it on boot.
@@ -225,7 +323,7 @@ export default function LoginScreen() {
               <Ionicons name="logo-google" size={18} color={theme.text} />
               <ThemedText type="smallBold">{t('auth.google')}</ThemedText>
             </Pressable>
-          ) : Platform.OS !== 'web' ? (
+          ) : mode !== 'reset' && Platform.OS !== 'web' ? (
             // Native Google is SERVER-driven — no client id needed on the app,
             // so the button always shows (the server explains if unconfigured).
             <Pressable
@@ -238,13 +336,13 @@ export default function LoginScreen() {
               <Ionicons name="logo-google" size={18} color={theme.text} />
               <ThemedText type="smallBold">{busy ? t('auth.waitingGoogle') : t('auth.google')}</ThemedText>
             </Pressable>
-          ) : (
+          ) : mode !== 'reset' ? (
             <ThemedText type="small" themeColor="textSecondary" style={styles.blurb}>
               {t('auth.googleUnconfigured')}
             </ThemedText>
-          )}
+          ) : null}
 
-          {appleAvailable ? (
+          {mode !== 'reset' && appleAvailable ? (
             <Pressable
               onPress={appleLogin}
               disabled={busy}
@@ -257,18 +355,22 @@ export default function LoginScreen() {
             </Pressable>
           ) : null}
 
-          <Pressable
-            onPress={githubLogin}
-            disabled={busy}
-            style={({ pressed }) => [
-              styles.google,
-              { borderColor: theme.backgroundSelected, opacity: busy ? 0.4 : pressed ? 0.7 : 1 },
-            ]}>
-            <Ionicons name="logo-github" size={18} color={theme.text} />
-            <ThemedText type="smallBold">{t('auth.github')}</ThemedText>
-          </Pressable>
+          {mode !== 'reset' ? (
+            <Pressable
+              onPress={githubLogin}
+              disabled={busy}
+              style={({ pressed }) => [
+                styles.google,
+                { borderColor: theme.backgroundSelected, opacity: busy ? 0.4 : pressed ? 0.7 : 1 },
+              ]}>
+              <Ionicons name="logo-github" size={18} color={theme.text} />
+              <ThemedText type="smallBold">{t('auth.github')}</ThemedText>
+            </Pressable>
+          ) : null}
 
-          <Pressable onPress={() => setMode((m) => (m === 'login' ? 'register' : 'login'))} hitSlop={8}>
+          <Pressable
+            onPress={() => setMode((m) => (m === 'login' ? 'register' : 'login'))}
+            hitSlop={8}>
             <ThemedText type="small" themeColor="textSecondary" style={styles.switch}>
               {mode === 'login' ? t('auth.toRegister') : t('auth.toLogin')}
             </ThemedText>

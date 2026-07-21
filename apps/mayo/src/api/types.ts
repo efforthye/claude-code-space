@@ -95,7 +95,7 @@ export type EditClip = {
   filter?: ClipFilter;
   font?: CaptionFont;
 };
-export type EditRequest = { title: string; clips: EditClip[]; audioKey?: string };
+export type EditRequest = { title: string; clips: EditClip[]; audioKey?: string; keepAudio?: boolean };
 
 export type ExploreItem = {
   id: string;

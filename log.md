@@ -138,3 +138,14 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-07-18] service | mayo UI 이모지 전면 제거 + 디자인 규칙 명문화 (밤샘 배치 32, 오너 지시 "아이콘 이모지 넣지 마, 앞으로도"). 관리자 콘솔 통계 카드/게시물 관리 행, 공개 릴 페이지의 이모지 카운터를 텍스트 라벨(좋아요/댓글/공유/조회, i18n)로 교체, 알림 제목·공유 문구의 장식 이모지도 제거. apps/mayo/AGENTS.md 최상단에 "제품 어디에도 이모지 금지 — 아이콘은 Ionicons, 라벨은 텍스트" 규칙 명문화(향후 세션에도 적용). tsc + iOS/web export 통과.
 ## [2026-07-18] service | mayo prod-hardening — 가짜 성공 제거·mock 경로 관리자 전용 (밤샘 배치 33, 오너 지시 "mock 하나도 없어야, 전부 prod"). 전수 감사 후 조치: (1) POST /v1/billing/validate — 영수증을 검증 없이 entitled=true로 돌려주던 가짜 검증 → 실제 스토어 검증 전까지 501 거부(플랜은 실경로인 Stripe 결제+서명 검증 웹훅으로만 부여). (2) 유튜브 미연결 상태의 게시 — accepted=true 가짜 성공 → 400 "유튜브 채널 연결이 필요해요". (3) "클립별 다운로드" 죽은 버튼("곧 지원" 토스트) 제거. (4) 설정의 mock("빠른 미리보기") 백엔드 칩과 탐색 샘플 시딩(플라스크·빈피드 버튼) — 관리자 프로브(403) 성공 시에만 노출. (5) 팔로우 버튼 — 서버 미반영(기기 로컬 전용) 가짜 소셜 기능이라 서버 구현 전까지 숨김. 잔여 mock 현황은 브리핑에 정리(mock 백엔드/플래너는 관리자용 개발 도구로 유지, S3 스텁은 미선택 경로, 앱 IAP mock은 사경로). 테스트 2건 갱신(pytest 103/103); tsc + iOS/web export 통과.
 ## [2026-07-18] service | mayo 유료 게이팅 상시화 + 관리자 미리보기 모드 (밤샘 배치 34, 오너 지시 "클로드는 관리자만, 일반은 결제해야, 무료 기능만 개방 + 관리자용 일반사용자 미리보기"). 서버: premium_gating 기본 ON — Claude 감독·외부 생성은 [유료 플랜 OR 관리자 계정(MAYO_ADMIN_EMAILS) OR 자기 키(BYOK)]만 통과(premium_user_or_none), 무료/익명은 402. 로컬 AI·기본 감독·편집·탐색 등 무료 기능은 전부 개방 유지. 앱: 서버 게이트를 UI에 미러링 — 설정의 외부 API 칩과 감독 선택의 Claude 옵션이 비유료에게 잠금 표시(자물쇠 아이콘·"유료" 태그·탭 시 안내 토스트). 관리자 설정에 "일반 사용자로 보기" 토글(previewAsUser, 로컬 영속) — 켜면 관리자 콘솔 진입로·mock 칩·시딩 버튼이 숨고 유료 잠금이 걸려 무료 유저 화면 그대로 미리보기. 테스트 1건 추가(관리자 통과·무료 402, pytest 104/104); tsc + iOS/web export 통과.
+
+## [2026-07-21] deploy | mayo → password reset + editor keeps original sound (batch 35)
+- Auth: `POST /v1/auth/reset/start` emails a 6-digit code (SMTP via `MAYO_SMTP_*`,
+  honest 501 when unset, no account enumeration); `/reset/complete` rotates the
+  password, revokes old sessions, and signs the user in. Login screen gained a
+  full forgot-password flow (email → code + new password).
+- Editor: `EditRequest.keepAudio` (default on) keeps each clip's own sound —
+  ffprobe audio detection, silent clips get an anullsrc track so concat stays
+  uniform, speed changes sync audio via atempo, and a voiceover now MIXES over
+  the original sound (amix) instead of replacing it. App: "원본 소리 유지" toggle.
+- Verified: pytest 109 passed, tsc clean, iOS + web exports OK.

@@ -81,9 +81,47 @@ def _drawtext_filter(text: str, position: str, font: str = "auto") -> str:
     return "drawtext=" + ":".join(parts)
 
 
-def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[bytes]:
+def _has_audio(path: str) -> bool:
+    """Whether the file carries an audio stream (ffprobe; False on any failure)."""
+    try:
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "a",
+             "-show_entries", "stream=codec_type", "-of", "csv=p=0", path],
+            capture_output=True, timeout=60,
+        )
+        return b"audio" in probe.stdout
+    except Exception:
+        return False
+
+
+def _atempo_chain(speed: float) -> str:
+    """An -af chain matching audio to a setpts speed change. atempo only takes
+    0.5–2.0 per stage, so out-of-range speeds are factored into stages."""
+    if not speed or speed == 1.0:
+        return ""
+    parts: list[str] = []
+    s = speed
+    while s > 2.0:
+        parts.append("atempo=2.0")
+        s /= 2.0
+    while s < 0.5:
+        parts.append("atempo=0.5")
+        s /= 0.5
+    if abs(s - 1.0) > 1e-6:
+        parts.append(f"atempo={s}")
+    return ",".join(parts)
+
+
+def _render(
+    sources: list[Source], audio_key: Optional[str] = None, keep_audio: bool = True
+) -> Optional[bytes]:
     """Trim each source (+ optional burned-in caption), concat, and optionally
-    mux an audio track — all via ffmpeg."""
+    mux an audio track — all via ffmpeg.
+
+    With keep_audio each segment keeps its own sound (silent sources get a
+    generated silent track so the concat streams stay uniform); a provided
+    audio_key is then MIXED over the cut instead of replacing it.
+    """
     store = get_storage()
     with tempfile.TemporaryDirectory() as td:
         segments: list[str] = []
@@ -92,12 +130,17 @@ def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[
             with open(src, "wb") as fh:
                 fh.write(store.read(key))
             seg = os.path.join(td, f"seg{i}.mp4")
+            src_has_audio = keep_audio and _has_audio(src)
 
             def build(with_text: bool) -> list[str]:
                 cmd = ["ffmpeg", "-y"]
                 if start and start > 0:
                     cmd += ["-ss", f"{start}"]  # input seek
                 cmd += ["-i", src]
+                if keep_audio and not src_has_audio:
+                    # Silent source: synthesize a silent track so every segment
+                    # has uniform a/v streams for the stream-copy concat.
+                    cmd += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
                 if end is not None and end > (start or 0):
                     cmd += ["-t", f"{end - (start or 0)}"]  # duration after seek
                 if with_text:
@@ -105,7 +148,19 @@ def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[
                     if chain:
                         cmd += ["-vf", chain]
                 # Re-encode to a uniform codec so the concat step can stream-copy.
-                cmd += ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", seg]
+                cmd += ["-c:v", "libx264", "-pix_fmt", "yuv420p"]
+                if not keep_audio:
+                    cmd += ["-an"]
+                elif src_has_audio:
+                    af = _atempo_chain(speed)  # keep sound in sync with setpts
+                    if af:
+                        cmd += ["-af", af]
+                    cmd += ["-map", "0:v:0", "-map", "0:a:0",
+                            "-c:a", "aac", "-ar", "44100", "-ac", "2"]
+                else:
+                    cmd += ["-map", "0:v:0", "-map", "1:a:0", "-shortest",
+                            "-c:a", "aac", "-ar", "44100", "-ac", "2"]
+                cmd += [seg]
                 return cmd
 
             try:
@@ -128,26 +183,30 @@ def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[
             timeout=600,
         )
 
-        # Optional audio track (voiceover/BGM): mux it over the stitched cut,
-        # trimmed to the shorter stream. Audio problems must never break the
-        # edit — on any failure the silent cut is returned instead.
+        # Optional audio track (voiceover/BGM): with keep_audio it is MIXED over
+        # the cut's own sound; otherwise it replaces the (silent) cut's audio.
+        # Audio problems must never break the edit — on any failure the plain
+        # cut is returned instead.
         if audio_key and store.exists(audio_key):
             src_audio = os.path.join(td, "track" + os.path.splitext(audio_key)[1])
             with open(src_audio, "wb") as fh:
                 fh.write(store.read(audio_key))
             with_audio = os.path.join(td, "edit-audio.mp4")
+            if keep_audio:
+                mux = ["ffmpeg", "-y", "-i", out, "-i", src_audio,
+                       "-filter_complex",
+                       "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=0[aout]",
+                       "-map", "0:v:0", "-map", "[aout]",
+                       "-c:v", "copy", "-c:a", "aac", with_audio]
+            else:
+                mux = ["ffmpeg", "-y", "-i", out, "-i", src_audio,
+                       "-map", "0:v:0", "-map", "1:a:0",
+                       "-c:v", "copy", "-c:a", "aac", "-shortest", with_audio]
             try:
-                subprocess.run(
-                    ["ffmpeg", "-y", "-i", out, "-i", src_audio,
-                     "-map", "0:v:0", "-map", "1:a:0",
-                     "-c:v", "copy", "-c:a", "aac", "-shortest", with_audio],
-                    check=True,
-                    capture_output=True,
-                    timeout=600,
-                )
+                subprocess.run(mux, check=True, capture_output=True, timeout=600)
                 out = with_audio
             except subprocess.CalledProcessError:
-                pass  # unsupported/corrupt audio — keep the silent cut
+                pass  # unsupported/corrupt audio — keep the plain cut
 
         with open(out, "rb") as fh:
             return fh.read()
@@ -173,7 +232,7 @@ async def compose_edit(req: EditRequest, owner_id: str | None = None) -> Optiona
     if not sources:
         return None
 
-    data = await asyncio.to_thread(_render, sources, req.audioKey)
+    data = await asyncio.to_thread(_render, sources, req.audioKey, req.keepAudio)
     if not data:
         return None
     film_key = f"films/edit-{int(time.time() * 1000)}.mp4"

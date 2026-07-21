@@ -81,6 +81,9 @@ export default function EditScreen() {
   const [recording, setRecording] = useState(false);
   const [audioBusy, setAudioBusy] = useState(false);
   const [audioKey, setAudioKey] = useState<string | null>(null);
+  // Keep each source clip's own sound in the export (owner directive: the
+  // editor must never silently strip audio). Off = legacy silent cut.
+  const [keepAudio, setKeepAudio] = useState(true);
 
   const toggleRecord = async () => {
     if (audioBusy) return;
@@ -290,6 +293,7 @@ export default function EditScreen() {
           ...(c.filter !== 'none' ? { filter: c.filter } : {}),
         })),
         ...(audioKey ? { audioKey } : {}),
+        keepAudio,
       };
       const video = await createEdit(payload);
       router.replace(`/library/${video.id}`);
@@ -478,10 +482,28 @@ export default function EditScreen() {
                   ))}
                 </View>
 
-                {/* Voiceover — record on device, muxed over the whole edit. */}
+                {/* Audio — keep the clips' own sound, plus optional voiceover
+                    (recorded on device, mixed over the whole edit). */}
+                <ThemedText type="smallBold">{t('edit.audio')}</ThemedText>
+                <View style={styles.audioRow}>
+                  <Pressable
+                    onPress={() => setKeepAudio((v) => !v)}
+                    style={[
+                      styles.audioBtn,
+                      { borderColor: keepAudio ? theme.text : theme.backgroundSelected },
+                    ]}>
+                    <Ionicons
+                      name={keepAudio ? 'volume-high-outline' : 'volume-mute-outline'}
+                      size={16}
+                      color={theme.text}
+                    />
+                    <ThemedText type="small">
+                      {keepAudio ? t('edit.keepAudioOn') : t('edit.keepAudioOff')}
+                    </ThemedText>
+                  </Pressable>
+                </View>
                 {Platform.OS !== 'web' ? (
                   <>
-                    <ThemedText type="smallBold">{t('edit.audio')}</ThemedText>
                     <View style={styles.audioRow}>
                       <Pressable
                         onPress={toggleRecord}

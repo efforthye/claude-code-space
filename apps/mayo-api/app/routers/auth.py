@@ -41,9 +41,56 @@ async def login(req: LoginRequest) -> SessionResult:
     return SessionResult(token=store.create_session(user["id"]), user=to_public(user))
 
 
-from pydantic import BaseModel  # noqa: E402
+from pydantic import BaseModel, Field  # noqa: E402
 
-from ..auth import start_google_login, take_login_result  # noqa: E402
+from ..auth import (  # noqa: E402
+    complete_password_reset,
+    start_google_login,
+    start_password_reset,
+    take_login_result,
+)
+
+# --- Password reset (email + 6-digit code; honest 501 when mail is unset) ---
+
+_EMAIL_RE = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+
+
+class ResetStartRequest(BaseModel):
+    email: str = Field(pattern=_EMAIL_RE, max_length=200)
+
+
+class ResetCompleteRequest(BaseModel):
+    email: str = Field(pattern=_EMAIL_RE, max_length=200)
+    code: str = Field(min_length=4, max_length=10)
+    newPassword: str = Field(min_length=8, max_length=200)
+
+
+class OkResult(BaseModel):
+    ok: bool = True
+
+
+@router.post("/reset/start", response_model=OkResult)
+async def reset_start(req: ResetStartRequest) -> OkResult:
+    """Email a reset code. Always 200 for a valid request shape — whether the
+    account exists is never revealed. 501 when the server can't send mail."""
+    try:
+        await start_password_reset(req.email)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, detail=str(exc))
+    except Exception:
+        # SMTP hiccup — an honest failure beats a silent black hole.
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, detail="reset mail could not be sent — try again"
+        )
+    return OkResult()
+
+
+@router.post("/reset/complete", response_model=SessionResult)
+async def reset_complete(req: ResetCompleteRequest) -> SessionResult:
+    user = complete_password_reset(req.email, req.code, req.newPassword)
+    if not user:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="wrong or expired reset code")
+    return SessionResult(token=store.create_session(user["id"]), user=to_public(user))
 
 
 class GoogleStartResult(BaseModel):

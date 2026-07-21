@@ -184,6 +184,15 @@ class Settings:
     apple_oauth_audiences: list[str] = field(
         default_factory=lambda: _split(os.getenv("APPLE_OAUTH_AUDIENCES", "host.exp.Exponent"))
     )
+    # Outbound mail (password-reset codes). Unset host -> reset endpoints answer
+    # an honest 501 instead of pretending to send. Names only in the repo.
+    smtp_host: str = field(default_factory=lambda: os.getenv("MAYO_SMTP_HOST", ""))
+    smtp_port: int = field(default_factory=lambda: int(os.getenv("MAYO_SMTP_PORT", "587")))
+    smtp_user: str = field(default_factory=lambda: os.getenv("MAYO_SMTP_USER", ""))
+    smtp_password: str = field(default_factory=lambda: os.getenv("MAYO_SMTP_PASS", ""))
+    smtp_from: str = field(
+        default_factory=lambda: os.getenv("MAYO_SMTP_FROM", os.getenv("MAYO_SMTP_USER", ""))
+    )
     # Admin console: signed-in accounts with these emails may call /v1/admin.
     admin_emails: list[str] = field(
         default_factory=lambda: _split(os.getenv("MAYO_ADMIN_EMAILS", "efforthye@gmail.com"))

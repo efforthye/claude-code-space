@@ -164,9 +164,12 @@ class EditClip(BaseModel):
 class EditRequest(BaseModel):
     title: str = Field(default="My edit", max_length=100)
     clips: list[EditClip] = Field(min_length=1)
-    # Optional audio track (voiceover/BGM) — a storage key from POST /v1/edit/audio,
-    # muxed over the stitched cut (trimmed to the shorter of the two).
+    # Optional audio track (voiceover/BGM) — a storage key from POST /v1/edit/audio.
+    # With keepAudio it is MIXED over the clips' own sound; without, it replaces it.
     audioKey: Optional[str] = None
+    # Keep each source clip's original sound in the cut (owner directive: the
+    # editor must not silently strip audio). False = legacy silent-cut behavior.
+    keepAudio: bool = True
 
 
 class AudioUploadResult(BaseModel):

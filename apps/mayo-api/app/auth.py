@@ -150,6 +150,20 @@ class _Store:
         self.save()
         return rec
 
+    def set_password(self, user_id: str, password: str) -> bool:
+        """Set/replace the account password (also gives social-only accounts an
+        email login) and revoke every existing session for safety."""
+        user = self.users.get(user_id)
+        if not user:
+            return False
+        salt = secrets.token_bytes(16)
+        user["salt"] = salt.hex()
+        user["hash"] = hashlib.scrypt(password.encode(), salt=salt, **_SCRYPT).hex()
+        for tok in [t for t, s in self.sessions.items() if s["userId"] == user_id]:
+            self.sessions.pop(tok, None)
+        self.save()
+        return True
+
     def check_password(self, user: dict, password: str) -> bool:
         salt = bytes.fromhex(user.get("salt", ""))
         expected = user.get("hash", "")
@@ -268,6 +282,89 @@ def premium_user_or_none(session_token: str | None) -> Optional[dict]:
     if user and (user.get("planId", "free") != "free" or is_admin_user(user)):
         return user
     return None
+
+
+# --- Password reset: a 6-digit code is emailed to the account address; entering
+# it (with a new password) rotates the password and revokes old sessions. The
+# code store is in-memory (10-min TTL) — a restart just voids pending codes. ---
+_RESET_TTL = 600
+_RESET_MAX_ATTEMPTS = 5
+_reset_pending: dict[str, dict] = {}  # email -> {code, expiresAt, attempts}
+
+
+def smtp_configured() -> bool:
+    return bool(settings.smtp_host and settings.smtp_from)
+
+
+def _send_mail(to_email: str, subject: str, body: str) -> None:
+    """Blocking SMTP send (call via asyncio.to_thread). STARTTLS on 587-style
+    ports; implicit TLS on 465."""
+    import smtplib
+    from email.mime.text import MIMEText
+
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = subject
+    msg["From"] = settings.smtp_from
+    msg["To"] = to_email
+    if settings.smtp_port == 465:
+        server: smtplib.SMTP = smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=20)
+    else:
+        server = smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=20)
+        server.starttls()
+    try:
+        if settings.smtp_user:
+            server.login(settings.smtp_user, settings.smtp_password)
+        server.sendmail(settings.smtp_from, [to_email], msg.as_string())
+    finally:
+        server.quit()
+
+
+async def start_password_reset(email: str) -> None:
+    """Email a reset code to the address IF an account exists. Always succeeds
+    from the caller's view (no account enumeration). Raises ValueError when the
+    server has no SMTP configured — the router turns that into a 501."""
+    import asyncio
+
+    if not smtp_configured():
+        raise ValueError("password reset mail is not configured on this server")
+    e = email.strip().lower()
+    user = store.by_email(e)
+    if not user:
+        return  # pretend-send: don't reveal whether the account exists
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    _reset_pending[e] = {
+        "code": code,
+        "expiresAt": time.time() + _RESET_TTL,
+        "attempts": 0,
+    }
+    body = (
+        f"mayo 비밀번호 재설정 코드: {code}\n\n"
+        "앱의 재설정 화면에 이 코드를 입력해주세요. 10분 동안 유효합니다.\n"
+        "요청한 적이 없다면 이 메일은 무시하셔도 됩니다.\n\n"
+        f"Your mayo password reset code is {code}. It expires in 10 minutes."
+    )
+    await asyncio.to_thread(_send_mail, e, "mayo 비밀번호 재설정 코드", body)
+
+
+def complete_password_reset(email: str, code: str, new_password: str) -> Optional[dict]:
+    """Verify the emailed code and rotate the password; returns the user on
+    success, None on a wrong/expired code (attempts are capped)."""
+    e = email.strip().lower()
+    rec = _reset_pending.get(e)
+    if not rec or rec["expiresAt"] < time.time():
+        _reset_pending.pop(e, None)
+        return None
+    rec["attempts"] += 1
+    if rec["attempts"] > _RESET_MAX_ATTEMPTS or not secrets.compare_digest(rec["code"], code.strip()):
+        if rec["attempts"] > _RESET_MAX_ATTEMPTS:
+            _reset_pending.pop(e, None)
+        return None
+    user = store.by_email(e)
+    if not user:
+        return None
+    _reset_pending.pop(e, None)
+    store.set_password(user["id"], new_password)
+    return user
 
 
 # --- Server-driven Google login (works in Expo Go, where in-app OAuth redirects

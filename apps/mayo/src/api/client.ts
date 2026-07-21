@@ -139,6 +139,15 @@ export const authRegister = (email: string, password: string, name?: string) =>
   });
 export const authLogin = (email: string, password: string) =>
   req<SessionResult>('/v1/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+// Password reset: /start emails a 6-digit code (501 = server has no mail set
+// up); /complete swaps the password and signs the user straight in.
+export const resetStart = (email: string) =>
+  req<{ ok: boolean }>('/v1/auth/reset/start', { method: 'POST', body: JSON.stringify({ email }) });
+export const resetComplete = (email: string, code: string, newPassword: string) =>
+  req<SessionResult>('/v1/auth/reset/complete', {
+    method: 'POST',
+    body: JSON.stringify({ email, code, newPassword }),
+  });
 // Server-driven SNS start/poll. `link=true` (signed in) LINKS the provider to
 // the current account instead of signing in — poll returns `linked` then.
 export type SnsPoll = {
