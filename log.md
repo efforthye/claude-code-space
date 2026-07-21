@@ -182,3 +182,13 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   (+ public mirror); app pings once per activation on the player's playToEnd;
   weight 1.5 in the score (ADR 0015 updated).
 - Verified: pytest 111 passed, tsc clean, iOS + web exports OK.
+
+## [2026-07-21] deploy | mayo → admin audit log + daily metric time series (batch 39)
+- Every mutating admin action (credit grant, plan change, user delete, explore
+  takedown) now writes an audit record (SQLite kind `audit`; new `db.append`
+  upsert helper). `GET /v1/admin/audit` serves them newest-first.
+- Daily time series with zero schedulers: each `/v1/admin/stats` read upserts
+  TODAY's snapshot (kind `metric_snap`, id=date) — users/videos/posts/likes/
+  views/shares/watches/credits/storage. `GET /v1/admin/timeseries` serves the
+  history; the console shows the last 14 days + the audit log.
+- Verified: pytest 112 passed, tsc clean, iOS + web exports OK.

@@ -79,3 +79,41 @@ def test_admin_explore_moderation(monkeypatch):
     assert client.delete(
         f"/v1/admin/explore/{item.id}", headers={"X-Mayo-Session": token}
     ).status_code == 404
+
+
+def test_admin_audit_log_and_timeseries(monkeypatch):
+    """Mutating admin actions land in the audit log; stats reads accrue a daily
+    metric snapshot served by /timeseries."""
+    from app import db
+
+    db.replace_kind("audit", [])
+    db.replace_kind("metric_snap", [])
+    _, token = _admin_session(monkeypatch)
+    h = {"X-Mayo-Session": token}
+
+    target = auth_mod.store.create_user(
+        "audited@example.com", "Aud", provider="email", password="pw12345678"
+    )
+    r = client.post(f"/v1/admin/users/{target['id']}/credits", json={"delta": 50}, headers=h)
+    assert r.status_code == 200
+    r = client.post(f"/v1/admin/users/{target['id']}/plan", json={"planId": "pro"}, headers=h)
+    assert r.status_code == 200
+
+    audit = client.get("/v1/admin/audit", headers=h)
+    assert audit.status_code == 200
+    actions = [(a["action"], a["detail"]) for a in audit.json()]
+    assert ("plan", "pro") == actions[0]  # newest first
+    assert ("credits", "+50") in actions
+    assert all(a["admin"] == "boss@example.com" for a in audit.json())
+
+    # stats upserts today's snapshot; a second read updates, not duplicates
+    assert client.get("/v1/admin/stats", headers=h).status_code == 200
+    assert client.get("/v1/admin/stats", headers=h).status_code == 200
+    series = client.get("/v1/admin/timeseries", headers=h)
+    assert series.status_code == 200 and len(series.json()) == 1
+    point = series.json()[0]
+    assert point["users"] >= 2 and "watches" in point
+
+    # non-admin gets nothing
+    anon = client.get("/v1/admin/audit")
+    assert anon.status_code == 403

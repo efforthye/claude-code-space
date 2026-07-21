@@ -71,6 +71,48 @@ class PlanChange(BaseModel):
     planId: str = Field(pattern="^(free|pro|studio)$")
 
 
+class AuditEntry(BaseModel):
+    id: str
+    at: float
+    admin: str  # acting admin's email
+    action: str  # credits | plan | delete-user | delete-explore
+    target: str = ""
+    detail: str = ""
+
+
+class MetricPoint(BaseModel):
+    date: str  # YYYY-MM-DD (UTC)
+    users: int
+    videos: int
+    explorePosts: int
+    likes: int
+    views: int
+    shares: int
+    watches: int
+    creditsOutstanding: int
+    storageBytes: int
+
+
+def _audit(admin: dict, action: str, target: str = "", detail: str = "") -> None:
+    """Append an audit record (kind=audit) — every mutating admin action."""
+    import secrets
+
+    from .. import db
+
+    entry = {
+        "id": f"a_{secrets.token_hex(6)}",
+        "at": time.time(),
+        "admin": admin.get("email", ""),
+        "action": action,
+        "target": target,
+        "detail": detail,
+    }
+    try:
+        db.append("audit", entry["id"], entry)
+    except Exception:
+        pass  # bookkeeping must never break the action itself
+
+
 @router.get("/stats", response_model=AdminStats)
 async def stats(admin: dict = Depends(require_admin)) -> AdminStats:
     from ..storage import get_storage
@@ -90,7 +132,7 @@ async def stats(admin: dict = Depends(require_admin)) -> AdminStats:
             except Exception:
                 pass
 
-    return AdminStats(
+    result = AdminStats(
         users=len(all_users),
         signups7d=sum(1 for u in all_users if now - u.get("createdAt", 0) < 7 * 86400),
         activeSessions=sum(1 for s in users.sessions.values() if s["expiresAt"] > now),
@@ -109,6 +151,32 @@ async def stats(admin: dict = Depends(require_admin)) -> AdminStats:
         generationBackend=runtime.generation_backend(),
         plannerBackend=runtime.planner_backend(),
     )
+
+    # Passive daily time series: every stats read upserts TODAY's snapshot
+    # (kind=metric_snap, id=date) — history accrues with zero schedulers.
+    from .. import db
+
+    today = time.strftime("%Y-%m-%d", time.gmtime(now))
+    try:
+        db.append(
+            "metric_snap",
+            today,
+            {
+                "date": today,
+                "users": result.users,
+                "videos": result.videos,
+                "explorePosts": result.explorePosts,
+                "likes": result.likes,
+                "views": result.views,
+                "shares": result.shares,
+                "watches": sum(p.watches for p in posts),
+                "creditsOutstanding": result.creditsOutstanding,
+                "storageBytes": result.storageBytes,
+            },
+        )
+    except Exception:
+        pass
+    return result
 
 
 async def _user_rows() -> list[AdminUser]:
@@ -156,6 +224,7 @@ async def adjust_credits(
 ) -> AdminUser:
     if users.add_credits(user_id, req.delta) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="user not found")
+    _audit(admin, "credits", target=user_id, detail=f"{req.delta:+d}")
     return await _user_row(user_id)
 
 
@@ -165,6 +234,7 @@ async def set_plan(
 ) -> AdminUser:
     if not users.set_plan(user_id, req.planId):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="user not found")
+    _audit(admin, "plan", target=user_id, detail=req.planId)
     return await _user_row(user_id)
 
 
@@ -175,10 +245,12 @@ async def delete_user(user_id: str, admin: dict = Depends(require_admin)) -> dic
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="cannot delete yourself")
     if user_id not in users.users:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="user not found")
+    doomed = users.users.get(user_id, {})
     users.users.pop(user_id, None)
     for tok in [t for t, s in users.sessions.items() if s["userId"] == user_id]:
         users.sessions.pop(tok, None)
     users.save()
+    _audit(admin, "delete-user", target=user_id, detail=doomed.get("email", ""))
     return {"deleted": True}
 
 
@@ -187,4 +259,35 @@ async def delete_explore_item(item_id: str, admin: dict = Depends(require_admin)
     """Moderation: take any published reel down."""
     if not await explore_store.remove(item_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+    _audit(admin, "delete-explore", target=item_id)
     return {"deleted": True}
+
+
+@router.get("/audit", response_model=list[AuditEntry])
+async def audit_log(limit: int = 100, admin: dict = Depends(require_admin)) -> list[AuditEntry]:
+    """Recent admin actions, newest first."""
+    from .. import db
+
+    entries = []
+    for raw in db.load("audit"):
+        try:
+            entries.append(AuditEntry.model_validate(raw))
+        except Exception:
+            continue
+    entries.sort(key=lambda e: e.at, reverse=True)
+    return entries[: max(1, min(500, limit))]
+
+
+@router.get("/timeseries", response_model=list[MetricPoint])
+async def timeseries(admin: dict = Depends(require_admin)) -> list[MetricPoint]:
+    """Daily metric snapshots (accrued by /stats reads), oldest first."""
+    from .. import db
+
+    points = []
+    for raw in db.load("metric_snap"):
+        try:
+            points.append(MetricPoint.model_validate(raw))
+        except Exception:
+            continue
+    points.sort(key=lambda p: p.date)
+    return points

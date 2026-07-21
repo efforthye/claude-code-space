@@ -76,6 +76,33 @@ def replace_kind(kind: str, docs: Iterable[tuple[str, dict]]) -> None:
         c.commit()
 
 
+def append(kind: str, doc_id: str, doc: dict) -> None:
+    """Upsert ONE document of a kind (append-friendly: no wholesale replace).
+
+    Used by append-only kinds (audit log, metric snapshots) where rewriting the
+    whole kind on every write would be wasteful.
+    """
+    with _lock:
+        c = conn()
+        row = c.execute(
+            "SELECT seq FROM docs WHERE kind = ? AND id = ?", (kind, doc_id)
+        ).fetchone()
+        if row:
+            c.execute(
+                "UPDATE docs SET doc = ? WHERE kind = ? AND id = ?",
+                (json.dumps(doc), kind, doc_id),
+            )
+        else:
+            nxt = c.execute(
+                "SELECT COALESCE(MAX(seq), -1) + 1 FROM docs WHERE kind = ?", (kind,)
+            ).fetchone()[0]
+            c.execute(
+                "INSERT INTO docs (kind, id, doc, seq) VALUES (?, ?, ?, ?)",
+                (kind, doc_id, json.dumps(doc), nxt),
+            )
+        c.commit()
+
+
 def migrate_legacy_json(kind: str, path: str, to_docs) -> list[dict]:
     """If `kind` is empty but a legacy JSON file exists, import it once.
 

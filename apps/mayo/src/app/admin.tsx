@@ -12,7 +12,9 @@ import {
   adminAdjustCredits,
   adminDeleteExplore,
   adminSetPlan,
+  getAdminAudit,
   getAdminStats,
+  getAdminTimeseries,
   getAdminUsers,
   getExplore,
 } from '@/api/client';
@@ -39,6 +41,8 @@ export default function AdminScreen() {
   const { data: stats, loading, error, refetch } = useQuery(getAdminStats);
   const { data: usersList, refetch: refetchUsers } = useQuery(getAdminUsers);
   const { data: posts, refetch: refetchPosts } = useQuery(() => getExplore('latest'));
+  const { data: audit, refetch: refetchAudit } = useQuery(getAdminAudit);
+  const { data: series } = useQuery(getAdminTimeseries);
   const [busy, setBusy] = useState<string | null>(null);
 
   const act = async (key: string, fn: () => Promise<unknown>, after?: () => Promise<unknown>) => {
@@ -57,7 +61,10 @@ export default function AdminScreen() {
 
   const cyclePlan = (u: AdminUser) => {
     const next = u.planId === 'free' ? 'pro' : u.planId === 'pro' ? 'studio' : 'free';
-    return act(`plan-${u.id}`, () => adminSetPlan(u.id, next), refetchUsers);
+    return act(`plan-${u.id}`, () => adminSetPlan(u.id, next), async () => {
+      await refetchUsers();
+      await refetchAudit();
+    });
   };
 
   const statCards = stats
@@ -162,6 +169,49 @@ export default function AdminScreen() {
               </Pressable>
             </ThemedView>
           ))}
+
+          {/* Daily metric time series (accrued by stats reads — no scheduler) */}
+          {series && series.length > 0 ? (
+            <>
+              <ThemedText type="smallBold">{t('admin.timeseries')}</ThemedText>
+              {series.slice(-14).reverse().map((p) => (
+                <ThemedView key={p.date} type="backgroundElement" style={styles.userRow}>
+                  <ThemedText type="small" style={styles.seriesDate}>
+                    {p.date}
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
+                    {t('admin.seriesRow', {
+                      users: p.users,
+                      videos: p.videos,
+                      posts: p.explorePosts,
+                      views: p.views,
+                    })}
+                  </ThemedText>
+                </ThemedView>
+              ))}
+            </>
+          ) : null}
+
+          {/* Audit log — every mutating admin action, newest first */}
+          {audit && audit.length > 0 ? (
+            <>
+              <ThemedText type="smallBold">{t('admin.audit')}</ThemedText>
+              {audit.slice(0, 30).map((a) => (
+                <ThemedView key={a.id} type="backgroundElement" style={styles.userRow}>
+                  <View style={styles.flex}>
+                    <ThemedText type="small">
+                      {a.action}
+                      {a.detail ? ` · ${a.detail}` : ''}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                      {a.admin} · {a.target || '-'} ·{' '}
+                      {new Date(a.at * 1000).toLocaleString()}
+                    </ThemedText>
+                  </View>
+                </ThemedView>
+              ))}
+            </>
+          ) : null}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -202,6 +252,7 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     borderRadius: Spacing.four,
   },
+  seriesDate: { width: 84 },
   miniBtn: {
     borderWidth: 1,
     borderRadius: Spacing.three,

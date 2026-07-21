@@ -193,5 +193,26 @@ export type AdminUser = {
   hasByok: boolean;
 };
 
+export type AdminAuditEntry = {
+  id: string;
+  at: number;
+  admin: string;
+  action: string;
+  target?: string;
+  detail?: string;
+};
+export type AdminMetricPoint = {
+  date: string;
+  users: number;
+  videos: number;
+  explorePosts: number;
+  likes: number;
+  views: number;
+  shares: number;
+  watches: number;
+  creditsOutstanding: number;
+  storageBytes: number;
+};
+
 export type PublishRequest = { title: string; description?: string; visibility: Visibility; tags?: string[] };
 export type PublishResult = { accepted: boolean; videoId: string; visibility: Visibility; url?: string | null };
