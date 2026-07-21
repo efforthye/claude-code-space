@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.screen,
     paddingVertical: Spacing.three,
   },
   titleWrap: {
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.screen,
     paddingBottom: Spacing.six,
     gap: Spacing.three,
   },

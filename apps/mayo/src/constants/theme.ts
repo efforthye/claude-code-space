@@ -54,6 +54,8 @@ export const Spacing = {
   one: 4,
   two: 8,
   three: 16,
+  // Screen edge padding — half of `four`, so content breathes wider (owner ask).
+  screen: 12,
   four: 24,
   five: 32,
   six: 64,

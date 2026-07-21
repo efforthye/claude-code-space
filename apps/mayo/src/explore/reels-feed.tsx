@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.two,
     backgroundColor: '#ffffff',
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.screen,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
   },
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.four,
   },
-  commentList: { paddingHorizontal: Spacing.four, flexGrow: 0, minHeight: 120 },
+  commentList: { paddingHorizontal: Spacing.screen, flexGrow: 0, minHeight: 120 },
   loading: { padding: Spacing.four, textAlign: 'center' },
   comment: { paddingVertical: Spacing.two, gap: 2 },
   commentInputRow: {

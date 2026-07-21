@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   chip: {
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.screen,
     paddingVertical: Spacing.one,
     borderRadius: Spacing.five,
   },

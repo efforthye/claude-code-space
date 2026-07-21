@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     alignItems: 'center',
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.screen,
     paddingBottom: Spacing.six + Spacing.four,
   },
   toast: {
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     maxWidth: 420,
     paddingVertical: Spacing.three,
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.screen,
     borderRadius: Spacing.five,
   },
 });

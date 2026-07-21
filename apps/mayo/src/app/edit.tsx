@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.screen,
     paddingVertical: Spacing.two,
   },
   titleInput: {
@@ -695,7 +695,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderRadius: Spacing.four,
   },
-  main: { flex: 1, flexDirection: 'row', paddingHorizontal: Spacing.four, gap: Spacing.three },
+  main: { flex: 1, flexDirection: 'row', paddingHorizontal: Spacing.screen, gap: Spacing.three },
   previewWrap: { flex: 1.3, justifyContent: 'center' },
   preview: { width: '100%', aspectRatio: 16 / 9, borderRadius: Spacing.three, backgroundColor: '#000' },
   previewBox: { overflow: 'hidden' },
@@ -756,7 +756,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   timeline: { borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: Spacing.two },
-  timelineInner: { gap: Spacing.two, paddingHorizontal: Spacing.four, alignItems: 'center' },
+  timelineInner: { gap: Spacing.two, paddingHorizontal: Spacing.screen, alignItems: 'center' },
   tlClip: {
     width: 96,
     height: 60,
