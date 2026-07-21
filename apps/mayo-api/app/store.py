@@ -450,13 +450,44 @@ class ExploreStore:
             pass
 
     async def list(self, sort: str = "popular") -> list[ExploreItem]:
+        """The PUBLIC feed — owner-hidden items never appear here."""
         async with self._lock:
-            items = [e.model_copy() for e in self._items.values()]
+            items = [e.model_copy() for e in self._items.values() if not e.hidden]
         if sort == "latest":
             items.reverse()  # dict preserves insertion order; newest last
         else:
             items.sort(key=self._score, reverse=True)
         return items
+
+    async def mine(self, owner_id: str) -> list[ExploreItem]:
+        """Everything this account published — hidden included — newest first."""
+        async with self._lock:
+            items = [e.model_copy() for e in self._items.values() if e.ownerId == owner_id]
+        items.reverse()
+        return items
+
+    async def set_hidden(self, item_id: str, owner_id: str, hidden: bool) -> Optional[ExploreItem]:
+        """Owner-only hide/unhide; None when the item isn't theirs (or missing)."""
+        async with self._lock:
+            item = self._items.get(item_id)
+            if not item or item.ownerId != owner_id:
+                return None
+            updated = item.model_copy(update={"hidden": hidden})
+            self._items[item_id] = updated
+            self._persist()
+            return updated.model_copy()
+
+    async def remove_owned(self, item_id: str, owner_id: str) -> bool:
+        """Owner-only permanent delete (comments go with it)."""
+        async with self._lock:
+            item = self._items.get(item_id)
+            if not item or item.ownerId != owner_id:
+                return False
+            self._items.pop(item_id, None)
+            self._comments.pop(item_id, None)
+            self._liked.pop(item_id, None)
+            self._persist()
+        return True
 
     @staticmethod
     def _score(e: ExploreItem, now: float | None = None) -> float:
@@ -523,7 +554,9 @@ class ExploreStore:
             self._persist()
             return updated.model_copy()
 
-    async def publish(self, video: Video, prompt: str, author: str = "@me") -> ExploreItem:
+    async def publish(
+        self, video: Video, prompt: str, author: str = "@me", owner_id: str | None = None
+    ) -> ExploreItem:
         item = ExploreItem(
             id=_new_id("e"),
             title=video.title,
@@ -539,6 +572,7 @@ class ExploreStore:
             # Publish the recipe too — anyone can reuse this as a template.
             scenePrompts=video.scenePrompts,
             stylePrompt=video.stylePrompt,
+            ownerId=owner_id,
         )
         async with self._lock:
             self._items[item.id] = item

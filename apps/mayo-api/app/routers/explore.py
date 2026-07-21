@@ -44,7 +44,60 @@ async def publish_explore(
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST, detail="only a real (playable) video can be published"
         )
-    return await explore_store.publish(video, req.prompt, author=_author(x_mayo_session))
+    user = users.user_for_session(x_mayo_session or "")
+    return await explore_store.publish(
+        video, req.prompt, author=_author(x_mayo_session),
+        owner_id=user["id"] if user else None,
+    )
+
+
+def _require_user(session: Optional[str]) -> dict:
+    user = users.user_for_session(session or "")
+    if not user:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="sign in first")
+    return user
+
+
+# NOTE: registered before /{item_id} so "mine" isn't captured as an item id.
+@router.get("/mine", response_model=list[ExploreItem])
+async def my_explore(x_mayo_session: Optional[str] = Header(default=None)) -> list[ExploreItem]:
+    """Everything the caller published — hidden posts included (owner view)."""
+    user = _require_user(x_mayo_session)
+    return await explore_store.mine(user["id"])
+
+
+@router.post("/{item_id}/hide", response_model=ExploreItem)
+async def hide_explore(
+    item_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> ExploreItem:
+    """Owner-only: pull the post from the public feed (kept, reversible)."""
+    user = _require_user(x_mayo_session)
+    item = await explore_store.set_hidden(item_id, user["id"], True)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not your post (or not found)")
+    return item
+
+
+@router.post("/{item_id}/unhide", response_model=ExploreItem)
+async def unhide_explore(
+    item_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> ExploreItem:
+    user = _require_user(x_mayo_session)
+    item = await explore_store.set_hidden(item_id, user["id"], False)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not your post (or not found)")
+    return item
+
+
+@router.delete("/{item_id}")
+async def delete_my_explore(
+    item_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> dict:
+    """Owner-only PERMANENT delete (admins use /v1/admin/explore/{id})."""
+    user = _require_user(x_mayo_session)
+    if not await explore_store.remove_owned(item_id, user["id"]):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not your post (or not found)")
+    return {"deleted": True}
 
 
 SAMPLE_AUTHOR = "@mayo-sample"

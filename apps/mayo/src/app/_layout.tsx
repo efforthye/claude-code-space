@@ -29,6 +29,7 @@ export default function RootLayout() {
                   <Stack.Screen name="login" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="notifications" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="my-posts" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="publish" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="extend" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="plan" options={{ presentation: 'modal' }} />

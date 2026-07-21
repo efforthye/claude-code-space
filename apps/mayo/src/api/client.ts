@@ -284,6 +284,14 @@ export const shareExplore = (id: string) =>
     `/v1/public/explore/${encodeURIComponent(id)}/share`,
     { method: 'POST' },
   );
+// My posts (owner-only management): list mine incl. hidden, hide/unhide, delete.
+export const listMyExplore = () => req<ExploreItem[]>('/v1/explore/mine');
+export const hideExplore = (id: string) =>
+  req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/hide`, { method: 'POST' });
+export const unhideExplore = (id: string) =>
+  req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/unhide`, { method: 'POST' });
+export const deleteMyExplore = (id: string) =>
+  req<{ deleted: boolean }>(`/v1/explore/${encodeURIComponent(id)}`, { method: 'DELETE' });
 export const likeExplore = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/like`, { method: 'POST' });
 export const unlikeExplore = (id: string) =>

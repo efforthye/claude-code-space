@@ -238,6 +238,13 @@ export default function MyScreen() {
               : router.push('/(tabs)/explore')
           }
         />
+        {user ? (
+          <Row
+            icon="albums-outline"
+            label={t('myPosts.title')}
+            onPress={() => router.push('/my-posts')}
+          />
+        ) : null}
         <Row
           icon="film-outline"
           label={t('my.myVideos')}

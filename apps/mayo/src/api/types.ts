@@ -116,6 +116,8 @@ export type ExploreItem = {
   // Full recipe — powers "use this template" in the director.
   scenePrompts?: string[] | null;
   stylePrompt?: string | null;
+  ownerId?: string | null; // publishing account (my-posts management)
+  hidden?: boolean; // owner pulled it from the public feed (visible in /mine)
 };
 export type ExploreSort = 'popular' | 'latest';
 export type ExploreComment = { id: string; author: string; text: string; createdLabel?: string };

@@ -160,3 +160,15 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 - Verified: pytest 109 passed (OG page assertions added to the public-reels test).
 
 ## [2026-07-21] decision | ADR 0017 — pricing: hybrid credits + subscriptions (Free/Pro/Studio + packs)
+
+## [2026-07-21] deploy | mayo → my-posts management + endless reels loop (batch 37)
+- Explore: `ExploreItem.ownerId`/`hidden`; `GET /v1/explore/mine` (hidden incl.),
+  owner-only `POST hide|unhide` (pulls the post from the public feed AND the
+  public share routes, reversible) and owner `DELETE` (permanent, takes comments
+  and likes with it). Publish now records the publishing account.
+- App: 마이 → "내 게시물" screen — thumbnail rows with like/comment/view stats,
+  eye toggle for hide/unhide, two-tap trash confirm for permanent delete.
+- Reels feed never dead-ends: the pager renders two copies of the feed and
+  silently snaps back a copy when the viewer crosses the seam — infinite loop
+  on both native paging and web scroll-snap (web down-arrow never disables).
+- Verified: pytest 110 passed, tsc clean, iOS + web exports OK.

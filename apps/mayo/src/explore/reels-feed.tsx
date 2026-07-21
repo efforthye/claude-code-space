@@ -5,7 +5,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { ViewStyle } from 'react-native';
 import {
   ActivityIndicator,
@@ -91,8 +91,21 @@ export function ReelsFeed({
   // Web: viewability events are unreliable and pagingEnabled is a no-op, so
   // track the page from the scroll offset and offer explicit arrows too.
   const listRef = useRef<FlatList<ExploreItem>>(null);
+
+  // Infinite loop (owner directive: the feed never dead-ends): render TWO
+  // copies of the feed; the moment the viewer crosses into the second copy we
+  // silently snap back one copy, so scrolling down always has a next reel.
+  const pages = useMemo(() => (items.length > 1 ? [...items, ...items] : items), [items]);
+  useEffect(() => {
+    if (items.length > 1 && size.h > 0 && activeIndex >= items.length) {
+      const target = activeIndex - items.length;
+      listRef.current?.scrollToOffset({ offset: target * size.h, animated: false });
+      setActiveIndex(target);
+    }
+  }, [activeIndex, items.length, size.h]);
+
   const goTo = (delta: number) => {
-    const next = Math.max(0, Math.min(items.length - 1, activeIndex + delta));
+    const next = Math.max(0, Math.min(pages.length - 1, activeIndex + delta));
     if (next === activeIndex) return;
     listRef.current?.scrollToIndex({ index: next, animated: true });
     setActiveIndex(next);
@@ -105,8 +118,8 @@ export function ReelsFeed({
       {size.h > 0 && items.length > 0 ? (
         <FlatList
           ref={listRef}
-          data={items}
-          keyExtractor={(it) => it.id}
+          data={pages}
+          keyExtractor={(it, i) => `${it.id}:${i}`}
           pagingEnabled
           style={SNAP_CONTAINER}
           showsVerticalScrollIndicator={false}
@@ -120,7 +133,7 @@ export function ReelsFeed({
           onScroll={(e) => {
             const idx = Math.round(e.nativeEvent.contentOffset.y / Math.max(1, size.h));
             setActiveIndex((prev) =>
-              idx !== prev ? Math.max(0, Math.min(items.length - 1, idx)) : prev,
+              idx !== prev ? Math.max(0, Math.min(pages.length - 1, idx)) : prev,
             );
           }}
           scrollEventThrottle={48}
@@ -180,8 +193,8 @@ export function ReelsFeed({
           </Pressable>
           <Pressable
             onPress={() => goTo(1)}
-            disabled={activeIndex >= items.length - 1}
-            style={[styles.webNavBtn, activeIndex >= items.length - 1 && styles.webNavBtnOff]}>
+            disabled={activeIndex >= pages.length - 1}
+            style={[styles.webNavBtn, activeIndex >= pages.length - 1 && styles.webNavBtnOff]}>
             <Ionicons name="chevron-down" size={22} color="#fff" />
           </Pressable>
         </View>

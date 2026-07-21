@@ -197,3 +197,59 @@ def test_one_like_per_account_and_annotation():
     asyncio.run(store.unlike(item.id, user["id"]))  # second undo is a no-op
     final = asyncio.run(store.list("latest"))[0]
     assert final.likes == 0
+
+
+def test_my_posts_hide_unhide_and_owner_delete(monkeypatch):
+    """Owner-only post management: /mine lists hidden too, hide pulls from the
+    public feed (and public share routes), delete is permanent, and another
+    account can touch none of it."""
+    from app import db
+    from app.store import explore as live_store
+
+    db.replace_kind("explore", [])
+    db.replace_kind("explore_comment", [])
+    db.replace_kind("explore_like", [])
+    fresh = ExploreStore()
+    for mod in ("app.routers.explore", "app.routers.public"):
+        monkeypatch.setattr(f"{mod}.explore_store", fresh)
+
+    owner = client.post(
+        "/v1/auth/register",
+        json={"email": "poster@example.com", "password": "password1", "name": "Poster"},
+    ).json()
+    other = client.post(
+        "/v1/auth/register",
+        json={"email": "lurker@example.com", "password": "password1", "name": "Lurker"},
+    ).json()
+    oh = {"X-Mayo-Session": owner["token"]}
+    xh = {"X-Mayo-Session": other["token"]}
+
+    video = _video("mine1")
+    item = asyncio.run(
+        fresh.publish(video, "my prompt", author="@Poster", owner_id=owner["user"]["id"])
+    )
+
+    # /mine requires sign-in and shows the post; others see an empty list.
+    assert client.get("/v1/explore/mine").status_code == 401
+    mine = client.get("/v1/explore/mine", headers=oh).json()
+    assert [i["id"] for i in mine] == [item.id]
+    assert client.get("/v1/explore/mine", headers=xh).json() == []
+
+    # Hide: gone from the public feed + public reel route, still in /mine.
+    assert client.post(f"/v1/explore/{item.id}/hide", headers=xh).status_code == 404
+    hid = client.post(f"/v1/explore/{item.id}/hide", headers=oh)
+    assert hid.status_code == 200 and hid.json()["hidden"] is True
+    assert all(i["id"] != item.id for i in client.get("/v1/explore?sort=latest").json())
+    assert client.get(f"/v1/public/reels/{item.id}").status_code == 404
+    assert client.get("/v1/explore/mine", headers=oh).json()[0]["hidden"] is True
+
+    # Unhide restores it publicly.
+    assert client.post(f"/v1/explore/{item.id}/unhide", headers=oh).status_code == 200
+    assert any(i["id"] == item.id for i in client.get("/v1/explore?sort=latest").json())
+
+    # Delete: owner-only and permanent.
+    assert client.delete(f"/v1/explore/{item.id}", headers=xh).status_code == 404
+    assert client.delete(f"/v1/explore/{item.id}", headers=oh).json()["deleted"] is True
+    assert client.get("/v1/explore/mine", headers=oh).json() == []
+    assert client.get(f"/v1/public/reels/{item.id}").status_code == 404
+    assert live_store is not None  # silence unused-import lint in minimal runs

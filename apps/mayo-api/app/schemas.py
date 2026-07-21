@@ -198,6 +198,11 @@ class ExploreItem(BaseModel):
     # Full recipe so anyone can REUSE this creation as a template in the director.
     scenePrompts: Optional[list[str]] = None
     stylePrompt: Optional[str] = None
+    # Account that published this (None = legacy/anonymous). Powers "my posts".
+    ownerId: Optional[str] = None
+    # Hidden by its owner: kept (with comments/likes) but absent from the public
+    # feed and public share routes until unhidden.
+    hidden: bool = False
 
 
 class ExploreComment(BaseModel):
