@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { Colors, MaxContentWidth } from '@/constants/theme';
 import { useSettings } from '@/settings/settings';
 
 export default function TabsLayout() {
@@ -17,6 +18,11 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopColor: colors.backgroundSelected,
+          // Desktop web: a full-width tab bar stretches the buttons absurdly —
+          // cap it to the content width and center it like the screens above.
+          ...(Platform.OS === 'web'
+            ? { width: '100%' as const, maxWidth: MaxContentWidth, marginHorizontal: 'auto' as const }
+            : {}),
         },
       }}>
       <Tabs.Screen

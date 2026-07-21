@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type { ViewStyle } from 'react-native';
 import {
   ActivityIndicator,
   FlatList,
@@ -39,6 +40,15 @@ import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
 
 export type ReelsMode = 'popular' | 'latest' | 'liked';
+
+// react-native-web ignores pagingEnabled — CSS scroll-snap does the paging on
+// web instead (RNW passes these through; native ignores them via Platform).
+const SNAP_CONTAINER =
+  Platform.OS === 'web' ? ({ scrollSnapType: 'y mandatory' } as unknown as ViewStyle) : undefined;
+const SNAP_PAGE =
+  Platform.OS === 'web'
+    ? ({ scrollSnapAlign: 'start', scrollSnapStop: 'always' } as unknown as ViewStyle)
+    : undefined;
 
 export function ReelsFeed({
   mode,
@@ -77,15 +87,27 @@ export function ReelsFeed({
   });
   const viewConfigRef = useRef({ itemVisiblePercentThreshold: 80 });
 
+  // Web: viewability events are unreliable and pagingEnabled is a no-op, so
+  // track the page from the scroll offset and offer explicit arrows too.
+  const listRef = useRef<FlatList<ExploreItem>>(null);
+  const goTo = (delta: number) => {
+    const next = Math.max(0, Math.min(items.length - 1, activeIndex + delta));
+    if (next === activeIndex) return;
+    listRef.current?.scrollToIndex({ index: next, animated: true });
+    setActiveIndex(next);
+  };
+
   return (
     <View
       style={styles.root}
       onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       {size.h > 0 && items.length > 0 ? (
         <FlatList
+          ref={listRef}
           data={items}
           keyExtractor={(it) => it.id}
           pagingEnabled
+          style={SNAP_CONTAINER}
           showsVerticalScrollIndicator={false}
           snapToInterval={size.h}
           snapToAlignment="start"
@@ -94,6 +116,13 @@ export function ReelsFeed({
           getItemLayout={(_, i) => ({ length: size.h, offset: size.h * i, index: i })}
           onViewableItemsChanged={onViewRef.current}
           viewabilityConfig={viewConfigRef.current}
+          onScroll={(e) => {
+            const idx = Math.round(e.nativeEvent.contentOffset.y / Math.max(1, size.h));
+            setActiveIndex((prev) =>
+              idx !== prev ? Math.max(0, Math.min(items.length - 1, idx)) : prev,
+            );
+          }}
+          scrollEventThrottle={48}
           onRefresh={mode === 'liked' ? undefined : refetch}
           refreshing={false}
           renderItem={({ item, index }) => (
@@ -140,6 +169,22 @@ export function ReelsFeed({
       ) : null}
 
       {overlay}
+      {Platform.OS === 'web' && items.length > 1 ? (
+        <View style={styles.webNav} pointerEvents="box-none">
+          <Pressable
+            onPress={() => goTo(-1)}
+            disabled={activeIndex <= 0}
+            style={[styles.webNavBtn, activeIndex <= 0 && styles.webNavBtnOff]}>
+            <Ionicons name="chevron-up" size={22} color="#fff" />
+          </Pressable>
+          <Pressable
+            onPress={() => goTo(1)}
+            disabled={activeIndex >= items.length - 1}
+            style={[styles.webNavBtn, activeIndex >= items.length - 1 && styles.webNavBtnOff]}>
+            <Ionicons name="chevron-down" size={22} color="#fff" />
+          </Pressable>
+        </View>
+      ) : null}
       {seedable && mode !== 'liked' && items.length > 0 ? (
         <SafeAreaView edges={['top']} style={styles.seedFabWrap} pointerEvents="box-none">
           <Pressable
@@ -234,7 +279,7 @@ function Reel({
   };
 
   return (
-    <View style={{ width, height, backgroundColor: '#000' }}>
+    <View style={[{ width, height, backgroundColor: '#000' }, SNAP_PAGE]}>
       {uri ? (
         <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="contain" nativeControls={false} />
       ) : (
@@ -406,6 +451,23 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.five,
   },
   seedText: { color: '#000000' },
+  webNav: {
+    position: 'absolute',
+    right: Spacing.three,
+    top: '50%',
+    marginTop: -48,
+    gap: Spacing.two,
+    alignItems: 'center',
+  },
+  webNavBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  webNavBtnOff: { opacity: 0.25 },
   seedFabWrap: { position: 'absolute', top: 0, right: 0 },
   seedFab: {
     margin: Spacing.three,
