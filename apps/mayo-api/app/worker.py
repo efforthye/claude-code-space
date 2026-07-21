@@ -228,7 +228,13 @@ async def _run(job_id: str) -> None:
 
     done = await jobs.patch(job_id, status="done", etaMin=None)
     if done is not None:
-        await library.add_from_job(done, film_key=film_key, duration_seconds=duration_seconds)
+        # The finished film belongs to whoever created (and paid for) the job.
+        await library.add_from_job(
+            done,
+            film_key=film_key,
+            duration_seconds=duration_seconds,
+            owner_id=jobs.owner_of(job_id),
+        )
 
 
 def start_generation(job_id: str) -> None:

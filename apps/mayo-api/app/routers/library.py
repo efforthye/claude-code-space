@@ -9,14 +9,23 @@ from ..store import library as lib
 router = APIRouter(prefix="/v1/library", tags=["library"])
 
 
+def _caller_id(session: Optional[str]) -> Optional[str]:
+    from ..auth import store as users
+
+    user = users.user_for_session(session or "")
+    return user["id"] if user else None
+
+
 @router.get("/videos", response_model=list[Video])
-async def list_videos() -> list[Video]:
-    return await lib.list()
+async def list_videos(x_mayo_session: Optional[str] = Header(default=None)) -> list[Video]:
+    """The caller's own videos (plus legacy ownerless ones) — per-account library."""
+    return await lib.list(_caller_id(x_mayo_session))
 
 
 @router.get("/storage", response_model=Storage)
-async def storage() -> Storage:
-    return await lib.storage()
+async def storage(x_mayo_session: Optional[str] = Header(default=None)) -> Storage:
+    """Storage usage metered over the caller's own files, not the whole host."""
+    return await lib.storage(_caller_id(x_mayo_session))
 
 
 @router.get("/videos/{video_id}", response_model=Video)

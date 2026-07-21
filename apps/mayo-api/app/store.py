@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import itertools
-import os
 import time
 from typing import Optional
 
@@ -17,16 +16,6 @@ from .catalog import clips_for_duration, tier_by_id
 from .config import settings
 from .schemas import ExploreComment, ExploreItem, Job, Storage, Video
 
-
-def _dir_size(path: str) -> int:
-    total = 0
-    for root, _dirs, files in os.walk(path):
-        for name in files:
-            try:
-                total += os.path.getsize(os.path.join(root, name))
-            except OSError:
-                pass
-    return total
 
 _counter = itertools.count(1)
 
@@ -54,9 +43,14 @@ class JobStore:
     def owner_of(self, job_id: str) -> Optional[str]:
         return self._owners.get(job_id)
 
-    async def list(self) -> list[Job]:
+    async def list(self, owner_id: str | None = None) -> list[Job]:
+        """Jobs visible to a caller: their own plus ownerless (legacy/anonymous)."""
         async with self._lock:
-            return [j.model_copy() for j in self._jobs.values()]
+            return [
+                j.model_copy()
+                for j in self._jobs.values()
+                if self._owners.get(j.id) in (None, owner_id)
+            ]
 
     async def get(self, job_id: str) -> Optional[Job]:
         async with self._lock:
@@ -165,9 +159,14 @@ class LibraryStore:
         except Exception:
             pass
 
-    async def list(self) -> list[Video]:
+    async def list(self, owner_id: str | None = None) -> list[Video]:
+        """Videos visible to a caller: their own plus ownerless (legacy/anonymous)."""
         async with self._lock:
-            return [v.model_copy() for v in self._videos.values()]
+            return [
+                v.model_copy()
+                for v in self._videos.values()
+                if v.ownerId in (None, owner_id)
+            ]
 
     async def get(self, video_id: str) -> Optional[Video]:
         async with self._lock:
@@ -175,7 +174,11 @@ class LibraryStore:
             return v.model_copy() if v else None
 
     async def add_from_job(
-        self, job: Job, film_key: str | None = None, duration_seconds: int | None = None
+        self,
+        job: Job,
+        film_key: str | None = None,
+        duration_seconds: int | None = None,
+        owner_id: str | None = None,
     ) -> Video:
         idx = len(self._videos)
         # Prefer the REAL stitched length (clips × clip-seconds) over the requested
@@ -204,6 +207,7 @@ class LibraryStore:
             prompt=job.title,
             scenePrompts=job.scenePrompts,
             stylePrompt=job.stylePrompt,
+            ownerId=owner_id,
         )
         async with self._lock:
             self._videos[video.id] = video
@@ -218,6 +222,7 @@ class LibraryStore:
         tier_label: str = "Local",
         created_label: str = "just now",
         scenes: int = 1,
+        owner_id: str | None = None,
     ) -> Video:
         idx = len(self._videos)
         # Measure the real length (ffprobe) so edited/imported films don't show
@@ -243,6 +248,7 @@ class LibraryStore:
             scenes=scenes,
             createdLabel=created_label,
             url=f"/v1/media/{film_key}",
+            ownerId=owner_id,
         )
         async with self._lock:
             self._videos[video.id] = video
@@ -325,9 +331,19 @@ class LibraryStore:
             self._persist()
             return updated.model_copy()
 
-    async def storage(self) -> Storage:
-        # Real usage: sum of bytes stored under the local media root vs a cap.
-        used = _dir_size(settings.storage_local_path)
+    async def storage(self, owner_id: str | None = None) -> Storage:
+        # Per-user usage: sum of the caller's OWN video files (plus legacy
+        # ownerless ones) — not the whole media dir, which mixes every user.
+        from .storage import get_storage
+
+        store = get_storage()
+        used = 0
+        for v in await self.list(owner_id):
+            if v.url and "/v1/media/" in v.url:
+                try:
+                    used += store.size(v.url.split("/v1/media/", 1)[-1])
+                except Exception:
+                    pass
         # The client meters `usedBytes` against the current plan's cap; these
         # labels are a sensible default (free tier) for when it doesn't.
         cap = 300 * 1024 * 1024  # free-tier default

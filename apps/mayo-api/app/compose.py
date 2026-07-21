@@ -148,7 +148,7 @@ def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[
             return fh.read()
 
 
-async def compose_edit(req: EditRequest) -> Optional[Video]:
+async def compose_edit(req: EditRequest, owner_id: str | None = None) -> Optional[Video]:
     # Resolve each clip to a real, existing storage key (skip mock/metadata ones).
     store = get_storage()
     sources: list[Source] = []
@@ -173,5 +173,6 @@ async def compose_edit(req: EditRequest) -> Optional[Video]:
     film_key = f"films/edit-{int(time.time() * 1000)}.mp4"
     store.save(film_key, data)
     return await library.add_film(
-        req.title or "My edit", film_key, len(data), tier_label="Edit", scenes=scenes
+        req.title or "My edit", film_key, len(data), tier_label="Edit", scenes=scenes,
+        owner_id=owner_id,
     )

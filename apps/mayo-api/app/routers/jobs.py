@@ -13,8 +13,12 @@ router = APIRouter(prefix="/v1/jobs", tags=["jobs"])
 
 
 @router.get("", response_model=list[Job])
-async def list_jobs() -> list[Job]:
-    return await job_store.list()
+async def list_jobs(x_mayo_session: Optional[str] = Header(default=None)) -> list[Job]:
+    """The caller's own jobs (plus ownerless legacy/anonymous ones)."""
+    from ..auth import store as users
+
+    caller = users.user_for_session(x_mayo_session or "")
+    return await job_store.list(caller["id"] if caller else None)
 
 
 def _price_credits(req: CreateJobRequest, caller: Optional[dict]) -> int:

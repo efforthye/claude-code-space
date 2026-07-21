@@ -217,8 +217,19 @@ export async function uploadEditAudio(fileUri: string, mimeType = 'audio/mp4'): 
 }
 
 // --- Explore (public feed + remix + publish) ---
+// Anonymous mayo.im visitors have no key/session — explore READS fall back to
+// the open /v1/public mirror on 401 so browsing never requires login.
+async function reqPublic<T>(authedPath: string, publicPath: string, init?: RequestInit): Promise<T> {
+  try {
+    return await req<T>(authedPath, init);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401) return req<T>(publicPath, init);
+    throw e;
+  }
+}
+
 export const getExplore = (sort: ExploreSort = 'popular') =>
-  req<ExploreItem[]>(`/v1/explore?sort=${sort}`);
+  reqPublic<ExploreItem[]>(`/v1/explore?sort=${sort}`, `/v1/public/explore?sort=${sort}`);
 export const publishToExplore = (videoId: string, prompt: string) =>
   req<ExploreItem>('/v1/explore', { method: 'POST', body: JSON.stringify({ videoId, prompt }) });
 export const getExploreItem = (id: string) =>
@@ -233,16 +244,27 @@ export const seedExplore = (clear = false) =>
   req<ExploreItem[]>(`/v1/explore/seed${clear ? '?clear=true' : ''}`, { method: 'POST' });
 // Reel impression ping — feeds the popular ranking's `views` signal (ADR 0015).
 export const viewExplore = (id: string) =>
-  req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/view`, { method: 'POST' });
+  reqPublic<ExploreItem>(
+    `/v1/explore/${encodeURIComponent(id)}/view`,
+    `/v1/public/explore/${encodeURIComponent(id)}/view`,
+    { method: 'POST' },
+  );
 // Completed external share — the strongest ranking signal.
 export const shareExplore = (id: string) =>
-  req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/share`, { method: 'POST' });
+  reqPublic<ExploreItem>(
+    `/v1/explore/${encodeURIComponent(id)}/share`,
+    `/v1/public/explore/${encodeURIComponent(id)}/share`,
+    { method: 'POST' },
+  );
 export const likeExplore = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/like`, { method: 'POST' });
 export const unlikeExplore = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}/unlike`, { method: 'POST' });
 export const getComments = (id: string) =>
-  req<ExploreComment[]>(`/v1/explore/${encodeURIComponent(id)}/comments`);
+  reqPublic<ExploreComment[]>(
+    `/v1/explore/${encodeURIComponent(id)}/comments`,
+    `/v1/public/explore/${encodeURIComponent(id)}/comments`,
+  );
 export const addComment = (id: string, text: string) =>
   req<ExploreComment>(`/v1/explore/${encodeURIComponent(id)}/comments`, {
     method: 'POST',

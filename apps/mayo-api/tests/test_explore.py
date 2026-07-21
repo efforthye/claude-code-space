@@ -149,3 +149,16 @@ def test_public_reel_endpoints_open_but_gated_on_published(monkeypatch):
     # unpublished/unknown ids stay closed
     assert anon.get("/v1/public/reels/e-nope").status_code == 404
     assert anon.get("/v1/public/media/e-nope").status_code == 404
+
+
+def test_anonymous_explore_reads_via_public_mirror():
+    from fastapi.testclient import TestClient as TC
+
+    from app.main import app as app_
+
+    anon = TC(app_)  # no key, no session — a logged-out mayo.im visitor
+    r = anon.get("/v1/public/explore?sort=latest")
+    assert r.status_code == 200 and isinstance(r.json(), list)
+    assert anon.get("/v1/public/explore?sort=bogus").status_code == 422
+    assert anon.get("/v1/public/explore/e-nope/comments").status_code == 404
+    assert anon.post("/v1/public/explore/e-nope/view").status_code == 404

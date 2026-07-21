@@ -132,6 +132,8 @@ class Video(BaseModel):
     prompt: Optional[str] = None
     scenePrompts: Optional[list[str]] = None
     stylePrompt: Optional[str] = None  # consistency block used at render time
+    # Account that owns this video (None = legacy/anonymous, visible to all).
+    ownerId: Optional[str] = None
 
 
 class Storage(BaseModel):

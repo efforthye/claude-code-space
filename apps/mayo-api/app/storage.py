@@ -29,6 +29,14 @@ class StorageBackend(ABC):
     @abstractmethod
     def exists(self, key: str) -> bool: ...
 
+    def size(self, key: str) -> int:
+        """Bytes stored under key; 0 if missing. Backends may override with a
+        cheaper stat than a full read."""
+        try:
+            return len(self.read(key))
+        except Exception:
+            return 0
+
 
 class LocalStorage(StorageBackend):
     def __init__(self, root: str) -> None:
@@ -59,6 +67,12 @@ class LocalStorage(StorageBackend):
 
     def exists(self, key: str) -> bool:
         return os.path.exists(self._path(key))
+
+    def size(self, key: str) -> int:
+        try:
+            return os.path.getsize(self._path(key))
+        except OSError:
+            return 0
 
 
 class S3Storage(StorageBackend):

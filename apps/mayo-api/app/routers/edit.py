@@ -2,8 +2,9 @@
 new film, and accept audio-track uploads (voiceover/BGM) for it."""
 
 import time
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Header, HTTPException, Request, status
 
 from ..compose import compose_edit
 from ..schemas import AudioUploadResult, EditRequest, Video
@@ -33,9 +34,14 @@ async def upload_audio(request: Request) -> AudioUploadResult:
 
 
 @router.post("", response_model=Video, status_code=status.HTTP_201_CREATED)
-async def create_edit(req: EditRequest) -> Video:
+async def create_edit(
+    req: EditRequest, x_mayo_session: Optional[str] = Header(default=None)
+) -> Video:
+    from ..auth import store as users
+
+    caller = users.user_for_session(x_mayo_session or "")
     try:
-        video = await compose_edit(req)
+        video = await compose_edit(req, owner_id=caller["id"] if caller else None)
     except Exception as exc:  # ffmpeg failure, etc.
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"edit failed: {exc}")
     if video is None:

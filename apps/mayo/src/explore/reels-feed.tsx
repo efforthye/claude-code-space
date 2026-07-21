@@ -20,12 +20,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getApiKey } from '@/api/api-key';
 import {
   addComment,
   getComments,
   getExplore,
-  mediaUrl,
+  publicReelMediaUrl,
   seedExplore,
   shareExplore,
   viewExplore,
@@ -186,15 +185,13 @@ function Reel({
   const toast = useToast();
   const { has, toggle } = useFavorites();
   const follows = useFollows();
-  const key = getApiKey();
-  const uri = item.url ? mediaUrl(item.url) : '';
+  // Published reels stream from the credential-free public endpoint, so the
+  // feed plays for signed-out mayo.im visitors too.
+  const uri = item.url ? publicReelMediaUrl(item.id) : '';
 
-  const player = useVideoPlayer(
-    uri ? { uri, headers: key ? { Authorization: `Bearer ${key}` } : undefined } : null,
-    (p) => {
-      p.loop = true;
-    },
-  );
+  const player = useVideoPlayer(uri ? { uri } : null, (p) => {
+    p.loop = true;
+  });
 
   useEffect(() => {
     if (!uri) return;

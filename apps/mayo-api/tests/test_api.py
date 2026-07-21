@@ -113,3 +113,37 @@ def test_extend_and_publish():
     ).json()
     assert pub["accepted"] is True
     assert pub["visibility"] == "unlisted"
+
+
+def test_library_and_jobs_are_scoped_per_user():
+    import asyncio
+
+    from app.auth import store as users
+    from app.store import jobs as job_store, library
+
+    alice = users.create_user("scope-alice@example.com", "A", provider="email", password="pw12345678")
+    bob = users.create_user("scope-bob@example.com", "B", provider="email", password="pw12345678")
+
+    a_job = asyncio.run(job_store.create("alice film", 4, "draft", owner_id=alice["id"]))
+    asyncio.run(job_store.create("anon film", 4, "draft"))
+
+    a_jobs = {j.id for j in asyncio.run(job_store.list(alice["id"]))}
+    b_jobs = {j.id for j in asyncio.run(job_store.list(bob["id"]))}
+    assert a_job.id in a_jobs
+    assert a_job.id not in b_jobs  # bob can't see alice's job
+    # ownerless (legacy/anonymous) stays visible to everyone
+    assert any(j.title == "anon film" for j in asyncio.run(job_store.list(bob["id"])))
+
+    a_video = asyncio.run(library.add_film("alice cut", "films/alice.mp4", 10, owner_id=alice["id"]))
+    vids_a = {v.id for v in asyncio.run(library.list(alice["id"]))}
+    vids_b = {v.id for v in asyncio.run(library.list(bob["id"]))}
+    assert a_video.id in vids_a and a_video.id not in vids_b
+
+    # per-user storage counts only the caller's files
+    from app.storage import get_storage
+
+    get_storage().save("films/alice.mp4", b"x" * 1000)
+    assert asyncio.run(library.storage(alice["id"])).usedBytes >= 1000
+    assert asyncio.run(library.storage(bob["id"])).usedBytes < asyncio.run(
+        library.storage(alice["id"])
+    ).usedBytes + 1

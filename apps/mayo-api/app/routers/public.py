@@ -7,12 +7,46 @@ on explore membership: the item id is the capability, and the media it serves
 is exactly the published film (never arbitrary storage keys).
 """
 
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 
-from ..schemas import ExploreItem
+from ..schemas import ExploreComment, ExploreItem
 from ..store import explore as explore_store
 
 router = APIRouter(prefix="/v1/public", tags=["public"])
+
+
+# --- Anonymous explore (mayo.im without login): the feed is public content by
+# design, so browsing must not require an account or the shared key. Writes
+# that carry identity (publish, like, comment) stay on the authed router. ---
+
+
+@router.get("/explore", response_model=list[ExploreItem])
+async def public_explore(sort: str = Query("popular", pattern="^(popular|latest)$")) -> list[ExploreItem]:
+    return await explore_store.list(sort)
+
+
+@router.get("/explore/{item_id}/comments", response_model=list[ExploreComment])
+async def public_comments(item_id: str) -> list[ExploreComment]:
+    comments = await explore_store.comments(item_id)
+    if comments is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+    return comments
+
+
+@router.post("/explore/{item_id}/view", response_model=ExploreItem)
+async def public_view(item_id: str) -> ExploreItem:
+    item = await explore_store.view(item_id)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+    return item
+
+
+@router.post("/explore/{item_id}/share", response_model=ExploreItem)
+async def public_share(item_id: str) -> ExploreItem:
+    item = await explore_store.share(item_id)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
+    return item
 
 
 async def _published(item_id: str) -> ExploreItem:
