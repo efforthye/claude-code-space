@@ -8,6 +8,12 @@ updated: 2026-07-15
 
 # Runbook — Mayo Dev Auto-Sync (push → phone updates)
 
+> **📍 Repo path on the mini (canonical — use this in every command):**
+> `~/programs/work/creiip/claude-code-space`
+> (API .env: `~/programs/work/creiip/claude-code-space/apps/mayo-api/.env`.
+> NOT `~/claude-code-space` — giving the owner commands with a guessed path has
+> bitten us; copy the path from here.)
+
 Goal: when the cloud/web Claude (or anyone) **pushes** to the repo, the [[home-server]] mini
 **pulls automatically** so the running Expo dev server Fast-Refreshes [[mayo]] on the phone —
 no manual `git pull`. Builds on [[expo-dev-loop]].
