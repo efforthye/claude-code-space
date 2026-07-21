@@ -79,6 +79,9 @@ export type RuntimeSettings = {
 
 export type TextPosition = 'top' | 'center' | 'bottom';
 export type ClipFilter = 'none' | 'mono' | 'warm' | 'cool' | 'vivid';
+// Caption font style: auto = language-matched Noto Sans (free, server-fetched);
+// title/hand = Korean display faces (Black Han Sans / Nanum Pen Script).
+export type CaptionFont = 'auto' | 'title' | 'hand';
 export type EditClip = {
   videoId: string;
   start?: number;
@@ -87,6 +90,7 @@ export type EditClip = {
   textPosition?: TextPosition;
   speed?: number;
   filter?: ClipFilter;
+  font?: CaptionFont;
 };
 export type EditRequest = { title: string; clips: EditClip[]; audioKey?: string };
 

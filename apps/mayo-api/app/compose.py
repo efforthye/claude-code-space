@@ -22,7 +22,7 @@ from .store import library
 
 # A source clip in the edit spec:
 # (start, end, storage_key, caption, position, speed, color_filter).
-Source = tuple[float, Optional[float], str, str, str, float, str]
+Source = tuple[float, Optional[float], str, str, str, float, str, str]
 
 
 def _key_from_url(url: Optional[str]) -> Optional[str]:
@@ -45,11 +45,11 @@ _COLOR_FILTERS = {
 }
 
 
-def _vf_chain(text: str, position: str, speed: float, color: str) -> str:
+def _vf_chain(text: str, position: str, speed: float, color: str, font: str = "auto") -> str:
     """Compose the per-clip -vf chain: caption + speed + color look."""
     parts: list[str] = []
     if text.strip():
-        parts.append(_drawtext_filter(text.strip(), position))
+        parts.append(_drawtext_filter(text.strip(), position, font))
     if speed and speed != 1.0:
         parts.append(f"setpts=PTS/{speed}")
     if color in _COLOR_FILTERS:
@@ -57,7 +57,7 @@ def _vf_chain(text: str, position: str, speed: float, color: str) -> str:
     return ",".join(parts)
 
 
-def _drawtext_filter(text: str, position: str) -> str:
+def _drawtext_filter(text: str, position: str, font: str = "auto") -> str:
     y = {"top": "h*0.08", "center": "(h-text_h)/2", "bottom": "h-text_h-h*0.08"}.get(
         position, "h-text_h-h*0.08"
     )
@@ -71,8 +71,13 @@ def _drawtext_filter(text: str, position: str) -> str:
         "x=(w-text_w)/2",
         f"y={y}",
     ]
-    if settings.edit_font and os.path.exists(settings.edit_font):
-        parts.append(f"fontfile={settings.edit_font}")
+    # Language-matched free font (downloaded on demand); falls back to the
+    # configured host font, then to fontconfig's default.
+    from .fonts import font_path
+
+    resolved = font_path(font, text)
+    if resolved:
+        parts.append(f"fontfile={resolved}")
     return "drawtext=" + ":".join(parts)
 
 
@@ -82,7 +87,7 @@ def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[
     store = get_storage()
     with tempfile.TemporaryDirectory() as td:
         segments: list[str] = []
-        for i, (start, end, key, text, position, speed, color) in enumerate(sources):
+        for i, (start, end, key, text, position, speed, color, font) in enumerate(sources):
             src = os.path.join(td, f"src{i}.mp4")
             with open(src, "wb") as fh:
                 fh.write(store.read(key))
@@ -96,7 +101,7 @@ def _render(sources: list[Source], audio_key: Optional[str] = None) -> Optional[
                 if end is not None and end > (start or 0):
                     cmd += ["-t", f"{end - (start or 0)}"]  # duration after seek
                 if with_text:
-                    chain = _vf_chain(text, position, speed, color)
+                    chain = _vf_chain(text, position, speed, color, font)
                     if chain:
                         cmd += ["-vf", chain]
                 # Re-encode to a uniform codec so the concat step can stream-copy.
@@ -161,7 +166,8 @@ async def compose_edit(req: EditRequest, owner_id: str | None = None) -> Optiona
         if not key or not store.exists(key):
             continue
         sources.append(
-            (clip.start, clip.end, key, clip.text, clip.textPosition, clip.speed, clip.filter)
+            (clip.start, clip.end, key, clip.text, clip.textPosition, clip.speed, clip.filter,
+             clip.font)
         )
         scenes += 1
     if not sources:

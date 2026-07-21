@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getApiKey } from '@/api/api-key';
 import { getApiBaseUrl } from '@/api/base-url';
 import { createEdit, listVideos, mediaHeaders, mediaUrl, thumbUrl, uploadEditAudio } from '@/api/client';
-import type { ClipFilter, EditClip, TextPosition, Video } from '@/api/types';
+import type { CaptionFont, ClipFilter, EditClip, TextPosition, Video } from '@/api/types';
 import { useToast } from '@/components/toast';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -31,6 +31,7 @@ type Clip = {
   end: number;
   text: string;
   textPos: TextPosition;
+  font: CaptionFont;
   speed: number;
   filter: ClipFilter;
 };
@@ -206,6 +207,7 @@ export default function EditScreen() {
       end: dur,
       text: '',
       textPos: 'bottom',
+      font: 'auto',
       speed: 1,
       filter: 'none',
     };
@@ -281,7 +283,9 @@ export default function EditScreen() {
           videoId: c.videoId,
           ...(c.start > 0 ? { start: c.start } : {}),
           ...(c.end > 0 && c.end > c.start ? { end: c.end } : {}),
-          ...(c.text.trim() ? { text: c.text.trim(), textPosition: c.textPos } : {}),
+          ...(c.text.trim()
+            ? { text: c.text.trim(), textPosition: c.textPos, ...(c.font !== 'auto' ? { font: c.font } : {}) }
+            : {}),
           ...(c.speed !== 1 ? { speed: c.speed } : {}),
           ...(c.filter !== 'none' ? { filter: c.filter } : {}),
         })),
@@ -347,7 +351,12 @@ export default function EditScreen() {
                           ? styles.captionCenter
                           : styles.captionBottom,
                     ]}>
-                    <ThemedText type="smallBold" style={styles.captionText}>
+                    <ThemedText
+                      type="smallBold"
+                      style={[
+                        styles.captionText,
+                        sel.font === 'title' ? styles.fontTitle : sel.font === 'hand' ? styles.fontHand : undefined,
+                      ]}>
                       {sel.text.trim()}
                     </ThemedText>
                   </View>
@@ -444,6 +453,26 @@ export default function EditScreen() {
                       ]}>
                       <ThemedText type="small" themeColor={sel.textPos === p ? 'text' : 'textSecondary'}>
                         {t(`edit.pos${p[0].toUpperCase()}${p.slice(1)}` as 'edit.posTop')}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </View>
+
+                {/* Caption font — free language-aware fonts, fetched server-side. */}
+                <View style={styles.posRow}>
+                  {(['auto', 'title', 'hand'] as const).map((f) => (
+                    <Pressable
+                      key={f}
+                      onPress={() => update(selected, { font: f })}
+                      style={[
+                        styles.posChip,
+                        { borderColor: sel.font === f ? theme.text : theme.backgroundSelected },
+                      ]}>
+                      <ThemedText
+                        type="small"
+                        themeColor={sel.font === f ? 'text' : 'textSecondary'}
+                        style={f === 'title' ? styles.fontTitle : f === 'hand' ? styles.fontHand : undefined}>
+                        {t(`edit.font.${f}`)}
                       </ThemedText>
                     </Pressable>
                   ))}
@@ -682,6 +711,9 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
     textShadowOffset: { width: 0, height: 1 },
   },
+  // Rough previews of the export fonts (the real faces are burned server-side).
+  fontTitle: { fontWeight: '900' },
+  fontHand: { fontStyle: 'italic' },
   inspector: { flex: 1 },
   inspectorInner: { gap: Spacing.two, paddingBottom: Spacing.three },
   trimGrid: { flexDirection: 'row', gap: Spacing.two },
