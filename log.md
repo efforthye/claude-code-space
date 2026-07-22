@@ -216,3 +216,9 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 - App: eas.json (development/preview/production profiles), ios
   bundleIdentifier + android package `im.mayo.app`.
 - Verified: pytest 114 passed, tsc clean, both exports OK.
+
+## [2026-07-21] deploy | mayo → MAYO_FREE_TEAM switch for free-Apple-ID local builds
+- `app.config.js`: MAYO_FREE_TEAM=1 strips the Sign-in-with-Apple capability so
+  `npx expo run:ios --device` can be signed with a FREE Apple ID (personal
+  team) — that entitlement is paid-team-only and otherwise fails the build.
+  Unset -> app.json passes through untouched (EAS/paid builds unaffected).
