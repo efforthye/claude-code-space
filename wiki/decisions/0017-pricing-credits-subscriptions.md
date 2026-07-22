@@ -95,3 +95,13 @@ without subscribing. Subscription checkout also grants the first month's
 credits at the webhook (renewal grants: wire `invoice.paid` later). Env names:
 `STRIPE_PRICE_PACK_100/300/1000`. Per-credit: Pro $0.034 / Studio $0.024 vs
 packs $0.085–0.12 — subscriptions stay the better deal by design.
+
+## Status note — 2026-07-22 (owner decision: payments postponed)
+
+Real payment rails (IAP / Korean PG) are **deferred**: first get Higgsfield
+external generation running, measure REAL per-clip cost from actual usage,
+run a margin analysis, and only then wire real money. Everything already built
+stays live and honest meanwhile — premium gating (admin/BYOK pass), credit
+metering, checkout endpoints answering "not configured", real receipt
+validation ready behind MAYO_APPLE_SHARED_SECRET. The v2 price table above is
+the working hypothesis to re-verify against measured cost.

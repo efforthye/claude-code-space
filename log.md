@@ -222,3 +222,5 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   `npx expo run:ios --device` can be signed with a FREE Apple ID (personal
   team) — that entitlement is paid-team-only and otherwise fails the build.
   Unset -> app.json passes through untouched (EAS/paid builds unaffected).
+
+## [2026-07-22] decision | payments postponed — Higgsfield first, then margin analysis (ADR 0017 note)
