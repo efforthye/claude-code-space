@@ -90,11 +90,15 @@ def test_billing_products_and_validate():
     assert "pro" in ids and "studio" in ids
     assert "free" not in ids  # free isn't purchasable
 
-    # PROD RULE: receipt validation refuses (501) until real store verification
-    # exists — no fake entitlements. Plans come from Stripe checkout.
+    # PROD RULE: no fake entitlements — non-appstore platforms 501, and the
+    # appstore path 501s until MAYO_APPLE_SHARED_SECRET is configured.
     pro = next(p for p in products if p["planId"] == "pro")
     result = client.post("/v1/billing/validate", json={"productId": pro["id"], "platform": "mock"})
     assert result.status_code == 501
+    result = client.post(
+        "/v1/billing/validate", json={"productId": pro["id"], "platform": "appstore"}
+    )
+    assert result.status_code == 501  # shared secret unset in the test env
 
 
 def test_extend_and_publish():

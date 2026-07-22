@@ -190,6 +190,12 @@ class Settings:
             "https://mayo-api.efforthye.dev/v1/auth/github/callback",
         )
     )
+    # App Store IAP receipt validation (verifyReceipt shared secret from App
+    # Store Connect -> App Information -> App-Specific Shared Secret). Unset ->
+    # /v1/billing/validate answers an honest 501.
+    apple_shared_secret: str = field(
+        default_factory=lambda: os.getenv("MAYO_APPLE_SHARED_SECRET", "")
+    )
     # Apple sign-in: accepted id_token audiences (comma-sep). Expo Go runs under
     # Apple's own bundle id; a standalone build adds the app's bundle id here.
     apple_oauth_audiences: list[str] = field(

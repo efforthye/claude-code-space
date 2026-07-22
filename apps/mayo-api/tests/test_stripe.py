@@ -154,3 +154,80 @@ def test_credit_pack_listing_checkout_and_webhook_grant(monkeypatch):
     assert rec.get("purchasedCredits") == 300
     assert premium_user_or_none(token) is not None  # pack unlocks premium features
     assert to_public(rec).premium is True
+
+
+def test_appstore_receipt_validation_grants(monkeypatch):
+    """Real IAP path: Apple-approved receipts grant plans/credits; rejected or
+    mismatched receipts grant nothing."""
+    from app.routers import billing as billing_router
+
+    monkeypatch.setattr(
+        billing_router, "settings", type("S", (), {"apple_shared_secret": "shhh"})()
+    )
+    user = users.create_user("iap@example.com", "Iap", provider="email", password="pw12345678")
+    token = users.create_session(user["id"])
+    h = {"X-Mayo-Session": token}
+
+    async def apple_ok(receipt):
+        return {
+            "status": 0,
+            "latest_receipt_info": [{"product_id": "im.mayo.pro.monthly"}],
+            "receipt": {"in_app": [{"product_id": "im.mayo.pack300"}]},
+        }
+
+    monkeypatch.setattr(billing_router, "_apple_verify", apple_ok)
+
+    # subscription -> plan + first month's credits
+    r = client.post(
+        "/v1/billing/validate",
+        json={"productId": "im.mayo.pro.monthly", "platform": "appstore", "receipt": "b64"},
+        headers=h,
+    )
+    assert r.status_code == 200 and r.json() == {"entitled": True, "planId": "pro"}
+    assert users.users[user["id"]]["planId"] == "pro"
+    assert users.users[user["id"]]["credits"] >= 700
+
+    # consumable pack -> purchased credits (premium marker)
+    before = users.users[user["id"]]["credits"]
+    r = client.post(
+        "/v1/billing/validate",
+        json={"productId": "im.mayo.pack300", "platform": "appstore", "receipt": "b64"},
+        headers=h,
+    )
+    assert r.status_code == 200 and r.json()["entitled"] is True
+    assert users.users[user["id"]]["credits"] == before + 300
+    assert users.users[user["id"]]["purchasedCredits"] == 300
+
+    # product not present in the receipt -> 400
+    r = client.post(
+        "/v1/billing/validate",
+        json={"productId": "im.mayo.pack100", "platform": "appstore", "receipt": "b64"},
+        headers=h,
+    )
+    assert r.status_code == 400
+
+    # Apple says no -> 400, nothing granted
+    async def apple_no(receipt):
+        return {"status": 21003}
+
+    monkeypatch.setattr(billing_router, "_apple_verify", apple_no)
+    r = client.post(
+        "/v1/billing/validate",
+        json={"productId": "im.mayo.pro.monthly", "platform": "appstore", "receipt": "bad"},
+        headers=h,
+    )
+    assert r.status_code == 400
+
+    # signed-out -> 401; missing receipt -> 400
+    monkeypatch.setattr(billing_router, "_apple_verify", apple_ok)
+    r = client.post(
+        "/v1/billing/validate",
+        json={"productId": "im.mayo.pro.monthly", "platform": "appstore", "receipt": "b64"},
+    )
+    assert r.status_code == 401
+    r = client.post(
+        "/v1/billing/validate",
+        json={"productId": "im.mayo.pro.monthly", "platform": "appstore"},
+        headers=h,
+    )
+    assert r.status_code == 400

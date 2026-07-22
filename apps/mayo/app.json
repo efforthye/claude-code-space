@@ -13,7 +13,9 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
-      }
+      },
+      "bundleIdentifier": "im.mayo.app",
+      "supportsTablet": false
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +24,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "im.mayo.app"
     },
     "web": {
       "output": "single",

@@ -204,3 +204,15 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   show monthly credit grants. Env names: STRIPE_PRICE_PACK_100/300/1000.
 - ADR 0017 v2 + index updated. Verified: pytest 113 passed, tsc clean, both
   exports OK.
+
+## [2026-07-21] deploy | mayo → real App Store receipt validation + EAS config (batch 41)
+- Stripe cannot onboard Korean merchants — owner pivoted to iOS IAP (deploying
+  today). `/v1/billing/validate` is now REAL: Apple verifyReceipt with
+  MAYO_APPLE_SHARED_SECRET (prod -> 21007 sandbox fallback), receipt must
+  contain the claimed product, grants land on the session account —
+  subscriptions im.mayo.{pro,studio}.monthly set the plan + first-month
+  credits, consumables im.mayo.pack{100,300,1000} add purchased credits
+  (premium marker). Unconfigured -> honest 501; Apple-rejected -> 400.
+- App: eas.json (development/preview/production profiles), ios
+  bundleIdentifier + android package `im.mayo.app`.
+- Verified: pytest 114 passed, tsc clean, both exports OK.
