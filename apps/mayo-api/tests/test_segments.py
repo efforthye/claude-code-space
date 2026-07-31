@@ -38,9 +38,10 @@ def _screenplay(n: int) -> Screenplay:
 
 
 def test_segments_cover_the_whole_requested_duration():
+    step = int(seg.segment_seconds())
     out = seg.segments_from_screenplay(_screenplay(3), seconds=60)
-    assert len(out) == 6
-    assert out[0].startSec == 0 and out[0].endSec == 10
+    assert len(out) == 60 // step
+    assert out[0].startSec == 0 and out[0].endSec == step
     assert out[-1].endSec == 60
     # Contiguous, no gaps or overlaps — the film is the timeline.
     for a, b in zip(out, out[1:]):
@@ -51,13 +52,36 @@ def test_a_short_screenplay_cycles_to_fill_the_length():
     # The user asked for a duration; scenes are repeated rather than the film
     # being cut short, matching what the worker already does with scenePrompts.
     out = seg.segments_from_screenplay(_screenplay(2), seconds=50)
-    assert len(out) == 5
+    assert len(out) == 50 // int(seg.segment_seconds())
     assert out[0].prompt == out[2].prompt == out[4].prompt == "prompt 0"
 
 
 def test_a_final_partial_slice_is_not_padded_past_the_duration():
-    out = seg.segments_from_screenplay(_screenplay(1), seconds=25)
-    assert [(s.startSec, s.endSec) for s in out] == [(0, 10), (10, 20), (20, 25)]
+    # A duration that is not a whole number of clips ends on a short one rather
+    # than running past what the user asked for.
+    step = int(seg.segment_seconds())
+    seconds = step * 2 + 1
+    out = seg.segments_from_screenplay(_screenplay(1), seconds=seconds)
+    assert [(s.startSec, s.endSec) for s in out] == [
+        (0, step),
+        (step, step * 2),
+        (step * 2, seconds),
+    ]
+
+
+def test_the_beat_sheet_describes_the_clips_that_will_actually_be_rendered():
+    """The invariant that was broken until 2026-08-01.
+
+    SEGMENT_SECONDS was hard-coded to 10 while the renderer's clip length came
+    from the backend — two seconds on ComfyUI, five on Higgsfield. A ten-second
+    short was therefore planned as ONE beat covering the whole film and rendered
+    as several clips, so what the user approved was not what got made.
+    """
+    from app.catalog import clips_for_duration
+
+    for seconds in (10, 30, 60, 180):
+        beats = seg.segments_from_screenplay(_screenplay(3), seconds=seconds)
+        assert len(beats) == clips_for_duration(seconds), seconds
 
 
 def test_no_scenes_means_no_segments_rather_than_a_crash():
@@ -96,7 +120,9 @@ def test_planning_beats_produces_a_reviewable_timeline():
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["stage"] == "beats"
-    assert len(body["segments"]) == 6
+    from app.catalog import clips_for_duration
+
+    assert len(body["segments"]) == clips_for_duration(60)
     assert all(s["status"] == "draft" for s in body["segments"])
     assert body["segments"][0]["text"]
 

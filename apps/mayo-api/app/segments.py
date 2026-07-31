@@ -16,9 +16,17 @@ from typing import Optional
 from .planner import Screenplay, get_scenario_planner
 from .schemas import Segment
 
-# One segment per ~10 seconds. Matches catalog.scenes_for() so the beat sheet
-# and the render plan cannot disagree about how many pieces a film has.
-SEGMENT_SECONDS = 10
+def segment_seconds() -> float:
+    """One segment per clip — whatever a clip actually is on this backend.
+
+    Hard-coded to 10 until 2026-08-01, which meant a ten-second short planned as
+    a single beat covering the whole film while the renderer made two five-second
+    clips from it. The beat sheet is the thing the user approves, so it has to
+    describe the pieces that will really be rendered: 0:00-0:05, 0:05-0:10.
+    """
+    from .catalog import clip_seconds
+
+    return max(1.0, clip_seconds())
 
 
 def segments_from_screenplay(screenplay: Screenplay, seconds: int) -> list[Segment]:
@@ -33,11 +41,28 @@ def segments_from_screenplay(screenplay: Screenplay, seconds: int) -> list[Segme
     if not scenes:
         return []
 
+    from .catalog import clips_for_duration
+
+    # One beat per clip, counted by the same function the renderer uses — not a
+    # parallel calculation that can drift from it. clips_for_duration also
+    # applies the max_scenes cap, so a very long film plans the beats that will
+    # really be rendered rather than a longer sheet the renderer then truncates.
+    total_clips = clips_for_duration(seconds)
+    # Clips are a FIXED length — the beats have to be too, or the sheet would
+    # promise timings the renderer cannot hit. Only the last slice is short,
+    # because that is exactly what the stitched film does when the duration is
+    # not a whole number of clips.
+    step = max(1, int(round(segment_seconds())))
+
     out: list[Segment] = []
     start = 0
     i = 0
-    while start < seconds:
-        end = min(start + SEGMENT_SECONDS, seconds)
+    while start < seconds and len(out) < total_clips:
+        end = min(start + step, seconds)
+        if len(out) == total_clips - 1:
+            end = seconds  # the cap ends the film here whatever the arithmetic says
+        if end <= start:  # degenerate step — never loop forever
+            end = seconds
         scene = scenes[i % len(scenes)]
         out.append(
             Segment(

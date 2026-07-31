@@ -135,31 +135,6 @@ export default function CreateScreen() {
     }
   };
 
-  const generate = async () => {
-    if (submitting) return;
-    setSubmitting(true);
-    const title = prompt.trim().split('\n')[0].slice(0, 60) || t('create.untitled');
-    try {
-      let job;
-      try {
-        job = await createJob({ prompt: title, seconds, tier: tier.id, aspect, videoModel });
-      } catch (e) {
-        // Transient network blip (tunnel/API restarting) — retry once before failing.
-        if (e instanceof ApiError && e.status === 0) {
-          await new Promise((r) => setTimeout(r, 1500));
-          job = await createJob({ prompt: title, seconds, tier: tier.id, aspect, videoModel });
-        } else {
-          throw e;
-        }
-      }
-      router.push(`/jobs/${job.id}`);
-    } catch (e) {
-      // 402 carries a human-readable reason (e.g. not enough credits) — show it.
-      toast.show(e instanceof ApiError && e.status === 402 && e.message ? e.message : t('common.error'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const applyCustom = (raw: string, unit: Unit) => {
     const value = raw.replace(/[^0-9.]/g, '');
@@ -398,26 +373,16 @@ export default function CreateScreen() {
         ) : null}
       </ThemedView>
 
-      {/* The staged path (ADR 0020): plan and review before anything is paid
-          for. Free up to the clips stage, which is also the honest way to show
-          someone what they would be buying. */}
+      {/*
+        One path only. There used to be a second, bigger button here that
+        rendered the whole film in one shot, and being the primary CTA it is
+        what people pressed — skipping the beat sheet, the stills, and both
+        review gates that the staged flow exists to provide. It also billed the
+        entire film up front, which is the opposite of the per-clip charging
+        the gates were built around.
+      */}
       <Pressable
         onPress={planStepByStep}
-        disabled={submitting}
-        style={({ pressed }) => [
-          styles.card,
-          styles.staged,
-          { borderColor: theme.text },
-          pressed && { opacity: 0.85 },
-        ]}>
-        <ThemedText type="smallBold">{t('create.staged')}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('create.stagedHint')}
-        </ThemedText>
-      </Pressable>
-
-      <Pressable
-        onPress={generate}
         disabled={submitting}
         style={({ pressed }) => [
           styles.cta,
@@ -425,9 +390,13 @@ export default function CreateScreen() {
         ]}>
         {submitting ? <ActivityIndicator color={theme.background} /> : null}
         <ThemedText type="smallBold" style={{ color: theme.background }}>
-          {submitting ? t('create.generating') : t('create.generate')}
+          {submitting ? t('create.generating') : t('create.staged')}
         </ThemedText>
       </Pressable>
+      <ThemedText type="small" themeColor="textSecondary" style={styles.ctaHint}>
+        {t('create.stagedHint')}
+      </ThemedText>
+
     </Screen>
   );
 }
@@ -485,7 +454,7 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     borderRadius: Spacing.four,
   },
-  staged: { borderWidth: 1, gap: 4 },
+  ctaHint: { textAlign: 'center' },
   backBtn: { paddingVertical: 14, paddingHorizontal: 20 },
   backRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   cta: {

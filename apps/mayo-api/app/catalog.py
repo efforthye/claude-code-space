@@ -216,9 +216,19 @@ def scenes_for(seconds: int) -> int:
 
 
 def clip_seconds() -> float:
-    """Length of one generated clip = frames / fps (e.g. 16/8 = 2s)."""
+    """Length of one generated clip, for whichever backend is actually running.
+
+    This used to always return the ComfyUI figure (frames / fps, e.g. 16/8 = 2s)
+    even when rendering on Higgsfield, whose clips are five seconds. Every count
+    derived from it was therefore wrong on the paid backend: a ten-second short
+    planned five clips instead of two, and both the ETA and the price followed
+    that inflated count.
+    """
+    from . import runtime
     from .config import settings
 
+    if runtime.generation_backend() == "external":
+        return float(settings.higgsfield_duration)
     return settings.comfy_frames / max(1, settings.comfy_fps)
 
 
