@@ -221,3 +221,65 @@ def test_approve_means_the_right_thing_at_each_stage():
     after = client.post(f"/v1/jobs/{job_id}/segments/0/approve").json()["segments"]
     # Same endpoint, different meaning — the app should not have to know.
     assert after[0]["status"] == "imageApproved"
+
+
+# --- stage 3: continuity ----------------------------------------------------
+
+
+def test_the_first_clip_starts_from_its_own_still():
+    segs = [
+        Segment(index=0, startSec=0, endSec=10, imageKey="a.png"),
+        Segment(index=1, startSec=10, endSec=20, imageKey="b.png"),
+    ]
+    from app.storage import get_storage
+
+    get_storage().save("a.png", b"still-a")
+    # No predecessor, so there is nothing to be continuous with.
+    assert seg.continuity_source(segs, 0) == b"still-a"
+
+
+def test_a_later_clip_prefers_the_previous_clip_last_frame(monkeypatch):
+    segs = [
+        Segment(index=0, startSec=0, endSec=10, imageKey="a.png", clipKey="c0.mp4"),
+        Segment(index=1, startSec=10, endSec=20, imageKey="b.png"),
+    ]
+    from app.storage import get_storage
+
+    get_storage().save("b.png", b"still-b")
+    monkeypatch.setattr(seg, "last_frame_of", lambda key: b"frame-from-c0")
+    # This is what makes the cut continuous instead of a jump.
+    assert seg.continuity_source(segs, 1) == b"frame-from-c0"
+
+
+def test_it_falls_back_to_the_still_when_the_frame_cannot_be_read(monkeypatch):
+    segs = [
+        Segment(index=0, startSec=0, endSec=10, clipKey="missing.mp4"),
+        Segment(index=1, startSec=10, endSec=20, imageKey="b2.png"),
+    ]
+    from app.storage import get_storage
+
+    get_storage().save("b2.png", b"still-b2")
+    monkeypatch.setattr(seg, "last_frame_of", lambda key: None)
+    # A mock-backend clip has no bytes; rendering must still proceed.
+    assert seg.continuity_source(segs, 1) == b"still-b2"
+
+
+def test_re_rendering_invalidates_only_the_next_clip():
+    segs = [
+        Segment(index=i, startSec=i * 10, endSec=i * 10 + 10, clipKey=f"c{i}.mp4")
+        for i in range(4)
+    ]
+    # Clip 2 started from clip 1's last frame, so only clip 2 is broken.
+    # Clip 3 still follows clip 2's own frame — telling the user to redo
+    # everything after would cost forty renders instead of one.
+    assert seg.invalidated_by(segs, 1) == [2]
+
+
+def test_nothing_is_invalidated_at_the_end_or_before_rendering():
+    segs = [Segment(index=i, startSec=i * 10, endSec=i * 10 + 10) for i in range(3)]
+    assert seg.invalidated_by(segs, 2) == []  # last segment
+    assert seg.invalidated_by(segs, 0) == []  # next one not rendered yet
+
+
+def test_last_frame_of_a_missing_clip_is_none_rather_than_an_error():
+    assert seg.last_frame_of("nope/does-not-exist.mp4") is None

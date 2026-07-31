@@ -127,9 +127,16 @@ def _higgsfield_video_sync(  # pragma: no cover — needs paid credits to exerci
       result     comes back as `{"video": {"url": ...}}` — not the `videos` /
                  `images` list the old code looked for.
 
+    ASPECT RATIO IS NOT A PARAMETER HERE. DoP accepts exactly three arguments —
+    image_url, prompt, duration — and the output shape follows the INPUT IMAGE.
+    Higgsfield's own guide says to supply an image matching the aspect you want.
+    So a film renders 9:16 because the Nano Banana stage generated a 9:16 still,
+    not because anything was sent to this call. Do not add an aspect argument:
+    it would be silently ignored.
+
     A caution learned the expensive way: this API does NOT validate arguments.
-    `duration=999` and `aspect_ratio="99:1"` are accepted and billed. Do not
-    probe it to discover what it supports.
+    `duration=999` and `aspect_ratio="99:1"` are accepted and BILLED rather than
+    rejected. Do not probe it to discover what it supports — read the docs.
     """
     import time as _time
 

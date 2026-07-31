@@ -11,6 +11,8 @@ stages later is not.
 
 from __future__ import annotations
 
+from typing import Optional
+
 from .planner import Screenplay, get_scenario_planner
 from .schemas import Segment
 
@@ -130,3 +132,127 @@ async def render_segment_image(job_id: str, segment: Segment, style_prompt: str 
     updated.status = "imaged"
     updated.imageRuns = segment.imageRuns + 1
     return updated
+
+
+# --- Stage 3: clips, and the continuity that makes them a film -------------
+
+
+def last_frame_of(clip_key: str) -> Optional[bytes]:
+    """Grab the final frame of a rendered clip as a JPEG.
+
+    This is what turns independently generated clips into a film. DoP starts
+    from an image, so handing it the frame the previous clip ended on makes the
+    cut continuous instead of a jump to an unrelated shot. Without it the result
+    is a slideshow, which is most of what "AI video looks cheap" means.
+
+    Returns None when the clip has no bytes (the mock backend stores keys with
+    no file), so callers fall back to the segment's own still.
+    """
+    import os
+    import subprocess
+    import tempfile
+
+    from .storage import get_storage
+
+    store = get_storage()
+    if not store.exists(clip_key):
+        return None
+
+    with tempfile.TemporaryDirectory() as td:
+        src = os.path.join(td, "clip.mp4")
+        with open(src, "wb") as fh:
+            fh.write(store.read(clip_key))
+        out = os.path.join(td, "last.jpg")
+        # -sseof seeks from the END, which is the only reliable way to land on
+        # the final frame without knowing the duration.
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-sseof", "-0.5", "-i", src,
+               "-update", "1", "-q:v", "2", out]
+        try:
+            subprocess.run(cmd, check=True, timeout=60)
+        except Exception:
+            return None
+        if not os.path.exists(out):
+            return None
+        with open(out, "rb") as fh:
+            return fh.read()
+
+
+def continuity_source(segments: list[Segment], index: int) -> Optional[bytes]:
+    """The image clip `index` should start from.
+
+    The previous clip's last frame when there is one, otherwise this segment's
+    own approved still. The first segment of a film has no predecessor, and a
+    re-render in the middle of a film does — which is exactly why this is a
+    function of position rather than something baked in at render time.
+    """
+    from .storage import get_storage
+
+    if index > 0:
+        prev = segments[index - 1]
+        if prev.clipKey:
+            frame = last_frame_of(prev.clipKey)
+            if frame:
+                return frame
+
+    own = segments[index].imageKey
+    store = get_storage()
+    if own and store.exists(own):
+        return store.read(own)
+    return None
+
+
+async def render_segment_clip(
+    job_id: str, segments: list[Segment], index: int, video_model: Optional[str] = None
+) -> Segment:
+    """Render ONE clip, starting from whatever keeps it continuous.
+
+    Charged per clip as it happens rather than up front, because a film is no
+    longer one purchase: any segment can be re-rendered, and pre-charging plus
+    pro-rata refunds cannot express "clip 14, twice" (ADR 0020).
+    """
+    import asyncio
+
+    from .providers import _higgsfield_video_sync
+    from .storage import get_storage
+
+    segment = segments[index]
+    start_image = continuity_source(segments, index)
+
+    from . import catalog
+
+    app_id = catalog.higgsfield_app_for(video_model)
+    url = await asyncio.to_thread(
+        _higgsfield_video_sync, segment.prompt, start_image, app_id
+    )
+
+    import httpx
+
+    from .config import settings
+
+    async with httpx.AsyncClient(timeout=settings.higgsfield_max_wait) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+        data = resp.content
+
+    key = f"clips/{job_id}/{index:04d}.mp4"
+    get_storage().save(key, data)
+
+    updated = segment.model_copy()
+    updated.clipKey = key
+    updated.status = "rendered"  # freshly rendered means unreviewed again
+    updated.clipRuns = segment.clipRuns + 1
+    return updated
+
+
+def invalidated_by(segments: list[Segment], index: int) -> list[int]:
+    """Which later clips stop being continuous once `index` is re-rendered.
+
+    Only the immediate next one is truly broken — its start frame came from the
+    clip that just changed. Everything after it still follows its own
+    predecessor. Saying "the next clip" rather than "everything after" is the
+    difference between re-rendering one $0.38 clip and re-rendering forty.
+    """
+    nxt = index + 1
+    if nxt < len(segments) and segments[nxt].clipKey:
+        return [nxt]
+    return []
