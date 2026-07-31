@@ -26,19 +26,41 @@ DURATIONS: list[Duration] = [
     Duration(id="h1", label="1 hr+", seconds=3600),
 ]
 
-# Pricing v2 (ADR 0017): subscriptions grant monthly credits; packs below are
-# one-time top-ups that need NO subscription. Subscription credits are the
-# better per-credit deal on purpose.
+# Pricing v3 (ADR 0017 v3) — priced off MEASURED cost, 2026-08-01.
+#
+# v2 was set before we could generate anything, and it was underwater. Measured:
+# three 5-second cinematic clips (higgsfield-ai/dop) cost 17.5 Higgsfield
+# credits, and Higgsfield sells credits at $0.0625 (500 for $31.25). That is
+# ~5.83 credits per scene = $0.364, plus ~$0.02 for the image stage:
+#
+#     cost per 10s scene  =  $0.384
+#
+# At v2's prices a premium scene (5 mayo credits) earned $0.118 on Studio —
+# 0.31x cost. Every Studio subscription lost money on every scene generated,
+# and even the priciest pack only reached 1.56x.
+#
+# The rule now: the CHEAPEST credit we sell must still clear 2x cost. That
+# floor is Studio, because pricing that only works for pack buyers loses money
+# on precisely the customers a subscription business is trying to win.
+#
+#     2 x $0.384 / 5 credits per scene  =  $0.154 per mayo credit (floor)
+#
+# Plan prices are unchanged; the credit GRANTS shrank to hit that floor.
+# Re-derive with: python scripts/margin.py --hf 5.83
 PLANS: list[Plan] = [
     Plan(id="free", monthly=0, storageMb=300),
-    Plan(id="pro", monthly=24, storageMb=5_000, monthlyCredits=700),
-    Plan(id="studio", monthly=59, storageMb=50_000, monthlyCredits=2_500),
+    # $24 / 150 = $0.160/credit -> 2.08x
+    Plan(id="pro", monthly=24, storageMb=5_000, monthlyCredits=150),
+    # $59 / 380 = $0.155/credit -> 2.02x — the floor, and the cheapest credit
+    Plan(id="studio", monthly=59, storageMb=50_000, monthlyCredits=380),
 ]
 
+# Packs stay above the subscription rate on purpose: a subscription should be
+# the better deal, or there is no reason to hold one.
 CREDIT_PACKS: list[CreditPack] = [
-    CreditPack(id="pack100", credits=100, usd=12),
-    CreditPack(id="pack300", credits=300, usd=30),
-    CreditPack(id="pack1000", credits=1_000, usd=85),
+    CreditPack(id="pack100", credits=100, usd=18),  # $0.180/credit -> 2.34x
+    CreditPack(id="pack300", credits=300, usd=50),  # $0.167/credit -> 2.17x
+    CreditPack(id="pack1000", credits=1_000, usd=160),  # $0.160/credit -> 2.08x
 ]
 
 RETENTION_PLANS: list[RetentionPlan] = [

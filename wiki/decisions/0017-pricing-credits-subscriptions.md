@@ -105,3 +105,70 @@ stays live and honest meanwhile — premium gating (admin/BYOK pass), credit
 metering, checkout endpoints answering "not configured", real receipt
 validation ready behind MAYO_APPLE_SHARED_SECRET. The v2 price table above is
 the working hypothesis to re-verify against measured cost.
+
+## v3 — 2026-08-01 (measured cost; every credit clears 2x)
+
+v1 and v2 were both set before mayo could generate anything. They were guesses,
+and the guess was wrong in the expensive direction.
+
+**The measurement** (MAYO-5). Three 5-second cinematic clips through
+`higgsfield-ai/dop` (lite, standard, turbo) consumed **17.5 Higgsfield credits**
+total. Higgsfield sells credits at **$0.0625** (500 for $31.25). So:
+
+| | |
+|---|---|
+| Higgsfield credits per 10s scene | ~5.83 (average of the three variants) |
+| video cost per scene | $0.364 |
+| + image stage (Nano Banana, est.) | $0.02 |
+| **cost per 10s scene** | **$0.384** |
+
+**What v2 was actually doing.** A premium scene charges 5 mayo credits. At v2's
+prices that earned:
+
+| plan | $/credit | revenue/scene | margin |
+|---|---|---|---|
+| Studio | $0.0236 | $0.118 | **0.31x — loss** |
+| Pro | $0.0343 | $0.171 | **0.45x — loss** |
+| pack1000 | $0.085 | $0.425 | 1.11x |
+| pack100 | $0.120 | $0.600 | 1.56x |
+
+Both subscriptions lost money on every scene generated, and no pack reached 2x.
+The more a subscriber used the product, the more it cost us.
+
+**The rule now.** The *cheapest* credit we sell must clear **2x** cost. The
+floor is the Studio subscription, not a pack — pricing that only works for pack
+buyers loses money on precisely the customers a subscription business wants.
+
+    2 x $0.384 / 5 credits per scene = $0.154 per mayo credit (floor)
+
+**v3 table.** Plan prices are unchanged; the credit **grants** shrank. Raising
+consumption per scene would have been algebraically identical — same dollars,
+same minutes of video — so the lever was chosen for legibility: $24 stays $24.
+
+| | price | credits | $/credit | margin |
+|---|---|---|---|---|
+| Pro | $24/mo | **150** | $0.160 | 2.08x |
+| Studio | $59/mo | **380** | $0.155 | **2.02x** (the floor) |
+| pack100 | **$18** | 100 | $0.180 | 2.34x |
+| pack300 | **$50** | 300 | $0.167 | 2.17x |
+| pack1000 | **$160** | 1,000 | $0.160 | 2.08x |
+
+Packs stay above the subscription rate on purpose: a subscription has to be the
+better deal or there is no reason to hold one.
+
+What that buys: **Pro $24 = 5 min** of premium video/month, **Studio $59 =
+12.7 min**. That is the honest consequence of $0.38 per 10 seconds — and it is
+worth watching, because "AI long-form video" at five minutes a month may be the
+wrong shape of product. The answer is not a cheaper price; it is cheaper
+generation (a lighter DoP variant, shorter scenes, or local generation for
+draft tiers).
+
+**Derivation is executable:** `apps/mayo-api/scripts/margin.py --hf 5.83`. It
+reads the live catalog, so the script and the product cannot disagree.
+
+**Still unmeasured**
+- Per-variant cost. 17.5 is the total across lite/standard/turbo, so 5.83 is an
+  average; lite is presumably cheaper. Splitting them needs more paid runs and
+  would let the draft/standard/premium tiers map to real variants.
+- The image stage, carried as a $0.02 estimate.
+- Payments remain **off**. This table is what will be charged when they go on.

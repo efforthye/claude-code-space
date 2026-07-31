@@ -229,6 +229,11 @@ No ticket → make one first; a commit without `Refs:` is not acceptable.
   used in the ADR or the wiki page. Not a hard gate on every small change — but for
   anything load-bearing, "I already know how this works" is how outdated defaults get
   baked in. Distil findings into `wiki/concepts/` so the next task inherits them.
+- **Never spend the owner's money without asking.** Paid generations (Higgsfield,
+  any metered API) need explicit permission each time — say how many calls and roughly
+  what it costs, then wait. Do not assume an API rejects bad input for free: Higgsfield
+  accepts `duration=999` and bills for it. Verify with docs, dry runs, or results you
+  already have.
 - **Owner action items become Jira issues immediately.** The moment work surfaces
   something only the owner can do (an account, a key, a payment, a console setting),
   file the issue right then — don't leave it in chat where it evaporates.

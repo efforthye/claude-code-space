@@ -185,7 +185,12 @@ def test_appstore_receipt_validation_grants(monkeypatch):
     )
     assert r.status_code == 200 and r.json() == {"entitled": True, "planId": "pro"}
     assert users.users[user["id"]]["planId"] == "pro"
-    assert users.users[user["id"]]["credits"] >= 700
+    # Read the grant from the catalog rather than hardcoding it — pricing moves
+    # with measured provider cost (ADR 0017 v3) and a literal here just breaks.
+    from app.catalog import PLANS
+
+    pro_credits = next(p.monthlyCredits for p in PLANS if p.id == "pro")
+    assert users.users[user["id"]]["credits"] >= pro_credits
 
     # consumable pack -> purchased credits (premium marker)
     before = users.users[user["id"]]["credits"]
