@@ -45,10 +45,19 @@ export function planStorageBytes(planId: string, plans: Plan[] = PLANS): number 
   return mb * 1024 * 1024;
 }
 
+/**
+ * Two decimals throughout, deliberately.
+ *
+ * A quota bar is the one place rounding is actively unhelpful: at one decimal
+ * a library holding 40 MB of clips reads "0.0 MB" until the first one lands,
+ * which looks broken rather than empty. Small numbers are exactly where the
+ * user is checking whether anything was stored at all.
+ */
 export function formatBytes(bytes: number): string {
   const mb = bytes / (1024 * 1024);
-  if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
-  return `${mb.toFixed(mb < 10 ? 1 : 0)} MB`;
+  if (mb >= 1024) return `${(mb / 1024).toFixed(2)} GB`;
+  if (mb > 0 && mb < 0.01) return '< 0.01 MB'; // never round a real file to zero
+  return `${mb.toFixed(2)} MB`;
 }
 
 export const RETENTION_PLANS: RetentionPlan[] = [

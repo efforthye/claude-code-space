@@ -25,13 +25,9 @@ import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/toast';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { formatBytes } from '@/api/catalog';
 import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
-
-function fmtBytes(n: number): string {
-  const mb = n / (1024 * 1024);
-  return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${mb.toFixed(1)} MB`;
-}
 
 export default function AdminScreen() {
   const theme = useTheme();
@@ -71,7 +67,7 @@ export default function AdminScreen() {
     ? ([
         [t('admin.users'), `${stats.users}`, `+${stats.signups7d} / 7d`],
         [t('admin.sessions'), `${stats.activeSessions}`, ''],
-        [t('admin.videos'), `${stats.videos}`, fmtBytes(stats.storageBytes)],
+        [t('admin.videos'), `${stats.videos}`, formatBytes(stats.storageBytes)],
         [
           t('admin.jobs'),
           `${stats.jobsQueued + stats.jobsGenerating}`,
