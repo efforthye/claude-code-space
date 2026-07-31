@@ -57,6 +57,27 @@ export default function CreateScreen() {
   );
   const { data: quote } = useQuery(() => estimateJob(estimateReq), { deps: [estimateReq] });
 
+  const planStepByStep = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    const title = prompt.trim().split('\n')[0].slice(0, 60) || t('create.untitled');
+    try {
+      const job = await createJob({
+        prompt: title,
+        seconds,
+        tier: tier.id,
+        aspect,
+        videoModel,
+        staged: true,
+      });
+      router.push(`/jobs/${job.id}/review`);
+    } catch (e) {
+      toast.show(e instanceof ApiError && e.message ? e.message : t('common.error'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const generate = async () => {
     if (submitting) return;
     setSubmitting(true);
@@ -252,6 +273,24 @@ export default function CreateScreen() {
         ) : null}
       </ThemedView>
 
+      {/* The staged path (ADR 0020): plan and review before anything is paid
+          for. Free up to the clips stage, which is also the honest way to show
+          someone what they would be buying. */}
+      <Pressable
+        onPress={planStepByStep}
+        disabled={submitting}
+        style={({ pressed }) => [
+          styles.card,
+          styles.staged,
+          { borderColor: theme.text },
+          pressed && { opacity: 0.85 },
+        ]}>
+        <ThemedText type="smallBold">{t('create.staged')}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {t('create.stagedHint')}
+        </ThemedText>
+      </Pressable>
+
       <Pressable
         onPress={generate}
         disabled={submitting}
@@ -321,6 +360,7 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     borderRadius: Spacing.four,
   },
+  staged: { borderWidth: 1, gap: 4 },
   cta: {
     marginTop: Spacing.two,
     paddingVertical: Spacing.three,

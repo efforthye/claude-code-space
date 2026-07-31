@@ -168,6 +168,10 @@ class CreateJobRequest(BaseModel):
     aspect: Literal["16:9", "9:16", "1:1", "4:5", "21:9"] = "16:9"
     # Which cinematic variant renders the scenes. Empty = server default.
     videoModel: str = Field(default="", max_length=40)
+    # Start in the staged, review-gated flow (ADR 0020) instead of rendering in
+    # one pass. Staged jobs are NOT charged at creation — nothing is spent until
+    # the clips stage, which is the whole point of the gates.
+    staged: bool = False
 
 
 class Estimate(BaseModel):

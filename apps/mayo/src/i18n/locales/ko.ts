@@ -472,4 +472,6 @@ export const ko: Dict = {
   'review.next': 'OK, 다음 단계로',
   'review.nextBlocked': '{n}개 더 승인해야 해요',
   'jobDetail.review': '검수하고 이어가기',
+  'create.staged': '단계별로 만들기',
+  'create.stagedHint': '흐름을 먼저 보고, 이미지를 보고, 그다음 영상. 영상 만들기 전까지는 과금 없어요.',
 };

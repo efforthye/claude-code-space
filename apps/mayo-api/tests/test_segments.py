@@ -13,6 +13,9 @@ from app.schemas import Segment
 
 client = TestClient(app)
 
+# Premium gating on, without touching the frozen settings instance.
+_GATED = type("S", (), {"premium_gating": True})()
+
 
 def _job(seconds: int = 60) -> str:
     r = client.post("/v1/jobs", json={"prompt": "a lighthouse at dusk", "seconds": seconds})
@@ -387,3 +390,75 @@ def test_per_scene_price_follows_the_tier():
     draft = catalog.credits_per_scene(catalog.tier_by_id("draft"))
     premium = catalog.credits_per_scene(catalog.tier_by_id("premium"))
     assert premium > draft >= 1
+
+
+# --- entering the staged flow -----------------------------------------------
+
+
+def test_a_staged_job_starts_at_the_beats_gate_and_costs_nothing():
+    r = client.post(
+        "/v1/jobs", json={"prompt": "a lighthouse", "seconds": 30, "staged": True}
+    )
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["stage"] == "beats"
+    # Nothing is spent until the clips stage — charging here would defeat the
+    # gates the staged flow exists to provide.
+    assert body["chargedCredits"] in (None, 0)
+    assert body["spentCredits"] == 0
+
+
+def test_a_plain_job_still_renders_in_one_pass():
+    r = client.post("/v1/jobs", json={"prompt": "a lighthouse", "seconds": 30})
+    assert r.status_code == 201
+    assert r.json()["stage"] == "clips"
+
+
+def test_planning_and_previewing_are_free_for_a_free_user(monkeypatch):
+    # The paid gate is at the clips stage, so someone without a plan can still
+    # plan a film and look at its stills. That is also the only honest way to
+    # show what they would be paying for.
+    # settings is a frozen dataclass, so the router's reference is swapped
+    # wholesale — the pattern test_gating.py already uses.
+    from app.routers import jobs as jobs_router
+
+    monkeypatch.setattr(jobs_router, "settings", _GATED)
+    monkeypatch.setattr(jobs_router.runtime, "generation_backend", lambda: "external")
+
+    # This test is about WHERE the paywall sits, not about image generation —
+    # stub the renderer so it does not reach for a provider SDK.
+    async def fake_image(job_id, segment, style=""):
+        out = segment.model_copy()
+        out.imageKey = f"stills/{job_id}/{segment.index}.png"
+        out.status = "imaged"
+        out.imageRuns = segment.imageRuns + 1
+        return out
+
+    monkeypatch.setattr(seg, "render_segment_image", fake_image)
+
+    r = client.post("/v1/jobs", json={"prompt": "x", "seconds": 20, "staged": True})
+    assert r.status_code == 201, r.text
+    job_id = r.json()["id"]
+
+    assert client.post(f"/v1/jobs/{job_id}/beats", json={"prompt": "x"}).status_code == 200
+    n = len(client.get(f"/v1/jobs/{job_id}").json()["segments"])
+    for i in range(n):
+        client.post(f"/v1/jobs/{job_id}/segments/{i}/approve")
+    assert client.post(f"/v1/jobs/{job_id}/advance").status_code == 200
+    assert client.post(f"/v1/jobs/{job_id}/stills").status_code == 200
+
+    # ...and only then does it ask for payment.
+    for i in range(n):
+        client.post(f"/v1/jobs/{job_id}/segments/{i}/approve")
+    client.post(f"/v1/jobs/{job_id}/advance")
+    r = client.post(f"/v1/jobs/{job_id}/clips", json={"mode": "renderAll"})
+    assert r.status_code == 402, r.text
+
+
+def test_a_one_pass_job_is_still_gated_at_creation(monkeypatch):
+    from app.routers import jobs as jobs_router
+
+    monkeypatch.setattr(jobs_router, "settings", _GATED)
+    monkeypatch.setattr(jobs_router.runtime, "generation_backend", lambda: "external")
+    r = client.post("/v1/jobs", json={"prompt": "x", "seconds": 20})
+    assert r.status_code == 402

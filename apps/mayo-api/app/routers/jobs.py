@@ -74,8 +74,13 @@ async def create_job(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown tier '{req.tier}'")
     # External generation spends the owner's paid provider keys — when premium
     # gating is on, it's reserved for signed-in paid-plan users (ADR 0011/0012).
+    # The paid gate belongs where the money is, not at the door. A staged job
+    # spends nothing until the clips stage, so a free user can plan a film and
+    # see its stills first — which is also the only honest way to show what they
+    # would be paying for. The gate moves to POST /{id}/clips.
     if (
-        settings.premium_gating
+        not req.staged
+        and settings.premium_gating
         and runtime.generation_backend() == "external"
         and premium_user_or_none(x_mayo_session) is None
     ):
@@ -89,7 +94,10 @@ async def create_job(
 
     caller = users.user_for_session(x_mayo_session or "")
     charge: int | None = None
-    if caller:
+    # A staged job spends nothing at creation: the beat sheet and the stills are
+    # cheap, and the clips stage bills per clip as it renders (ADR 0020).
+    # Charging up front here would defeat the gates it exists to protect.
+    if caller and not req.staged:
         charge = _price_credits(req, caller)
         balance = int(caller.get("credits", 0))
         if balance < charge:
@@ -108,6 +116,7 @@ async def create_job(
         owner_id=caller["id"] if caller else None,
         aspect=req.aspect,
         video_model=req.videoModel or None,
+        stage="beats" if req.staged else "clips",
     )
     start_generation(job.id)
     return job
@@ -358,6 +367,17 @@ async def start_clips(
     if job.stage != "clips" or not job.segments:
         raise HTTPException(
             status.HTTP_409_CONFLICT, detail=f"job is at stage '{job.stage}', not ready for clips"
+        )
+
+    # This is the paid boundary for a staged job — everything before it was free.
+    if (
+        settings.premium_gating
+        and runtime.generation_backend() == "external"
+        and premium_user_or_none(x_mayo_session) is None
+    ):
+        raise HTTPException(
+            status.HTTP_402_PAYMENT_REQUIRED,
+            detail="external AI generation is for paid plans — upgrade or switch generation mode",
         )
 
     from ..auth import store as users

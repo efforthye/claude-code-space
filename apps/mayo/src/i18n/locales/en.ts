@@ -472,4 +472,6 @@ export const en: Dict = {
   'review.next': 'OK, next step',
   'review.nextBlocked': '{n} left to approve',
   'jobDetail.review': 'Review and continue',
+  'create.staged': 'Build it step by step',
+  'create.stagedHint': 'Review the flow, then the images, then render. Nothing is charged until you render.',
 };

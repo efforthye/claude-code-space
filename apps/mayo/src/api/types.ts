@@ -116,6 +116,8 @@ export type CreateJobRequest = {
   aspect?: Aspect;
   /** Cinematic variant id from the catalog, e.g. 'dop-lite'. */
   videoModel?: string;
+  /** Start in the review-gated flow (ADR 0020). Not charged at creation. */
+  staged?: boolean;
 };
 export type RuntimeSettings = {
   generationBackend: string;

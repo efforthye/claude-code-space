@@ -456,4 +456,6 @@ export const zhHans: Dict = {
   'publish.promptAsk': '要一并公开提示词吗? 即使不公开，别人依然可以二创 — 区别只在于能不能看到你是怎么做的。',
   'publish.promptKeep': '保持私密',
   'publish.promptShare': '公开提示词',
+  'create.staged': '分步骤制作',
+  'create.stagedHint': '先看流程，再看图像，最后生成视频。生成视频前不收费。',
 };

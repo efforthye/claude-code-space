@@ -474,4 +474,6 @@ export const ja: Dict = {
   'review.next': 'OK、次のステップへ',
   'review.nextBlocked': 'あと {n} 件の承認が必要',
   'jobDetail.review': '確認して進む',
+  'create.staged': 'ステップごとに作る',
+  'create.stagedHint': '流れを確認し、画像を確認してから動画へ。動画を作るまで料金はかかりません。',
 };
