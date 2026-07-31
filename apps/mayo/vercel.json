@@ -3,7 +3,6 @@
   "buildCommand": "npx expo export -p web && node scripts/seo-inject.mjs",
   "outputDirectory": "dist",
   "framework": null,
-  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/reel/:id",
