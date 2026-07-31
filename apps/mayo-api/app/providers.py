@@ -131,7 +131,23 @@ def _higgsfield_video_sync(prompt: str, image_bytes: bytes | None) -> str:  # pr
         arguments[settings.higgsfield_image_arg] = (
             "data:image/png;base64," + base64.b64encode(image_bytes).decode()
         )
-    job = higgsfield_client.submit(settings.higgsfield_model, arguments=arguments)
+    try:
+        job = higgsfield_client.submit(settings.higgsfield_model, arguments=arguments)
+    except Exception as exc:  # noqa: BLE001 — re-raised with a usable message
+        # Higgsfield answers `model_not_found` for BOTH a wrong model id and an
+        # account with no models provisioned — verified 2026-08-01: an
+        # unsubscribed key returns model_not_found even for the identifier in
+        # Higgsfield's own README (`bytedance/seedream/v4/text-to-image`).
+        # Authentication is fine in that case, so the raw error sends you
+        # hunting through model ids for a billing problem. Say both.
+        if "model_not_found" in str(exc):
+            raise RuntimeError(
+                f"Higgsfield rejected model '{settings.higgsfield_model}' (model_not_found). "
+                "Either MAYO_HIGGSFIELD_MODEL is wrong, or the Higgsfield account has no "
+                "active subscription — an unsubscribed key authenticates but is granted no "
+                "models, and reports it the same way."
+            ) from exc
+        raise
 
     deadline = _time.monotonic() + settings.higgsfield_max_wait
     while _time.monotonic() < deadline:
