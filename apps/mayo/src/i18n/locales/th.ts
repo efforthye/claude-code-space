@@ -36,8 +36,6 @@ export const th: Dict = {
   'reels.save': 'บันทึก',
   'reels.saved': 'บันทึกแล้ว',
   'reels.empty': 'ยังไม่มีใครเผยแพร่อะไร สร้างหนังสักเรื่องแล้วแตะ “แชร์ไปที่สำรวจ” ในหน้ารายละเอียด',
-  'reels.seed': 'เติมด้วยรีลตัวอย่าง',
-  'reels.seeding': 'กำลังสร้างตัวอย่าง…',
   'reels.shareMessage': '“{title}” หนัง AI ที่ทำด้วย mayo ลองดูแล้วทำของคุณเองบ้าง:',
   'reels.linkCopied': 'คัดลอกลิงก์แล้ว วางที่ไหนก็ได้',
   'reel.tagline': 'สตูดิโอวิดีโอ AI',
@@ -460,4 +458,7 @@ export const th: Dict = {
   'creator.empty': 'ยังไม่ได้เผยแพร่อะไรเลย',
   'following.title': 'กำลังติดตาม',
   'following.empty': 'คุณยังไม่ได้ติดตามใคร',
+  'reels.expand': 'เต็มจอ',
+  'reels.collapse': 'ออกจากเต็มจอ',
+  'plan.iapUnavailable': 'การซื้อในแอปยังไม่พร้อมใช้งาน',
 };

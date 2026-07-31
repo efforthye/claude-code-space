@@ -22,9 +22,10 @@ router = APIRouter(prefix="/v1/explore", tags=["explore"])
 async def list_explore(
     sort: str = Query("popular", pattern="^(popular|latest)$"),
     orientation: str = Query("all", pattern="^(all|vertical|horizontal)$"),
+    author: str = Query("", max_length=64),
     x_mayo_session: Optional[str] = Header(default=None),
 ) -> list[ExploreItem]:
-    items = await explore_store.list(sort, orientation)
+    items = await explore_store.list(sort, orientation, author)
     user = users.user_for_session(x_mayo_session or "")
     uid = user["id"] if user else None
     annotated = explore_store.annotate_liked(items, uid)
@@ -129,88 +130,11 @@ async def delete_my_explore(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not your post (or not found)")
     return {"deleted": True}
 
-
-SAMPLE_AUTHOR = "@mayo-sample"
-
-_SAMPLES = [
-    # (title, prompt, hue-shift, likes, views, age_hours)
-    ("노을 지는 바다 산책", "a calm sea at sunset, warm colors, gentle waves", 0, 12, 60, 48.0),
-    ("네온 시티 드라이브", "neon city night drive, cyberpunk palette, rain reflections", 60, 8, 44, 24.0),
-    ("숲 속의 아침", "misty forest morning, sun rays through trees", 120, 5, 30, 12.0),
-    ("우주 유영", "an astronaut drifting past a nebula, deep space colors", 180, 3, 18, 6.0),
-    ("고양이의 하루", "a small orange tabby cat exploring a cozy room", 240, 1, 9, 2.0),
-    ("빗속의 카페", "rainy cafe window, warm lights, lo-fi mood", 300, 0, 3, 0.5),
-]
-
-
-def _gen_sample_clip_sync(hue: int, label: str) -> bytes:
-    """A 4s portrait (576x1024) test reel via ffmpeg lavfi — real, playable mp4."""
-    import os
-    import subprocess
-    import tempfile
-
-    with tempfile.TemporaryDirectory() as td:
-        out = os.path.join(td, "clip.mp4")
-        vf = f"hue=h={hue},format=yuv420p"
-        subprocess.run(
-            ["ffmpeg", "-y",
-             "-f", "lavfi", "-i", "testsrc2=size=576x1024:rate=24:duration=4",
-             "-vf", vf, "-c:v", "libx264", "-preset", "veryfast",
-             "-movflags", "+faststart", out],
-            check=True, capture_output=True, timeout=120,
-        )
-        with open(out, "rb") as fh:
-            return fh.read()
-
-
-@router.post("/seed", response_model=list[ExploreItem])
-async def seed_explore(clear: bool = Query(default=False)) -> list[ExploreItem]:
-    """Dev helper: fill the feed with generated sample reels so the reels UI and
-    ranking can be exercised before real posts exist. Samples are authored
-    '@mayo-sample' with varied likes/views/ages; `?clear=true` removes existing
-    samples first (call with clear alone to just clean up).
-    """
-    import asyncio
-    import time as _time
-
-    from ..storage import get_storage
-
-    if clear:
-        await explore_store.remove_by_author(SAMPLE_AUTHOR)
-
-    from ..schemas import ExploreItem as _Item
-    from ..store import _new_id
-
-    accents = ["#6D5DF6", "#1FA2A6", "#E0699A", "#E2A43B", "#4C8DF6", "#8B5CF6"]
-    created: list[ExploreItem] = []
-    for idx, (title, prompt, hue, likes, views, age_h) in enumerate(_SAMPLES):
-        try:
-            data = await asyncio.to_thread(_gen_sample_clip_sync, hue, title)
-        except Exception:
-            raise HTTPException(
-                status.HTTP_501_NOT_IMPLEMENTED,
-                detail="샘플 생성에는 서버에 ffmpeg가 필요해요",
-            )
-        key = f"films/sample-{idx}.mp4"
-        get_storage().save(key, data)
-        item = _Item(
-            id=_new_id("e"),
-            title=title,
-            prompt=prompt,
-            author=SAMPLE_AUTHOR,
-            likes=likes,
-            durationLabel="0:04",
-            accent=accents[idx % len(accents)],
-            tierLabel="Sample",
-            url=f"/v1/media/{key}",
-            createdLabel="sample",
-            views=views,
-            createdAt=_time.time() - age_h * 3600,
-            scenePrompts=[prompt],
-            stylePrompt="vivid colors, smooth motion",
-        )
-        created.append(await explore_store.insert(item))
-    return created
+# Sample seeding used to live here: an endpoint that generated ffmpeg test
+# clips authored "@mayo-sample" so the feed looked populated before anyone had
+# published. Removed 2026-08-01 — a feed of films nobody made is a lie about
+# what the product has on it, and it made the ranking signals meaningless.
+# The purge of any rows it left behind runs at startup (see main.py).
 
 
 @router.get("/{item_id}", response_model=ExploreItem)

@@ -27,7 +27,6 @@ import {
   getExplore,
   likeExplore,
   publicReelMediaUrl,
-  seedExplore,
   shareExplore,
   unlikeExplore,
   viewExplore,
@@ -70,26 +69,53 @@ export function ReelsFeed({
   orientation = 'vertical',
   startIndex = 0,
   overlay,
-  seedable = false,
 }: {
   mode: ReelsMode;
   /**
-   * Which lane, and therefore which way the pager runs. Vertical is the shorts
-   * feed; horizontal is the cinematic one, where films are wide and swiping
-   * sideways is the gesture that matches the shape on screen.
+   * Which lane — which films are in the feed. Not the same thing as which way
+   * you page them: the cinematic lane opens as an ordinary vertical feed and
+   * only turns sideways when you ask it to, the way a video app goes
+   * fullscreen. Defaulting cinematic to landscape would force a phone rotation
+   * on anyone who just wanted to browse.
    */
   orientation?: 'vertical' | 'horizontal';
   startIndex?: number;
   /** Rendered above the pager (sort chips, close button…) — position absolutely. */
   overlay?: ReactNode;
-  /** Show the sample-seeding flask (dev helper) even when the feed has items. */
-  seedable?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
   const { favorites } = useFavorites();
   const sort: ExploreSort = mode === 'latest' ? 'latest' : 'popular';
-  const horizontal = orientation === 'horizontal';
+  const cinematic = orientation === 'horizontal';
+  // Expanded = the sideways, one-film-at-a-time reading of the cinematic lane.
+  const [expanded, setExpanded] = useState(false);
+  const horizontal = cinematic && expanded;
+
+  // Leaving the lane must not strand the phone in landscape.
+  useEffect(() => {
+    if (!cinematic && expanded) setExpanded(false);
+  }, [cinematic, expanded]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const ScreenOrientation = await import('expo-screen-orientation');
+        if (cancelled) return;
+        await (expanded
+          ? ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE)
+          : ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP));
+      } catch {
+        // Tablets and some Android builds refuse the lock; the feed still works
+        // in whatever orientation the device is in.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [expanded]);
   const { data: fetched, refetch } = useQuery(() => getExplore(sort, orientation), {
     enabled: mode !== 'liked',
     deps: [sort, orientation],
@@ -98,7 +124,7 @@ export function ReelsFeed({
   // rather than by the server.
   const items =
     mode === 'liked'
-      ? favorites.filter((f) => isVertical(f.aspect) !== horizontal)
+      ? favorites.filter((f) => isVertical(f.aspect) !== cinematic)
       : (fetched ?? []);
 
   // Measure our own viewport: inside the tab navigator the usable height is
@@ -108,7 +134,6 @@ export function ReelsFeed({
   const page = horizontal ? size.w : size.h;
   const [activeIndex, setActiveIndex] = useState(startIndex);
   const [commentsFor, setCommentsFor] = useState<ExploreItem | null>(null);
-  const [seeding, setSeeding] = useState(false);
 
   const onViewRef = useRef(({ viewableItems }: { viewableItems: { index: number | null }[] }) => {
     if (viewableItems.length > 0 && viewableItems[0].index != null) {
@@ -190,31 +215,24 @@ export function ReelsFeed({
           <ThemedText type="small" style={styles.emptyText}>
             {t('reels.empty')}
           </ThemedText>
-          {mode !== 'liked' && seedable ? (
-            <Pressable
-              onPress={async () => {
-                if (seeding) return;
-                setSeeding(true);
-                try {
-                  await seedExplore();
-                  await refetch();
-                } catch {
-                  // server without ffmpeg, or network blip — leave the empty state
-                } finally {
-                  setSeeding(false);
-                }
-              }}
-              style={styles.seedBtn}>
-              <Ionicons name="flask-outline" size={16} color="#000" />
-              <ThemedText type="smallBold" style={styles.seedText}>
-                {seeding ? t('reels.seeding') : t('reels.seed')}
-              </ThemedText>
-            </Pressable>
-          ) : null}
         </View>
       ) : null}
 
       {overlay}
+      {cinematic && items.length > 0 ? (
+        <SafeAreaView edges={['bottom']} style={styles.expandWrap} pointerEvents="box-none">
+          <Pressable
+            onPress={() => setExpanded((e) => !e)}
+            hitSlop={10}
+            accessibilityLabel={t(expanded ? 'reels.collapse' : 'reels.expand')}
+            style={styles.expandBtn}>
+            <Ionicons name={expanded ? 'contract' : 'expand'} size={18} color="#fff" />
+            <ThemedText type="smallBold" style={styles.white}>
+              {t(expanded ? 'reels.collapse' : 'reels.expand')}
+            </ThemedText>
+          </Pressable>
+        </SafeAreaView>
+      ) : null}
       {Platform.OS === 'web' && items.length > 1 ? (
         <View style={styles.webNav} pointerEvents="box-none">
           <Pressable
@@ -230,27 +248,6 @@ export function ReelsFeed({
             <Ionicons name={horizontal ? 'chevron-forward' : 'chevron-down'} size={22} color="#fff" />
           </Pressable>
         </View>
-      ) : null}
-      {seedable && mode !== 'liked' && items.length > 0 ? (
-        <SafeAreaView edges={['top']} style={styles.seedFabWrap} pointerEvents="box-none">
-          <Pressable
-            onPress={async () => {
-              if (seeding) return;
-              setSeeding(true);
-              try {
-                await seedExplore();
-                await refetch();
-              } catch {
-                // server without ffmpeg — quietly ignore
-              } finally {
-                setSeeding(false);
-              }
-            }}
-            hitSlop={8}
-            style={styles.seedFab}>
-            <Ionicons name={seeding ? 'hourglass-outline' : 'flask-outline'} size={18} color="#fff" />
-          </Pressable>
-        </SafeAreaView>
       ) : null}
       <CommentsSheet item={commentsFor} onClose={() => setCommentsFor(null)} />
     </View>
@@ -531,16 +528,6 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.three },
   emptyText: { color: '#999', textAlign: 'center', paddingHorizontal: Spacing.five },
-  seedBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    backgroundColor: '#ffffff',
-    paddingHorizontal: Spacing.screen,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-  },
-  seedText: { color: '#000000' },
   webNav: {
     position: 'absolute',
     right: Spacing.three,
@@ -558,16 +545,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   webNavBtnOff: { opacity: 0.25 },
-  seedFabWrap: { position: 'absolute', top: 0, right: 0 },
-  seedFab: {
-    margin: Spacing.three,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   rail: {
     position: 'absolute',
     right: Spacing.three,
@@ -584,6 +561,22 @@ const styles = StyleSheet.create({
     bottom: 0,
     padding: Spacing.four,
     gap: Spacing.two,
+  },
+  expandWrap: {
+    position: 'absolute',
+    right: Spacing.four,
+    // Clear of the like/save/share rail on the right and the tab bar below.
+    bottom: Spacing.five + Spacing.four,
+    alignItems: 'flex-end',
+  },
+  expandBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one + 2,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.55)',
   },
   authorRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   followBtn: {

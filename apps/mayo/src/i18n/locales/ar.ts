@@ -38,8 +38,6 @@ export const ar: Dict = {
   'reels.save': 'حفظ',
   'reels.saved': 'تم الحفظ',
   'reels.empty': 'لم يُنشر شيء بعد — أنشئ فيلمًا واضغط «مشاركة في استكشاف» في تفاصيله.',
-  'reels.seed': 'املأ بمقاطع تجريبية',
-  'reels.seeding': 'جارٍ إنشاء المقاطع التجريبية…',
   'reels.shareMessage': '«{title}» — فيلم بالذكاء الاصطناعي صُنع بواسطة mayo. شاهده واصنع فيلمك:',
   'reels.linkCopied': 'تم نسخ الرابط — الصقه أينما شئت',
   'reel.tagline': 'استوديو فيديو بالذكاء الاصطناعي',
@@ -462,4 +460,7 @@ export const ar: Dict = {
   'creator.empty': 'لم يُنشر شيء بعد.',
   'following.title': 'المتابَعون',
   'following.empty': 'لا تتابع أحدًا بعد.',
+  'reels.expand': 'ملء الشاشة',
+  'reels.collapse': 'إنهاء',
+  'plan.iapUnavailable': 'الشراء داخل التطبيق غير متاح بعد.',
 };

@@ -45,7 +45,9 @@ export default function PlanScreen() {
     }
     const product = products.find((p) => p.planId === selected);
     if (!product) {
-      toast.show(t('common.error'));
+      // No product means no store to buy from — say that, rather than showing
+      // a generic failure for something that was never going to work.
+      toast.show(t('plan.iapUnavailable'));
       return;
     }
     const result = await purchase(product.id);

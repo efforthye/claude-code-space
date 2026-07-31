@@ -48,7 +48,7 @@ export default function SettingsScreen() {
     deps: [apiUrl],
   });
   const { data: genSettings } = useQuery(getSettings, { deps: [apiUrl] });
-  // PROD RULE: the mock ("fast preview") backend is a dev tool — only admins
+  // PROD RULE: generation backends are real ones only — the stub is gone
   // see the chip (the server 403s this probe for everyone else).
   const { data: adminStats } = useQuery(getAdminStats, { enabled: !!user, deps: [user?.id] });
   const realAdmin = !!adminStats;
@@ -58,7 +58,7 @@ export default function SettingsScreen() {
   const premium = (user?.planId ?? 'free') !== 'free' || !!user?.premium || isAdmin;
   const [genOverride, setGenOverride] = useState<string | null>(null);
   const [byokOverride, setByokOverride] = useState<boolean | null>(null);
-  const genBackend = genOverride ?? genSettings?.generationBackend ?? 'mock';
+  const genBackend = genOverride ?? genSettings?.generationBackend ?? 'comfy';
   const byok = byokOverride ?? genSettings?.byok ?? false;
   // Always send the full settings object so flipping one control never resets
   // the others (the director backend/model live in the same runtime settings).
@@ -76,7 +76,7 @@ export default function SettingsScreen() {
     try {
       await saveSettings({ generationBackend: backend });
     } catch {
-      setGenOverride(genSettings?.generationBackend ?? 'mock');
+      setGenOverride(genSettings?.generationBackend ?? 'comfy');
     }
   };
   const chooseByok = async (value: boolean) => {

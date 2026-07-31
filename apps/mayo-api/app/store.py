@@ -514,7 +514,7 @@ class ExploreStore:
             pass
 
     async def list(
-        self, sort: str = "popular", orientation: str = "all"
+        self, sort: str = "popular", orientation: str = "all", author: str = ""
     ) -> list[ExploreItem]:
         """The PUBLIC feed — owner-hidden items never appear here.
 
@@ -530,6 +530,8 @@ class ExploreStore:
         if orientation != "all":
             want_vertical = orientation == "vertical"
             items = [e for e in items if _is_vertical(e.aspect) == want_vertical]
+        if author:
+            items = [e for e in items if e.author == author]
         if sort == "latest":
             items.reverse()  # dict preserves insertion order; newest last
         else:

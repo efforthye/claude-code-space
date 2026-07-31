@@ -1,6 +1,6 @@
 /**
  * Minimal app-wide toast. useToast().show(message) pops a short-lived banner
- * near the bottom of the screen — used to confirm mock actions (publish,
+ * near the bottom of the screen — used to confirm actions (publish,
  * extend retention, plan change) that otherwise just dismiss silently.
  */
 

@@ -30,8 +30,6 @@ export const zhHans: Dict = {
   'reels.save': '收藏',
   'reels.saved': '已收藏',
   'reels.empty': '还没有公开作品 — 生成一个视频，在详情页点「公开到发现」。',
-  'reels.seed': '填充示例内容',
-  'reels.seeding': '正在生成示例…',
   'reels.shareMessage': '《{title}》— 用 mayo 做的 AI 视频。看看，也做一个你的:',
   'reels.linkCopied': '链接已复制',
   'reel.tagline': 'AI 视频工作室',
@@ -474,4 +472,7 @@ export const zhHans: Dict = {
   'creator.empty': '还没有公开的作品。',
   'following.title': '关注中',
   'following.empty': '你还没有关注任何人。',
+  'reels.expand': '全屏',
+  'reels.collapse': '退出全屏',
+  'plan.iapUnavailable': '应用内购买尚未开放。',
 };

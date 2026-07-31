@@ -32,8 +32,6 @@ export const vi: Dict = {
   'reels.save': 'Lưu',
   'reels.saved': 'Đã lưu',
   'reels.empty': 'Chưa có gì được đăng — tạo một bộ phim và chạm “Chia sẻ lên Khám phá” trong phần chi tiết.',
-  'reels.seed': 'Lấp đầy bằng reel mẫu',
-  'reels.seeding': 'Đang tạo bản mẫu…',
   'reels.shareMessage': '“{title}” — một bộ phim AI làm bằng mayo. Xem thử và tự làm phim của bạn:',
   'reels.linkCopied': 'Đã sao chép liên kết — dán vào đâu cũng được',
   'reel.tagline': 'Xưởng phim AI',
@@ -456,4 +454,7 @@ export const vi: Dict = {
   'creator.empty': 'Chưa đăng gì cả.',
   'following.title': 'Đang theo dõi',
   'following.empty': 'Bạn chưa theo dõi ai.',
+  'reels.expand': 'Toàn màn hình',
+  'reels.collapse': 'Thoát',
+  'plan.iapUnavailable': 'Mua trong ứng dụng chưa khả dụng.',
 };

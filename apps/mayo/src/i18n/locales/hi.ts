@@ -35,8 +35,6 @@ export const hi: Dict = {
   'reels.save': 'सेव करें',
   'reels.saved': 'सेव हो गया',
   'reels.empty': 'अभी कुछ भी पब्लिश नहीं हुआ — एक फ़िल्म बनाइए और उसकी डिटेल में “एक्सप्लोर पर शेयर करें” दबाइए।',
-  'reels.seed': 'सैंपल रील से भरें',
-  'reels.seeding': 'सैंपल बन रहे हैं…',
   'reels.shareMessage': '“{title}” — mayo से बनी एक AI फ़िल्म। देखिए और अपनी भी बनाइए:',
   'reels.linkCopied': 'लिंक कॉपी हो गया — कहीं भी पेस्ट कर दीजिए',
   'reel.tagline': 'AI वीडियो स्टूडियो',
@@ -459,4 +457,7 @@ export const hi: Dict = {
   'creator.empty': 'अभी तक कुछ भी पब्लिश नहीं किया।',
   'following.title': 'फ़ॉलोइंग',
   'following.empty': 'आपने अभी तक किसी को फ़ॉलो नहीं किया।',
+  'reels.expand': 'फ़ुल स्क्रीन',
+  'reels.collapse': 'बाहर निकलें',
+  'plan.iapUnavailable': 'इन-ऐप ख़रीदारी अभी उपलब्ध नहीं है।',
 };

@@ -32,8 +32,6 @@ export const id: Dict = {
   'reels.save': 'Simpan',
   'reels.saved': 'Tersimpan',
   'reels.empty': 'Belum ada yang dipublikasikan — buat film dan ketuk “Bagikan ke Jelajahi” di detailnya.',
-  'reels.seed': 'Isi dengan reel contoh',
-  'reels.seeding': 'Membuat contoh…',
   'reels.shareMessage': '“{title}” — film AI yang dibuat dengan mayo. Tonton, lalu bikin punyamu:',
   'reels.linkCopied': 'Tautan disalin — tempel di mana saja',
   'reel.tagline': 'Studio video AI',
@@ -456,4 +454,7 @@ export const id: Dict = {
   'creator.empty': 'Belum ada yang dipublikasikan.',
   'following.title': 'Mengikuti',
   'following.empty': 'Kamu belum mengikuti siapa pun.',
+  'reels.expand': 'Layar penuh',
+  'reels.collapse': 'Keluar',
+  'plan.iapUnavailable': 'Pembelian dalam aplikasi belum tersedia.',
 };

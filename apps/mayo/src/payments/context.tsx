@@ -1,7 +1,7 @@
 // PaymentsProvider / usePayments — app-wide entitlement + purchase flow.
 //
 // Holds the current entitlement (persisted via AsyncStorage), the store
-// products, and purchase/restore actions. Backed by the mock provider today;
+// products, and purchase/restore actions. No store is wired up yet, so the
 // a real IAP provider slots in behind the same interface (see provider.ts).
 
 import AsyncStorage from '@react-native-async-storage/async-storage';

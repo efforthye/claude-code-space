@@ -69,6 +69,18 @@ async def lifespan(app: FastAPI):
             logger.info("backfilled duration/size labels on %d video(s)", fixed)
     except Exception:
         logger.exception("label backfill failed")
+    # Purge the generated "@mayo-sample" reels the old seeding endpoint left in
+    # the feed. They were ffmpeg test clips presented as user creations, which
+    # misrepresents what is on the product and poisons the ranking signals the
+    # popular sort reads. The endpoint is gone; this clears what it made.
+    try:
+        from .store import explore
+
+        removed = await explore.remove_by_author("@mayo-sample")
+        if removed:
+            logger.info("removed %d seeded sample reel(s) from the feed", removed)
+    except Exception:
+        logger.exception("sample purge failed")
     yield
     await shutdown()
 

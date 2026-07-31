@@ -31,8 +31,6 @@ export const ptBR: Dict = {
   'reels.save': 'Salvar',
   'reels.saved': 'Salvo',
   'reels.empty': 'Ainda não há nada publicado: gere um filme e toque em “Publicar no Explorar” nos detalhes dele.',
-  'reels.seed': 'Preencher com reels de exemplo',
-  'reels.seeding': 'Gerando exemplos…',
   'reels.shareMessage': '“{title}” — um filme de IA feito com o mayo. Assista e faça o seu:',
   'reels.linkCopied': 'Link copiado: cole onde quiser',
   'reel.tagline': 'Estúdio de vídeo com IA',
@@ -455,4 +453,7 @@ export const ptBR: Dict = {
   'creator.empty': 'Nada publicado ainda.',
   'following.title': 'Seguindo',
   'following.empty': 'Você ainda não segue ninguém.',
+  'reels.expand': 'Tela cheia',
+  'reels.collapse': 'Sair',
+  'plan.iapUnavailable': 'A compra no app ainda não está disponível.',
 };

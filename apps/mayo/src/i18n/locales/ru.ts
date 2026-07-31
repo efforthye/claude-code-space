@@ -35,8 +35,6 @@ export const ru: Dict = {
   'reels.save': 'Сохранить',
   'reels.saved': 'Сохранено',
   'reels.empty': 'Пока никто ничего не опубликовал — создайте фильм и нажмите «Опубликовать в Интересном» в его карточке.',
-  'reels.seed': 'Заполнить примерами',
-  'reels.seeding': 'Создаём примеры…',
   'reels.shareMessage': '«{title}» — ИИ-фильм, сделанный в mayo. Посмотрите и соберите свой:',
   'reels.linkCopied': 'Ссылка скопирована — вставьте где угодно',
   'reel.tagline': 'ИИ-видеостудия',
@@ -459,4 +457,7 @@ export const ru: Dict = {
   'creator.empty': 'Пока ничего не опубликовано.',
   'following.title': 'Подписки',
   'following.empty': 'Вы пока ни на кого не подписаны.',
+  'reels.expand': 'Во весь экран',
+  'reels.collapse': 'Выйти',
+  'plan.iapUnavailable': 'Покупки в приложении пока недоступны.',
 };

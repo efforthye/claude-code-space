@@ -35,8 +35,6 @@ export const fr: Dict = {
   'reels.save': 'Enregistrer',
   'reels.saved': 'Enregistrée',
   'reels.empty': 'Rien n’a encore été publié : générez un film et touchez « Publier dans Explorer » dans ses détails.',
-  'reels.seed': 'Remplir avec des reels d’exemple',
-  'reels.seeding': 'Génération des exemples…',
   'reels.shareMessage': '« {title} » — un film IA fait avec mayo. Regardez, puis faites le vôtre :',
   'reels.linkCopied': 'Lien copié : collez-le où vous voulez',
   'reel.tagline': 'Studio vidéo IA',
@@ -459,4 +457,7 @@ export const fr: Dict = {
   'creator.empty': 'Rien de publié pour le moment.',
   'following.title': 'Abonnements',
   'following.empty': 'Vous ne suivez encore personne.',
+  'reels.expand': 'Plein écran',
+  'reels.collapse': 'Quitter',
+  'plan.iapUnavailable': "L'achat intégré n'est pas encore disponible.",
 };

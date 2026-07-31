@@ -30,8 +30,6 @@ export const ko: Dict = {
   'reels.save': '저장',
   'reels.saved': '저장됨',
   'reels.empty': '아직 공개된 영상이 없어요 — 영상을 만들고 상세에서 "탐색에 공개"를 눌러보세요.',
-  'reels.seed': '샘플 영상으로 채우기',
-  'reels.seeding': '샘플 생성 중…',
   'reels.shareMessage': '"{title}" — mayo로 만든 AI 영상이에요. 보고 나도 만들어보기:',
   'reels.linkCopied': '링크를 복사했어요 — 어디든 붙여넣으세요',
   'reel.tagline': 'AI 영상 스튜디오',
@@ -492,4 +490,7 @@ export const ko: Dict = {
   'creator.empty': '아직 공개한 영상이 없어요.',
   'following.title': '팔로잉',
   'following.empty': '아직 팔로우한 사람이 없어요.',
+  'reels.expand': '크게보기',
+  'reels.collapse': '작게보기',
+  'plan.iapUnavailable': '인앱 결제는 아직 준비되지 않았어요.',
 };

@@ -1,17 +1,17 @@
 // Payment abstraction — app-native in-app purchases (StoreKit / Play Billing).
 //
 // Real IAP needs native modules that DON'T run in Expo Go, so the app codes
-// against this interface and ships a mock provider today. A dev build swaps in a
-// real provider (RevenueCat / react-native-iap) behind the same interface — see
+// against this interface and ships a provider that refuses honestly until a dev
+// build can carry a real one (RevenueCat / react-native-iap) — see
 // src/payments/provider.ts.
 
-export type EntitlementSource = 'none' | 'mock' | 'appstore' | 'playstore';
+export type EntitlementSource = 'none' | 'appstore' | 'playstore' | 'stripe';
 
 /** What the user is currently entitled to (their active plan). */
 export type Entitlement = {
   planId: string; // 'free' | 'pro' | 'studio' | …
   source: EntitlementSource;
-  activeUntil: string | null; // ISO date, or null for non-expiring / mock
+  activeUntil: string | null; // ISO date, or null for non-expiring
 };
 
 export const FREE_ENTITLEMENT: Entitlement = {

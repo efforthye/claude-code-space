@@ -344,9 +344,6 @@ export const publicReelMediaUrl = (id: string) =>
  *  video, so grids render for signed-out visitors too. */
 export const publicReelThumbUrl = (id: string) =>
   `${getApiBaseUrl()}/v1/public/thumb/${encodeURIComponent(id)}`;
-// Dev helper: fill the feed with generated sample reels (server needs ffmpeg).
-export const seedExplore = (clear = false) =>
-  req<ExploreItem[]>(`/v1/explore/seed${clear ? '?clear=true' : ''}`, { method: 'POST' });
 // Reel impression ping — feeds the popular ranking's `views` signal (ADR 0015).
 export const viewExplore = (id: string) =>
   reqPublic<ExploreItem>(

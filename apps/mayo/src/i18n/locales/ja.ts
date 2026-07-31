@@ -30,8 +30,6 @@ export const ja: Dict = {
   'reels.save': '保存',
   'reels.saved': '保存済み',
   'reels.empty': 'まだ公開作品がありません。動画を生成して、詳細画面の「みんなに公開」から投稿しましょう。',
-  'reels.seed': 'サンプルで埋める',
-  'reels.seeding': 'サンプルを生成中…',
   'reels.shareMessage': '「{title}」— mayo で作った AI 動画です。観て、あなたも作ってみませんか:',
   'reels.linkCopied': 'リンクをコピーしました',
   'reel.tagline': 'AI 動画スタジオ',
@@ -492,4 +490,7 @@ export const ja: Dict = {
   'creator.empty': 'まだ公開した作品がありません。',
   'following.title': 'フォロー中',
   'following.empty': 'まだ誰もフォローしていません。',
+  'reels.expand': '全画面',
+  'reels.collapse': '全画面を終了',
+  'plan.iapUnavailable': 'アプリ内課金はまだ利用できません。',
 };

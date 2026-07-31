@@ -1,10 +1,14 @@
 // Explore = the reels feed itself: a full-screen video pager. Browsing IS
 // watching.
 //
-// Two lanes, because one feed cannot hold both shapes. Shorts are vertical and
-// page up/down; cinematic films are wide and page left/right, the way a wide
-// thing wants to be swiped. Mixing them means every other film is either a
-// strip between two black walls or a letterboxed sliver.
+// Two lanes, because one feed cannot hold both shapes: a short in a landscape
+// player is a strip between two black walls, and a wide film in a portrait one
+// is a letterboxed sliver.
+//
+// Both lanes browse the same way — vertically, thumb up and down. The cinematic
+// lane adds a 크게보기 control that turns the phone sideways and pages films
+// one at a time, the way a video app goes fullscreen. Opening straight into
+// landscape would force a rotation on someone who only wanted to look.
 //
 // The lane is switched by tapping the 탐색 tab you are already on — the same
 // spare gesture other apps use to scroll a feed to the top — and by the visible
@@ -15,26 +19,18 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getAdminStats } from '@/api/client';
-import { useAuth } from '@/auth/auth';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { ReelsFeed } from '@/explore/reels-feed';
-import { useQuery } from '@/hooks/use-query';
-import { useI18n, useSettings } from '@/settings/settings';
+import { useI18n } from '@/settings/settings';
 
 type Lane = 'vertical' | 'horizontal';
 
 export default function ExploreScreen() {
   const { t } = useI18n();
-  const { user } = useAuth();
-  const { previewAsUser } = useSettings();
   const navigation = useNavigation();
   const [sort, setSort] = useState<'popular' | 'latest'>('popular');
   const [lane, setLane] = useState<Lane>('vertical');
-  // PROD RULE: sample seeding is a dev tool — admins only (server 403s others).
-  const { data: adminStats } = useQuery(getAdminStats, { enabled: !!user, deps: [user?.id] });
-
   const flip = useCallback(() => setLane((l) => (l === 'vertical' ? 'horizontal' : 'vertical')), []);
 
   // Re-tapping the tab you are already on switches lane. preventDefault stops
@@ -59,7 +55,6 @@ export default function ExploreScreen() {
       <ReelsFeed
         mode={sort}
         orientation={lane}
-        seedable={!!adminStats && !previewAsUser}
         overlay={
           <SafeAreaView edges={['top']} style={styles.chipsWrap} pointerEvents="box-none">
             <View style={styles.chips}>

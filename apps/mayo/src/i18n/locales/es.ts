@@ -32,8 +32,6 @@ export const es: Dict = {
   'reels.save': 'Guardar',
   'reels.saved': 'Guardado',
   'reels.empty': 'Todavía no hay nada publicado: genera una película y toca «Publicar en Explorar» en sus detalles.',
-  'reels.seed': 'Llenar con reels de muestra',
-  'reels.seeding': 'Generando muestras…',
   'reels.shareMessage': '«{title}»: una película de IA hecha con mayo. Míralas y haz la tuya:',
   'reels.linkCopied': 'Enlace copiado: pégalo donde quieras',
   'reel.tagline': 'Estudio de video con IA',
@@ -456,4 +454,7 @@ export const es: Dict = {
   'creator.empty': 'Aún no ha publicado nada.',
   'following.title': 'Siguiendo',
   'following.empty': 'Todavía no sigues a nadie.',
+  'reels.expand': 'Pantalla completa',
+  'reels.collapse': 'Salir',
+  'plan.iapUnavailable': 'La compra dentro de la app aún no está disponible.',
 };

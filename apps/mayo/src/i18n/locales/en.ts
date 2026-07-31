@@ -28,8 +28,6 @@ export const en: Dict = {
   'reels.save': 'Save',
   'reels.saved': 'Saved',
   'reels.empty': 'Nothing published yet — generate a film and tap "Share to Explore" in its details.',
-  'reels.seed': 'Fill with sample reels',
-  'reels.seeding': 'Generating samples…',
   'reels.shareMessage': '"{title}" — an AI film made with mayo. Watch it and make your own:',
   'reels.linkCopied': 'Link copied — paste it anywhere',
   'reel.tagline': 'AI video studio',
@@ -490,4 +488,7 @@ export const en: Dict = {
   'creator.empty': 'Nothing published yet.',
   'following.title': 'Following',
   'following.empty': 'You are not following anyone yet.',
+  'reels.expand': 'Expand',
+  'reels.collapse': 'Exit fullscreen',
+  'plan.iapUnavailable': "In-app purchase isn't available yet.",
 };

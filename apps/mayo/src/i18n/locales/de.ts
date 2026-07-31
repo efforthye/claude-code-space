@@ -34,8 +34,6 @@ export const de: Dict = {
   'reels.save': 'Speichern',
   'reels.saved': 'Gespeichert',
   'reels.empty': 'Noch nichts veröffentlicht — generiere einen Film und tippe in den Details auf „In Entdecken teilen“.',
-  'reels.seed': 'Mit Beispiel-Reels füllen',
-  'reels.seeding': 'Beispiele werden generiert…',
   'reels.shareMessage': '„{title}“ — ein KI-Film, gemacht mit mayo. Schau ihn dir an und mach deinen eigenen:',
   'reels.linkCopied': 'Link kopiert — füg ihn ein, wo du willst',
   'reel.tagline': 'KI-Videostudio',
@@ -458,4 +456,7 @@ export const de: Dict = {
   'creator.empty': 'Noch nichts veröffentlicht.',
   'following.title': 'Abonniert',
   'following.empty': 'Du folgst noch niemandem.',
+  'reels.expand': 'Vollbild',
+  'reels.collapse': 'Beenden',
+  'plan.iapUnavailable': 'In-App-Kauf ist noch nicht verfügbar.',
 };

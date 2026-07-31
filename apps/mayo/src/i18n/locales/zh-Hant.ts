@@ -32,8 +32,6 @@ export const zhHant: Dict = {
   'reels.save': '收藏',
   'reels.saved': '已收藏',
   'reels.empty': '還沒有公開作品 — 生成一支影片，在詳細資料頁點「公開到探索」。',
-  'reels.seed': '填入範例內容',
-  'reels.seeding': '正在生成範例…',
   'reels.shareMessage': '《{title}》— 用 mayo 做的 AI 影片。看看，也做一支你的:',
   'reels.linkCopied': '連結已複製',
   'reel.tagline': 'AI 影片工作室',
@@ -456,4 +454,7 @@ export const zhHant: Dict = {
   'creator.empty': '尚未公開任何作品。',
   'following.title': '追蹤中',
   'following.empty': '你還沒有追蹤任何人。',
+  'reels.expand': '全螢幕',
+  'reels.collapse': '結束全螢幕',
+  'plan.iapUnavailable': '應用程式內購買尚未開放。',
 };
