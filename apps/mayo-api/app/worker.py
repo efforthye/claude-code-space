@@ -29,6 +29,66 @@ logger = logging.getLogger("mayo")
 _tasks: set[asyncio.Task] = set()
 
 
+def _xfade_filter(durations: list[float], dissolve: float) -> tuple[str, str]:
+    """Build the ffmpeg xfade chain for N clips; returns (filter, out label).
+
+    Each transition starts `dissolve` seconds before the end of the material
+    accumulated so far — with frame chaining (batch 45) the frames on both
+    sides already match, so the dissolve reads as one continuous move."""
+    parts: list[str] = []
+    prev = "[0:v]"
+    acc = 0.0
+    for i in range(1, len(durations)):
+        acc += durations[i - 1] - dissolve
+        label = f"[v{i}]"
+        parts.append(
+            f"{prev}[{i}:v]xfade=transition=fade:duration={dissolve:.3f}:offset={acc:.3f}{label}"
+        )
+        prev = label
+    return ";".join(parts), prev
+
+
+def _path_seconds(path: str) -> float:
+    try:
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", path],
+            capture_output=True, timeout=60,
+        )
+        return float(probe.stdout.strip() or 0)
+    except Exception:
+        return 0.0
+
+
+def _dissolve_stitch_sync(paths: list[str], out: str) -> bool:
+    """Try a cross-dissolve stitch; False means 'use the plain concat instead'.
+
+    Skipped when disabled, when any clip carries audio (xfade here is video-
+    only — silently dropping sound would be a regression), or when a clip is
+    too short to absorb the overlap."""
+    dissolve = settings.stitch_dissolve_seconds
+    if dissolve <= 0 or len(paths) < 2:
+        return False
+    from .compose import _has_audio
+
+    if any(_has_audio(p) for p in paths):
+        return False
+    durations = [_path_seconds(p) for p in paths]
+    if any(d <= dissolve * 2 for d in durations):
+        return False
+    fc, out_label = _xfade_filter(durations, dissolve)
+    cmd = ["ffmpeg", "-y"]
+    for p in paths:
+        cmd += ["-i", p]
+    cmd += ["-filter_complex", fc, "-map", out_label,
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", out]
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=900)
+        return True
+    except Exception:
+        return False
+
+
 def _stitch_sync(job_id: str, clip_keys: list[str]) -> str | None:
     """Combine the per-scene clips into one film via ffmpeg and store it.
 
@@ -56,6 +116,14 @@ def _stitch_sync(job_id: str, clip_keys: list[str]) -> str | None:
             for p in paths:
                 fh.write(f"file '{p}'\n")
         out = os.path.join(td, "film.mp4")
+        # Preferred: a short cross-dissolve between scenes (config
+        # MAYO_STITCH_DISSOLVE); falls through to the plain concat whenever it
+        # can't apply safely (audio present, clips too short, ffmpeg error).
+        if _dissolve_stitch_sync(paths, out):
+            with open(out, "rb") as fh:
+                data = fh.read()
+            store.save(film_key, data)
+            return film_key
         base = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", listfile]
         try:
             # Fast path: stream-copy (clips share codec/size from one workflow).

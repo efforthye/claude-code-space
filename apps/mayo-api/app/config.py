@@ -64,6 +64,12 @@ class Settings:
     comfy_clip_eta_seconds: float = field(
         default_factory=lambda: float(os.getenv("MAYO_COMFY_CLIP_ETA_SECONDS", "240"))
     )
+    # Cross-dissolve length (seconds) between scenes when stitching a film.
+    # 0 disables (hard cuts). Applied only when every clip is silent — a
+    # dissolve that drops audio would be a regression, not a polish.
+    stitch_dissolve_seconds: float = field(
+        default_factory=lambda: float(os.getenv("MAYO_STITCH_DISSOLVE", "0.3"))
+    )
     # Safety cap on clips per film so a long duration can't queue thousands of
     # renders on the mini (each clip is minutes). ~60 clips ≈ 2 min of video.
     max_scenes: int = field(default_factory=lambda: int(os.getenv("MAYO_MAX_SCENES", "60")))

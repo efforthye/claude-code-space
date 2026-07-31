@@ -326,3 +326,11 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   END by describing the FINAL frame — which is exactly the frame the next clip
   is generated from (batch 45 chaining), so written endings become real
   transitions. Verified: pytest 183 passed (server-only change).
+
+## [2026-08-01] deploy | mayo → cross-dissolve scene transitions in the stitch (batch 48)
+- New MAYO_STITCH_DISSOLVE (default 0.3s, 0 = hard cuts): stitching now runs an
+  ffmpeg xfade chain between scenes. Combined with frame chaining (batch 45)
+  the overlap blends two nearly-identical frames, so cuts read as one
+  continuous move. Applies only when every clip is silent and long enough;
+  otherwise the plain concat path runs untouched (audio is never dropped for
+  a transition). Verified: pytest 184 passed (offset-chain unit test added).

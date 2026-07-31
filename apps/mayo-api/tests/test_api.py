@@ -204,3 +204,15 @@ def test_a_persisted_stub_value_is_ignored_in_a_real_environment(monkeypatch):
     monkeypatch.setenv("MAYO_ENV", "dev")
     monkeypatch.setitem(runtime._state, "generation_backend", "mock")
     assert runtime.generation_backend() == "comfy"
+
+
+def test_xfade_filter_chain_offsets():
+    """Cross-dissolve stitch: offsets accumulate clip lengths minus overlaps."""
+    from app.worker import _xfade_filter
+
+    fc, out = _xfade_filter([5.0, 5.0, 5.0], 0.3)
+    assert out == "[v2]"
+    assert "xfade=transition=fade:duration=0.300:offset=4.700[v1]" in fc
+    # second transition: 4.7 (first) + 5.0 - 0.3 = 9.4
+    assert "offset=9.400[v2]" in fc
+    assert fc.count("xfade") == 2
