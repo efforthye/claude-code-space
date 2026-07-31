@@ -19,6 +19,36 @@ import { useI18n, useSettings } from '@/settings/settings';
 
 type Unit = 'sec' | 'min';
 
+/**
+ * What kind of film, asked before anything technical.
+ *
+ * Five aspect ratios and seven durations on one screen is a settings panel, not
+ * a question. People arrive knowing "a short" or "a proper film", and every
+ * other choice follows from that — so ask the thing they already know and
+ * derive the rest.
+ */
+const FORMATS = [
+  {
+    id: 'shorts' as const,
+    aspect: '9:16' as Aspect,
+    // Vertical feeds cut off past a minute; offering 30 minutes here would be
+    // offering something no platform will show.
+    durations: [10, 15, 30, 60] as number[],
+  },
+  {
+    id: 'film' as const,
+    aspect: '16:9' as Aspect,
+    durations: [60, 180, 600, 1800, 3600] as number[],
+  },
+  {
+    id: 'square' as const,
+    aspect: '1:1' as Aspect,
+    durations: [10, 30, 60, 180] as number[],
+  },
+] as const;
+
+type FormatId = (typeof FORMATS)[number]['id'];
+
 export default function CreateScreen() {
   const theme = useTheme();
   const { t } = useI18n();
@@ -39,6 +69,20 @@ export default function CreateScreen() {
   // Which cinematic variant renders the scenes. mayo always renders cinematic
   // (Higgsfield DoP), so the choice is speed vs finish, not style.
   const [videoModel, setVideoModel] = useState('dop-standard');
+  // Three questions in order rather than one panel of controls.
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const [format, setFormat] = useState<FormatId>('film');
+  const preset = useMemo(() => FORMATS.find((f) => f.id === format) ?? FORMATS[1], [format]);
+
+  // Picking a format sets the shape; the length list narrows to what that
+  // format can actually carry.
+  const chooseFormat = (id: FormatId) => {
+    const next = FORMATS.find((f) => f.id === id) ?? FORMATS[1];
+    setFormat(id);
+    setAspect(next.aspect);
+    if (!next.durations.includes(seconds)) setSeconds(next.durations[0]);
+    setStep(1);
+  };
   const [customMode, setCustomMode] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState<Unit>('min');
@@ -114,8 +158,136 @@ export default function CreateScreen() {
     }
   };
 
+  // Step 1 — what kind of film. Everything technical follows from this.
+  if (step === 0) {
+    return (
+      <Screen title={t('tab.create')} subtitle={t('create.formatQuestion')}>
+        {FORMATS.map((f) => (
+          <Pressable
+            key={f.id}
+            onPress={() => chooseFormat(f.id)}
+            style={({ pressed }) => (pressed ? styles.directorPressed : undefined)}>
+            <ThemedView type="backgroundElement" style={styles.director}>
+              <Ionicons
+                name={f.id === 'shorts' ? 'phone-portrait-outline' : f.id === 'film' ? 'film-outline' : 'square-outline'}
+                size={20}
+                color={theme.text}
+              />
+              <View style={styles.flex}>
+                <ThemedText type="smallBold">{t(`create.format.${f.id}`)}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t(`create.format.${f.id}.hint`)}
+                </ThemedText>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+            </ThemedView>
+          </Pressable>
+        ))}
+      </Screen>
+    );
+  }
+
+  // Step 2 — how long, offering only what this format can carry.
+  if (step === 1) {
+    return (
+      <Screen title={t('create.length')} subtitle={t('create.lengthQuestion')}>
+        <View style={styles.row}>
+          {preset.durations.map((sec) => (
+            <Chip
+              key={sec}
+              label={formatDuration(sec)}
+              selected={!customMode && seconds === sec}
+              onPress={() => {
+                setSeconds(sec);
+                setCustomMode(false);
+              }}
+            />
+          ))}
+          {/* Length lives entirely on this step, custom included — otherwise
+              the step is decorative and the real control is elsewhere. */}
+          <Chip
+            label={t('create.custom')}
+            selected={customMode}
+            onPress={() => setCustomMode(true)}
+          />
+        </View>
+
+        {customMode ? (
+          <ThemedView type="backgroundElement" style={styles.card}>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('create.customHint')}
+            </ThemedText>
+            <View style={styles.row}>
+              <TextInput
+                value={customValue}
+                onChangeText={(v) => {
+                  setCustomValue(v);
+                  applyCustom(v, customUnit);
+                }}
+                placeholder={t('create.customPlaceholder')}
+                placeholderTextColor={theme.textSecondary}
+                keyboardType="number-pad"
+                style={[styles.input, styles.flex, { color: theme.text }]}
+              />
+              <Chip
+                label={t('create.unitSec')}
+                selected={customUnit === 'sec'}
+                onPress={() => {
+                  setCustomUnit('sec');
+                  applyCustom(customValue, 'sec');
+                }}
+              />
+              <Chip
+                label={t('create.unitMin')}
+                selected={customUnit === 'min'}
+                onPress={() => {
+                  setCustomUnit('min');
+                  applyCustom(customValue, 'min');
+                }}
+              />
+            </View>
+          </ThemedView>
+        ) : null}
+        <ThemedText type="small" themeColor="textSecondary">
+          {quote
+            ? t('create.estimateDetail', {
+                scenes: quote.scenes,
+                credits: quote.credits,
+                eta: formatDuration(quote.etaSeconds),
+              })
+            : t('create.customHint')}
+        </ThemedText>
+        <View style={styles.row}>
+          <Pressable onPress={() => setStep(0)} style={styles.backBtn}>
+            <ThemedText type="smallBold">{t('create.back')}</ThemedText>
+          </Pressable>
+          <Pressable
+            onPress={() => setStep(2)}
+            style={({ pressed }) => [
+              styles.cta,
+              styles.flex,
+              { backgroundColor: theme.text },
+              pressed && { opacity: 0.85 },
+            ]}>
+            <ThemedText type="smallBold" style={{ color: theme.background }}>
+              {t('create.next')}
+            </ThemedText>
+          </Pressable>
+        </View>
+      </Screen>
+    );
+  }
+
+  // Step 3 — the idea itself, plus the settings worth changing per film.
   return (
     <Screen title={t('tab.create')} subtitle={t('create.subtitle')}>
+      <Pressable onPress={() => setStep(1)} style={styles.backRow}>
+        <Ionicons name="chevron-back" size={16} color={theme.textSecondary} />
+        <ThemedText type="small" themeColor="textSecondary">
+          {t(`create.format.${format}`)} · {formatDuration(seconds)}
+        </ThemedText>
+      </Pressable>
+
       <ThemedView type="backgroundElement" style={styles.card}>
         <ThemedText type="smallBold">{t('create.prompt')}</ThemedText>
         <TextInput
@@ -161,66 +333,6 @@ export default function CreateScreen() {
           />
         ))}
       </View>
-
-      {/* Output shape — the film really renders at this aspect ratio. */}
-      <ThemedText type="smallBold">{t('create.aspect')}</ThemedText>
-      <View style={styles.row}>
-        {(
-          [
-            ['16:9', t('create.aspect.youtube')],
-            ['9:16', t('create.aspect.shorts')],
-            ['1:1', t('create.aspect.square')],
-            ['4:5', t('create.aspect.portrait')],
-            ['21:9', t('create.aspect.cinema')],
-          ] as [Aspect, string][]
-        ).map(([a, label]) => (
-          <Chip key={a} label={label} selected={aspect === a} onPress={() => setAspect(a)} />
-        ))}
-      </View>
-
-      <ThemedText type="smallBold">{t('create.length')}</ThemedText>
-      <View style={styles.row}>
-        {durations.map((d) => (
-          <Chip
-            key={d.id}
-            label={d.label}
-            selected={!customMode && seconds === d.seconds}
-            onPress={() => {
-              setSeconds(d.seconds);
-              setCustomMode(false);
-            }}
-          />
-        ))}
-        <Chip label={t('create.custom')} selected={customMode} onPress={() => setCustomMode(true)} />
-      </View>
-
-      {customMode ? (
-        <ThemedView type="backgroundElement" style={styles.customBox}>
-          <View style={styles.customRow}>
-            <TextInput
-              value={customValue}
-              onChangeText={(v) => applyCustom(v, customUnit)}
-              placeholder={t('create.customPlaceholder')}
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="numeric"
-              style={[styles.customInput, { color: theme.text, borderColor: theme.backgroundSelected }]}
-            />
-            <Chip
-              label={t('create.unitSec')}
-              selected={customUnit === 'sec'}
-              onPress={() => applyCustom(customValue, 'sec')}
-            />
-            <Chip
-              label={t('create.unitMin')}
-              selected={customUnit === 'min'}
-              onPress={() => applyCustom(customValue, 'min')}
-            />
-          </View>
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('create.customHint')}
-          </ThemedText>
-        </ThemedView>
-      ) : null}
 
       <ThemedText type="smallBold">{t('create.quality')}</ThemedText>
       <View style={styles.row}>
@@ -361,6 +473,8 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.four,
   },
   staged: { borderWidth: 1, gap: 4 },
+  backBtn: { paddingVertical: 14, paddingHorizontal: 20 },
+  backRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   cta: {
     marginTop: Spacing.two,
     paddingVertical: Spacing.three,
