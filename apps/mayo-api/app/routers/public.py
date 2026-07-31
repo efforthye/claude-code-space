@@ -13,7 +13,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from fastapi.responses import HTMLResponse
 
 from ..config import settings
-from ..schemas import ExploreComment, ExploreItem
+from ..schemas import CreateJobRequest, Estimate, ExploreComment, ExploreItem
 from ..store import explore as explore_store
 
 router = APIRouter(prefix="/v1/public", tags=["public"])
@@ -22,6 +22,35 @@ router = APIRouter(prefix="/v1/public", tags=["public"])
 # --- Anonymous explore (mayo.im without login): the feed is public content by
 # design, so browsing must not require an account or the shared key. Writes
 # that carry identity (publish, like, comment) stay on the authed router. ---
+
+
+@router.post("/estimate", response_model=Estimate)
+async def public_estimate(req: CreateJobRequest) -> Estimate:
+    """What a render would cost, without a key.
+
+    A price list is not user data. Requiring a session to see one means the
+    first thing mayo.im tells a visitor is 401, and the create screen silently
+    falls back to a credit figure with no money attached — which is what it was
+    doing until 2026-08-01.
+
+    The authenticated route stays: it applies the caller's BYOK discount, which
+    this one cannot know about. This mirror quotes the list price.
+    """
+    from .. import catalog
+
+    tier = catalog.tier_by_id(req.tier)
+    if tier is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown tier '{req.tier}'")
+    credits = catalog.estimate_credits(req.seconds, tier)
+    scenes = catalog.scenes_for(req.seconds)
+    return Estimate(
+        seconds=req.seconds,
+        tier=req.tier,
+        credits=credits,
+        usd=catalog.payg_usd(scenes),
+        scenes=scenes,
+        etaSeconds=catalog.eta_seconds(scenes, req.videoModel or None),
+    )
 
 
 @router.get("/explore", response_model=list[ExploreItem])

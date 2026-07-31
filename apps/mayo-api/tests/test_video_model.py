@@ -85,3 +85,21 @@ def test_payg_bands_are_marginal_and_never_dip_below_the_2x_floor():
     scene_cost = (5.83 + 1.0) * 0.0625
     for scenes in (1, 6, 60, 180, 360, 1000):
         assert catalog.payg_usd(scenes) / (scenes * scene_cost) >= 2.0, scenes
+
+
+def test_a_price_can_be_seen_without_signing_in():
+    # A price list is not user data. Requiring a key to see one means mayo.im
+    # answers a first-time visitor with 401 and the create screen silently
+    # shows credits with no money attached — which is what it did until
+    # 2026-08-01.
+    r = client.post("/v1/public/estimate", json={"prompt": "", "seconds": 60, "tier": "standard"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["usd"] == catalog.payg_usd(6)
+    assert body["scenes"] == 6
+    assert body["etaSeconds"] > 0
+
+
+def test_the_public_quote_still_validates_its_input():
+    r = client.post("/v1/public/estimate", json={"prompt": "", "seconds": 60, "tier": "nonsense"})
+    assert r.status_code == 400

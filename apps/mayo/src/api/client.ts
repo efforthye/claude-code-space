@@ -203,8 +203,14 @@ export const getDirectors = () => req<DirectorModel[]>('/v1/catalog/directors');
 // --- Jobs ---
 export const listJobs = () => req<Job[]>('/v1/jobs');
 export const getJob = (id: string) => req<Job>(`/v1/jobs/${encodeURIComponent(id)}`);
+/** A price is not user data: quote works signed out too, via the public mirror.
+ *  The authenticated route is tried first because only it knows the caller's
+ *  BYOK discount. */
 export const estimateJob = (body: CreateJobRequest) =>
-  req<Estimate>('/v1/jobs/estimate', { method: 'POST', body: JSON.stringify(body) });
+  reqPublic<Estimate>('/v1/jobs/estimate', '/v1/public/estimate', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 export const createJob = (body: CreateJobRequest) =>
   req<Job>('/v1/jobs', { method: 'POST', body: JSON.stringify(body) });
 // Cancelling a charged job refunds the unrendered share pro-rata (e.g. cancel a
