@@ -236,3 +236,8 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   ([[ai-video-prompting]]): MCSLA scene-prompt ordering (Camera -> Subject ->
   Look -> Action), fixed identity / varying motion, escalation arc.
 - Verified: pytest 114 passed.
+
+## [2026-07-22] setup | Jira work tracking live — efforthye.atlassian.net / SCRUM (rule in CLAUDE.md)
+- Backlog registered: SCRUM-5 힉스필드 실생성 검증, SCRUM-6 BYOK 점검, SCRUM-7
+  수익률 분석, SCRUM-9 웹 UI 재구성, SCRUM-10 사용량 로그, SCRUM-11 IAP
+  클라이언트, SCRUM-12 웹 결제 PG, SCRUM-13 앱스토어 등록.

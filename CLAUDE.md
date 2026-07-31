@@ -183,6 +183,19 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 
 ---
 
+## Work tracking — Jira (owner directive, 2026-07-22)
+
+**All Claude work items are tracked in Jira**: site `efforthye.atlassian.net`,
+project **SCRUM** ("Roadmap Planning"), via the Atlassian MCP connector on the
+owner's claude.ai account. Workflow for every batch of work:
+1. Create (or pick) an issue BEFORE starting; issue type 작업 unless it's a 버그.
+2. Transition it to In Progress while working.
+3. On completion: comment with what shipped + the commit hash, transition to Done.
+4. Owner-side tasks (account signups, key registration) get issues too, left
+   assigned to the owner. `log.md` stays the append-only timeline; Jira is the
+   live board. If the connector is unavailable in a session, note the gap in
+   `log.md` and reconcile Jira when it returns.
+
 ## Operating principles for the LLM
 
 - **`raw/` is read-only. `wiki/` is yours. `CLAUDE.md` we evolve together.**
