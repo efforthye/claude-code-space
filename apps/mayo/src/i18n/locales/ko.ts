@@ -451,4 +451,7 @@ export const ko: Dict = {
   'create.model.standard': '시네마틱 · 씬당 약 6분',
   'create.model.turbo': '터보 · 씬당 약 5분',
   'create.estimateDetail': '{scenes}개 씬 · 구독 시 {credits} 크레딧 · 생성에 약 {eta}',
+  'publish.promptAsk': '프롬프트도 같이 공개할까요? 공개하지 않아도 다른 사람이 리믹스하는 건 가능합니다 — 만든 방법을 읽을 수 있느냐만 달라집니다.',
+  'publish.promptKeep': '비공개로 두기',
+  'publish.promptShare': '프롬프트도 공개',
 };

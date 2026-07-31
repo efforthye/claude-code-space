@@ -225,6 +225,7 @@ class LibraryStore:
             scenePrompts=job.scenePrompts,
             stylePrompt=job.stylePrompt,
             ownerId=owner_id,
+            promptPublic=prompt_public,
         )
         async with self._lock:
             self._videos[video.id] = video
@@ -573,7 +574,12 @@ class ExploreStore:
             return updated.model_copy()
 
     async def publish(
-        self, video: Video, prompt: str, author: str = "@me", owner_id: str | None = None
+        self,
+        video: Video,
+        prompt: str,
+        author: str = "@me",
+        owner_id: str | None = None,
+        prompt_public: bool = False,
     ) -> ExploreItem:
         item = ExploreItem(
             id=_new_id("e"),

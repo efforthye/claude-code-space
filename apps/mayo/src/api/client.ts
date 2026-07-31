@@ -263,8 +263,11 @@ async function reqPublic<T>(authedPath: string, publicPath: string, init?: Reque
 
 export const getExplore = (sort: ExploreSort = 'popular') =>
   reqPublic<ExploreItem[]>(`/v1/explore?sort=${sort}`, `/v1/public/explore?sort=${sort}`);
-export const publishToExplore = (videoId: string, prompt: string) =>
-  req<ExploreItem>('/v1/explore', { method: 'POST', body: JSON.stringify({ videoId, prompt }) });
+export const publishToExplore = (videoId: string, prompt: string, promptPublic = false) =>
+  req<ExploreItem>('/v1/explore', {
+    method: 'POST',
+    body: JSON.stringify({ videoId, prompt, promptPublic }),
+  });
 export const getExploreItem = (id: string) =>
   req<ExploreItem>(`/v1/explore/${encodeURIComponent(id)}`);
 // Public shared-reel endpoints — no account/key needed (explore-published only).

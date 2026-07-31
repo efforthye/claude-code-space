@@ -221,8 +221,17 @@ class ExploreItem(BaseModel):
     likedByMe: bool = False
     createdAt: float = 0.0  # unix seconds; drives the ranking's time decay
     # Full recipe so anyone can REUSE this creation as a template in the director.
+    #
+    # REDACTED unless the creator opted in. A prompt is the work — the part that
+    # took iterations to get right — so publishing a film does not publish how
+    # it was made. Crucially this costs nothing in reach: "make like this" seeds
+    # a new job from the recipe SERVER-SIDE, so remixing keeps working whether
+    # or not the text is ever shown. Readable and remixable are separate things.
     scenePrompts: Optional[list[str]] = None
     stylePrompt: Optional[str] = None
+    # Creator's choice, per post. Default off: the safe default for someone
+    # else's work is not to give it away.
+    promptPublic: bool = False
     # Account that published this (None = legacy/anonymous). Powers "my posts".
     ownerId: Optional[str] = None
     # Hidden by its owner: kept (with comments/likes) but absent from the public
@@ -244,6 +253,8 @@ class CommentRequest(BaseModel):
 class PublishExploreRequest(BaseModel):
     videoId: str
     prompt: str = ""  # optional; the remix seed (falls back to the video title)
+    # Show the prompt on the public page. Off by default — see ExploreItem.
+    promptPublic: bool = False
 
 
 class ExtendRequest(BaseModel):

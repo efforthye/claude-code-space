@@ -451,4 +451,7 @@ export const en: Dict = {
   'create.model.standard': 'Cinematic · ~6 min/scene',
   'create.model.turbo': 'Turbo · ~5 min/scene',
   'create.estimateDetail': '{scenes} scenes · {credits} credits if subscribed · about {eta} to render',
+  'publish.promptAsk': 'Share the prompt too? Others can still remix your film either way — this only decides whether they can read how you made it.',
+  'publish.promptKeep': 'Keep it private',
+  'publish.promptShare': 'Share the prompt',
 };

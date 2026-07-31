@@ -26,7 +26,11 @@ router = APIRouter(prefix="/v1/public", tags=["public"])
 
 @router.get("/explore", response_model=list[ExploreItem])
 async def public_explore(sort: str = Query("popular", pattern="^(popular|latest)$")) -> list[ExploreItem]:
-    return await explore_store.list(sort)
+    # No session here by definition, so nobody is the creator: recipes are
+    # redacted unless their creator published them openly.
+    from .explore import redact_recipe
+
+    return [redact_recipe(i, None) for i in await explore_store.list(sort)]
 
 
 @router.get("/explore/{item_id}/comments", response_model=list[ExploreComment])
@@ -101,9 +105,11 @@ async def public_reel_og(item_id: str) -> HTMLResponse:
     image_url = f"{settings.public_api_base}/v1/public/thumb/{item.id}"
     video_url = f"{settings.public_api_base}/v1/public/media/{item.id}"
     title = html.escape(item.title or "mayo reel")
-    desc = html.escape(
-        (item.prompt or "AI-generated video on mayo")[:160] + f" — {item.author}"
-    )
+    # The share preview must not leak a private recipe. A link unfurled into a
+    # group chat is the least controlled surface there is, so only an openly
+    # published prompt goes in the description.
+    blurb = item.prompt if item.promptPublic else ""
+    desc = html.escape((blurb or "AI-generated video on mayo")[:160] + f" — {item.author}")
     doc = f"""<!doctype html>
 <html lang="ko">
 <head>

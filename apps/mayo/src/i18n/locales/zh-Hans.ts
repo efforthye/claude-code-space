@@ -453,4 +453,7 @@ export const zhHans: Dict = {
   'create.model.standard': '电影感 · 每个场景约6分钟',
   'create.model.turbo': '加速 · 每个场景约5分钟',
   'create.estimateDetail': '{scenes} 个场景 · 订阅则 {credits} 积分 · 生成约需 {eta}',
+  'publish.promptAsk': '要一并公开提示词吗? 即使不公开，别人依然可以二创 — 区别只在于能不能看到你是怎么做的。',
+  'publish.promptKeep': '保持私密',
+  'publish.promptShare': '公开提示词',
 };

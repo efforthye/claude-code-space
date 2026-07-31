@@ -129,8 +129,12 @@ export type ExploreItem = {
   likedByMe?: boolean; // whether the calling account liked it (signed in only)
   createdAt?: number;
   // Full recipe — powers "use this template" in the director.
+  // REDACTED by the server unless the creator opted in or you are the creator:
+  // publishing a film is not publishing how it was made. Remix still works
+  // either way, because it re-seeds from the recipe server-side.
   scenePrompts?: string[] | null;
   stylePrompt?: string | null;
+  promptPublic?: boolean;
   ownerId?: string | null; // publishing account (my-posts management)
   hidden?: boolean; // owner pulled it from the public feed (visible in /mine)
 };

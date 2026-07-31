@@ -24,7 +24,14 @@ async def list_explore(
 ) -> list[ExploreItem]:
     items = await explore_store.list(sort)
     user = users.user_for_session(x_mayo_session or "")
-    return explore_store.annotate_liked(items, user["id"] if user else None)
+    uid = user["id"] if user else None
+    annotated = explore_store.annotate_liked(items, uid)
+    # Admins review moderation queues and need to see what they are judging.
+    from ..auth import is_admin_user
+
+    if user and is_admin_user(user):
+        return annotated
+    return [redact_recipe(i, uid) for i in annotated]
 
 
 def _author(session: Optional[str]) -> str:
@@ -48,7 +55,27 @@ async def publish_explore(
     return await explore_store.publish(
         video, req.prompt, author=_author(x_mayo_session),
         owner_id=user["id"] if user else None,
+        prompt_public=req.promptPublic,
     )
+
+
+def redact_recipe(item: ExploreItem, viewer_id: str | None) -> ExploreItem:
+    """Blank the prompt fields unless the viewer is entitled to read them.
+
+    Entitled = the creator, or an admin. Everyone else sees the film and not
+    the recipe, unless the creator published it openly.
+
+    This does NOT limit remixing: "make like this" re-seeds a job from the
+    stored recipe on the server, so the text never has to reach a client to be
+    reused. Readable and remixable are deliberately separate.
+    """
+    if item.promptPublic or (viewer_id and item.ownerId == viewer_id):
+        return item
+    hidden = item.model_copy()
+    hidden.prompt = ""
+    hidden.scenePrompts = None
+    hidden.stylePrompt = None
+    return hidden
 
 
 def _require_user(session: Optional[str]) -> dict:

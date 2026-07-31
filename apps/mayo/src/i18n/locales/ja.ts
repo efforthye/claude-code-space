@@ -453,4 +453,7 @@ export const ja: Dict = {
   'create.model.standard': 'シネマティック · 1シーン約6分',
   'create.model.turbo': 'ターボ · 1シーン約5分',
   'create.estimateDetail': '{scenes} シーン · サブスクなら {credits} クレジット · 生成に約 {eta}',
+  'publish.promptAsk': 'プロンプトも公開しますか? 公開しなくてもリミックスは可能です — 作り方を読めるかどうかだけが変わります。',
+  'publish.promptKeep': '非公開のまま',
+  'publish.promptShare': 'プロンプトも公開',
 };

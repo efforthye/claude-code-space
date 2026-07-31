@@ -99,8 +99,20 @@ export default function VideoDetailScreen() {
       toast.show(t('detail.noFile'));
       return;
     }
+    // Ask before giving the recipe away. The prompt is the part that took work,
+    // and publishing the film is not the same decision as publishing how it was
+    // made — so it is an explicit choice, defaulting to keeping it.
+    Alert.alert(t('detail.shareToExplore'), t('publish.promptAsk'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('publish.promptKeep'), onPress: () => doPublish(false) },
+      { text: t('publish.promptShare'), onPress: () => doPublish(true) },
+    ]);
+  };
+
+  const doPublish = async (promptPublic: boolean) => {
+    if (!video) return;
     try {
-      await publishToExplore(video.id, video.title);
+      await publishToExplore(video.id, video.title, promptPublic);
       toast.show(t('detail.sharedToExplore'));
     } catch {
       toast.show(t('common.error'));
