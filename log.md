@@ -226,3 +226,13 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-07-22] decision | payments postponed — Higgsfield first, then margin analysis (ADR 0017 note)
 
 ## [2026-07-22] ingest | Higgsfield video-making guides -> wiki/concepts/ai-video-prompting.md
+
+## [2026-07-22] deploy | mayo → director actually works by default + MCSLA prompts (batch 42)
+- Owner: "AI 감독이 따로 놀고 제대로 작동 안 함." Root cause: planner default was
+  the mock stub unless someone flipped the runtime switch. Now, when the host
+  has ANTHROPIC_API_KEY (+ anthropic pkg), the REAL Claude director is used even
+  with no runtime selection — mock only remains for hosts with no credential.
+- Both director system prompts upgraded with the distilled Higgsfield guidance
+  ([[ai-video-prompting]]): MCSLA scene-prompt ordering (Camera -> Subject ->
+  Look -> Action), fixed identity / varying motion, escalation arc.
+- Verified: pytest 114 passed.

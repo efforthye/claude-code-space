@@ -240,7 +240,12 @@ _DIRECTOR_SYSTEM = (
     "requested total. Keep scenes short (a few seconds each) so they render well. "
     "CONSISTENCY: define each recurring character ONCE in `characters` as an exact "
     "visual descriptor (species/hair/outfit/colors), and repeat that descriptor "
-    "VERBATIM in every scene prompt that features the character."
+    "VERBATIM in every scene prompt that features the character. "
+    "SCENE PROMPT FORM (MCSLA, per industry video-model guidance): order each scene "
+    "prompt as Camera (shot type + camera move) -> Subject (the character descriptor) "
+    "-> Look (style/palette/mood) -> Action (what happens). Keep identity fixed and "
+    "vary ONLY the motion/action between scenes. Give the film an escalation arc "
+    "(calm -> tension -> turn -> aftermath)."
 )
 
 
@@ -266,7 +271,12 @@ _DIRECTOR_CHAT_SYSTEM = (
     "CHARACTER CONSISTENCY: define each recurring character ONCE in `characters` as one exact visual "
     "descriptor phrase (species/hair/outfit/colors, e.g. 'a small orange tabby cat wearing a tiny red "
     "scarf'), and repeat that descriptor VERBATIM inside every scene prompt featuring the character — "
-    "each clip renders independently, so only exact repetition keeps them looking identical."
+    "each clip renders independently, so only exact repetition keeps them looking identical.\n"
+    "SCENE PROMPT FORM (MCSLA): order every scene prompt as Camera (shot type + move, e.g. 'slow "
+    "dolly-in', 'FPV drone through alley') -> Subject (the exact character descriptor) -> Look "
+    "(style/palette/mood) -> Action (the motion of this scene). Identity stays fixed; only the "
+    "motion varies between scenes. Shape the scene list with an escalation arc "
+    "(calm -> tension -> turn -> aftermath)."
 )
 
 
@@ -501,4 +511,16 @@ def get_scenario_planner() -> ScenarioPlanner:
         return ClaudeScenarioPlanner()
     if backend == "local":
         return LocalScenarioPlanner()
+    # PROD RULE (owner: "the director doesn't really work"): mock is a dev stub.
+    # If the host actually has a Claude credential, use the REAL director even
+    # when nobody flipped the runtime switch — canned replies helped no one.
+    import os
+
+    if os.getenv("ANTHROPIC_API_KEY"):
+        try:
+            import anthropic  # noqa: F401
+
+            return ClaudeScenarioPlanner()
+        except ImportError:
+            pass
     return MockScenarioPlanner()
