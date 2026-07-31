@@ -263,7 +263,12 @@ export default function ReviewScreen() {
               disabled={busy}
               onPress={() => run(() => renderStills(String(id)))}
             />
-          ) : stage === 'clips' && !segments.some((s) => s.clipKey) ? (
+          ) : stage === 'clips' &&
+            segments.some((s) => !s.clipKey) &&
+            job?.status !== 'generating' ? (
+            // Also the RESUME path: after a crash/restart the finished clips
+            // are kept and rendering skips them, so this only pays for what is
+            // still missing.
             // Clips do not render themselves: this button is the paid boundary
             // (POST /clips). Without it the stage sat at 0/N forever — nothing
             // was rendering, so "approve" had nothing to approve.

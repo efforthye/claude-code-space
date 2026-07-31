@@ -84,7 +84,7 @@ Updated whenever pages are added/renamed or a service's status changes.
   fit the mini's Docker VM because ComfyUI needs the host RAM; loopback-only + SSH tunnel.
 
 ## Incidents
-_(none yet — postmortems)_
+- [[2026-07-22-restart-erased-active-render]] — deploy restart wiped an actively rendering job; jobs now persist + resume.
 
 ## Concepts
 - [[ai-video-prompting]] — Higgsfield/Seedance/Kling 실전 프롬프트 규칙 (MCSLA, 샷 구조,

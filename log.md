@@ -297,3 +297,7 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   409 with the reason instead of no-oping.
 - Also: installed expo-haptics (new dep from the parallel session) so exports
   build. Verified: pytest 182 passed, tsc clean, iOS + web exports OK.
+
+## [2026-07-22] incident | deploy restart erased an active render → jobs now persist + resume (batch 44)
+- See wiki/incidents/2026-07-22-restart-erased-active-render.md. pytest 183,
+  tsc clean, both exports OK.

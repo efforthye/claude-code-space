@@ -44,3 +44,27 @@ def test_explore_feed_survives_a_restart():
         assert comments and comments[0].text == "nice!"
 
     asyncio.run(check())
+
+
+def test_jobs_survive_a_restart_and_generating_becomes_failed():
+    """INCIDENT 2026-07-22: a deploy restart erased an actively-rendering job.
+    Jobs persist now; a mid-render job comes back failed (its render task died
+    with the process) with segments/clips intact for resume."""
+    import asyncio
+
+    from app import db
+    from app.store import JobStore
+
+    store = JobStore()
+    job = asyncio.run(store.create("cyberpunk cat", 10, "standard", owner_id="u_test1"))
+    asyncio.run(store.patch(job.id, status="generating"))
+
+    reborn = JobStore()  # simulates the API restarting
+    back = asyncio.run(reborn.get(job.id))
+    assert back is not None and back.title == job.title
+    assert back.status == "failed"  # honest: the in-flight task did not survive
+    assert reborn.owner_of(job.id) == "u_test1"
+
+    asyncio.run(store.remove(job.id))
+    assert asyncio.run(JobStore().get(job.id)) is None
+    db.replace_kind("job", [])

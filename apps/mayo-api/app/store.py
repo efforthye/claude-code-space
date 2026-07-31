@@ -35,10 +35,50 @@ _ACCENTS = ["#6D5DF6", "#1FA2A6", "#E0699A", "#E2A43B", "#4C8DF6"]
 
 
 class JobStore:
+    """Jobs — in-memory dicts written through to SQLite (kind `job`).
+
+    INCIDENT 2026-07-22: jobs used to be memory-only, so an auto-deploy restart
+    of the API silently erased a user's ACTIVELY RENDERING (and already billed)
+    film. Jobs now persist like every other store; a job that was mid-render at
+    shutdown comes back as `failed` with its finished clips intact, and the
+    review screen offers to resume (render skips segments that already have a
+    clip, so nothing paid-for is redone).
+    """
+
     def __init__(self) -> None:
+        from . import db
+
         self._jobs: dict[str, Job] = {j.id: j.model_copy() for j in _SEED_JOBS}
         self._owners: dict[str, str] = {}  # job id -> user id (for cancel refunds)
         self._lock = asyncio.Lock()
+        for raw in db.load("job"):
+            try:
+                if raw.get("_t") == "owner":
+                    self._owners[raw["jobId"]] = raw["userId"]
+                    continue
+                job = Job.model_validate({k: v for k, v in raw.items() if k != "_t"})
+                if job.status == "generating":
+                    # The render task died with the old process — be honest.
+                    job = job.model_copy(update={"status": "failed", "etaMin": None})
+                self._jobs[job.id] = job
+            except Exception:
+                continue
+
+    def _persist(self) -> None:
+        """Write-through to SQLite; call while holding self._lock."""
+        from . import db
+
+        try:
+            docs: list[tuple[str, dict]] = [
+                (j.id, {"_t": "job", **j.model_dump()}) for j in self._jobs.values()
+            ]
+            docs += [
+                (f"o:{jid}", {"_t": "owner", "jobId": jid, "userId": uid})
+                for jid, uid in self._owners.items()
+            ]
+            db.replace_kind("job", docs)
+        except Exception:
+            pass  # in-memory state still applies
 
     def owner_of(self, job_id: str) -> Optional[str]:
         return self._owners.get(job_id)
@@ -105,6 +145,7 @@ class JobStore:
             self._jobs[job.id] = job
             if owner_id:
                 self._owners[job.id] = owner_id
+            self._persist()
         return job.model_copy()
 
     async def set_segments(
@@ -119,6 +160,7 @@ class JobStore:
             if stage:
                 job.stage = stage
             job.scenesTotal = len(segments) or job.scenesTotal
+            self._persist()
             return job.model_copy()
 
     async def set_segment(self, job_id: str, segment) -> Optional[Job]:
@@ -128,6 +170,7 @@ class JobStore:
             if job is None or not 0 <= segment.index < len(job.segments):
                 return None
             job.segments[segment.index] = segment
+            self._persist()
             return job.model_copy()
 
     async def request_stop(self, job_id: str) -> Optional[Job]:
@@ -136,6 +179,7 @@ class JobStore:
             if job is None:
                 return None
             job.stopRequested = True
+            self._persist()
             return job.model_copy()
 
     async def add_spend(self, job_id: str, credits: int) -> None:
@@ -143,6 +187,7 @@ class JobStore:
             job = self._jobs.get(job_id)
             if job is not None:
                 job.spentCredits += credits
+                self._persist()
 
     async def set_clip_mode(self, job_id: str, mode: str) -> Optional[Job]:
         async with self._lock:
@@ -150,12 +195,16 @@ class JobStore:
             if job is None:
                 return None
             job.clipMode = mode
+            self._persist()
             return job.model_copy()
 
     async def remove(self, job_id: str) -> bool:
         async with self._lock:
             self._owners.pop(job_id, None)
-            return self._jobs.pop(job_id, None) is not None
+            existed = self._jobs.pop(job_id, None) is not None
+            if existed:
+                self._persist()
+            return existed
 
     async def append_scene_url(self, job_id: str, url: str) -> None:
         async with self._lock:
@@ -164,6 +213,7 @@ class JobStore:
                 return
             urls = list(j.sceneUrls or []) + [url]
             self._jobs[job_id] = j.model_copy(update={"sceneUrls": urls})
+            self._persist()
 
     async def retry(self, job_id: str) -> Optional[Job]:
         async with self._lock:
@@ -172,6 +222,7 @@ class JobStore:
                 return None
             updated = j.model_copy(update={"status": "queued", "scenesDone": 0, "etaMin": None})
             self._jobs[job_id] = updated
+            self._persist()
             return updated.model_copy()
 
     async def patch(self, job_id: str, **fields) -> Optional[Job]:
@@ -181,6 +232,7 @@ class JobStore:
                 return None
             updated = j.model_copy(update=fields)
             self._jobs[job_id] = updated
+            self._persist()
             return updated.model_copy()
 
 
