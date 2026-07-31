@@ -88,6 +88,9 @@ class Job(BaseModel):
     chargedCredits: Optional[int] = None
     # Output aspect ratio the scenes render at (see CreateJobRequest.aspect).
     aspect: str = "16:9"
+    # Cinematic variant chosen at creation. Stored on the job so a retry renders
+    # the same way the user paid for, rather than whatever the default is now.
+    videoModel: Optional[str] = None
 
 
 class CreateJobRequest(BaseModel):
@@ -102,12 +105,22 @@ class CreateJobRequest(BaseModel):
     # Output aspect ratio — the film really renders at this shape (shorts 9:16,
     # square 1:1, YouTube 16:9, portrait 4:5, cinema 21:9).
     aspect: Literal["16:9", "9:16", "1:1", "4:5", "21:9"] = "16:9"
+    # Which cinematic variant renders the scenes. Empty = server default.
+    videoModel: str = Field(default="", max_length=40)
 
 
 class Estimate(BaseModel):
     seconds: int
     tier: str
     credits: int
+    # Pay-as-you-go price for exactly this job. Sent so the app never has to
+    # multiply credits by a rate it keeps its own copy of.
+    usd: float = 0.0
+    scenes: int = 0
+    # Rough wall-clock, measured per variant and adjusted for the provider's
+    # 4-at-a-time cap. Shown so "1 hour of video" does not silently mean
+    # "come back in four hours" with no warning.
+    etaSeconds: int = 0
 
 
 class StoryboardRequest(BaseModel):

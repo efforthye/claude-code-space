@@ -72,6 +72,7 @@ class JobStore:
         charged_credits: int | None = None,
         owner_id: str | None = None,
         aspect: str = "16:9",
+        video_model: str | None = None,
     ) -> Job:
         tier = tier_by_id(tier_id)
         title = (prompt.strip().splitlines()[0][:60] if prompt.strip() else "Untitled film")
@@ -96,6 +97,7 @@ class JobStore:
             stylePrompt=style_prompt or None,
             chargedCredits=charged_credits,
             aspect=aspect,
+            videoModel=video_model,
         )
         async with self._lock:
             self._jobs[job.id] = job

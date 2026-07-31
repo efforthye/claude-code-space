@@ -100,15 +100,32 @@ class Settings:
     # The exact model id + argument keys are provider-schema-specific, so they are
     # config-driven ("low-code"): set them to match Higgsfield's docs, no code change.
     higgsfield_key: str = field(default_factory=lambda: os.getenv("HF_KEY", ""))
+    # Default cinematic variant. Verified against the live API 2026-08-01:
+    # the working ids are `higgsfield-ai/dop/{lite,standard,turbo}` — NOT
+    # `higgsfield/dop/image-to-video`, which was a guess and never existed.
+    # A job can override this per render; see HIGGSFIELD_VARIANTS in catalog.
     higgsfield_model: str = field(
-        default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_MODEL", "higgsfield/dop/image-to-video")
+        default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_MODEL", "higgsfield-ai/dop/standard")
     )
-    # Argument keys in Higgsfield's submit() payload (match your model's schema).
+    # Argument keys in Higgsfield's submit() payload.
     higgsfield_prompt_arg: str = field(
         default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_PROMPT_ARG", "prompt")
     )
+    # DoP takes `image_url`, and it must be a URL on Higgsfield's own storage —
+    # it refuses arbitrary public URLs (invalid_image_url) and a base64 data URI
+    # does not work either. Upload first, pass the returned URL.
     higgsfield_image_arg: str = field(
-        default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_IMAGE_ARG", "input_image")
+        default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_IMAGE_ARG", "image_url")
+    )
+    # Clip length per scene, in seconds, sent as `duration`.
+    higgsfield_duration: int = field(
+        default_factory=lambda: int(os.getenv("MAYO_HIGGSFIELD_DURATION", "5"))
+    )
+    # Higgsfield rejects the 5th simultaneous request outright
+    # ("Maximum number of concurrent requests (4) has been reached"), so the
+    # worker must not fan out wider than this.
+    higgsfield_max_concurrency: int = field(
+        default_factory=lambda: int(os.getenv("MAYO_HIGGSFIELD_MAX_CONCURRENCY", "4"))
     )
     higgsfield_poll_seconds: float = field(
         default_factory=lambda: float(os.getenv("MAYO_HIGGSFIELD_POLL_SECONDS", "3"))

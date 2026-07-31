@@ -49,7 +49,20 @@ async def estimate(
 
     caller = users.user_for_session(x_mayo_session or "")
     credits = _price_credits(req, caller)
-    return Estimate(seconds=req.seconds, tier=req.tier, credits=credits)
+    return Estimate(
+        seconds=req.seconds,
+        tier=req.tier,
+        credits=credits,
+        # Two prices, deliberately: `credits` is what a subscriber spends,
+        # `usd` is what it costs to render this right now with no subscription.
+        # The pay-as-you-go number is the banded one, so a long film is not
+        # quoted at the short-clip rate.
+        usd=catalog.payg_usd_for_seconds(req.seconds),
+        scenes=catalog.scenes_for(req.seconds),
+        etaSeconds=catalog.eta_seconds(
+            catalog.scenes_for(req.seconds), req.videoModel or None
+        ),
+    )
 
 
 @router.post("", response_model=Job, status_code=status.HTTP_201_CREATED)
@@ -93,6 +106,7 @@ async def create_job(
         charged_credits=charge,
         owner_id=caller["id"] if caller else None,
         aspect=req.aspect,
+        video_model=req.videoModel or None,
     )
     start_generation(job.id)
     return job

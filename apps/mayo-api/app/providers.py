@@ -105,15 +105,32 @@ async def nano_banana_image(prompt: str, aspect: str | None = None) -> tuple[byt
     raise RuntimeError("Nano Banana returned no image data")
 
 
-def _higgsfield_video_sync(prompt: str, image_bytes: bytes | None) -> str:  # pragma: no cover
-    """Submit a Higgsfield job (official Python SDK) and return the finished
-    media URL. Synchronous (the SDK is sync) — called via asyncio.to_thread.
+def _higgsfield_video_sync(  # pragma: no cover — needs paid credits to exercise
+    prompt: str, image_bytes: bytes | None, model: str | None = None
+) -> str:
+    """Render one scene on Higgsfield and return the finished video URL.
 
-    The model id + argument keys are config-driven (MAYO_HIGGSFIELD_*) so they
-    match whatever Higgsfield model you point at without code changes. Creds come
-    from HF_KEY on the host. See ADR 0010.
+    Synchronous because the SDK is; called via asyncio.to_thread.
+
+    VERIFIED AGAINST THE LIVE API 2026-08-01 (MAYO-5). The previous version was
+    written from guesswork and could not have worked:
+
+      model id   `higgsfield-ai/dop/{lite,standard,turbo}`.
+                 `higgsfield/dop/image-to-video` was invented and returns
+                 model_not_found, as does every other id — including the one in
+                 Higgsfield's own README — so the error tells you nothing about
+                 which part is wrong.
+      image      must be UPLOADED to Higgsfield first. The API takes `image_url`
+                 and rejects both public URLs it does not host
+                 (invalid_image_url) and base64 data URIs. `client.upload()`
+                 returns the URL to pass.
+      result     comes back as `{"video": {"url": ...}}` — not the `videos` /
+                 `images` list the old code looked for.
+
+    A caution learned the expensive way: this API does NOT validate arguments.
+    `duration=999` and `aspect_ratio="99:1"` are accepted and billed. Do not
+    probe it to discover what it supports.
     """
-    import base64
     import time as _time
 
     try:
@@ -126,39 +143,45 @@ def _higgsfield_video_sync(prompt: str, image_bytes: bytes | None) -> str:  # pr
     if not settings.higgsfield_key:
         raise RuntimeError('Higgsfield needs HF_KEY="<id>:<secret>" set on the host')
 
-    arguments: dict = {settings.higgsfield_prompt_arg: prompt}
+    app_id = model or settings.higgsfield_model
+    client = higgsfield_client.SyncClient()
+
+    arguments: dict = {
+        settings.higgsfield_prompt_arg: prompt,
+        "duration": settings.higgsfield_duration,
+    }
     if image_bytes is not None:
-        arguments[settings.higgsfield_image_arg] = (
-            "data:image/png;base64," + base64.b64encode(image_bytes).decode()
-        )
+        arguments[settings.higgsfield_image_arg] = client.upload(image_bytes, "image/png")
+
     try:
-        job = higgsfield_client.submit(settings.higgsfield_model, arguments=arguments)
+        ctrl = client.submit(app_id, arguments=arguments)
     except Exception as exc:  # noqa: BLE001 — re-raised with a usable message
-        # Higgsfield answers `model_not_found` for BOTH a wrong model id and an
-        # account with no models provisioned — verified 2026-08-01: an
-        # unsubscribed key returns model_not_found even for the identifier in
-        # Higgsfield's own README (`bytedance/seedream/v4/text-to-image`).
-        # Authentication is fine in that case, so the raw error sends you
-        # hunting through model ids for a billing problem. Say both.
+        # `model_not_found` covers a wrong id AND an account with no models
+        # provisioned; an unsubscribed key authenticates and then reports every
+        # id as missing. Name both so nobody hunts for a billing problem in the
+        # model list again.
         if "model_not_found" in str(exc):
             raise RuntimeError(
-                f"Higgsfield rejected model '{settings.higgsfield_model}' (model_not_found). "
-                "Either MAYO_HIGGSFIELD_MODEL is wrong, or the Higgsfield account has no "
-                "active subscription — an unsubscribed key authenticates but is granted no "
-                "models, and reports it the same way."
+                f"Higgsfield rejected model '{app_id}' (model_not_found). Either the id is "
+                "wrong — the working ones are higgsfield-ai/dop/{lite,standard,turbo} — or "
+                "the Higgsfield account has no credits, which reports identically."
             ) from exc
         raise
 
     deadline = _time.monotonic() + settings.higgsfield_max_wait
     while _time.monotonic() < deadline:
-        status = getattr(job, "status", lambda: job)()
-        state = str(getattr(status, "status", status)).lower()
+        state = str(client.status(ctrl.request_id)).lower()
         if "complet" in state or "success" in state:
-            result = getattr(job, "result", lambda: status)()
+            result = client.result(ctrl.request_id)
+            url = (result.get("video") or {}).get("url")
+            if url:
+                return url
+            # Older/other models return a list; accept both rather than fail on
+            # a shape difference.
             media = result.get("videos") or result.get("images") or []
             if media and media[0].get("url"):
                 return media[0]["url"]
-            raise RuntimeError("Higgsfield completed but returned no media URL")
+            raise RuntimeError(f"Higgsfield completed but returned no media URL: {result}")
         if "fail" in state or "nsfw" in state or "cancel" in state:
             raise RuntimeError(f"Higgsfield job ended: {state}")
         _time.sleep(settings.higgsfield_poll_seconds)
@@ -176,19 +199,27 @@ class ExternalModelBackend(ModelBackend):
 
     id = "external"
 
-    def __init__(self, aspect: str | None = None) -> None:
+    # Higgsfield refuses a 5th simultaneous request, so scenes queue here rather
+    # than failing mid-film. Class-level: the cap is per API key, not per job.
+    _slots = asyncio.Semaphore(settings.higgsfield_max_concurrency)
+
+    def __init__(self, aspect: str | None = None, video_model: str | None = None) -> None:
         self.aspect = aspect  # per-job output shape for the image stage
+        self.video_model = video_model  # catalog id, e.g. "dop-lite"
 
     async def generate_scene(self, prompt: str, index: int) -> SceneResult:  # pragma: no cover
         import httpx
 
+        from . import catalog
         from .storage import get_storage
 
         image_bytes: bytes | None = None
         if settings.external_use_image_stage:
             image_bytes, _mime = await nano_banana_image(prompt, aspect=self.aspect)
 
-        url = await asyncio.to_thread(_higgsfield_video_sync, prompt, image_bytes)
+        app_id = catalog.higgsfield_app_for(self.video_model)
+        async with self._slots:
+            url = await asyncio.to_thread(_higgsfield_video_sync, prompt, image_bytes, app_id)
         async with httpx.AsyncClient(timeout=settings.higgsfield_max_wait) as client:
             clip = await client.get(url)
             clip.raise_for_status()
@@ -295,15 +326,19 @@ class ComfyUIModelBackend(ModelBackend):
         return SceneResult(media_key=key)
 
 
-def get_model_backend(aspect: str | None = None) -> ModelBackend:
+def get_model_backend(
+    aspect: str | None = None, video_model: str | None = None
+) -> ModelBackend:
     # Read the *runtime* backend so the app can switch mock <-> comfy live
     # (falls back to the .env default via runtime.py). `aspect` carries the
-    # job's output shape into whichever backend renders it.
+    # job's output shape into whichever backend renders it; `video_model` is the
+    # cinematic variant the user picked (external only — local generation has
+    # just the one model).
     from . import runtime
 
     backend = runtime.generation_backend()
     if backend == "comfy":
         return ComfyUIModelBackend(size=size_for_aspect(aspect))
     if backend == "external":
-        return ExternalModelBackend(aspect=aspect)
+        return ExternalModelBackend(aspect=aspect, video_model=video_model)
     return MockModelBackend()

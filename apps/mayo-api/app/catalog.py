@@ -63,6 +63,92 @@ CREDIT_PACKS: list[CreditPack] = [
     CreditPack(id="pack1000", credits=1_000, usd=160),  # $0.160/credit -> 2.08x
 ]
 
+# Video model id -> the Higgsfield application to submit to. Kept here rather
+# than in config so adding a variant is a catalog change, not an env change.
+HIGGSFIELD_VARIANTS: dict[str, str] = {
+    "dop-lite": "higgsfield-ai/dop/lite",
+    "dop-standard": "higgsfield-ai/dop/standard",
+    "dop-turbo": "higgsfield-ai/dop/turbo",
+}
+
+# Measured seconds per 5s scene, for the "this will take about X" estimate.
+HIGGSFIELD_SECONDS_PER_SCENE: dict[str, int] = {
+    "dop-lite": 172,
+    "dop-standard": 373,
+    "dop-turbo": 298,
+}
+
+
+def higgsfield_app_for(video_model: str | None) -> str | None:
+    """Application id for a catalog video model, or None to use the default."""
+    return HIGGSFIELD_VARIANTS.get(video_model or "")
+
+
+def eta_seconds(scenes: int, video_model: str | None, concurrency: int = 4) -> int:
+    """Rough wall-clock for a whole film: scenes render `concurrency` at a time."""
+    per = HIGGSFIELD_SECONDS_PER_SCENE.get(video_model or "", 373)
+    import math
+
+    return int(math.ceil(scenes / max(1, concurrency)) * per)
+
+
+# --- Pay-as-you-go -------------------------------------------------------
+# Generate without a subscription: pick a length, see the price, pay, render.
+# This is the primary path for long-form, because a one-hour film costs more
+# than any monthly plan could sensibly include.
+#
+# Anchored to the obvious comparison. Runway Pro is $35/mo for ~9 clips, about
+# $3.90 a clip; a 10-second mayo scene is $3.00 — slightly under, deliberately.
+#
+# But a flat $3.00/scene makes an hour cost $1,080, which kills the one thing
+# mayo does that the others do not. Hence VOLUME TIERS: per-scene price falls
+# as the film gets longer, and the deepest tier still clears the 2x floor from
+# ADR 0017 v3 ($0.80 / $0.384 = 2.08x).
+#
+#      10s  $3.00     7.80x        10 min  $126     5.46x
+#      1min $18.00    7.80x        30 min  $270     3.90x
+#      3min $42.00    6.07x        1 hour  $414     2.99x
+#
+# Marginal price per scene, applied in bands like income tax — the first six
+# scenes cost $3.00 each whatever the total length.
+PAYG_SCENE_BANDS: list[tuple[int, float]] = [
+    (6, 3.00),        # up to 1 minute
+    (60, 2.00),       # up to 10 minutes
+    (180, 1.20),      # up to 30 minutes
+    (10**9, 0.80),    # beyond — floor, 2.08x cost
+]
+
+
+def payg_usd(scenes: int) -> float:
+    """Pay-as-you-go price for a film of `scenes` scenes."""
+    total, prev = 0.0, 0
+    for cap, rate in PAYG_SCENE_BANDS:
+        billable = min(scenes, cap) - prev
+        if billable > 0:
+            total += billable * rate
+        prev = cap
+        if scenes <= cap:
+            break
+    return round(total, 2)
+
+
+def payg_usd_for_seconds(seconds: int) -> float:
+    return payg_usd(scenes_for(seconds))
+
+
+# Subscription credits are the commitment discount: 25% off the top
+# pay-as-you-go band. A premium scene costs 5 credits, so
+#   $3.00 x 0.75 / 5 credits = $0.45 per credit.
+# Anyone generating steadily is better off subscribing, which is the point;
+# anyone rendering one long film is better off paying as they go, which is also
+# the point.
+USD_PER_CREDIT = 0.45
+
+
+def usd_for_credits(credits: int) -> float:
+    return round(credits * USD_PER_CREDIT, 2)
+
+
 RETENTION_PLANS: list[RetentionPlan] = [
     RetentionPlan(id="d7", days=7, credits=20),
     RetentionPlan(id="d30", days=30, credits=60),
@@ -74,7 +160,13 @@ RETENTION_PLANS: list[RetentionPlan] = [
 MODELS: list[ModelProvider] = [
     ModelProvider(id="nano-banana", name="Nano Banana", kind="image", tier="standard", blurb="Fast, versatile image generation."),
     ModelProvider(id="aurora-img", name="Aurora", kind="image", tier="premium", blurb="Photoreal, film-grade stills."),
-    ModelProvider(id="higgsfield", name="Higgsfield", kind="video", tier="premium", blurb="High-motion cinematic clips."),
+    # Higgsfield DoP — "Director of Photography", their cinematic camera model.
+    # These are the ONLY video ids verified to work (2026-08-01); mayo always
+    # renders cinematic, so all three are offered and the user picks.
+    # Measured on one 5s clip each: lite 172s, turbo 298s, standard 373s.
+    ModelProvider(id="dop-lite", name="Cinematic Lite", kind="video", tier="draft", blurb="Fastest cinematic pass — about 3 min per scene."),
+    ModelProvider(id="dop-standard", name="Cinematic", kind="video", tier="standard", blurb="Full cinematic camera work — about 6 min per scene."),
+    ModelProvider(id="dop-turbo", name="Cinematic Turbo", kind="video", tier="premium", blurb="Higgsfield's turbo variant — about 5 min per scene."),
     ModelProvider(id="motionlite", name="MotionLite", kind="video", tier="draft", blurb="Cheap, quick motion for rough cuts."),
 ]
 

@@ -136,7 +136,8 @@ async def _run(job_id: str) -> None:
     if job is None:
         return
     total = job.scenesTotal
-    backend = get_model_backend(job.aspect)  # per job: live backend switch + output shape
+    # per job: live backend switch, output shape, and cinematic variant
+    backend = get_model_backend(job.aspect, getattr(job, "videoModel", "") or None)
 
     clip_keys: list[str] = []
     start_index = job.scenesDone
