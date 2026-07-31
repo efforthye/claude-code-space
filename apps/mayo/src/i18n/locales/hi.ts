@@ -18,7 +18,7 @@ import type { Dict } from '../types';
 export const hi: Dict = {
   'tab.explore': 'एक्सप्लोर',
   'tab.create': 'बनाएं',
-  'tab.jobs': 'काम',
+  'tab.jobs': 'टास्क',
   'tab.library': 'लाइब्रेरी',
   'tab.account': 'अकाउंट',
 

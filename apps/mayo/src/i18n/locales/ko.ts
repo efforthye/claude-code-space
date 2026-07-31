@@ -13,7 +13,9 @@ export const ko: Dict = {
   'tab.create': '만들기',
   'tab.jobs': '작업',
   'tab.library': '보관함',
-  'tab.account': '마이',
+  // "마이" on its own is not Korean — it is an English possessive with nothing
+  // possessed, and it reads as a truncation. Korean apps say 내 정보.
+  'tab.account': '내 정보',
 
   'explore.subtitle': '커뮤니티가 공개한 영상 — 감상하고, 좋아요, 나만의 버전으로 만들어요.',
   'explore.remix': '이렇게 만들기',

@@ -13,7 +13,7 @@ export const en: Dict = {
   'tab.create': 'Create',
   'tab.jobs': 'Jobs',
   'tab.library': 'Library',
-  'tab.account': 'My',
+  'tab.account': 'Profile',
 
   'explore.subtitle': "Films the community published — watch, like, or make your own version.",
   'explore.remix': 'Make like this',
