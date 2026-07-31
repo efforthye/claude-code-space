@@ -448,4 +448,9 @@ export const zhHans: Dict = {
   'lang.system': '跟随系统',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'create.videoModel': '电影感模型',
+  'create.model.lite': '轻量 · 每个场景约3分钟',
+  'create.model.standard': '电影感 · 每个场景约6分钟',
+  'create.model.turbo': '加速 · 每个场景约5分钟',
+  'create.estimateDetail': '{scenes} 个场景 · 订阅则 {credits} 积分 · 生成约需 {eta}',
 };

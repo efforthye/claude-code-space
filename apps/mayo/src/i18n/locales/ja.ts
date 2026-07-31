@@ -448,4 +448,9 @@ export const ja: Dict = {
   'lang.system': 'システム',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'create.videoModel': 'シネマティックモデル',
+  'create.model.lite': 'ライト · 1シーン約3分',
+  'create.model.standard': 'シネマティック · 1シーン約6分',
+  'create.model.turbo': 'ターボ · 1シーン約5分',
+  'create.estimateDetail': '{scenes} シーン · サブスクなら {credits} クレジット · 生成に約 {eta}',
 };

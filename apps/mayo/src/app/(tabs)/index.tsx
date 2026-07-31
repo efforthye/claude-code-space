@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { estimateCredits, formatDuration, useCatalog } from '@/api/catalog';
+import { estimateJob } from '@/api/client';
 import { ApiError, createJob, getSettings } from '@/api/client';
 import type { Aspect } from '@/api/types';
 import { useQuery } from '@/hooks/use-query';
@@ -35,6 +36,9 @@ export default function CreateScreen() {
   const [seconds, setSeconds] = useState(60);
   const [tierId, setTierId] = useState(defaultTierId);
   const [aspect, setAspect] = useState<Aspect>('16:9');
+  // Which cinematic variant renders the scenes. mayo always renders cinematic
+  // (Higgsfield DoP), so the choice is speed vs finish, not style.
+  const [videoModel, setVideoModel] = useState('dop-standard');
   const [customMode, setCustomMode] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState<Unit>('min');
@@ -44,6 +48,14 @@ export default function CreateScreen() {
   const { data: genSettings } = useQuery(getSettings);
   const priceFactor = genSettings?.byok ? 0.1 : 1;
   const credits = Math.max(1, Math.round(estimateCredits(seconds, tier) * priceFactor));
+  // The server owns pricing and timing: it knows the pay-as-you-go bands and
+  // the measured seconds-per-scene. The local credit maths above stays as the
+  // instant, offline-safe figure while this resolves.
+  const estimateReq = useMemo(
+    () => ({ prompt: '', seconds, tier: tier.id, aspect, videoModel }),
+    [seconds, tier.id, aspect, videoModel],
+  );
+  const { data: quote } = useQuery(() => estimateJob(estimateReq), { deps: [estimateReq] });
 
   const generate = async () => {
     if (submitting) return;
@@ -52,12 +64,12 @@ export default function CreateScreen() {
     try {
       let job;
       try {
-        job = await createJob({ prompt: title, seconds, tier: tier.id, aspect });
+        job = await createJob({ prompt: title, seconds, tier: tier.id, aspect, videoModel });
       } catch (e) {
         // Transient network blip (tunnel/API restarting) — retry once before failing.
         if (e instanceof ApiError && e.status === 0) {
           await new Promise((r) => setTimeout(r, 1500));
-          job = await createJob({ prompt: title, seconds, tier: tier.id, aspect });
+          job = await createJob({ prompt: title, seconds, tier: tier.id, aspect, videoModel });
         } else {
           throw e;
         }
@@ -99,7 +111,7 @@ export default function CreateScreen() {
         onPress={() =>
           router.push({
             pathname: '/director',
-            params: { seconds: String(seconds), tier: tier.id, aspect },
+            params: { seconds: String(seconds), tier: tier.id, aspect, videoModel },
           })
         }
         style={({ pressed }) => (pressed ? styles.directorPressed : undefined)}>
@@ -199,14 +211,45 @@ export default function CreateScreen() {
         {t(`tier.${tier.id}.blurb`)}
       </ThemedText>
 
+      {/* Cinematic variant — speed vs finish. Times are measured, not guessed. */}
+      <ThemedText type="smallBold">{t('create.videoModel')}</ThemedText>
+      <View style={styles.row}>
+        {(
+          [
+            ['dop-lite', t('create.model.lite')],
+            ['dop-standard', t('create.model.standard')],
+            ['dop-turbo', t('create.model.turbo')],
+          ] as const
+        ).map(([id, label]) => (
+          <Chip
+            key={id}
+            label={label}
+            selected={videoModel === id}
+            onPress={() => setVideoModel(id)}
+          />
+        ))}
+      </View>
+
       <ThemedView type="backgroundElement" style={styles.estimate}>
         <ThemedText type="small" themeColor="textSecondary">
           {t('create.estimate')}
         </ThemedText>
-        <ThemedText type="subtitle">{t('create.credits', { n: credits })}</ThemedText>
+        {/* Money first: this is what you pay right now, with no subscription. */}
+        <ThemedText type="subtitle">
+          {quote ? `$${quote.usd.toFixed(2)}` : t('create.credits', { n: credits })}
+        </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {t('create.estimateMeta', { duration: formatDuration(seconds), tier: tier.label })}
         </ThemedText>
+        {quote ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('create.estimateDetail', {
+              scenes: quote.scenes,
+              credits: quote.credits,
+              eta: formatDuration(quote.etaSeconds),
+            })}
+          </ThemedText>
+        ) : null}
       </ThemedView>
 
       <Pressable

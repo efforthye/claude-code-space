@@ -446,4 +446,9 @@ export const ko: Dict = {
   'lang.system': '시스템',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'create.videoModel': '시네마틱 모델',
+  'create.model.lite': '라이트 · 씬당 약 3분',
+  'create.model.standard': '시네마틱 · 씬당 약 6분',
+  'create.model.turbo': '터보 · 씬당 약 5분',
+  'create.estimateDetail': '{scenes}개 씬 · 구독 시 {credits} 크레딧 · 생성에 약 {eta}',
 };

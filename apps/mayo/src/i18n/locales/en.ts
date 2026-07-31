@@ -446,4 +446,9 @@ export const en: Dict = {
   'lang.system': 'System',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'create.videoModel': 'Cinematic model',
+  'create.model.lite': 'Lite · ~3 min/scene',
+  'create.model.standard': 'Cinematic · ~6 min/scene',
+  'create.model.turbo': 'Turbo · ~5 min/scene',
+  'create.estimateDetail': '{scenes} scenes · {credits} credits if subscribed · about {eta} to render',
 };

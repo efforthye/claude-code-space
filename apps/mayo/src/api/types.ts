@@ -60,7 +60,17 @@ export type Storage = {
   usedRatio: number;
   usedBytes?: number;
 };
-export type Estimate = { seconds: number; tier: string; credits: number };
+export type Estimate = {
+  seconds: number;
+  tier: string;
+  /** What a subscriber spends. */
+  credits: number;
+  /** Pay-as-you-go price for exactly this render, in USD. Banded by length. */
+  usd: number;
+  scenes: number;
+  /** Measured wall-clock estimate, allowing for the provider's 4-at-a-time cap. */
+  etaSeconds: number;
+};
 export type Health = { status: string; env: string; storage: string };
 
 // Output aspect ratio — the film really renders at this shape.
@@ -74,6 +84,8 @@ export type CreateJobRequest = {
   // characters keep the same look across independently generated clips.
   stylePrompt?: string;
   aspect?: Aspect;
+  /** Cinematic variant id from the catalog, e.g. 'dop-lite'. */
+  videoModel?: string;
 };
 export type RuntimeSettings = {
   generationBackend: string;
