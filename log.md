@@ -284,3 +284,16 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 - 잔여: ELK가 `~/elk-stage/`에서 실행 중(레포 체크아웃에 untracked 파일을 넣으면
   autopull의 `git pull`이 깨져서). 커밋 후 레포 경로로 이전 필요. ILM 보존기간 미설정.
   컨테이너 stdout 수집은 Phase B(Docker Desktop for Mac의 VM 경로 제약).
+
+## [2026-07-22] deploy | mayo → staged review screen: blank stills + stuck 0/N approvals fixed (batch 43)
+- Blank images: review.tsx built the still URL from the bare storage key
+  (mediaUrl(imageKey)) — missing the /v1/media prefix made a broken host and
+  every still rendered blank. Now mediaUrl(`/v1/media/${key}`).
+- Stuck approvals at the clips stage: nothing ever STARTED clip rendering (the
+  server's POST /{job}/clips had no caller in the app), so segments sat at
+  'imageApproved' where approve is unmappable — and the server silently
+  no-oped, leaving 0/N with no feedback. Fixes: client startClips() + a
+  "영상 렌더 시작" footer action on the clips stage, and approve now answers
+  409 with the reason instead of no-oping.
+- Also: installed expo-haptics (new dep from the parallel session) so exports
+  build. Verified: pytest 182 passed, tsc clean, iOS + web exports OK.

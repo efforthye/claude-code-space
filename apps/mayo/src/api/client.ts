@@ -299,6 +299,13 @@ export const reimageSegment = (jobId: string, index: number) =>
 export const advanceStage = (jobId: string) =>
   req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/advance`, { method: 'POST' });
 
+/** Begin rendering clips — the paid boundary of a staged job (ADR 0020). */
+export const startClips = (jobId: string, mode: 'renderAll' | 'stopOnReject' = 'renderAll') =>
+  req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/clips`, {
+    method: 'POST',
+    body: JSON.stringify({ mode }),
+  });
+
 /**
  * The feed for one lane. `orientation` is not a filter the user opted into so
  * much as a property of the player they are looking at: a vertical pager can

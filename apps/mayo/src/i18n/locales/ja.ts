@@ -464,6 +464,7 @@ export const ja: Dict = {
   'review.legacyJob': 'この動画は従来の方式で一度に作られました。確認する項目はありません。',
   'review.planBeats': '流れを作る',
   'review.renderStills': '画像を生成',
+  'review.startClips': 'クリップ生成を開始',
   'review.rewrite': 'この区間を書き直す',
   'review.rewritePlaceholder': 'どこをどう変えますか?',
   'review.reimage': 'この画像を作り直す',

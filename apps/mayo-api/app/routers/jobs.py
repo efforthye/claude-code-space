@@ -228,7 +228,17 @@ async def approve_segment(job_id: str, index: int) -> Job:
     if job is None or not 0 <= index < len(job.segments):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
     target = job.segments[index].model_copy()
-    target.status = _APPROVES.get(target.status, target.status)
+    nxt = _APPROVES.get(target.status)
+    if nxt is None:
+        # Nothing to approve at this status (e.g. an approved still while the
+        # clip hasn't rendered). Silently no-oping here left the review screen
+        # stuck at 0/N with no explanation — answer 409 with the reason instead.
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail=f"segment {index} is '{target.status}' — nothing to approve yet"
+            + (" (start clip rendering first)" if job.stage == "clips" else ""),
+        )
+    target.status = nxt
     updated = await job_store.set_segment(job_id, target)
     if updated is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")

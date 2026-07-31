@@ -23,6 +23,7 @@ import {
   reimageSegment,
   renderStills,
   rewriteSegment,
+  startClips,
 } from '@/api/client';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -146,8 +147,10 @@ export default function ReviewScreen() {
       </ThemedText>
 
       {current.imageKey ? (
+        // imageKey is a bare storage key — mediaUrl needs the /v1/media path
+        // (a bare key built a broken host and the still rendered blank).
         <Image
-          source={{ uri: mediaUrl(current.imageKey) }}
+          source={{ uri: mediaUrl(`/v1/media/${current.imageKey}`) }}
           style={styles.still}
           resizeMode="cover"
         />
@@ -259,6 +262,16 @@ export default function ReviewScreen() {
               primary
               disabled={busy}
               onPress={() => run(() => renderStills(String(id)))}
+            />
+          ) : stage === 'clips' && !segments.some((s) => s.clipKey) ? (
+            // Clips do not render themselves: this button is the paid boundary
+            // (POST /clips). Without it the stage sat at 0/N forever — nothing
+            // was rendering, so "approve" had nothing to approve.
+            <Action
+              label={t('review.startClips')}
+              primary
+              disabled={busy}
+              onPress={() => run(() => startClips(String(id)))}
             />
           ) : (
             <Action

@@ -464,6 +464,7 @@ export const ko: Dict = {
   'review.legacyJob': '이 영상은 예전 방식으로 한 번에 만들어졌어요. 검수할 게 없습니다.',
   'review.planBeats': '흐름 짜기',
   'review.renderStills': '이미지 생성',
+  'review.startClips': '영상 렌더 시작',
   'review.rewrite': '이 구간 다시 쓰기',
   'review.rewritePlaceholder': '어떻게 바꿀까요?',
   'review.reimage': '이 이미지 다시 만들기',

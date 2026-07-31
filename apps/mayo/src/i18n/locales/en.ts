@@ -462,6 +462,7 @@ export const en: Dict = {
   'review.legacyJob': 'This film was made the old way, in one pass. Nothing to review here.',
   'review.planBeats': 'Plan the flow',
   'review.renderStills': 'Generate the images',
+  'review.startClips': 'Start rendering clips',
   'review.rewrite': 'Rewrite this segment',
   'review.rewritePlaceholder': 'What should change here?',
   'review.reimage': 'Regenerate this image',
