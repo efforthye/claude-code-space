@@ -129,9 +129,14 @@ def _higgsfield_image_sync(prompt: str, aspect: str | None = None) -> bytes:  # 
     with its own key and its own outage surface, for the cheapest step in the
     pipeline.
 
-    Unlike DoP, this model DOES take `aspect_ratio` (docs, 2026-08-01), so the
-    output shape is set directly here rather than inherited from an input image.
-    That makes it the place shorts vs cinema is actually decided.
+    Unlike DoP, this model DOES take `aspect_ratio`, so the output shape is set
+    directly here rather than inherited from an input image. That makes this the
+    place shorts vs cinema is actually decided.
+
+    Verified against the live API 2026-08-01: `aspect_ratio: "9:16"` with
+    `resolution: "720p"` returned a 960x1696 PNG (ratio 0.566 vs 0.5625) in
+    about 30 seconds. The request is honoured, not silently dropped the way an
+    unsupported argument would be.
     """
     import time as _time
 
@@ -167,12 +172,13 @@ def _higgsfield_image_sync(prompt: str, aspect: str | None = None) -> bytes:  # 
         state = str(client.status(ctrl.request_id)).lower()
         if "complet" in state or "success" in state:
             result = client.result(ctrl.request_id)
-            # Response shape is undocumented; DoP answers {"video": {...}}, so
-            # accept the singular and plural forms rather than guessing one.
-            url = (result.get("image") or {}).get("url")
+            # Verified 2026-08-01: this model answers {"images": [{"url": ...}]}
+            # — plural, unlike DoP's singular "video". The singular form is still
+            # accepted in case a sibling model differs; the docs specify neither.
+            media = result.get("images") or []
+            url = media[0].get("url") if media else None
             if not url:
-                media = result.get("images") or []
-                url = media[0].get("url") if media else None
+                url = (result.get("image") or {}).get("url")
             if not url:
                 raise RuntimeError(f"Higgsfield image completed with no URL: {result}")
 

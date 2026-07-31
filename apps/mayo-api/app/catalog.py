@@ -30,10 +30,11 @@ DURATIONS: list[Duration] = [
 #
 # v2 was set before we could generate anything, and it was underwater. Measured:
 # three 5-second cinematic clips (higgsfield-ai/dop) cost 17.5 Higgsfield
-# credits, and Higgsfield sells credits at $0.0625 (500 for $31.25). That is
-# ~5.83 credits per scene = $0.364, plus ~$0.02 for the image stage:
+# credits, and Higgsfield sells credits at $0.0625 (800 for $50.00). That is
+# ~5.83 credits per scene = $0.364. The image stage is MEASURED at exactly 1.0
+# credit = $0.0625 (2026-08-01), not the $0.02 first assumed:
 #
-#     cost per 10s scene  =  $0.384
+#     cost per 10s scene  =  $0.427
 #
 # At v2's prices a premium scene (5 mayo credits) earned $0.118 on Studio —
 # 0.31x cost. Every Studio subscription lost money on every scene generated,
@@ -43,24 +44,24 @@ DURATIONS: list[Duration] = [
 # floor is Studio, because pricing that only works for pack buyers loses money
 # on precisely the customers a subscription business is trying to win.
 #
-#     2 x $0.384 / 5 credits per scene  =  $0.154 per mayo credit (floor)
+#     2 x $0.427 / 5 credits per scene  =  $0.171 per mayo credit (floor)
 #
 # Plan prices are unchanged; the credit GRANTS shrank to hit that floor.
 # Re-derive with: python scripts/margin.py --hf 5.83
 PLANS: list[Plan] = [
     Plan(id="free", monthly=0, storageMb=300),
-    # $24 / 150 = $0.160/credit -> 2.08x
-    Plan(id="pro", monthly=24, storageMb=5_000, monthlyCredits=150),
-    # $59 / 380 = $0.155/credit -> 2.02x — the floor, and the cheapest credit
-    Plan(id="studio", monthly=59, storageMb=50_000, monthlyCredits=380),
+    # $24 / 135 = $0.178/credit -> 2.08x
+    Plan(id="pro", monthly=24, storageMb=5_000, monthlyCredits=135),
+    # $59 / 340 = $0.174/credit -> 2.03x — the floor, and the cheapest credit
+    Plan(id="studio", monthly=59, storageMb=50_000, monthlyCredits=340),
 ]
 
 # Packs stay above the subscription rate on purpose: a subscription should be
 # the better deal, or there is no reason to hold one.
 CREDIT_PACKS: list[CreditPack] = [
-    CreditPack(id="pack100", credits=100, usd=18),  # $0.180/credit -> 2.34x
-    CreditPack(id="pack300", credits=300, usd=50),  # $0.167/credit -> 2.17x
-    CreditPack(id="pack1000", credits=1_000, usd=160),  # $0.160/credit -> 2.08x
+    CreditPack(id="pack100", credits=100, usd=18),  # $0.180/credit -> 2.11x
+    CreditPack(id="pack300", credits=300, usd=52),  # $0.173/credit -> 2.03x
+    CreditPack(id="pack1000", credits=1_000, usd=172),  # $0.172/credit -> 2.01x
 ]
 
 # Video model id -> the Higgsfield application to submit to. Kept here rather
@@ -103,11 +104,11 @@ def eta_seconds(scenes: int, video_model: str | None, concurrency: int = 4) -> i
 # But a flat $3.00/scene makes an hour cost $1,080, which kills the one thing
 # mayo does that the others do not. Hence VOLUME TIERS: per-scene price falls
 # as the film gets longer, and the deepest tier still clears the 2x floor from
-# ADR 0017 v3 ($0.80 / $0.384 = 2.08x).
+# ADR 0017 v3 ($0.90 / $0.427 = 2.11x).
 #
-#      10s  $3.00     7.80x        10 min  $126     5.46x
-#      1min $18.00    7.80x        30 min  $270     3.90x
-#      3min $42.00    6.07x        1 hour  $414     2.99x
+#      10s  $3.00     7.03x        10 min  $126     4.92x
+#      1min $18.00    7.03x        30 min  $270     3.51x
+#      3min $42.00    5.47x        1 hour  $432     2.81x
 #
 # Marginal price per scene, applied in bands like income tax — the first six
 # scenes cost $3.00 each whatever the total length.
@@ -115,7 +116,7 @@ PAYG_SCENE_BANDS: list[tuple[int, float]] = [
     (6, 3.00),        # up to 1 minute
     (60, 2.00),       # up to 10 minutes
     (180, 1.20),      # up to 30 minutes
-    (10**9, 0.80),    # beyond — floor, 2.08x cost
+    (10**9, 0.90),    # beyond — floor, 2.11x cost
 ]
 
 

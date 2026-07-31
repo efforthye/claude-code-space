@@ -78,7 +78,10 @@ def test_payg_bands_are_marginal_and_never_dip_below_the_2x_floor():
     assert catalog.payg_usd(6) == 18.00
     assert catalog.payg_usd(7) == 20.00  # 6 x $3.00 + 1 x $2.00
 
-    # Measured scene cost, ADR 0017 v3.
-    scene_cost = 5.83 * 0.0625 + 0.02
+    # Measured scene cost, ADR 0017 v3 — both halves metered, both measured:
+    # 5.83 Higgsfield credits for the clip, exactly 1.0 for the image, at
+    # $0.0625 a credit (800 for $50.00). The image was an estimate of $0.02
+    # until 2026-08-01, which quietly made this assertion too lenient.
+    scene_cost = (5.83 + 1.0) * 0.0625
     for scenes in (1, 6, 60, 180, 360, 1000):
         assert catalog.payg_usd(scenes) / (scenes * scene_cost) >= 2.0, scenes

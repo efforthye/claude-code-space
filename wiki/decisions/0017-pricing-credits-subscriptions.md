@@ -172,3 +172,52 @@ reads the live catalog, so the script and the product cannot disagree.
   would let the draft/standard/premium tiers map to real variants.
 - The image stage, carried as a $0.02 estimate.
 - Payments remain **off**. This table is what will be charged when they go on.
+
+## v3.1 — 2026-08-01 (the image stage, measured)
+
+v3 carried one estimate: **$0.02 per scene for the image step**. Now that both
+stages run on Higgsfield ([[0010-mayo-external-generation-providers]]), it was
+measured instead — and the estimate was three times too low.
+
+| | measured |
+|---|---|
+| Higgsfield credit | **$0.0625** — 800 credits for $50.00 (the July purchase of 500/$31.25 had failed) |
+| clip, 5s cinematic | 5.83 credits (average of dop lite/standard/turbo) |
+| **still, 720p** | **exactly 1.0 credit = $0.0625** |
+| **cost per 10s scene** | **$0.427** (was $0.384 — 11% higher) |
+
+At v3's prices that put **everything except pack100 back under 2x**: Studio
+1.82x, Pro 1.87x, pack1000 1.87x, pack300 1.95x. An 11% cost rise was enough to
+undo the whole correction, which is a fair measure of how thin a 2x floor is.
+
+**Corrected so the cheapest credit clears 2x again**, plan prices untouched:
+
+| | price | credits | $/credit | margin |
+|---|---|---|---|---|
+| Pro | $24/mo | 150 → **135** | $0.178 | 2.08x |
+| Studio | $59/mo | 380 → **340** | $0.174 | 2.03x |
+| pack100 | $18 | 100 | $0.180 | 2.11x |
+| pack300 | $50 → **$52** | 300 | $0.173 | 2.03x |
+| pack1000 | $160 → **$172** | 1,000 | $0.172 | **2.01x** (the floor) |
+
+Pay-as-you-go bands keep their top three rates; only the deepest one moved,
+$0.80 → **$0.90**, because $0.80 had fallen to 1.87x:
+
+| length | price | margin |
+|---|---|---|
+| 10s | $3.00 | 7.03x |
+| 1 min | $18.00 | 7.03x |
+| 10 min | $126.00 | 4.92x |
+| 30 min | $270.00 | 3.51x |
+| 1 hour | **$432.00** | 2.81x |
+
+**The lesson worth keeping:** a single unmeasured input, worth four cents,
+silently pushed four of five price points below the floor the previous revision
+existed to establish. `scripts/margin.py --hf 5.83 --image 0.0625` reproduces
+all of it, and the test asserting the 2x floor now uses the measured figure —
+it had been passing on the optimistic estimate.
+
+**Verified in the same run:** `higgsfield-ai/soul/standard` with
+`aspect_ratio: "9:16"` returned a 960x1696 PNG in ~30s. Shorts are real, and
+the aspect request is honoured rather than silently dropped — unlike DoP, which
+has no aspect parameter and inherits the shape of its input image.
