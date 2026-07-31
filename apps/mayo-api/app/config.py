@@ -117,6 +117,17 @@ class Settings:
     higgsfield_image_arg: str = field(
         default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_IMAGE_ARG", "image_url")
     )
+    # Image stage on Higgsfield rather than a second vendor. Verified in their
+    # docs 2026-08-01: unlike DoP, this one DOES take aspect_ratio, so the
+    # output shape is controlled directly instead of inherited.
+    higgsfield_image_model: str = field(
+        default_factory=lambda: os.getenv(
+            "MAYO_HIGGSFIELD_IMAGE_MODEL", "higgsfield-ai/soul/standard"
+        )
+    )
+    higgsfield_image_resolution: str = field(
+        default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_IMAGE_RESOLUTION", "720p")
+    )
     # Clip length per scene, in seconds, sent as `duration`.
     higgsfield_duration: int = field(
         default_factory=lambda: int(os.getenv("MAYO_HIGGSFIELD_DURATION", "5"))

@@ -92,9 +92,12 @@ async def _render_one(sb_id: str, index: int, prompt: str) -> Optional[str]:
 
     backend = runtime.generation_backend()
     if backend == "external":
-        from .providers import nano_banana_image
+        # Same provider as the real render, deliberately. A preview drawn by a
+        # different model is not a preview — the user would approve one look and
+        # be charged for another.
+        from .providers import generate_still
 
-        data, mime = await nano_banana_image(prompt)
+        data, mime = await generate_still(prompt)
         ext = "png" if "png" in mime else "jpg"
         key = f"storyboards/{sb_id}/{index:02d}.{ext}"
         get_storage().save(key, data)

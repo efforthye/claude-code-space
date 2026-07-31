@@ -105,6 +105,88 @@ async def nano_banana_image(prompt: str, aspect: str | None = None) -> tuple[byt
     raise RuntimeError("Nano Banana returned no image data")
 
 
+async def generate_still(prompt: str, aspect: str | None = None) -> tuple[bytes, str]:
+    """The image stage, whichever provider is configured.
+
+    Higgsfield by default — one vendor, one key, one bill, and its image model
+    takes aspect_ratio directly. Nano Banana (Gemini) stays reachable for anyone
+    who has that key and prefers it; set MAYO_IMAGE_PROVIDER=gemini.
+    """
+    import os
+
+    provider = os.getenv("MAYO_IMAGE_PROVIDER", "higgsfield").strip().lower()
+    if provider == "gemini":
+        return await nano_banana_image(prompt, aspect=aspect)
+    data = await asyncio.to_thread(_higgsfield_image_sync, prompt, aspect)
+    return data, "image/jpeg"
+
+
+def _higgsfield_image_sync(prompt: str, aspect: str | None = None) -> bytes:  # pragma: no cover
+    """Generate one still on Higgsfield and return its bytes.
+
+    One vendor for both stages: a single key, a single bill, a single place to
+    be rate-limited. The alternative was a second provider (Nano Banana / Gemini)
+    with its own key and its own outage surface, for the cheapest step in the
+    pipeline.
+
+    Unlike DoP, this model DOES take `aspect_ratio` (docs, 2026-08-01), so the
+    output shape is set directly here rather than inherited from an input image.
+    That makes it the place shorts vs cinema is actually decided.
+    """
+    import time as _time
+
+    try:
+        import higgsfield_client
+    except ImportError as exc:
+        raise RuntimeError(
+            "Higgsfield needs the `higgsfield-client` package on the host "
+            "(`pip install higgsfield-client`) and HF_KEY set"
+        ) from exc
+    if not settings.higgsfield_key:
+        raise RuntimeError('Higgsfield needs HF_KEY="<id>:<secret>" set on the host')
+
+    client = higgsfield_client.SyncClient()
+    arguments = {
+        "prompt": prompt,
+        "aspect_ratio": aspect or settings.external_aspect_ratio,
+        "resolution": settings.higgsfield_image_resolution,
+    }
+    try:
+        ctrl = client.submit(settings.higgsfield_image_model, arguments=arguments)
+    except Exception as exc:  # noqa: BLE001
+        if "model_not_found" in str(exc):
+            raise RuntimeError(
+                f"Higgsfield rejected image model '{settings.higgsfield_image_model}' "
+                "(model_not_found). Either the id is wrong or the account has no credits — "
+                "both report identically."
+            ) from exc
+        raise
+
+    deadline = _time.monotonic() + settings.higgsfield_max_wait
+    while _time.monotonic() < deadline:
+        state = str(client.status(ctrl.request_id)).lower()
+        if "complet" in state or "success" in state:
+            result = client.result(ctrl.request_id)
+            # Response shape is undocumented; DoP answers {"video": {...}}, so
+            # accept the singular and plural forms rather than guessing one.
+            url = (result.get("image") or {}).get("url")
+            if not url:
+                media = result.get("images") or []
+                url = media[0].get("url") if media else None
+            if not url:
+                raise RuntimeError(f"Higgsfield image completed with no URL: {result}")
+
+            import httpx
+
+            resp = httpx.get(url, timeout=120)
+            resp.raise_for_status()
+            return resp.content
+        if "fail" in state or "nsfw" in state or "cancel" in state:
+            raise RuntimeError(f"Higgsfield image job ended: {state}")
+        _time.sleep(settings.higgsfield_poll_seconds)
+    raise RuntimeError("Higgsfield image job timed out")
+
+
 def _higgsfield_video_sync(  # pragma: no cover — needs paid credits to exercise
     prompt: str, image_bytes: bytes | None, model: str | None = None
 ) -> str:
@@ -222,7 +304,7 @@ class ExternalModelBackend(ModelBackend):
 
         image_bytes: bytes | None = None
         if settings.external_use_image_stage:
-            image_bytes, _mime = await nano_banana_image(prompt, aspect=self.aspect)
+            image_bytes, _mime = await generate_still(prompt, aspect=self.aspect)
 
         app_id = catalog.higgsfield_app_for(self.video_model)
         async with self._slots:
