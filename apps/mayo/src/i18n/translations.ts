@@ -15,6 +15,7 @@ import { en } from './locales/en';
 import { es } from './locales/es';
 import { ja } from './locales/ja';
 import { ko } from './locales/ko';
+import { ptBR } from './locales/pt-BR';
 import { zhHans } from './locales/zh-Hans';
 import { zhHant } from './locales/zh-Hant';
 import type { ActiveLang, Dict, Lang } from './types';
@@ -34,6 +35,7 @@ export const TRANSLATIONS: Partial<Record<ActiveLang, Dict>> = {
   'zh-Hans': zhHans,
   'zh-Hant': zhHant,
   es,
+  'pt-BR': ptBR,
 };
 
 /**
