@@ -31,6 +31,10 @@ export type Job = {
   stylePrompt?: string | null;
   // Credits charged at create — cancelling refunds the unrendered share.
   chargedCredits?: number | null;
+  /** Which gate this job waits at. Legacy jobs stay at 'clips' (ADR 0020). */
+  stage?: JobStage;
+  /** Timecoded breakdown. Empty for legacy jobs, which use scenePrompts. */
+  segments?: Segment[];
 };
 
 export type Video = {
@@ -75,6 +79,32 @@ export type Health = { status: string; env: string; storage: string };
 
 // Output aspect ratio — the film really renders at this shape.
 export type Aspect = '16:9' | '9:16' | '1:1' | '4:5' | '21:9';
+/** Furthest point a segment has reached. Linear: a gate asks "at least X". */
+export type SegmentStatus =
+  | 'draft'
+  | 'approved'
+  | 'imaged'
+  | 'imageApproved'
+  | 'rendered'
+  | 'clipApproved';
+
+export type JobStage = 'beats' | 'stills' | 'clips' | 'done';
+
+/** One timecoded slice — the unit of review and of billing (ADR 0020). */
+export type Segment = {
+  index: number;
+  startSec: number;
+  endSec: number;
+  text: string;
+  prompt: string;
+  status: SegmentStatus;
+  imageKey?: string | null;
+  clipKey?: string | null;
+  rewrites: number;
+  imageRuns: number;
+  clipRuns: number;
+};
+
 export type CreateJobRequest = {
   prompt: string;
   seconds: number;

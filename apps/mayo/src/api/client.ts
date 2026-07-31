@@ -261,6 +261,37 @@ async function reqPublic<T>(authedPath: string, publicPath: string, init?: Reque
   }
 }
 
+// --- Staged production (ADR 0020) -----------------------------------------
+// Text and stills are free to iterate on; only the clips stage costs money.
+// Every one of these returns the whole Job, so the screen always renders from
+// one authoritative object rather than patching its own copy.
+
+export const planBeats = (jobId: string, prompt: string) =>
+  req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/beats`, {
+    method: 'POST',
+    body: JSON.stringify({ prompt }),
+  });
+
+export const rewriteSegment = (jobId: string, index: number, instruction: string) =>
+  req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/segments/${index}/rewrite`, {
+    method: 'POST',
+    body: JSON.stringify({ instruction }),
+  });
+
+/** Accepts whatever this segment currently shows — text, still, or clip. */
+export const approveSegment = (jobId: string, index: number) =>
+  req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/segments/${index}/approve`, { method: 'POST' });
+
+export const renderStills = (jobId: string) =>
+  req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/stills`, { method: 'POST' });
+
+export const reimageSegment = (jobId: string, index: number) =>
+  req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/segments/${index}/reimage`, { method: 'POST' });
+
+/** The "OK, next" button. 409 when the gate is still closed — show the reason. */
+export const advanceStage = (jobId: string) =>
+  req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/advance`, { method: 'POST' });
+
 export const getExplore = (sort: ExploreSort = 'popular') =>
   reqPublic<ExploreItem[]>(`/v1/explore?sort=${sort}`, `/v1/public/explore?sort=${sort}`);
 export const publishToExplore = (videoId: string, prompt: string, promptPublic = false) =>

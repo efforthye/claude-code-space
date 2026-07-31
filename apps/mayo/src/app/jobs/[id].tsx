@@ -148,6 +148,24 @@ export default function JobDetailScreen() {
               </ThemedText>
             </ThemedView>
 
+            {/* Staged jobs are reviewed, not just watched — send them to the
+                gate they are waiting at (ADR 0020). Legacy jobs have no
+                segments and skip this entirely. */}
+            {job.stage && job.stage !== 'clips' && job.stage !== 'done' ? (
+              <Pressable
+                onPress={() => router.push(`/jobs/${job.id}/review`)}
+                style={({ pressed }) => [
+                  styles.primary,
+                  { backgroundColor: theme.text },
+                  pressed && styles.pressed,
+                ]}>
+                <Ionicons name="list-outline" size={20} color={theme.background} />
+                <ThemedText type="smallBold" style={{ color: theme.background }}>
+                  {t('jobDetail.review')}
+                </ThemedText>
+              </Pressable>
+            ) : null}
+
             {done ? (
               <Pressable
                 onPress={() => router.navigate('/library')}
