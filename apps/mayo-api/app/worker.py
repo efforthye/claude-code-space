@@ -227,6 +227,26 @@ async def _run(job_id: str) -> None:
         else (round(real_clips * clip_seconds) if real_clips else None)
     )
 
+    # "Done" has to mean there is a film. Reporting success with no media is
+    # the failure mode this project already banned once (batch 33): the user is
+    # told it worked, opens the library, and finds nothing playable.
+    #
+    # The mock backend legitimately produces no bytes — it exists to exercise
+    # the pipeline offline — so it is the one case where an empty result is not
+    # a failure. Everything else is.
+    if film_key is None and backend.id != "mock":
+        await jobs.patch(
+            job_id,
+            status="failed",
+            etaMin=None,
+            failureReason=(
+                "생성은 끝났는데 재생 가능한 파일이 없어요. "
+                f"생성 백엔드({backend.id})가 실제 영상을 만들지 못했습니다."
+            ),
+        )
+        logger.error("job %s produced no media on backend %s", job_id, backend.id)
+        return
+
     done = await jobs.patch(job_id, status="done", etaMin=None)
     if done is not None:
         # The finished film belongs to whoever created (and paid for) the job.

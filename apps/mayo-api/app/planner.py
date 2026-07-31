@@ -511,6 +511,11 @@ def get_scenario_planner() -> ScenarioPlanner:
         return ClaudeScenarioPlanner()
     if backend == "local":
         return LocalScenarioPlanner()
+    # "mock" only ever reaches here under MAYO_ENV=test — runtime refuses to
+    # store it otherwise (see _valid_planners). Honouring the value keeps one
+    # code path instead of a parallel injection seam for the suite.
+    if backend == "mock":
+        return MockScenarioPlanner()
     # PROD RULE (owner: "the director doesn't really work"): mock is a dev stub.
     # If the host actually has a Claude credential, use the REAL director even
     # when nobody flipped the runtime switch — canned replies helped no one.
@@ -523,4 +528,7 @@ def get_scenario_planner() -> ScenarioPlanner:
             return ClaudeScenarioPlanner()
         except ImportError:
             pass
-    return MockScenarioPlanner()
+    # No credential: the local model, which is free and real. MockScenarioPlanner
+    # is TEST ONLY and no longer reachable from configuration — canned scene
+    # splitting presented as an AI director helped no one.
+    return LocalScenarioPlanner()

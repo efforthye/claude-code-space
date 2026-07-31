@@ -150,3 +150,57 @@ def test_library_and_jobs_are_scoped_per_user():
     assert asyncio.run(library.storage(bob["id"])).usedBytes < asyncio.run(
         library.storage(alice["id"])
     ).usedBytes + 1
+
+
+def test_a_job_with_no_media_reports_failure_not_success(monkeypatch):
+    """Telling someone their film is ready when nothing playable exists is the
+    failure this project banned once (batch 33) and then reintroduced by
+    leaving the stub backend selectable."""
+    import asyncio
+
+    from app import worker
+    from app.providers import ComfyUIModelBackend, SceneResult
+    from app.store import jobs as job_store
+
+    async def no_media(self, prompt, index):
+        return SceneResult(media_key=f"clips/{index:04d}.mp4")  # a key, no bytes
+
+    monkeypatch.setattr(ComfyUIModelBackend, "generate_scene", no_media)
+    monkeypatch.setattr(worker, "get_model_backend", lambda *a, **k: ComfyUIModelBackend())
+
+    async def run():
+        job = await job_store.create("no media", 10, "standard")
+        await worker._run(job.id)
+        return await job_store.get(job.id)
+
+    done = asyncio.run(run())
+    assert done.status == "failed", done.status
+    assert done.failureReason and "재생 가능한 파일" in done.failureReason
+
+
+def test_the_stub_is_unreachable_outside_the_test_environment(monkeypatch):
+    """A stub production can select is not a stub. It is reachable here only
+    because MAYO_ENV=test; anywhere else the setters refuse it.
+
+    This is the guard for what happened on 2026-08-01 — the mini's persisted
+    runtime said "mock", so every real job was answered by a renderer that
+    produced nothing and still reported success.
+    """
+    import pytest
+
+    from app import runtime
+
+    monkeypatch.setenv("MAYO_ENV", "dev")  # i.e. the mini, or anything real
+    with pytest.raises(ValueError):
+        runtime.set_generation_backend("mock")
+    with pytest.raises(ValueError):
+        runtime.set_planner_backend("mock")
+
+
+def test_a_persisted_stub_value_is_ignored_in_a_real_environment(monkeypatch):
+    """Removing the option is not enough — the value was already on disk."""
+    from app import runtime
+
+    monkeypatch.setenv("MAYO_ENV", "dev")
+    monkeypatch.setitem(runtime._state, "generation_backend", "mock")
+    assert runtime.generation_backend() == "comfy"

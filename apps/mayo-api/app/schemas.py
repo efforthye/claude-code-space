@@ -132,6 +132,9 @@ class Job(BaseModel):
     stylePrompt: Optional[str] = None
     # Credits charged at creation (refunded pro-rata on cancel).
     chargedCredits: Optional[int] = None
+    # Why a job failed, in the user's words. Without this the app can only say
+    # "something went wrong", which tells nobody what to do next.
+    failureReason: Optional[str] = None
     # Output aspect ratio the scenes render at (see CreateJobRequest.aspect).
     aspect: str = "16:9"
     # Cinematic variant chosen at creation. Stored on the job so a retry renders

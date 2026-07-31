@@ -156,9 +156,9 @@ export default function SettingsScreen() {
 
           <ThemedText type="smallBold">{t('account.generation')}</ThemedText>
           <View style={styles.row}>
-            {isAdmin || genBackend === 'mock' ? (
-              <Chip label={t('account.genFast')} selected={genBackend === 'mock'} onPress={() => chooseGen('mock')} />
-            ) : null}
+            {/* The "fast preview" (mock) chip is gone. It rendered nothing and
+                reported success, and leaving it reachable — even for admins —
+                is how the mini ended up serving stubs to real jobs. */}
             <Chip label={t('account.genLocal')} selected={genBackend === 'comfy'} onPress={() => chooseGen('comfy')} />
             <Chip
               label={premium ? t('account.genExternal') : `${t('account.genExternal')} · ${t('common.paidTag')}`}
@@ -167,11 +167,7 @@ export default function SettingsScreen() {
             />
           </View>
           <ThemedText type="small" themeColor="textSecondary">
-            {genBackend === 'comfy'
-              ? t('account.genLocalHint')
-              : genBackend === 'external'
-                ? t('account.genExternalHint')
-                : t('account.genFastHint')}
+            {genBackend === 'external' ? t('account.genExternalHint') : t('account.genLocalHint')}
           </ThemedText>
 
           <ThemedText type="smallBold">{t('account.byok')}</ThemedText>

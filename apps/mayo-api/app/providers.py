@@ -57,7 +57,16 @@ def size_for_aspect(aspect: str | None) -> tuple[int, int] | None:
 
 
 class MockModelBackend(ModelBackend):
-    """Timed stand-in — advances a scene per tick so progress is observable."""
+    """TEST ONLY — a timed stand-in that returns storage keys with no bytes.
+
+    Not reachable from configuration: `get_model_backend` never returns it and
+    "mock" is not a valid runtime backend. It exists so the suite can exercise
+    the pipeline offline, and tests inject it directly.
+
+    It was previously selectable, and on 2026-08-01 the mini was found running
+    on it — every job reported "done" with nothing playable behind it. A stub
+    that is reachable in production is not a stub, it is a bug with a nice name.
+    """
 
     id = "mock"
 
@@ -432,8 +441,12 @@ def get_model_backend(
     from . import runtime
 
     backend = runtime.generation_backend()
-    if backend == "comfy":
-        return ComfyUIModelBackend(size=size_for_aspect(aspect))
     if backend == "external":
         return ExternalModelBackend(aspect=aspect, video_model=video_model)
-    return MockModelBackend()
+    # Same as the planner: "mock" is storable only under MAYO_ENV=test.
+    if backend == "mock":
+        return MockModelBackend()
+    # Local generation is the floor. There is deliberately no fall-through to
+    # MockModelBackend: a stub that answers like a renderer is how "done" came
+    # to mean "nothing was made".
+    return ComfyUIModelBackend(size=size_for_aspect(aspect))

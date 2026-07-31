@@ -582,13 +582,11 @@ function DirectorPicker() {
     if (settings && !sel) setSel(settings);
   }, [settings, sel]);
 
-  const backend: PlannerBackend = (sel?.plannerBackend ?? 'mock') as PlannerBackend;
+  const backend: PlannerBackend = (sel?.plannerBackend ?? 'local') as PlannerBackend;
   const label =
     backend === 'claude'
       ? directors?.find((d) => d.id === sel?.directorModel)?.name ?? 'Claude'
-      : backend === 'local'
-        ? t('director.backendLocal')
-        : t('director.backendMock');
+      : t('director.backendLocal');
 
   const choose = async (next: PlannerBackend, model?: string) => {
     if (next === 'claude' && !premium) {
@@ -690,12 +688,9 @@ function DirectorPicker() {
             <ActivityIndicator style={styles.pickLoading} />
           ) : (
             <ScrollView style={styles.pickList} contentContainerStyle={styles.pickListInner}>
-              <Row
-                b="mock"
-                title={t('director.backendMock')}
-                desc={t('director.backendMockDesc')}
-                free
-              />
+              {/* No "mock" row: canned scene splitting presented as an AI
+                  director is not a director. Removed 2026-08-01 along with the
+                  mock generation backend. */}
               <Row
                 b="local"
                 title={t('director.backendLocal')}

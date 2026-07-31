@@ -13,9 +13,37 @@ import os
 from .config import settings
 
 _PATH = os.path.join(settings.storage_local_path, ".runtime.json")
-_VALID_BACKENDS = {"mock", "comfy", "external"}
-# AI director backends — mock (offline), local (free Ollama), claude (paid, best).
-_VALID_PLANNERS = {"mock", "local", "claude"}
+# Generation backends the PRODUCT can be set to. "mock" is deliberately absent:
+# it produces keys with no bytes, and leaving it selectable is how a dev stub
+# ends up being what a real user gets — which is exactly what happened
+# (2026-08-01: the runtime had been left on mock, so jobs reported "done" with
+# nothing playable behind them).
+#
+# MockModelBackend still exists for tests, which need to exercise the pipeline
+# offline, but nothing in configuration can reach it any more.
+_VALID_BACKENDS = {"comfy", "external"}
+# AI director backends — local (free Ollama), claude (paid, best). Same reason.
+_VALID_PLANNERS = {"local", "claude"}
+
+
+def _testing() -> bool:
+    """True only under the test suite, which needs a renderer that does nothing.
+
+    Gating the stub on MAYO_ENV=test keeps ONE code path instead of a parallel
+    injection seam, while making it unreachable in any real deployment — the
+    mini does not run as env=test.
+    """
+    import os
+
+    return os.getenv("MAYO_ENV", "dev") == "test"
+
+
+def _valid_backends() -> set[str]:
+    return (_VALID_BACKENDS | {"mock"}) if _testing() else _VALID_BACKENDS
+
+
+def _valid_planners() -> set[str]:
+    return (_VALID_PLANNERS | {"mock"}) if _testing() else _VALID_PLANNERS
 
 
 def _valid_director_models() -> set[str]:
@@ -58,22 +86,33 @@ def _save() -> None:
 
 
 def generation_backend() -> str:
-    return _state["generation_backend"]
+    # A previously persisted "mock" must not survive the removal. The state file
+    # on the mini held exactly that, which is why real jobs were being answered
+    # by a stub. Fall forward to local generation rather than honouring it.
+    value = _state["generation_backend"]
+    return value if value in _valid_backends() else "comfy"
 
 
 def set_generation_backend(value: str) -> None:
-    if value not in _VALID_BACKENDS:
+    if value not in _valid_backends():
         raise ValueError(f"invalid generation backend '{value}'")
     _state["generation_backend"] = value
     _save()
 
 
 def planner_backend() -> str:
-    return _state["planner_backend"]
+    value = _state["planner_backend"]
+    if value in _valid_planners():
+        return value
+    # Same fall-forward. Claude when the host can reach it, local otherwise —
+    # both real, neither canned.
+    import os
+
+    return "claude" if os.getenv("ANTHROPIC_API_KEY") else "local"
 
 
 def set_planner_backend(value: str) -> None:
-    if value not in _VALID_PLANNERS:
+    if value not in _valid_planners():
         raise ValueError(f"invalid director backend '{value}'")
     _state["planner_backend"] = value
     _save()

@@ -32,13 +32,17 @@ const FORMATS = [
     id: 'shorts' as const,
     aspect: '9:16' as Aspect,
     // Vertical feeds cut off past a minute; offering 30 minutes here would be
-    // offering something no platform will show.
-    durations: [10, 15, 30, 60] as number[],
+    // offering something no platform will show. 10 and 15 seconds are not a
+    // meaningful choice apart — one short option is enough.
+    durations: [10, 30, 60] as number[],
   },
   {
     id: 'film' as const,
     aspect: '16:9' as Aspect,
-    durations: [60, 180, 600, 1800, 3600] as number[],
+    // Stops at 10 minutes for now: an hour is 360 clips, and nobody should be
+    // able to start a $432 render before the pipeline has been proven at a
+    // smaller size.
+    durations: [60, 180, 300, 600] as number[],
   },
   {
     id: 'square' as const,
