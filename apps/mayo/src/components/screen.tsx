@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
@@ -33,6 +34,11 @@ export function Screen({
   const handleRefresh = onRefresh
     ? async () => {
         setRefreshing(true);
+        // The tick that tells you the pull registered. Without it a refresh on
+        // an already-current screen is indistinguishable from a failed gesture,
+        // because nothing on screen changes. Haptics are a no-op on web and on
+        // Android devices without a motor, so this needs no platform guard.
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
         try {
           await onRefresh();
         } finally {
@@ -44,18 +50,14 @@ export function Screen({
   return (
     <ThemedView style={styles.root}>
       <SafeAreaView edges={['top']} style={styles.safe}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            handleRefresh ? (
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                tintColor={theme.textSecondary}
-              />
-            ) : undefined
-          }>
+        {/*
+          The header sits OUTSIDE the ScrollView on purpose. A RefreshControl
+          pushes its scroll view's content down to make room for the spinner,
+          and with the title and bell inside that meant the whole screen slid
+          down and back on every pull. Keeping the header fixed leaves only the
+          list moving, which is what the gesture is actually about.
+        */}
+        <View style={styles.header}>
           <View style={styles.titleRow}>
             <ThemedText type="subtitle" style={styles.title}>
               {title}
@@ -82,6 +84,24 @@ export function Screen({
               {subtitle}
             </ThemedText>
           ) : null}
+        </View>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          // Short screens do not overscroll by default on iOS, so a screen with
+          // little content had no way to reach the refresh gesture at all —
+          // which is why 작업 appeared to have lost pull-to-refresh even though
+          // it passes onRefresh.
+          alwaysBounceVertical={!!handleRefresh}
+          refreshControl={
+            handleRefresh ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={theme.textSecondary}
+              />
+            ) : undefined
+          }>
           {children}
         </ScrollView>
       </SafeAreaView>
@@ -96,12 +116,19 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
-  content: {
+  header: {
     width: '100%',
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
     paddingHorizontal: Spacing.screen,
     paddingTop: Spacing.three,
+  },
+  content: {
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    paddingHorizontal: Spacing.screen,
+    paddingTop: Spacing.two,
     paddingBottom: BottomTabInset + Spacing.four,
     gap: Spacing.three,
   },

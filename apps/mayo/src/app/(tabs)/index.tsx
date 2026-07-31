@@ -93,7 +93,7 @@ export default function CreateScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const tier = useMemo(() => tiers.find((x) => x.id === tierId) ?? tiers[0], [tiers, tierId]);
-  const { data: genSettings } = useQuery(getSettings);
+  const { data: genSettings, refetch: refetchSettings } = useQuery(getSettings);
   const priceFactor = genSettings?.byok ? 0.1 : 1;
   const credits = Math.max(1, Math.round(estimateCredits(seconds, tier) * priceFactor));
   // The server owns pricing and timing: it knows the pay-as-you-go bands and
@@ -103,7 +103,16 @@ export default function CreateScreen() {
     () => ({ prompt: '', seconds, tier: tier.id, aspect, videoModel }),
     [seconds, tier.id, aspect, videoModel],
   );
-  const { data: quote } = useQuery(() => estimateJob(estimateReq), { deps: [estimateReq] });
+  const { data: quote, refetch: refetchQuote } = useQuery(() => estimateJob(estimateReq), {
+    deps: [estimateReq],
+  });
+
+  // What a pull actually refetches here: the price. This screen quotes real
+  // money against server-owned bands, so a stale quote is the one thing on it
+  // worth distrusting.
+  const refresh = async () => {
+    await Promise.all([refetchSettings(), refetchQuote()]);
+  };
 
   const planStepByStep = async () => {
     if (submitting) return;
@@ -165,7 +174,7 @@ export default function CreateScreen() {
   // Step 1 — what kind of film. Everything technical follows from this.
   if (step === 0) {
     return (
-      <Screen title={t('tab.create')} subtitle={t('create.formatQuestion')}>
+      <Screen title={t('tab.create')} subtitle={t('create.formatQuestion')} onRefresh={refresh}>
         {FORMATS.map((f) => (
           <Pressable
             key={f.id}
@@ -194,7 +203,7 @@ export default function CreateScreen() {
   // Step 2 — how long, offering only what this format can carry.
   if (step === 1) {
     return (
-      <Screen title={t('create.length')} subtitle={t('create.lengthQuestion')}>
+      <Screen title={t('create.length')} subtitle={t('create.lengthQuestion')} onRefresh={refresh}>
         <View style={styles.row}>
           {preset.durations.map((sec) => (
             <Chip
@@ -284,7 +293,7 @@ export default function CreateScreen() {
 
   // Step 3 — the idea itself, plus the settings worth changing per film.
   return (
-    <Screen title={t('tab.create')} subtitle={t('create.subtitle')}>
+    <Screen title={t('tab.create')} subtitle={t('create.subtitle')} onRefresh={refresh}>
       <Pressable onPress={() => setStep(1)} style={styles.backRow}>
         <Ionicons name="chevron-back" size={16} color={theme.textSecondary} />
         <ThemedText type="small" themeColor="textSecondary">

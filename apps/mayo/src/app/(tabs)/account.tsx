@@ -41,10 +41,17 @@ export default function MyScreen() {
   const { user, signOut, refreshUser } = useAuth();
   const { entitlement } = usePayments();
   const { favorites } = useFavorites();
-  const { data: storage } = useQuery(getStorage);
+  const { data: storage, refetch: refetchStorage } = useQuery(getStorage);
   // Admin probe: the server 403s for everyone but MAYO_ADMIN_EMAILS accounts —
   // success is what reveals the console entry below.
-  const { data: adminStats } = useQuery(getAdminStats, { enabled: !!user, deps: [user?.id] });
+  const { data: adminStats, refetch: refetchAdmin } = useQuery(getAdminStats, {
+    enabled: !!user,
+    deps: [user?.id],
+  });
+
+  const refresh = async () => {
+    await Promise.all([refetchStorage(), refetchAdmin()]);
+  };
   const [linking, setLinking] = useState<string | null>(null);
 
   const linked = (p: string) => !!user?.providers?.includes(p);
@@ -150,7 +157,7 @@ export default function MyScreen() {
   );
 
   return (
-    <Screen title={t('tab.account')} subtitle={t('my.subtitle')}>
+    <Screen title={t('tab.account')} subtitle={t('my.subtitle')} onRefresh={refresh}>
       {user ? (
         <ThemedView type="backgroundElement" style={styles.authCard}>
           <Ionicons name="person-circle" size={40} color={theme.text} />
