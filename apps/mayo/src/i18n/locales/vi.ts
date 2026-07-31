@@ -450,4 +450,10 @@ export const vi: Dict = {
   'lang.system': 'Theo hệ thống',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'explore.lane.shorts': 'Shorts',
+  'explore.lane.cinema': 'Điện ảnh',
+  'creator.filmCount': '{n} phim',
+  'creator.empty': 'Chưa đăng gì cả.',
+  'following.title': 'Đang theo dõi',
+  'following.empty': 'Bạn chưa theo dõi ai.',
 };

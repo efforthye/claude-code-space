@@ -158,7 +158,9 @@ export type ExploreItem = {
   views?: number;
   shares?: number;
   watches?: number; // completed watches (played to the end)
+  aspect?: string; // the shape it was rendered at — decides its feed lane
   likedByMe?: boolean; // whether the calling account liked it (signed in only)
+  followedByMe?: boolean; // whether the calling account follows its creator
   createdAt?: number;
   // Full recipe — powers "use this template" in the director.
   // REDACTED by the server unless the creator opted in or you are the creator:
@@ -170,6 +172,9 @@ export type ExploreItem = {
   ownerId?: string | null; // publishing account (my-posts management)
   hidden?: boolean; // owner pulled it from the public feed (visible in /mine)
 };
+/** Which lane of the Explore feed — the shape of the player, really. */
+export type Orientation = 'all' | 'vertical' | 'horizontal';
+
 export type ExploreSort = 'popular' | 'latest';
 export type ExploreComment = { id: string; author: string; text: string; createdLabel?: string };
 

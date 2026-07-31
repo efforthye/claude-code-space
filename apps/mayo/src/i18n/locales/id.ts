@@ -450,4 +450,10 @@ export const id: Dict = {
   'lang.system': 'Sistem',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'explore.lane.shorts': 'Shorts',
+  'explore.lane.cinema': 'Sinema',
+  'creator.filmCount': '{n} film',
+  'creator.empty': 'Belum ada yang dipublikasikan.',
+  'following.title': 'Mengikuti',
+  'following.empty': 'Kamu belum mengikuti siapa pun.',
 };

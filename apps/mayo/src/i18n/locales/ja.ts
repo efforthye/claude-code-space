@@ -486,4 +486,10 @@ export const ja: Dict = {
   'create.format.square.hint': '1:1 — フィード投稿、広告。',
   'create.next': '次へ',
   'create.back': '戻る',
+  'explore.lane.shorts': 'ショート',
+  'explore.lane.cinema': 'シネマ',
+  'creator.filmCount': '{n}本の作品',
+  'creator.empty': 'まだ公開した作品がありません。',
+  'following.title': 'フォロー中',
+  'following.empty': 'まだ誰もフォローしていません。',
 };

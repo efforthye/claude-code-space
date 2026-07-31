@@ -454,4 +454,10 @@ export const th: Dict = {
   'lang.system': 'ตามระบบ',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'explore.lane.shorts': 'ช็อตส์',
+  'explore.lane.cinema': 'ภาพยนตร์',
+  'creator.filmCount': '{n} เรื่อง',
+  'creator.empty': 'ยังไม่ได้เผยแพร่อะไรเลย',
+  'following.title': 'กำลังติดตาม',
+  'following.empty': 'คุณยังไม่ได้ติดตามใคร',
 };

@@ -484,4 +484,10 @@ export const en: Dict = {
   'create.format.square.hint': 'Square 1:1 — feed posts, ads.',
   'create.next': 'Next',
   'create.back': 'Back',
+  'explore.lane.shorts': 'Shorts',
+  'explore.lane.cinema': 'Cinema',
+  'creator.filmCount': '{n} films',
+  'creator.empty': 'Nothing published yet.',
+  'following.title': 'Following',
+  'following.empty': 'You are not following anyone yet.',
 };

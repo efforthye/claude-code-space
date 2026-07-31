@@ -450,4 +450,10 @@ export const zhHant: Dict = {
   'lang.system': '跟隨系統',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'explore.lane.shorts': '短片',
+  'explore.lane.cinema': '影院',
+  'creator.filmCount': '{n} 部作品',
+  'creator.empty': '尚未公開任何作品。',
+  'following.title': '追蹤中',
+  'following.empty': '你還沒有追蹤任何人。',
 };

@@ -453,4 +453,10 @@ export const ru: Dict = {
   'lang.system': 'Системный',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'explore.lane.shorts': 'Шортсы',
+  'explore.lane.cinema': 'Кино',
+  'creator.filmCount': 'Работ: {n}',
+  'creator.empty': 'Пока ничего не опубликовано.',
+  'following.title': 'Подписки',
+  'following.empty': 'Вы пока ни на кого не подписаны.',
 };

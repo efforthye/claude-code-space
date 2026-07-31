@@ -453,4 +453,10 @@ export const hi: Dict = {
   'lang.system': 'सिस्टम',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'explore.lane.shorts': 'शॉर्ट्स',
+  'explore.lane.cinema': 'सिनेमा',
+  'creator.filmCount': '{n} फ़िल्में',
+  'creator.empty': 'अभी तक कुछ भी पब्लिश नहीं किया।',
+  'following.title': 'फ़ॉलोइंग',
+  'following.empty': 'आपने अभी तक किसी को फ़ॉलो नहीं किया।',
 };

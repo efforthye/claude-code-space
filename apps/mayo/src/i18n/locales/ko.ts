@@ -486,4 +486,10 @@ export const ko: Dict = {
   'create.format.square.hint': '1:1 — 피드 게시물, 광고.',
   'create.next': '다음',
   'create.back': '뒤로',
+  'explore.lane.shorts': '숏츠',
+  'explore.lane.cinema': '시네마',
+  'creator.filmCount': '영상 {n}개',
+  'creator.empty': '아직 공개한 영상이 없어요.',
+  'following.title': '팔로잉',
+  'following.empty': '아직 팔로우한 사람이 없어요.',
 };

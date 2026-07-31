@@ -468,4 +468,10 @@ export const zhHans: Dict = {
   'create.format.square.hint': '1:1 — 信息流帖子、广告。',
   'create.next': '下一步',
   'create.back': '返回',
+  'explore.lane.shorts': '短片',
+  'explore.lane.cinema': '影院',
+  'creator.filmCount': '{n} 个作品',
+  'creator.empty': '还没有公开的作品。',
+  'following.title': '关注中',
+  'following.empty': '你还没有关注任何人。',
 };

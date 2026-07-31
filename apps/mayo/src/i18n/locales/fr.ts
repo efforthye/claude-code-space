@@ -453,4 +453,10 @@ export const fr: Dict = {
   'lang.system': 'Système',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'explore.lane.shorts': 'Shorts',
+  'explore.lane.cinema': 'Cinéma',
+  'creator.filmCount': '{n} films',
+  'creator.empty': 'Rien de publié pour le moment.',
+  'following.title': 'Abonnements',
+  'following.empty': 'Vous ne suivez encore personne.',
 };

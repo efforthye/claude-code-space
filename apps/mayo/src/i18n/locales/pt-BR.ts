@@ -449,4 +449,10 @@ export const ptBR: Dict = {
   'lang.system': 'Sistema',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'explore.lane.shorts': 'Shorts',
+  'explore.lane.cinema': 'Cinema',
+  'creator.filmCount': '{n} filmes',
+  'creator.empty': 'Nada publicado ainda.',
+  'following.title': 'Seguindo',
+  'following.empty': 'Você ainda não segue ninguém.',
 };

@@ -450,4 +450,10 @@ export const es: Dict = {
   'lang.system': 'Sistema',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'explore.lane.shorts': 'Shorts',
+  'explore.lane.cinema': 'Cine',
+  'creator.filmCount': '{n} películas',
+  'creator.empty': 'Aún no ha publicado nada.',
+  'following.title': 'Siguiendo',
+  'following.empty': 'Todavía no sigues a nadie.',
 };

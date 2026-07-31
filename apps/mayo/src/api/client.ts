@@ -24,6 +24,7 @@ import type {
   ExploreComment,
   ExploreItem,
   ExploreSort,
+  Orientation,
   Estimate,
   Health,
   Job,
@@ -298,8 +299,35 @@ export const reimageSegment = (jobId: string, index: number) =>
 export const advanceStage = (jobId: string) =>
   req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/advance`, { method: 'POST' });
 
-export const getExplore = (sort: ExploreSort = 'popular') =>
-  reqPublic<ExploreItem[]>(`/v1/explore?sort=${sort}`, `/v1/public/explore?sort=${sort}`);
+/**
+ * The feed for one lane. `orientation` is not a filter the user opted into so
+ * much as a property of the player they are looking at: a vertical pager can
+ * only show vertical films.
+ */
+export const getExplore = (
+  sort: ExploreSort = 'popular',
+  orientation: Orientation = 'all',
+  author = '',
+) => {
+  const q =
+    `sort=${sort}&orientation=${orientation}` +
+    (author ? `&author=${encodeURIComponent(author)}` : '');
+  return reqPublic<ExploreItem[]>(`/v1/explore?${q}`, `/v1/public/explore?${q}`);
+};
+
+// --- Following creators ---
+// Server-side, so the list is the same on every device and survives reinstall.
+export const getFollowing = () => req<string[]>('/v1/explore/following/list');
+export const followAuthor = (author: string) =>
+  req<string[]>(`/v1/explore/following/${encodeURIComponent(author)}`, { method: 'POST' });
+export const unfollowAuthor = (author: string) =>
+  req<string[]>(`/v1/explore/following/${encodeURIComponent(author)}`, { method: 'DELETE' });
+/** Fold follows made while signed out into the account, on first sign-in. */
+export const mergeFollowing = (authors: string[]) =>
+  req<string[]>('/v1/explore/following/merge', {
+    method: 'POST',
+    body: JSON.stringify(authors),
+  });
 export const publishToExplore = (videoId: string, prompt: string, promptPublic = false) =>
   req<ExploreItem>('/v1/explore', {
     method: 'POST',
@@ -312,6 +340,10 @@ export const getPublicReel = (id: string) =>
   req<ExploreItem>(`/v1/public/reels/${encodeURIComponent(id)}`);
 export const publicReelMediaUrl = (id: string) =>
   `${getApiBaseUrl()}/v1/public/media/${encodeURIComponent(id)}`;
+/** Poster frame for a published reel — same credential-free route as the
+ *  video, so grids render for signed-out visitors too. */
+export const publicReelThumbUrl = (id: string) =>
+  `${getApiBaseUrl()}/v1/public/thumb/${encodeURIComponent(id)}`;
 // Dev helper: fill the feed with generated sample reels (server needs ffmpeg).
 export const seedExplore = (clear = false) =>
   req<ExploreItem[]>(`/v1/explore/seed${clear ? '?clear=true' : ''}`, { method: 'POST' });

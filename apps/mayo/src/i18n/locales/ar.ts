@@ -456,4 +456,10 @@ export const ar: Dict = {
   'lang.system': 'حسب النظام',
   'lang.en': 'English',
   'lang.ko': '한국어',
+  'explore.lane.shorts': 'شورتس',
+  'explore.lane.cinema': 'سينما',
+  'creator.filmCount': '{n} فيلمًا',
+  'creator.empty': 'لم يُنشر شيء بعد.',
+  'following.title': 'المتابَعون',
+  'following.empty': 'لا تتابع أحدًا بعد.',
 };

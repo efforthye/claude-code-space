@@ -38,15 +38,28 @@ import { ThemedText } from '@/components/themed-text';
 import { useToast } from '@/components/toast';
 import { Spacing } from '@/constants/theme';
 import { useFavorites } from '@/explore/favorites';
+import { useFollows } from '@/explore/follows';
 import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
 
 export type ReelsMode = 'popular' | 'latest' | 'liked';
 
+/**
+ * Mirrors the server's `_is_vertical` (store.py). Parsed rather than matched
+ * against a list so a ratio we add later lands in the right lane on both sides
+ * without a second edit.
+ */
+export function isVertical(aspect?: string): boolean {
+  const [w, h] = (aspect ?? '16:9').split(':').map(Number);
+  return Number.isFinite(w) && Number.isFinite(h) ? h > w : false;
+}
+
 // react-native-web ignores pagingEnabled — CSS scroll-snap does the paging on
 // web instead (RNW passes these through; native ignores them via Platform).
 const SNAP_CONTAINER =
   Platform.OS === 'web' ? ({ scrollSnapType: 'y mandatory' } as unknown as ViewStyle) : undefined;
+const SNAP_CONTAINER_X =
+  Platform.OS === 'web' ? ({ scrollSnapType: 'x mandatory' } as unknown as ViewStyle) : undefined;
 const SNAP_PAGE =
   Platform.OS === 'web'
     ? ({ scrollSnapAlign: 'start', scrollSnapStop: 'always' } as unknown as ViewStyle)
@@ -54,11 +67,18 @@ const SNAP_PAGE =
 
 export function ReelsFeed({
   mode,
+  orientation = 'vertical',
   startIndex = 0,
   overlay,
   seedable = false,
 }: {
   mode: ReelsMode;
+  /**
+   * Which lane, and therefore which way the pager runs. Vertical is the shorts
+   * feed; horizontal is the cinematic one, where films are wide and swiping
+   * sideways is the gesture that matches the shape on screen.
+   */
+  orientation?: 'vertical' | 'horizontal';
   startIndex?: number;
   /** Rendered above the pager (sort chips, close button…) — position absolutely. */
   overlay?: ReactNode;
@@ -69,15 +89,23 @@ export function ReelsFeed({
   const router = useRouter();
   const { favorites } = useFavorites();
   const sort: ExploreSort = mode === 'latest' ? 'latest' : 'popular';
-  const { data: fetched, refetch } = useQuery(() => getExplore(sort), {
+  const horizontal = orientation === 'horizontal';
+  const { data: fetched, refetch } = useQuery(() => getExplore(sort, orientation), {
     enabled: mode !== 'liked',
-    deps: [sort],
+    deps: [sort, orientation],
   });
-  const items = mode === 'liked' ? favorites : (fetched ?? []);
+  // Saved items are held locally, so the lane split has to be applied here
+  // rather than by the server.
+  const items =
+    mode === 'liked'
+      ? favorites.filter((f) => isVertical(f.aspect) !== horizontal)
+      : (fetched ?? []);
 
   // Measure our own viewport: inside the tab navigator the usable height is
   // smaller than the window (tab bar), and pagingEnabled needs exact pages.
   const [size, setSize] = useState({ w: 0, h: 0 });
+  // The page size along whichever axis is being paged.
+  const page = horizontal ? size.w : size.h;
   const [activeIndex, setActiveIndex] = useState(startIndex);
   const [commentsFor, setCommentsFor] = useState<ExploreItem | null>(null);
   const [seeding, setSeeding] = useState(false);
@@ -98,12 +126,12 @@ export function ReelsFeed({
   // silently snap back one copy, so scrolling down always has a next reel.
   const pages = useMemo(() => (items.length > 1 ? [...items, ...items] : items), [items]);
   useEffect(() => {
-    if (items.length > 1 && size.h > 0 && activeIndex >= items.length) {
+    if (items.length > 1 && page > 0 && activeIndex >= items.length) {
       const target = activeIndex - items.length;
-      listRef.current?.scrollToOffset({ offset: target * size.h, animated: false });
+      listRef.current?.scrollToOffset({ offset: target * page, animated: false });
       setActiveIndex(target);
     }
-  }, [activeIndex, items.length, size.h]);
+  }, [activeIndex, items.length, page]);
 
   const goTo = (delta: number) => {
     const next = Math.max(0, Math.min(pages.length - 1, activeIndex + delta));
@@ -116,23 +144,26 @@ export function ReelsFeed({
     <View
       style={styles.root}
       onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-      {size.h > 0 && items.length > 0 ? (
+      {page > 0 && items.length > 0 ? (
         <FlatList
           ref={listRef}
           data={pages}
           keyExtractor={(it, i) => `${it.id}:${i}`}
           pagingEnabled
-          style={SNAP_CONTAINER}
+          horizontal={horizontal}
+          style={horizontal ? SNAP_CONTAINER_X : SNAP_CONTAINER}
           showsVerticalScrollIndicator={false}
-          snapToInterval={size.h}
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={page}
           snapToAlignment="start"
           decelerationRate="fast"
           initialScrollIndex={items.length > startIndex ? startIndex : 0}
-          getItemLayout={(_, i) => ({ length: size.h, offset: size.h * i, index: i })}
+          getItemLayout={(_, i) => ({ length: page, offset: page * i, index: i })}
           onViewableItemsChanged={onViewRef.current}
           viewabilityConfig={viewConfigRef.current}
           onScroll={(e) => {
-            const idx = Math.round(e.nativeEvent.contentOffset.y / Math.max(1, size.h));
+            const off = horizontal ? e.nativeEvent.contentOffset.x : e.nativeEvent.contentOffset.y;
+            const idx = Math.round(off / Math.max(1, page));
             setActiveIndex((prev) =>
               idx !== prev ? Math.max(0, Math.min(pages.length - 1, idx)) : prev,
             );
@@ -190,13 +221,13 @@ export function ReelsFeed({
             onPress={() => goTo(-1)}
             disabled={activeIndex <= 0}
             style={[styles.webNavBtn, activeIndex <= 0 && styles.webNavBtnOff]}>
-            <Ionicons name="chevron-up" size={22} color="#fff" />
+            <Ionicons name={horizontal ? 'chevron-back' : 'chevron-up'} size={22} color="#fff" />
           </Pressable>
           <Pressable
             onPress={() => goTo(1)}
             disabled={activeIndex >= pages.length - 1}
             style={[styles.webNavBtn, activeIndex >= pages.length - 1 && styles.webNavBtnOff]}>
-            <Ionicons name="chevron-down" size={22} color="#fff" />
+            <Ionicons name={horizontal ? 'chevron-forward' : 'chevron-down'} size={22} color="#fff" />
           </Pressable>
         </View>
       ) : null}
@@ -242,8 +273,13 @@ function Reel({
   onRemix: () => void;
 }) {
   const { t } = useI18n();
+  const router = useRouter();
   const toast = useToast();
   const { has, toggle } = useFavorites();
+  const { isFollowing, toggle: toggleFollow } = useFollows();
+  // Prefer the server's answer when it annotated one; fall back to the local
+  // list so the button is right for signed-out viewers too.
+  const followingAuthor = item.followedByMe || isFollowing(item.author);
   // Published reels stream from the credential-free public endpoint, so the
   // feed plays for signed-out mayo.im visitors too.
   const uri = item.url ? publicReelMediaUrl(item.id) : '';
@@ -356,11 +392,20 @@ function Reel({
       {/* bottom info */}
       <SafeAreaView edges={['bottom']} style={styles.bottom} pointerEvents="box-none">
         <View style={styles.authorRow}>
-          <ThemedText type="smallBold" style={styles.white}>
-            {item.author}
-          </ThemedText>
-          {/* PROD RULE: the follow button is hidden until follows are server-backed
-              (they were device-local only — a fake social feature). */}
+          <Pressable onPress={() => router.push({ pathname: '/creator/[author]', params: { author: item.author } })}>
+            <ThemedText type="smallBold" style={styles.white}>
+              {item.author}
+            </ThemedText>
+          </Pressable>
+          {item.author ? (
+            <Pressable
+              onPress={() => toggleFollow(item.author)}
+              style={[styles.followBtn, followingAuthor && styles.followingBtn]}>
+              <ThemedText type="smallBold" style={styles.followText}>
+                {t(followingAuthor ? 'reels.following' : 'reels.follow')}
+              </ThemedText>
+            </Pressable>
+          ) : null}
         </View>
         <ThemedText type="small" style={styles.white} numberOfLines={2}>
           {item.title}

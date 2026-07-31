@@ -27,6 +27,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useFavorites } from '@/explore/favorites';
+import { useFollows } from '@/explore/follows';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
 import { usePayments } from '@/payments/context';
@@ -41,6 +42,7 @@ export default function MyScreen() {
   const { user, signOut, refreshUser } = useAuth();
   const { entitlement } = usePayments();
   const { favorites } = useFavorites();
+  const { following } = useFollows();
   const { data: storage, refetch: refetchStorage } = useQuery(getStorage);
   // Admin probe: the server 403s for everyone but MAYO_ADMIN_EMAILS accounts —
   // success is what reveals the console entry below.
@@ -244,6 +246,12 @@ export default function MyScreen() {
               ? router.push({ pathname: '/reels', params: { mode: 'liked', index: '0' } })
               : router.push('/(tabs)/explore')
           }
+        />
+        <Row
+          icon="people-outline"
+          label={t('following.title')}
+          value={following.length ? String(following.length) : undefined}
+          onPress={() => router.push('/following')}
         />
         {user ? (
           <Row
