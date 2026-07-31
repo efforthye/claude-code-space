@@ -13,15 +13,16 @@ Search and history for every log on the [[home-server]]. Rationale and the
 sizing constraints: [[0019-centralised-logging-elk]].
 
 **Code location:** `infra/elk/` in this repo (compose + Filebeat config).
-**Running from:** `~/elk-stage/` on the mini — a staging path, pending the first
-commit (see *Known drift* below).
+**Running from:** the mini's checkout at
+`~/programs/work/creiip/claude-code-space/infra/elk/`, so the running stack and
+the committed config are the same files. `.env` sits beside them, gitignored.
 
 ## Shape
 
 | Component | Image | Bind | Memory |
 |---|---|---|---|
-| Elasticsearch | `docker.elastic.co/elasticsearch/elasticsearch:9.4.4` | `127.0.0.1:9200` | 1 GiB limit / 512 MiB heap |
-| Kibana | `docker.elastic.co/kibana/kibana:9.4.4` | `127.0.0.1:5601` | 800 MiB |
+| Elasticsearch | `docker.elastic.co/elasticsearch/elasticsearch:9.4.4` | `127.0.0.1:9200` | 1.5 GiB limit / 512 MiB heap |
+| Kibana | `docker.elastic.co/kibana/kibana:9.4.4` | `127.0.0.1:5601` | 1 GiB limit / 700 MiB Node heap |
 | Filebeat | `docker.elastic.co/beats/filebeat:9.4.4` | — | 300 MiB |
 | `elk-setup` | (elasticsearch image) | — | one-shot, sets the `kibana_system` password then exits 0 |
 
@@ -67,7 +68,7 @@ Uninstall with `--uninstall`.
 ```bash
 ssh m1mini
 export PATH=/usr/local/bin:$PATH        # Docker Desktop's CLI is not on the non-interactive PATH
-cd ~/elk-stage
+cd ~/programs/work/creiip/claude-code-space/infra/elk
 docker compose ps                       # state + health
 docker compose logs -f filebeat         # is it shipping?
 docker compose restart filebeat         # after editing filebeat.yml
@@ -93,17 +94,33 @@ Elasticsearch runs with security enabled. HTTP TLS is **off** because the
 listener never leaves loopback — if that ever changes, turn
 `xpack.security.http.ssl.enabled` back on.
 
+## Retention — 30 days (set 2026-07-31)
+
+The `mayo-logs` ILM policy Filebeat creates by default has **a hot phase and
+nothing else** — it rolls over and keeps every index forever. That was fixed:
+
+| Phase | Setting |
+|---|---|
+| hot | rollover at `max_age: 1d` or `max_primary_shard_size: 10gb` |
+| delete | `min_age: 30d` after rollover |
+
+Rollover is daily rather than weekly so that "30 days" means 30 days. A weekly
+rollover would stretch actual retention to as much as 37, because the delete
+clock starts when an index rolls over, not when a document lands in it. At a few
+MB a day the resulting ~31 small indices cost nothing on a single node.
+
+Inspect or change it: Kibana → Stack Management → Index Lifecycle Policies, or
+
+```bash
+curl -s -u elastic:<pw> localhost:9200/_ilm/policy/mayo-logs
+curl -s -u elastic:<pw> 'localhost:9200/.ds-filebeat-*/_ilm/explain'
+```
+
 ## Known drift / follow-ups
 
-- **Running from `~/elk-stage/`, not the repo checkout.** The mini auto-pulls
-  this repo every 15s ([[mayo-dev-autosync]]); dropping untracked files into the
-  checkout would make `git pull` fail. Move to
-  `~/programs/work/creiip/claude-code-space/infra/elk/` once the first commit
-  lands, then `docker compose up -d` from there.
-- **ILM is declared but not configured.** Set rollover and delete ages for the
-  `mayo-logs` policy in Kibana → Stack Management → Index Lifecycle Policies.
-  Until then Elasticsearch grows without bound (~751 GB free today).
-- **No alerting.** Kibana can alert on error-rate spikes; not wired up.
+- **No alerting.** Kibana can alert on error-rate spikes; not wired up. Host and
+  container health is covered by the Telegram watchdog (see [[home-server]]),
+  but nothing watches log *content* — e.g. a burst of tracebacks in mayo-api.
 - **Phase B** — container stdout, as above.
 
 ## Related

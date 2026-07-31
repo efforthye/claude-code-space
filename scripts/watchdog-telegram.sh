@@ -21,7 +21,7 @@ set -uo pipefail
 
 ENV_FILE="${WATCHDOG_ENV:-$HOME/.mayo-watchdog.env}"
 STATE_DIR="${WATCHDOG_STATE:-$HOME/.mayo-watchdog-state}"
-ELK_DIR="${ELK_DIR:-$HOME/elk-stage}"
+ELK_DIR="${ELK_DIR:-$HOME/programs/work/creiip/claude-code-space/infra/elk}"
 REPEAT_HOURS="${REPEAT_HOURS:-6}"
 
 # --- thresholds ------------------------------------------------------------
