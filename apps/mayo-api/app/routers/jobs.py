@@ -59,9 +59,9 @@ async def estimate(
         # The pay-as-you-go number is the banded one, so a long film is not
         # quoted at the short-clip rate.
         usd=catalog.payg_usd_for_seconds(req.seconds),
-        scenes=catalog.scenes_for(req.seconds),
+        scenes=catalog.billable_scenes(req.seconds),
         etaSeconds=catalog.eta_seconds(
-            catalog.scenes_for(req.seconds), req.videoModel or None
+            catalog.billable_scenes(req.seconds), req.videoModel or None
         ),
     )
 

@@ -134,7 +134,7 @@ def payg_usd(scenes: int) -> float:
 
 
 def payg_usd_for_seconds(seconds: int) -> float:
-    return payg_usd(scenes_for(seconds))
+    return payg_usd(billable_scenes(seconds))
 
 
 # Subscription credits are the commitment discount: 25% off the top
@@ -211,8 +211,23 @@ def credits_per_scene(tier: Tier | None) -> int:
 
 
 def scenes_for(seconds: int) -> int:
-    """Narrative scene count — ~1 scene per 10s, at least 1 (used by the planner)."""
+    """Narrative scene count — ~1 scene per 10s, at least 1 (used by the planner).
+
+    This is how many DISTINCT SHOTS the director writes, which is not how many
+    clips get rendered: the renderer cycles the scenes to fill the duration.
+    Use billable_scenes() for anything that costs money or takes time.
+    """
     return max(1, round(seconds / 10))
+
+
+def billable_scenes(seconds: int) -> int:
+    """How many clips this film really renders — the unit of both cost and time.
+
+    Estimates read the narrative count until 2026-08-01, so a ten-second short
+    on Higgsfield quoted one scene while the renderer made two five-second
+    clips: the price was half the cost of making it, and the ETA half the wait.
+    """
+    return clips_for_duration(seconds)
 
 
 def clip_seconds() -> float:

@@ -66,9 +66,10 @@ def test_estimate_returns_money_and_scene_count():
     r = client.post("/v1/jobs/estimate", json={"prompt": "x", "seconds": 60, "tier": "premium"})
     assert r.status_code == 200, r.text
     body = r.json()
-    assert body["scenes"] == 6
-    # Pay-as-you-go: the first minute sits entirely in the top band.
-    assert body["usd"] == catalog.payg_usd(6)
+    # Billed per rendered clip, not per narrative scene — the two differ on
+    # every backend whose clip length is not ten seconds.
+    assert body["scenes"] == catalog.billable_scenes(60)
+    assert body["usd"] == catalog.payg_usd(body["scenes"])
     assert body["usd"] > 0
 
 
@@ -95,8 +96,8 @@ def test_a_price_can_be_seen_without_signing_in():
     r = client.post("/v1/public/estimate", json={"prompt": "", "seconds": 60, "tier": "standard"})
     assert r.status_code == 200, r.text
     body = r.json()
-    assert body["usd"] == catalog.payg_usd(6)
-    assert body["scenes"] == 6
+    assert body["scenes"] == catalog.billable_scenes(60)
+    assert body["usd"] == catalog.payg_usd(body["scenes"])
     assert body["etaSeconds"] > 0
 
 

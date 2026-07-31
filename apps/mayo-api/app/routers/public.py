@@ -42,7 +42,7 @@ async def public_estimate(req: CreateJobRequest) -> Estimate:
     if tier is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown tier '{req.tier}'")
     credits = catalog.estimate_credits(req.seconds, tier)
-    scenes = catalog.scenes_for(req.seconds)
+    scenes = catalog.billable_scenes(req.seconds)
     return Estimate(
         seconds=req.seconds,
         tier=req.tier,
