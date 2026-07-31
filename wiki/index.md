@@ -78,6 +78,8 @@ Updated whenever pages are added/renamed or a service's status changes.
 _(none yet — postmortems)_
 
 ## Concepts
+- [[ai-video-prompting]] — Higgsfield/Seedance/Kling 실전 프롬프트 규칙 (MCSLA, 샷 구조,
+  캐릭터 일관성) — mayo 감독 프롬프트에 반영할 기준.
 - [[expo-go-vs-dev-build]] — Expo Go (generic container, SDK-locked) vs a development build
   (your own compiled app); why mayo will need a dev build.
 - [[mayo-web-target]] — running the same Expo app on the **web** (react-native-web, `web.output:

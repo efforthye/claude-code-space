@@ -224,3 +224,5 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   Unset -> app.json passes through untouched (EAS/paid builds unaffected).
 
 ## [2026-07-22] decision | payments postponed — Higgsfield first, then margin analysis (ADR 0017 note)
+
+## [2026-07-22] ingest | Higgsfield video-making guides -> wiki/concepts/ai-video-prompting.md
