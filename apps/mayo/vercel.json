@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx expo export -p web",
+  "buildCommand": "npx expo export -p web && node scripts/seo-inject.mjs",
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,
@@ -11,11 +11,25 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|kakaotalk-scrap|Discordbot|WhatsApp|LinkedInBot|TelegramBot|Pinterestbot|SkypeUriPreview|redditbot|Applebot|Googlebot|bingbot|Yeti|Daum).*"
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|kakaotalk-scrap|Discordbot|WhatsApp|LinkedInBot|TelegramBot|Pinterestbot|SkypeUriPreview|redditbot|Applebot|Applebot-Extended|Googlebot|Google-Extended|bingbot|Yeti|Daum|Naver|GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-User|Claude-SearchBot|anthropic-ai|PerplexityBot|Perplexity-User|Amazonbot|meta-externalagent|Bytespider|CCBot|cohere-ai|DuckAssistBot|DuckDuckBot|MistralAI-User|YandexBot|Baiduspider).*"
         }
       ],
       "destination": "https://mayo-api.efforthye.dev/v1/public/reel-og/:id"
     },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(robots.txt|llms.txt|sitemap.xml)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    }
   ]
 }

@@ -45,7 +45,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "build:web": "expo export -p web"
+    "build:web": "expo export -p web && node scripts/seo-inject.mjs"
   },
   "private": true
 }

@@ -1,0 +1,83 @@
+# mayo — https://www.mayo.im
+#
+# AI crawlers are welcome. They are listed explicitly rather than left to the
+# wildcard because several of them (Google-Extended, Applebot-Extended) treat
+# the ABSENCE of a rule as a reason to exclude the site from AI surfaces.
+# Silence is not consent to them; a named Allow is.
+
+User-agent: *
+Allow: /
+
+# --- AI search and answer engines -----------------------------------------
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: MistralAI-User
+Allow: /
+
+# --- Authenticated / per-user surfaces ------------------------------------
+# Nothing here is useful to a crawler and some of it needs a session anyway.
+User-agent: *
+Disallow: /admin
+Disallow: /settings
+Disallow: /notifications
+Disallow: /my-posts
+Disallow: /login
+Disallow: /publish
+Disallow: /edit
+Disallow: /extend
+Disallow: /jobs/
+Disallow: /library/
+
+Sitemap: https://www.mayo.im/sitemap.xml

@@ -221,7 +221,17 @@ No ticket → make one first; a commit without `Refs:` is not acceptable.
   runbook + index + log); update them all in one pass.
 - **Compound, don't discard.** Turn diagnoses and one-off fixes into runbooks and incident
   records.
-- **It's a git repo.** Commit meaningful batches with clear messages.
+- **It's a git repo.** Commit meaningful batches with clear messages. Split them by
+  task and commit as each lands — not one pile at the end of a session.
+- **Research before building anything that matters.** For a non-trivial feature or an
+  architectural choice, look up the **papers** and the **practitioner write-ups**
+  (engineering blogs from teams who shipped it) before writing code, and cite what you
+  used in the ADR or the wiki page. Not a hard gate on every small change — but for
+  anything load-bearing, "I already know how this works" is how outdated defaults get
+  baked in. Distil findings into `wiki/concepts/` so the next task inherits them.
+- **Owner action items become Jira issues immediately.** The moment work surfaces
+  something only the owner can do (an account, a key, a payment, a console setting),
+  file the issue right then — don't leave it in chat where it evaporates.
 
 ## Optional tooling (add when the wiki outgrows the index)
 Local markdown search (e.g. `qmd`) once the index stops scaling; Obsidian on the side for graph
