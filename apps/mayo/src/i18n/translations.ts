@@ -13,6 +13,7 @@
 
 import { en } from './locales/en';
 import { es } from './locales/es';
+import { fr } from './locales/fr';
 import { ja } from './locales/ja';
 import { ko } from './locales/ko';
 import { ptBR } from './locales/pt-BR';
@@ -36,6 +37,7 @@ export const TRANSLATIONS: Partial<Record<ActiveLang, Dict>> = {
   'zh-Hant': zhHant,
   es,
   'pt-BR': ptBR,
+  fr,
 };
 
 /**
