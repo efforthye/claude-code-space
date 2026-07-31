@@ -18,7 +18,10 @@ locals {
 }
 
 resource "cloudflare_dns_record" "tunnel" {
-  for_each = local.tunnel_hosts
+  # Skipped entirely until the zone id is supplied, so the Docker half of this
+  # config can be planned and imported today without waiting on a Cloudflare
+  # API token. Set cloudflare_zone_id in terraform.tfvars to switch them on.
+  for_each = var.cloudflare_zone_id == "" ? {} : local.tunnel_hosts
 
   zone_id = var.cloudflare_zone_id
   name    = each.key

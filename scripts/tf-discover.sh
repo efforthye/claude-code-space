@@ -58,10 +58,10 @@ imageId: {{.Image}}
 restart: {{.HostConfig.RestartPolicy.Name}}
 network: {{.HostConfig.NetworkMode}}
 ports:   {{range $p, $b := .HostConfig.PortBindings}}{{range $b}}{{.HostPort}}->{{$p}} {{end}}{{end}}
-mounts:  {{range .Mounts}}[{{.Type}} {{if .Name}}{{.Name}}{{else}}{{.Source}}{{end}} -> {{.Destination}}{{if .RW}} rw{{else}} ro{{end}}] {{end}}
+mounts:  {{json .Mounts}}
 envKeys: {{range .Config.Env}}{{index (split . "=") 0}} {{end}}
-cmd:     {{if .Config.Cmd}}{{join .Config.Cmd " "}}{{end}}
-entry:   {{if .Config.Entrypoint}}{{join .Config.Entrypoint " "}}{{end}}'
+cmd:     {{json .Config.Cmd}}
+entry:   {{json .Config.Entrypoint}}'
     echo '```'
   } >> "$OUT_MD"
 
