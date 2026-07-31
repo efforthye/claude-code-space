@@ -18,6 +18,18 @@ secrets/
 credentials*.json
 *token*.txt
 
+# Terraform — state stores provider values (incl. container env) in PLAINTEXT.
+# Never commit state, tfvars, or the generated import IDs.
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+infra/terraform/onprem/imports.generated.tf
+
 # OS / editor noise
 .DS_Store
 Thumbs.db

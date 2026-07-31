@@ -1,0 +1,18 @@
+# Copy to terraform.tfvars on the mini and fill in. terraform.tfvars is
+# GITIGNORED — never commit the real file.
+#
+# The API token is NOT listed here on purpose: export it instead, so it never
+# touches disk in this directory.
+#
+#   export CLOUDFLARE_API_TOKEN=<token with Zone:DNS:Edit on efforthye.dev>
+#
+# Get the remaining values on the mini:
+#   ./scripts/tf-discover.sh          # prints all of them
+#   cloudflared tunnel list           # tunnel UUIDs
+
+cloudflare_zone_id = "<efforthye.dev zone id>"
+richclub_tunnel_id = "<uuid of the richclub tunnel>"
+mayo_api_tunnel_id = "<uuid of the mayo-api tunnel>"
+
+# Default is the local socket, because Terraform runs on the mini itself.
+# docker_host = "unix:///var/run/docker.sock"
