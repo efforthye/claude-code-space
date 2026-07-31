@@ -12,6 +12,7 @@ from ..auth import store as users
 
 from ..schemas import CommentRequest, ExploreComment, ExploreItem, PublishExploreRequest
 from ..store import explore as explore_store
+from ..store import follows as follow_store
 from ..store import library as lib
 
 router = APIRouter(prefix="/v1/explore", tags=["explore"])
@@ -20,12 +21,14 @@ router = APIRouter(prefix="/v1/explore", tags=["explore"])
 @router.get("", response_model=list[ExploreItem])
 async def list_explore(
     sort: str = Query("popular", pattern="^(popular|latest)$"),
+    orientation: str = Query("all", pattern="^(all|vertical|horizontal)$"),
     x_mayo_session: Optional[str] = Header(default=None),
 ) -> list[ExploreItem]:
-    items = await explore_store.list(sort)
+    items = await explore_store.list(sort, orientation)
     user = users.user_for_session(x_mayo_session or "")
     uid = user["id"] if user else None
     annotated = explore_store.annotate_liked(items, uid)
+    annotated = await _annotate_followed(annotated, uid)
     # Admins review moderation queues and need to see what they are judging.
     from ..auth import is_admin_user
 
@@ -285,3 +288,56 @@ async def add_comment(
     if comment is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="not found")
     return comment
+
+
+# --- Following creators ------------------------------------------------------
+#
+# Server-side (see store.FollowStore) so the list survives a reinstall and is
+# the same on every device the account signs in on.
+
+
+async def _annotate_followed(items: list[ExploreItem], user_id: str | None) -> list[ExploreItem]:
+    """Stamp followedByMe for the calling account (no-op for anonymous)."""
+    if not user_id:
+        return items
+    following = set(await follow_store.following(user_id))
+    if not following:
+        return items
+    return [i.model_copy(update={"followedByMe": i.author in following}) for i in items]
+
+
+@router.get("/following/list", response_model=list[str])
+async def list_following(x_mayo_session: Optional[str] = Header(default=None)) -> list[str]:
+    user = _require_user(x_mayo_session)
+    return await follow_store.following(user["id"])
+
+
+@router.post("/following/{author}", response_model=list[str])
+async def follow_author(
+    author: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> list[str]:
+    user = _require_user(x_mayo_session)
+    if author == _author(x_mayo_session):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="cannot follow yourself")
+    return await follow_store.set(user["id"], author, True)
+
+
+@router.delete("/following/{author}", response_model=list[str])
+async def unfollow_author(
+    author: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> list[str]:
+    user = _require_user(x_mayo_session)
+    return await follow_store.set(user["id"], author, False)
+
+
+@router.post("/following/merge", response_model=list[str])
+async def merge_following(
+    authors: list[str], x_mayo_session: Optional[str] = Header(default=None)
+) -> list[str]:
+    """Fold follows made while signed out into the account, on first sign-in.
+
+    Without this, following someone before signing in silently costs you that
+    follow the moment you have an account to keep it in.
+    """
+    user = _require_user(x_mayo_session)
+    return await follow_store.merge(user["id"], authors)

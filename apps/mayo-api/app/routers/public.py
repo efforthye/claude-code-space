@@ -54,12 +54,15 @@ async def public_estimate(req: CreateJobRequest) -> Estimate:
 
 
 @router.get("/explore", response_model=list[ExploreItem])
-async def public_explore(sort: str = Query("popular", pattern="^(popular|latest)$")) -> list[ExploreItem]:
+async def public_explore(
+    sort: str = Query("popular", pattern="^(popular|latest)$"),
+    orientation: str = Query("all", pattern="^(all|vertical|horizontal)$"),
+) -> list[ExploreItem]:
     # No session here by definition, so nobody is the creator: recipes are
     # redacted unless their creator published them openly.
     from .explore import redact_recipe
 
-    return [redact_recipe(i, None) for i in await explore_store.list(sort)]
+    return [redact_recipe(i, None) for i in await explore_store.list(sort, orientation)]
 
 
 @router.get("/explore/{item_id}/comments", response_model=list[ExploreComment])

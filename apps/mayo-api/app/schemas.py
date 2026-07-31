@@ -229,6 +229,11 @@ class Video(BaseModel):
     prompt: Optional[str] = None
     scenePrompts: Optional[list[str]] = None
     stylePrompt: Optional[str] = None  # consistency block used at render time
+    # Shape the film was rendered at. Carried onto the Explore item so the feed
+    # can be split into a vertical and a horizontal lane — a 9:16 short in a
+    # landscape player is letterboxed on both sides and unwatchable, and the
+    # reverse is worse.
+    aspect: str = "16:9"
     # Account that owns this video (None = legacy/anonymous, visible to all).
     ownerId: Optional[str] = None
 
@@ -285,8 +290,13 @@ class ExploreItem(BaseModel):
     views: int = 0  # reel impressions (app pings /view when a reel becomes active)
     shares: int = 0  # external shares (share-sheet completions) — deepest signal
     watches: int = 0  # completed watches (played to the end) — completion-rate signal
+    # Shape this was rendered at — decides which feed lane it belongs to.
+    aspect: str = "16:9"
     # Whether the CALLING account liked this — annotated per request, never stored.
     likedByMe: bool = False
+    # Whether the CALLING account follows its creator. Annotated per request for
+    # the same reason as likedByMe: it is a fact about the viewer, not the item.
+    followedByMe: bool = False
     createdAt: float = 0.0  # unix seconds; drives the ranking's time decay
     # Full recipe so anyone can REUSE this creation as a template in the director.
     #

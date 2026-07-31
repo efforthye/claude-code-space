@@ -259,6 +259,7 @@ class LibraryStore:
         video = Video(
             id=_new_id("v"),
             title=job.title,
+            aspect=job.aspect,
             durationLabel=_fmt_clock(label_seconds),
             sizeLabel=size_label,
             expiresInDays=14,
@@ -437,6 +438,19 @@ def _fmt_size(nbytes: int) -> str:
     return f"{mb:.1f} MB"
 
 
+def _is_vertical(aspect: str) -> bool:
+    """True for shapes taller than they are wide (9:16, 4:5).
+
+    Parsed rather than matched against a list so an aspect we start offering
+    later lands in the right lane without another edit here.
+    """
+    try:
+        w, h = (float(x) for x in aspect.split(":", 1))
+        return h > w
+    except (ValueError, AttributeError):
+        return False
+
+
 class ExploreStore:
     """Public feed of REAL user-published creations — no dummy seed. Empty until
     someone publishes a video to it."""
@@ -499,10 +513,23 @@ class ExploreStore:
         except Exception:
             pass
 
-    async def list(self, sort: str = "popular") -> list[ExploreItem]:
-        """The PUBLIC feed — owner-hidden items never appear here."""
+    async def list(
+        self, sort: str = "popular", orientation: str = "all"
+    ) -> list[ExploreItem]:
+        """The PUBLIC feed — owner-hidden items never appear here.
+
+        `orientation` splits the feed into the two ways a film can actually be
+        watched. Mixing them in one pager does not work: a 9:16 short shown in a
+        landscape player is a thin strip between two black walls, and a 16:9
+        film in a vertical pager is a letterboxed sliver. Square and other
+        shapes count as horizontal, since a landscape player wastes less of
+        them than a portrait one does.
+        """
         async with self._lock:
             items = [e.model_copy() for e in self._items.values() if not e.hidden]
+        if orientation != "all":
+            want_vertical = orientation == "vertical"
+            items = [e for e in items if _is_vertical(e.aspect) == want_vertical]
         if sort == "latest":
             items.reverse()  # dict preserves insertion order; newest last
         else:
@@ -640,6 +667,7 @@ class ExploreStore:
             url=video.url,
             createdLabel="just now",
             createdAt=time.time(),
+            aspect=video.aspect,
             # Publish the recipe too — anyone can reuse this as a template.
             scenePrompts=video.scenePrompts,
             stylePrompt=video.stylePrompt,
@@ -709,6 +737,78 @@ class ExploreStore:
             return comment.model_copy()
 
 
+
+class FollowStore:
+    """Who each account follows, by creator handle.
+
+    Server-side rather than on the device, for two reasons. A device-local list
+    vanishes on reinstall and never reaches a second device, so "the people I
+    follow" would quietly mean "the people I followed on this phone". And the
+    personalised feed (MAYO-34) has to rank against follows, which it cannot do
+    from storage it never sees.
+
+    Signed-out visitors keep the on-device list in the app; it merges up on the
+    first sign-in rather than being thrown away.
+    """
+
+    def __init__(self) -> None:
+        from . import db
+
+        self._by_user: dict[str, list[str]] = {}
+        for raw in db.load("follows"):
+            uid = raw.get("userId")
+            if uid:
+                self._by_user[uid] = list(raw.get("authors") or [])
+        self._lock = asyncio.Lock()
+
+    def _persist(self) -> None:
+        """Write-through to SQLite; call while holding self._lock."""
+        from . import db
+
+        try:
+            db.replace_kind(
+                "follows",
+                [(uid, {"userId": uid, "authors": a}) for uid, a in self._by_user.items()],
+            )
+        except Exception:
+            pass  # best-effort; the in-memory set still applies this run
+
+    async def following(self, user_id: str) -> list[str]:
+        async with self._lock:
+            return list(self._by_user.get(user_id) or [])
+
+    async def is_following(self, user_id: str, author: str) -> bool:
+        async with self._lock:
+            return author in (self._by_user.get(user_id) or [])
+
+    async def set(self, user_id: str, author: str, follow: bool) -> list[str]:
+        """Follow or unfollow, idempotently. Returns the new list, newest first."""
+        author = (author or "").strip()
+        if not author:
+            return await self.following(user_id)
+        async with self._lock:
+            current = list(self._by_user.get(user_id) or [])
+            if follow and author not in current:
+                current.insert(0, author)
+            elif not follow:
+                current = [a for a in current if a != author]
+            self._by_user[user_id] = current
+            self._persist()
+            return list(current)
+
+    async def merge(self, user_id: str, authors: list[str]) -> list[str]:
+        """Fold a device's signed-out follows into the account's list."""
+        async with self._lock:
+            current = list(self._by_user.get(user_id) or [])
+            for a in reversed([x.strip() for x in authors if x and x.strip()]):
+                if a not in current:
+                    current.insert(0, a)
+            self._by_user[user_id] = current
+            self._persist()
+            return list(current)
+
+
 jobs = JobStore()
 library = LibraryStore()
 explore = ExploreStore()
+follows = FollowStore()
