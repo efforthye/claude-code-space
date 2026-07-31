@@ -245,7 +245,12 @@ _DIRECTOR_SYSTEM = (
     "prompt as Camera (shot type + camera move) -> Subject (the character descriptor) "
     "-> Look (style/palette/mood) -> Action (what happens). Keep identity fixed and "
     "vary ONLY the motion/action between scenes. Give the film an escalation arc "
-    "(calm -> tension -> turn -> aftermath)."
+    "(calm -> tension -> turn -> aftermath). "
+    "DETAIL: every scene prompt is 3-5 sentences that walk the shot second by "
+    "second — the camera's path, the subject's micro-actions in order, environment "
+    "dynamics (particles, weather, light shifts), and the exact composition of the "
+    "FINAL frame (the next clip is generated FROM that frame, so describe how the "
+    "shot ends). One-line prompts produce flat, generic clips."
 )
 
 
@@ -276,7 +281,12 @@ _DIRECTOR_CHAT_SYSTEM = (
     "dolly-in', 'FPV drone through alley') -> Subject (the exact character descriptor) -> Look "
     "(style/palette/mood) -> Action (the motion of this scene). Identity stays fixed; only the "
     "motion varies between scenes. Shape the scene list with an escalation arc "
-    "(calm -> tension -> turn -> aftermath)."
+    "(calm -> tension -> turn -> aftermath).\n"
+    "DETAIL: each scene prompt is 3-5 sentences that walk the shot second by second — the "
+    "camera's path, the subject's micro-actions in order, environment dynamics (particles, "
+    "weather, light shifts), and the exact composition of the FINAL frame (the next clip is "
+    "generated FROM that ending frame, so say how the shot ends). One-line prompts produce "
+    "flat, generic clips."
 )
 
 
@@ -294,8 +304,12 @@ _TURN_JSON_SHAPE = (
     '{"title": string, "logline": string, "style": string, "characters": [string], "scenes": '
     '[{"index": integer, "heading": string, "prompt": string, "motion": string, '
     '"seconds": integer}]}}. Put a short chat message in "reply". If the user has '
-    'described any concept, fill "screenplay" with a CONCISE draft — at most 2-4 '
-    'short scenes, one sentence per scene prompt — and refine it each turn. If they '
+    'described any concept, fill "screenplay" with a draft of at most 2-4 scenes '
+    'and refine it each turn. Each scene "prompt" must be DETAILED (3-5 sentences): '
+    'walk through the shot second by second — camera move, the subject\'s micro-'
+    'actions as they unfold, environment dynamics (weather, particles, crowd, '
+    'light shifts), palette/mood, and END with what the FINAL FRAME looks like '
+    '(the next clip starts from that exact frame). If they '
     'have only greeted you or said nothing concrete, set "screenplay" to null and '
     'briefly ask what they want to make. Set "ready" true only when the user approves.'
 )
