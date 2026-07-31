@@ -1,0 +1,119 @@
+# Filebeat — ships the mini's launchd agent logs into Elasticsearch.
+#
+# Phase A (this file): the host log files written by the launchd agents.
+# Phase B (not yet): stdout of the Docker containers (richclub, jenkins). That
+# needs the app containers to write to a shared bind-mounted directory first —
+# on Docker Desktop for Mac, /var/lib/docker/containers lives inside the VM and
+# is NOT reachable from a bind mount. See README.md.
+
+filebeat.inputs:
+  - type: filestream
+    id: mayo-api
+    enabled: true
+    paths:
+      - /hostlogs/mayo-api.log
+    fields:
+      service.name: mayo-api
+      component: backend
+    fields_under_root: true
+    # Identify files by inode, not by content fingerprint. The fingerprint
+    # scanner refuses to read anything under 1024 bytes ("ingestion from some
+    # files will be delayed"), which silently drops small logs like
+    # mayo-autopull.log and every freshly rotated file. Verified 2026-07-31.
+    prospector.scanner.fingerprint.enabled: false
+    file_identity.native: ~
+    parsers:
+      # uvicorn tracebacks span many lines; a continuation line is indented.
+      - multiline:
+          type: pattern
+          pattern: '^[[:space:]]'
+          negate: false
+          match: after
+
+  - type: filestream
+    id: mayo-expo
+    enabled: true
+    paths:
+      - /hostlogs/mayo-expo.log
+    fields:
+      service.name: mayo-expo
+      component: dev-server
+    fields_under_root: true
+    # Identify files by inode, not by content fingerprint. The fingerprint
+    # scanner refuses to read anything under 1024 bytes ("ingestion from some
+    # files will be delayed"), which silently drops small logs like
+    # mayo-autopull.log and every freshly rotated file. Verified 2026-07-31.
+    prospector.scanner.fingerprint.enabled: false
+    file_identity.native: ~
+
+  - type: filestream
+    id: mayo-autopull
+    enabled: true
+    paths:
+      - /hostlogs/mayo-autopull.log
+    fields:
+      service.name: mayo-autopull
+      component: deploy
+    fields_under_root: true
+    # Identify files by inode, not by content fingerprint. The fingerprint
+    # scanner refuses to read anything under 1024 bytes ("ingestion from some
+    # files will be delayed"), which silently drops small logs like
+    # mayo-autopull.log and every freshly rotated file. Verified 2026-07-31.
+    prospector.scanner.fingerprint.enabled: false
+    file_identity.native: ~
+
+  - type: filestream
+    id: mayo-comfy
+    enabled: true
+    paths:
+      - /hostlogs/mayo-comfy.log
+    fields:
+      service.name: mayo-comfy
+      component: generation
+    fields_under_root: true
+    prospector.scanner.fingerprint.enabled: false
+    file_identity.native: ~
+    parsers:
+      - multiline:
+          type: pattern
+          pattern: '^[[:space:]]'
+          negate: false
+          match: after
+
+  - type: filestream
+    id: mayo-tunnel
+    enabled: true
+    paths:
+      - /hostlogs/mayo-tunnel.log
+    fields:
+      service.name: mayo-tunnel
+      component: network
+    fields_under_root: true
+    # Identify files by inode, not by content fingerprint. The fingerprint
+    # scanner refuses to read anything under 1024 bytes ("ingestion from some
+    # files will be delayed"), which silently drops small logs like
+    # mayo-autopull.log and every freshly rotated file. Verified 2026-07-31.
+    prospector.scanner.fingerprint.enabled: false
+    file_identity.native: ~
+
+processors:
+  - add_host_metadata: ~
+  - add_fields:
+      target: ""
+      fields:
+        host_role: home-server
+
+# Index lifecycle: the mini has ~770 GB free but Elasticsearch will happily eat
+# it. Roll over daily and delete after 30 days — adjust in Kibana if needed.
+setup.ilm.enabled: true
+setup.ilm.policy_name: mayo-logs
+
+setup.kibana:
+  host: "http://kibana:5601"
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  username: "elastic"
+  password: "${ELASTIC_PASSWORD}"
+
+logging.level: info

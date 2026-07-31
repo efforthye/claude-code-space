@@ -1,0 +1,123 @@
+# ELK on the home-server mini — Elasticsearch + Kibana + Filebeat.
+#
+# NO LOGSTASH, on purpose. Logstash is a ~1 GB JVM whose job here (parse a few
+# log files) is done by Filebeat + Elasticsearch ingest pipelines for ~50 MB.
+# The mini's Docker VM is small and already runs Jenkins; see README.md.
+#
+# Everything binds to 127.0.0.1 only. Nothing in this stack is exposed to the
+# LAN or the internet — reach Kibana over an SSH tunnel (see README.md).
+
+name: mayo-elk
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment:
+      - node.name=es01
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - xpack.security.enabled=true
+      # HTTP TLS off because the port is bound to loopback only and never
+      # leaves the host. If this is ever exposed beyond 127.0.0.1, turn TLS on.
+      - xpack.security.http.ssl.enabled=false
+      - xpack.license.self_generated.type=basic
+      # Heap must be set explicitly — the default sizes itself off the VM's RAM
+      # and will happily starve Jenkins and ComfyUI. Defaults in .env.example are
+      # sized for the mini's 5.77 GiB Docker VM, not for a dedicated log server.
+      - ES_JAVA_OPTS=-Xms${ES_HEAP} -Xmx${ES_HEAP}
+    mem_limit: ${ES_MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "127.0.0.1:9200:9200"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  # One-shot: Elasticsearch generates a random kibana_system password on first
+  # boot, so Kibana can't log in until we set it to a known value.
+  setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    container_name: elk-setup
+    user: "0"
+    restart: "no"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        echo "setting the kibana_system password…"
+        curl -sf -X POST -u "elastic:${ELASTIC_PASSWORD}" \
+          -H "Content-Type: application/json" \
+          "http://elasticsearch:9200/_security/user/kibana_system/_password" \
+          -d "{\"password\":\"${KIBANA_PASSWORD}\"}"
+        echo "done."
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    container_name: kibana
+    restart: unless-stopped
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - SERVER_PUBLICBASEURL=http://localhost:5601
+      # Cap the Node heap below the cgroup limit. Without this Kibana grows
+      # until the kernel kills it — observed sitting at 781 MiB of a 800 MiB
+      # limit on the mini, 2026-07-31.
+      - NODE_OPTIONS=--max-old-space-size=${KIBANA_NODE_HEAP}
+    mem_limit: ${KIBANA_MEM_LIMIT}
+    ports:
+      - "127.0.0.1:5601:5601"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf http://localhost:5601/api/status | grep -q '\"level\":\"available\"'",
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 30
+      start_period: 90s
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+    container_name: filebeat
+    restart: unless-stopped
+    user: root
+    command: ["filebeat", "-e", "--strict.perms=false"]
+    depends_on:
+      kibana:
+        condition: service_healthy
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    mem_limit: 300m
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      # The launchd agents write here: mayo-api.log, mayo-expo.log,
+      # mayo-autopull.log, mayo-tunnel.log. Read-only.
+      - ${HOST_LOG_DIR}:/hostlogs:ro
+      - filebeatdata:/usr/share/filebeat/data
+
+volumes:
+  esdata:
+  filebeatdata:
