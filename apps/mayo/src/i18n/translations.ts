@@ -12,6 +12,7 @@
 // Nothing else changes — the picker, device detection and fallback are generic.
 
 import { en } from './locales/en';
+import { es } from './locales/es';
 import { ja } from './locales/ja';
 import { ko } from './locales/ko';
 import { zhHans } from './locales/zh-Hans';
@@ -32,6 +33,7 @@ export const TRANSLATIONS: Partial<Record<ActiveLang, Dict>> = {
   ja,
   'zh-Hans': zhHans,
   'zh-Hant': zhHant,
+  es,
 };
 
 /**
