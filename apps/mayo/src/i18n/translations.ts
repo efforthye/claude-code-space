@@ -11,6 +11,7 @@
 //   3. register it in DICTS below
 // Nothing else changes — the picker, device detection and fallback are generic.
 
+import { ar } from './locales/ar';
 import { de } from './locales/de';
 import { en } from './locales/en';
 import { es } from './locales/es';
@@ -50,6 +51,8 @@ export const TRANSLATIONS: Partial<Record<ActiveLang, Dict>> = {
   th,
   hi,
   ru,
+  // Strings only — the layout is not mirrored yet. See locales/ar.ts.
+  ar,
 };
 
 /**
