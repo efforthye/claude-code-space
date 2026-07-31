@@ -21,6 +21,7 @@ import { ko } from './locales/ko';
 import { ptBR } from './locales/pt-BR';
 import { zhHans } from './locales/zh-Hans';
 import { zhHant } from './locales/zh-Hant';
+import { th } from './locales/th';
 import { vi } from './locales/vi';
 import type { ActiveLang, Dict, Lang } from './types';
 
@@ -44,6 +45,7 @@ export const TRANSLATIONS: Partial<Record<ActiveLang, Dict>> = {
   de,
   id,
   vi,
+  th,
 };
 
 /**
