@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -64,6 +64,14 @@ export default function ReviewScreen() {
   const [selected, setSelected] = useState(0);
   const [instruction, setInstruction] = useState('');
   const [busy, setBusy] = useState(false);
+  // Rotating tips for the busy overlay — long waits with a frozen "loading"
+  // read as hangs; a moving message reads as work (owner request).
+  const [tipIdx, setTipIdx] = useState(0);
+  useEffect(() => {
+    if (!busy) return;
+    const iv = setInterval(() => setTipIdx((n) => (n + 1) % 4), 3500);
+    return () => clearInterval(iv);
+  }, [busy]);
 
   const load = useCallback(() => getJob(String(id)), [id]);
   const { data: job, error, refetch } = useQuery<Job>(load, { deps: [id], pollMs: 5000 });
@@ -191,7 +199,7 @@ export default function ReviewScreen() {
         </>
       ) : null}
 
-      {stage === 'stills' ? (
+      {stage === 'stills' && current.imageKey ? (
         <Action
           label={t('review.reimage')}
           disabled={busy}
@@ -199,6 +207,17 @@ export default function ReviewScreen() {
         />
       ) : null}
 
+      {/* Approve only what exists: before the image/clip is rendered there is
+          nothing to judge — show WHERE to start instead of a button that 409s. */}
+      {stage === 'stills' && !current.imageKey ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {t('review.needImage')}
+        </ThemedText>
+      ) : stage === 'clips' && !current.clipKey ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {t('review.needClip')}
+        </ThemedText>
+      ) : (
       <Action
         label={isAtLeast(current.status, approvedStatus) ? t('review.approved') : t('review.approve')}
         disabled={busy || isAtLeast(current.status, approvedStatus)}
@@ -216,6 +235,7 @@ export default function ReviewScreen() {
           })
         }
       />
+      )}
     </ScrollView>
   ) : null;
 
@@ -306,8 +326,23 @@ export default function ReviewScreen() {
               onPress={() => run(() => advanceStage(String(id)))}
             />
           )}
-          {busy ? <ActivityIndicator color={theme.text} /> : null}
         </View>
+
+        {/* Center busy overlay: spinner + rotating tip + "you can leave" note.
+            (Owner: no side-of-button spinner; tell people it keeps running.) */}
+        {busy ? (
+          <View style={styles.busyOverlay} pointerEvents="none">
+            <ThemedView type="backgroundElement" style={styles.busyCard}>
+              <ActivityIndicator size="large" color={theme.text} />
+              <ThemedText type="smallBold" style={styles.busyText}>
+                {t(`review.tip.${tipIdx}`)}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.busyText}>
+                {t('review.busyNote')}
+              </ThemedText>
+            </ThemedView>
+          </View>
+        ) : null}
       </SafeAreaView>
     </ThemedView>
   );
@@ -395,4 +430,17 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   action: { flex: 1, alignItems: 'center', borderWidth: 1, borderRadius: 999, paddingVertical: 14 },
+  busyOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  busyCard: {
+    alignItems: 'center',
+    gap: Spacing.two,
+    padding: Spacing.four,
+    borderRadius: Spacing.four,
+    maxWidth: 320,
+  },
+  busyText: { textAlign: 'center' },
 });

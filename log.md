@@ -344,3 +344,14 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   link); with data on screen the 5s poll heals the connection silently. The
   beat sheet itself was never at risk — it is server-persisted per job.
 - Verified: tsc clean, iOS + web exports OK (app-only change).
+
+## [2026-08-01] deploy | mayo → staged jobs no longer render behind the review + busy overlay UX (batch 50)
+- BUG (double-billing risk): creating a STAGED job also kicked the legacy
+  worker — it rendered and billed scenes behind the review screen while the
+  user was still approving beats, and its 'generating' status hid the clips-
+  stage start button. Staged jobs now render nothing until the clips gate.
+- Review UX (owner): approve/redo buttons hidden until the image/clip actually
+  exists (a hint says where to start instead of a button that 409s); busy state
+  is a CENTERED overlay with rotating tips + "나가도 계속 진행, 끝나면 알림"
+  note, replacing the beside-the-button spinner.
+- Verified: pytest 184, tsc clean, iOS + web exports OK.

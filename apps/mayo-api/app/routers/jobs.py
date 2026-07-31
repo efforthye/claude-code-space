@@ -118,7 +118,13 @@ async def create_job(
         video_model=req.videoModel or None,
         stage="beats" if req.staged else "clips",
     )
-    start_generation(job.id)
+    # Staged jobs render NOTHING at creation — that is the whole point of the
+    # staged flow (review first, pay at the clips gate). Kicking the legacy
+    # worker here made it render (and bill) behind the review screen while the
+    # user was still approving beats, and its 'generating' status hid the
+    # clips-stage start button.
+    if not req.staged:
+        start_generation(job.id)
     return job
 
 
