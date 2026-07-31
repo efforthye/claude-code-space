@@ -11,6 +11,7 @@
 //   3. register it in DICTS below
 // Nothing else changes — the picker, device detection and fallback are generic.
 
+import { de } from './locales/de';
 import { en } from './locales/en';
 import { es } from './locales/es';
 import { fr } from './locales/fr';
@@ -38,6 +39,7 @@ export const TRANSLATIONS: Partial<Record<ActiveLang, Dict>> = {
   es,
   'pt-BR': ptBR,
   fr,
+  de,
 };
 
 /**
