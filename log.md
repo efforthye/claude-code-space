@@ -334,3 +334,13 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   continuous move. Applies only when every clip is silent and long enough;
   otherwise the plain concat path runs untouched (audio is never dropped for
   a transition). Verified: pytest 184 passed (offset-chain unit test added).
+
+## [2026-08-01] deploy | mayo → review UX: approve auto-advances; transient errors keep the sheet (batch 49)
+- Approving a segment now jumps selection to the next unapproved one — N
+  approvals are N taps (owner: "매번 클릭해야 해서 귀찮").
+- A transient fetch failure (app resumed from background, tunnel blip) used to
+  replace the whole review screen with an error page ("서버 연결 안 된대").
+  The error page now shows only when there is no data at all (with a retry
+  link); with data on screen the 5s poll heals the connection silently. The
+  beat sheet itself was never at risk — it is server-persisted per job.
+- Verified: tsc clean, iOS + web exports OK (app-only change).

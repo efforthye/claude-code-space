@@ -93,11 +93,20 @@ export default function ReviewScreen() {
     }
   };
 
-  if (error) {
+  // Only a full-screen error when there is NOTHING to show. A transient
+  // network blip (app resumed from background, tunnel hiccup) used to replace
+  // the whole beat sheet with an error page; now the sheet stays on screen and
+  // the 5s poll heals the connection by itself.
+  if (error && !job) {
     return (
       <ThemedView style={styles.root}>
         <SafeAreaView edges={['top']} style={styles.center}>
           <ThemedText>{t('common.error')}</ThemedText>
+          <Pressable onPress={() => refetch()} hitSlop={8}>
+            <ThemedText type="smallBold" style={styles.retry}>
+              {t('common.retry')}
+            </ThemedText>
+          </Pressable>
         </SafeAreaView>
       </ThemedView>
     );
@@ -194,7 +203,18 @@ export default function ReviewScreen() {
         label={isAtLeast(current.status, approvedStatus) ? t('review.approved') : t('review.approve')}
         disabled={busy || isAtLeast(current.status, approvedStatus)}
         primary
-        onPress={() => run(() => approveSegment(String(id), current.index))}
+        onPress={() =>
+          run(async () => {
+            const next = await approveSegment(String(id), current.index);
+            // Auto-advance to the next unapproved segment — approving N items
+            // should be N taps, not 2N (owner: "매번 클릭해야 해서 귀찮").
+            const remaining = segments.filter(
+              (s) => s.index !== current.index && !isAtLeast(s.status, approvedStatus),
+            );
+            if (remaining.length) setSelected(remaining[0].index);
+            return next;
+          })
+        }
       />
     </ScrollView>
   ) : null;
@@ -334,7 +354,14 @@ const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStar
 const styles = StyleSheet.create({
   root: { flex: 1 },
   flex: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.four },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.three,
+    padding: Spacing.four,
+  },
+  retry: { textDecorationLine: 'underline' },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
