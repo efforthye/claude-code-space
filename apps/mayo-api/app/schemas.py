@@ -67,6 +67,42 @@ class DirectorModel(BaseModel):
     blurb: str
 
 
+SegmentStatus = Literal["draft", "approved", "imaged", "rendered"]
+
+JobStage = Literal["beats", "stills", "clips", "done"]
+
+
+class Segment(BaseModel):
+    """One timecoded slice of a film, carried through every stage.
+
+    The unit of review AND the unit of billing. A film is a list of these, and
+    each one can be rewritten, re-imaged or re-rendered on its own — which is
+    the whole point of the staged flow (ADR 0020): at $0.384 a scene, redoing
+    one segment must not mean redoing the film.
+
+    `status` is the furthest stage this segment has reached, not the stage the
+    job is in. A job cannot advance until every segment has reached the gate.
+    """
+
+    index: int
+    startSec: int
+    endSec: int
+    # What happens here, in plain language — written first, reviewed first,
+    # and cheap to redo because it is only an LLM call.
+    text: str = ""
+    # The generation prompt derived from `text` (camera, subject, look, action).
+    prompt: str = ""
+    status: SegmentStatus = "draft"
+    # Filled in as later stages complete.
+    imageKey: Optional[str] = None
+    clipKey: Optional[str] = None
+    # Times this segment has been re-run, per stage. Billing and abuse both
+    # need to know; a segment re-rendered five times cost five renders.
+    rewrites: int = 0
+    imageRuns: int = 0
+    clipRuns: int = 0
+
+
 class Job(BaseModel):
     id: str
     title: str
@@ -91,6 +127,12 @@ class Job(BaseModel):
     # Cinematic variant chosen at creation. Stored on the job so a retry renders
     # the same way the user paid for, rather than whatever the default is now.
     videoModel: Optional[str] = None
+    # --- staged production (ADR 0020) ---------------------------------------
+    # Which gate the job is waiting at. Jobs created the old way (straight to
+    # render) stay at "clips" and behave exactly as before, so this is additive.
+    stage: JobStage = "clips"
+    # The timecoded breakdown. Empty for legacy jobs, which use scenePrompts.
+    segments: list[Segment] = Field(default_factory=list)
 
 
 class CreateJobRequest(BaseModel):

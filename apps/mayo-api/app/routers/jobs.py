@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException, status
+from pydantic import BaseModel, Field
 
 from .. import catalog, runtime
 from ..auth import premium_user_or_none
@@ -150,3 +151,103 @@ async def delete_job(job_id: str) -> dict:
             balance = users.add_credits(owner, refund)
     await job_store.remove(job_id)
     return {"deleted": True, "refundedCredits": refund, "credits": balance}
+
+
+# --- Staged production, stage 1: the beat sheet (ADR 0020) ------------------
+# Text is the cheapest artefact in the pipeline and it decides everything after
+# it, so it is planned, reviewed and rewritten before anything costs money.
+# None of these endpoints spend generation credits.
+
+
+class BeatsRequest(BaseModel):
+    prompt: str = Field(default="", max_length=2000)
+
+
+class RewriteSegmentRequest(BaseModel):
+    instruction: str = Field(min_length=1, max_length=1000)
+
+
+@router.post("/{job_id}/beats", response_model=Job)
+async def plan_beats(job_id: str, req: BeatsRequest) -> Job:
+    """Draft the timecoded beat sheet. Safe to re-run: it replaces the draft."""
+    job = await job_store.get(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+
+    from .. import segments as seg
+
+    _screenplay, made = await seg.plan_segments(
+        req.prompt or job.title, job.seconds or 60, job.tierLabel or "standard"
+    )
+    updated = await job_store.set_segments(job_id, made, stage="beats")
+    if updated is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    return updated
+
+
+@router.post("/{job_id}/segments/{index}/rewrite", response_model=Job)
+async def rewrite_one_segment(job_id: str, index: int, req: RewriteSegmentRequest) -> Job:
+    """Rewrite a single beat. Neighbours are passed as context so the
+    replacement still connects; a beat rewritten in isolation reads like it."""
+    job = await job_store.get(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+
+    from .. import segments as seg
+
+    try:
+        updated_segment = await seg.rewrite_segment(
+            job.segments, index, req.instruction, job.tierLabel or "standard"
+        )
+    except IndexError:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+
+    updated = await job_store.set_segment(job_id, updated_segment)
+    if updated is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+    return updated
+
+
+@router.post("/{job_id}/segments/{index}/approve", response_model=Job)
+async def approve_segment(job_id: str, index: int) -> Job:
+    job = await job_store.get(job_id)
+    if job is None or not 0 <= index < len(job.segments):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+    target = job.segments[index].model_copy()
+    if target.status == "draft":
+        target.status = "approved"
+    updated = await job_store.set_segment(job_id, target)
+    if updated is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+    return updated
+
+
+@router.post("/{job_id}/advance", response_model=Job)
+async def advance_stage(job_id: str) -> Job:
+    """Move to the next stage — the "OK, next" button.
+
+    Refuses while any segment is still unapproved. The gate is the feature: it
+    is what stops an unreviewed plan turning into a paid render.
+    """
+    job = await job_store.get(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+
+    from .. import segments as seg
+
+    if job.stage == "beats":
+        if not seg.stage_is_complete(job.segments, "approved"):
+            pending = [s.index for s in job.segments if s.status == "draft"]
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail=f"approve every beat first — still pending: {pending}",
+            )
+        updated = await job_store.set_segments(job_id, job.segments, stage="stills")
+        if updated is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+        return updated
+
+    raise HTTPException(
+        status.HTTP_409_CONFLICT,
+        detail=f"advancing from '{job.stage}' is not implemented yet (MAYO-27/28)",
+    )

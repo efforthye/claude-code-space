@@ -105,6 +105,29 @@ class JobStore:
                 self._owners[job.id] = owner_id
         return job.model_copy()
 
+    async def set_segments(
+        self, job_id: str, segments: list, stage: str | None = None
+    ) -> Optional[Job]:
+        """Replace a job's beat sheet, optionally advancing its stage."""
+        async with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                return None
+            job.segments = segments
+            if stage:
+                job.stage = stage
+            job.scenesTotal = len(segments) or job.scenesTotal
+            return job.model_copy()
+
+    async def set_segment(self, job_id: str, segment) -> Optional[Job]:
+        """Replace ONE segment in place — the unit of review and of billing."""
+        async with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None or not 0 <= segment.index < len(job.segments):
+                return None
+            job.segments[segment.index] = segment
+            return job.model_copy()
+
     async def remove(self, job_id: str) -> bool:
         async with self._lock:
             self._owners.pop(job_id, None)
