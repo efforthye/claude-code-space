@@ -291,6 +291,9 @@ export const ja: Dict = {
 
   'jobDetail.status': 'ステータス',
   'jobDetail.sceneMap': 'シーンの進捗',
+  'jobDetail.scene.done': '完了',
+  'jobDetail.scene.rendering': 'レンダリング中',
+  'jobDetail.scene.waiting': '待機',
   'jobDetail.notFound': 'この生成はもう見つかりません。',
   'jobDetail.viewInLibrary': 'ライブラリで見る',
   'jobDetail.retry': 'もう一度生成',

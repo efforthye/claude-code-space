@@ -27,6 +27,8 @@ export type Job = {
   tierLabel?: string | null;
   seconds?: number | null;
   sceneUrls?: string[] | null; // clips rendered so far (live preview)
+  // Per-scene prompts (legacy/quick path) — shown on the progress screen.
+  scenePrompts?: string[] | null;
   // Consistency block (style + character sheet) prepended to every scene render.
   stylePrompt?: string | null;
   // Credits charged at create — cancelling refunds the unrendered share.

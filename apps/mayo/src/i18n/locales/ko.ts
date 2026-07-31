@@ -291,6 +291,9 @@ export const ko: Dict = {
 
   'jobDetail.status': '상태',
   'jobDetail.sceneMap': '장면 진행',
+  'jobDetail.scene.done': '완료',
+  'jobDetail.scene.rendering': '렌더 중',
+  'jobDetail.scene.waiting': '대기',
   'jobDetail.notFound': '더 이상 사용할 수 없는 작업이에요.',
   'jobDetail.viewInLibrary': '보관함에서 보기',
   'jobDetail.retry': '다시 생성',

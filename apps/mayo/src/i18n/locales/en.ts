@@ -289,6 +289,9 @@ export const en: Dict = {
 
   'jobDetail.status': 'Status',
   'jobDetail.sceneMap': 'Scene progress',
+  'jobDetail.scene.done': 'Done',
+  'jobDetail.scene.rendering': 'Rendering',
+  'jobDetail.scene.waiting': 'Waiting',
   'jobDetail.notFound': 'This job is no longer available.',
   'jobDetail.viewInLibrary': 'View in Library',
   'jobDetail.retry': 'Retry generation',

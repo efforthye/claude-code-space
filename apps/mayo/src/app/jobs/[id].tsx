@@ -130,17 +130,47 @@ export default function JobDetailScreen() {
             ) : null}
 
             <ThemedText type="smallBold">{t('jobDetail.sceneMap')}</ThemedText>
-            <View style={styles.dots}>
-              {Array.from({ length: shownDots }).map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.dot,
-                    { backgroundColor: i < filledDots ? theme.text : theme.backgroundSelected },
-                  ]}
-                />
-              ))}
-            </View>
+            {/* Scene rows, not bare dots: WHAT is rendering and WHERE it is.
+                (Owner: the dots said nothing about the scenes being made.) */}
+            <ThemedView type="backgroundElement" style={styles.sceneList}>
+              {Array.from({ length: shownDots }).map((_, i) => {
+                const state =
+                  i < job.scenesDone
+                    ? 'done'
+                    : i === job.scenesDone && job.status === 'generating'
+                      ? 'rendering'
+                      : 'waiting';
+                const prompt =
+                  job.scenePrompts && i < (job.scenePrompts?.length ?? 0)
+                    ? job.scenePrompts[i]
+                    : job.title;
+                return (
+                  <View key={i} style={styles.sceneRow}>
+                    <Ionicons
+                      name={
+                        state === 'done'
+                          ? 'checkmark-circle'
+                          : state === 'rendering'
+                            ? 'sync-outline'
+                            : 'ellipse-outline'
+                      }
+                      size={16}
+                      color={state === 'waiting' ? theme.textSecondary : theme.text}
+                    />
+                    <ThemedText
+                      type="small"
+                      numberOfLines={2}
+                      themeColor={state === 'waiting' ? 'textSecondary' : 'text'}
+                      style={styles.scenePrompt}>
+                      {i + 1}. {prompt}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {t(`jobDetail.scene.${state}`)}
+                    </ThemedText>
+                  </View>
+                );
+              })}
+            </ThemedView>
 
             <ThemedView type="backgroundElement" style={styles.note}>
               <ThemedText type="small" themeColor="textSecondary">
@@ -249,11 +279,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  dots: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
+  sceneList: {
+    borderRadius: Spacing.four,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
   },
+  sceneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.two,
+  },
+  scenePrompt: { flex: 1 },
   previewRow: {
     gap: Spacing.two,
     paddingVertical: Spacing.one,
@@ -263,11 +300,6 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: Spacing.three,
     backgroundColor: '#000',
-  },
-  dot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
   },
   note: {
     padding: Spacing.three,

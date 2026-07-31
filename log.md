@@ -310,3 +310,10 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   external backend animates FROM it instead of generating a new still — same
   continuity the staged flow already had. First scene unchanged; mock/comfy
   ignore the param. Verified: pytest 183 passed.
+
+## [2026-08-01] deploy | mayo → progress screen shows per-scene prompts + states (batch 46)
+- The job progress screen's bare dots became a scene list: each row shows the
+  scene's prompt text and its state (완료 / 렌더 중 / 대기) — you can now see
+  WHAT is being made, not just how many. Job.scenePrompts added to the app
+  wire type (server already sent it). i18n ko/en/ja.
+- Verified: pytest 183 passed, tsc clean, iOS + web exports OK.
