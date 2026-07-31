@@ -143,6 +143,15 @@ class Job(BaseModel):
     stage: JobStage = "clips"
     # The timecoded breakdown. Empty for legacy jobs, which use scenePrompts.
     segments: list[Segment] = Field(default_factory=list)
+    # "Stop on reject" pauses after each clip for review; "render all" runs to
+    # the end and lets you fix individual clips afterwards. A preference about
+    # attention, not quality — both end somewhere a single clip can be redone.
+    clipMode: Literal["stopOnReject", "renderAll"] = "renderAll"
+    # Set by the stop button. The renderer checks it between clips; it cannot
+    # cancel the one in flight, because Higgsfield will not (and bills it).
+    stopRequested: bool = False
+    # Credits actually taken for this job so far, clip by clip.
+    spentCredits: int = 0
 
 
 class CreateJobRequest(BaseModel):

@@ -128,6 +128,28 @@ class JobStore:
             job.segments[segment.index] = segment
             return job.model_copy()
 
+    async def request_stop(self, job_id: str) -> Optional[Job]:
+        async with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                return None
+            job.stopRequested = True
+            return job.model_copy()
+
+    async def add_spend(self, job_id: str, credits: int) -> None:
+        async with self._lock:
+            job = self._jobs.get(job_id)
+            if job is not None:
+                job.spentCredits += credits
+
+    async def set_clip_mode(self, job_id: str, mode: str) -> Optional[Job]:
+        async with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                return None
+            job.clipMode = mode
+            return job.model_copy()
+
     async def remove(self, job_id: str) -> bool:
         async with self._lock:
             self._owners.pop(job_id, None)

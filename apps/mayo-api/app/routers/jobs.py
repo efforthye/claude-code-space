@@ -309,3 +309,115 @@ async def advance_stage(job_id: str) -> Job:
         status.HTTP_409_CONFLICT,
         detail=f"advancing from '{job.stage}' is not implemented yet (MAYO-28)",
     )
+
+
+# --- Staged production, stage 3: clips (ADR 0020) ---------------------------
+# The only stage that spends money, so it is the one with a stop button, a
+# per-clip charge, and a warning about what a stop actually costs.
+
+
+class ClipModeRequest(BaseModel):
+    mode: str = Field(default="renderAll", pattern="^(stopOnReject|renderAll)$")
+
+
+@router.get("/{job_id}/clip-quote", response_model=dict)
+async def clip_quote(job_id: str, x_mayo_session: Optional[str] = Header(default=None)) -> dict:
+    """What rendering the remaining clips will cost, and what a stop would cost.
+
+    Shown before the button that starts spending, and inside the stop
+    confirmation. Being explicit that the in-flight clip is billed is the
+    difference between a stop button people trust and one they suspect.
+    """
+    job = await job_store.get(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+
+    tier = catalog.tier_by_id((job.tierLabel or "standard").lower())
+    per_clip = catalog.credits_per_scene(tier)
+    remaining = [s for s in job.segments if not s.clipKey]
+    return {
+        "perClipCredits": per_clip,
+        "remaining": len(remaining),
+        "remainingCredits": per_clip * len(remaining),
+        "spentCredits": job.spentCredits,
+        # A stop takes effect after the clip currently rendering, which is
+        # already paid for on our side and cannot be cancelled.
+        "stopCostsCredits": per_clip if job.status == "generating" else 0,
+        "etaSeconds": catalog.eta_seconds(len(remaining), job.videoModel, concurrency=1),
+    }
+
+
+@router.post("/{job_id}/clips", response_model=Job)
+async def start_clips(
+    job_id: str, req: ClipModeRequest, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
+    """Begin rendering clips. This is where the money starts."""
+    job = await job_store.get(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    if job.stage != "clips" or not job.segments:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, detail=f"job is at stage '{job.stage}', not ready for clips"
+        )
+
+    from ..auth import store as users
+
+    caller = users.user_for_session(x_mayo_session or "")
+    await job_store.set_clip_mode(job_id, req.mode)
+
+    import asyncio
+
+    from .. import segments as seg
+
+    asyncio.create_task(seg.render_clips(job_id, caller["id"] if caller else None))
+    updated = await job_store.get(job_id)
+    if updated is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    return updated
+
+
+@router.post("/{job_id}/stop", response_model=dict)
+async def stop_clips(job_id: str) -> dict:
+    """Stop after the clip currently rendering. Nothing after it is charged."""
+    job = await job_store.request_stop(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    return {"stopped": True, "spentCredits": job.spentCredits}
+
+
+@router.post("/{job_id}/segments/{index}/reclip", response_model=Job)
+async def reclip_segment(
+    job_id: str, index: int, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
+    """Re-render ONE clip, and say which later clip it just invalidated.
+
+    Re-rendering clip N changes the frame clip N+1 started from, so N+1 no
+    longer follows on. Only N+1 — everything after it still follows its own
+    predecessor, and saying "everything after" would turn one $0.43 clip into
+    forty.
+    """
+    job = await job_store.get(job_id)
+    if job is None or not 0 <= index < len(job.segments):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+
+    from ..auth import store as users
+    from .. import segments as seg
+
+    caller = users.user_for_session(x_mayo_session or "")
+    tier = catalog.tier_by_id((job.tierLabel or "standard").lower())
+    per_clip = catalog.credits_per_scene(tier)
+    if caller:
+        balance = int(caller.get("credits", 0))
+        if balance < per_clip:
+            raise HTTPException(
+                status.HTTP_402_PAYMENT_REQUIRED,
+                detail=f"크레딧이 부족해요 (필요 {per_clip}, 보유 {balance})",
+            )
+        users.add_credits(caller["id"], -per_clip)
+        await job_store.add_spend(job_id, per_clip)
+
+    done = await seg.render_segment_clip(job_id, job.segments, index, job.videoModel)
+    updated = await job_store.set_segment(job_id, done)
+    if updated is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+    return updated

@@ -256,3 +256,49 @@ def invalidated_by(segments: list[Segment], index: int) -> list[int]:
     if nxt < len(segments) and segments[nxt].clipKey:
         return [nxt]
     return []
+
+
+async def render_clips(job_id: str, owner_id: Optional[str] = None) -> None:
+    """Render a film's clips in order, billing each as it lands.
+
+    Sequential, not parallel: clip N+1 starts from clip N's last frame, so the
+    chain cannot fan out. That is also why the provider's 4-at-a-time cap does
+    not help here.
+
+    Stopping is checked BETWEEN clips. The one in flight always completes and is
+    always billed, because Higgsfield refuses to cancel a submitted request
+    (`Request is in progress`) and charges for it regardless — pretending
+    otherwise would mean absorbing a cost we cannot avoid.
+    """
+    from . import catalog
+    from .auth import store as users
+    from .store import jobs as job_store
+
+    job = await job_store.get(job_id)
+    if job is None:
+        return
+    tier = catalog.tier_by_id((job.tierLabel or "standard").lower())
+    per_clip = catalog.credits_per_scene(tier)
+
+    for index in range(len(job.segments)):
+        fresh = await job_store.get(job_id)
+        if fresh is None or fresh.stopRequested:
+            return
+        segment = fresh.segments[index]
+        if segment.clipKey:
+            continue  # already rendered (a resumed or partially redone film)
+
+        # Charge before submitting: once the request is in, the money is gone
+        # whether or not we are still here to see the result.
+        if owner_id:
+            balance = int((users.users.get(owner_id) or {}).get("credits", 0))
+            if balance < per_clip:
+                return
+            users.add_credits(owner_id, -per_clip)
+            await job_store.add_spend(job_id, per_clip)
+
+        done = await render_segment_clip(job_id, fresh.segments, index, fresh.videoModel)
+        await job_store.set_segment(job_id, done)
+
+        if fresh.clipMode == "stopOnReject":
+            return  # one clip, then wait for a verdict

@@ -283,3 +283,107 @@ def test_nothing_is_invalidated_at_the_end_or_before_rendering():
 
 def test_last_frame_of_a_missing_clip_is_none_rather_than_an_error():
     assert seg.last_frame_of("nope/does-not-exist.mp4") is None
+
+
+# --- stage 3: money ---------------------------------------------------------
+
+
+def _clips_job(monkeypatch, seconds: int = 30):
+    """A job at the clips gate, with the renderer stubbed so no money moves."""
+    job_id, n = _approved_job(seconds)
+    client.post(f"/v1/jobs/{job_id}/stills")
+    for i in range(n):
+        client.post(f"/v1/jobs/{job_id}/segments/{i}/approve")
+    client.post(f"/v1/jobs/{job_id}/advance")
+
+    async def fake_render(job, segs, index, model=None):
+        out = segs[index].model_copy()
+        out.clipKey = f"clips/{job}/{index:04d}.mp4"
+        out.status = "rendered"
+        out.clipRuns = segs[index].clipRuns + 1
+        return out
+
+    monkeypatch.setattr(seg, "render_segment_clip", fake_render)
+    return job_id, n
+
+
+def test_the_quote_says_what_it_costs_and_what_a_stop_costs(monkeypatch):
+    job_id, n = _clips_job(monkeypatch)
+    q = client.get(f"/v1/jobs/{job_id}/clip-quote").json()
+    assert q["remaining"] == n
+    assert q["perClipCredits"] > 0
+    assert q["remainingCredits"] == q["perClipCredits"] * n
+    assert q["spentCredits"] == 0
+    # An ETA that assumed parallelism would understate it: continuity chains
+    # render one at a time.
+    assert q["etaSeconds"] >= n
+
+
+def test_stop_on_reject_renders_exactly_one_clip(monkeypatch):
+    job_id, n = _clips_job(monkeypatch)
+    r = client.post(f"/v1/jobs/{job_id}/clips", json={"mode": "stopOnReject"})
+    assert r.status_code == 200, r.text
+
+    import asyncio, time
+
+    for _ in range(40):
+        segs = client.get(f"/v1/jobs/{job_id}").json()["segments"]
+        if sum(1 for s in segs if s["clipKey"]) >= 1:
+            break
+        time.sleep(0.05)
+    segs = client.get(f"/v1/jobs/{job_id}").json()["segments"]
+    rendered = [s for s in segs if s["clipKey"]]
+    # One clip, then it waits for a verdict — the point of the mode.
+    assert len(rendered) == 1, [s["status"] for s in segs]
+
+
+def test_render_all_keeps_going_to_the_end(monkeypatch):
+    job_id, n = _clips_job(monkeypatch)
+    client.post(f"/v1/jobs/{job_id}/clips", json={"mode": "renderAll"})
+
+    import time
+
+    for _ in range(60):
+        segs = client.get(f"/v1/jobs/{job_id}").json()["segments"]
+        if all(s["clipKey"] for s in segs):
+            break
+        time.sleep(0.05)
+    segs = client.get(f"/v1/jobs/{job_id}").json()["segments"]
+    assert all(s["clipKey"] for s in segs), [s["status"] for s in segs]
+
+
+def test_stop_is_recorded_and_reports_what_was_spent(monkeypatch):
+    job_id, _ = _clips_job(monkeypatch)
+    r = client.post(f"/v1/jobs/{job_id}/stop")
+    assert r.status_code == 200
+    assert r.json()["stopped"] is True
+    assert "spentCredits" in r.json()
+    # The flag persists, so the renderer sees it between clips.
+    assert client.get(f"/v1/jobs/{job_id}").json()["stopRequested"] is True
+
+
+def test_a_stopped_job_renders_nothing_further(monkeypatch):
+    job_id, _ = _clips_job(monkeypatch)
+    client.post(f"/v1/jobs/{job_id}/stop")
+    client.post(f"/v1/jobs/{job_id}/clips", json={"mode": "renderAll"})
+
+    import time
+
+    time.sleep(0.3)
+    segs = client.get(f"/v1/jobs/{job_id}").json()["segments"]
+    assert not any(s["clipKey"] for s in segs)
+
+
+def test_clips_refuse_before_the_stills_gate_is_cleared():
+    job_id = _job(30)
+    client.post(f"/v1/jobs/{job_id}/beats", json={"prompt": "x"})
+    r = client.post(f"/v1/jobs/{job_id}/clips", json={"mode": "renderAll"})
+    assert r.status_code == 409
+
+
+def test_per_scene_price_follows_the_tier():
+    from app import catalog
+
+    draft = catalog.credits_per_scene(catalog.tier_by_id("draft"))
+    premium = catalog.credits_per_scene(catalog.tier_by_id("premium"))
+    assert premium > draft >= 1

@@ -196,6 +196,20 @@ def estimate_credits(seconds: int, tier: Tier) -> int:
     return max(1, round((seconds / 60) * tier.pricePerMin))
 
 
+SCENE_SECONDS_FOR_PRICING = 10  # matches scenes_for(): ~1 scene per 10s
+
+
+def credits_per_scene(tier: Tier | None) -> int:
+    """Credits for ONE scene at this tier.
+
+    Per-scene rather than per-film because a staged job is billed as it renders:
+    any clip can be re-run, and "charge up front, refund pro-rata" cannot
+    express "clip 14, twice" (ADR 0020).
+    """
+    rate = tier.pricePerMin if tier else 14
+    return max(1, round(rate * SCENE_SECONDS_FOR_PRICING / 60))
+
+
 def scenes_for(seconds: int) -> int:
     """Narrative scene count — ~1 scene per 10s, at least 1 (used by the planner)."""
     return max(1, round(seconds / 10))
