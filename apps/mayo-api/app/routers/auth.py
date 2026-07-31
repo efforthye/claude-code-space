@@ -9,8 +9,9 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Header, HTTPException, status
+from fastapi import APIRouter, Header, HTTPException, Request, status
 
+from ..access_log import log_auth_event, stamp_last_login
 from ..auth import (
     AuthUser,
     GoogleLoginRequest,
@@ -25,20 +26,39 @@ from ..auth import (
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
 
 
+def _signed_in(action: str, request: Request, user: dict) -> SessionResult:
+    """Issue a session and record where it was issued from.
+
+    Every path that hands out a session goes through here, so adding a new
+    sign-in method cannot silently skip the access log.
+    """
+    where = log_auth_event(action, request, user=user)
+    stamp_last_login(store, user, where)
+    return SessionResult(token=store.create_session(user["id"]), user=to_public(user))
+
+
 @router.post("/register", response_model=SessionResult, status_code=status.HTTP_201_CREATED)
-async def register(req: RegisterRequest) -> SessionResult:
+async def register(req: RegisterRequest, request: Request) -> SessionResult:
     if store.by_email(req.email):
+        log_auth_event(
+            "register", request, outcome="failure", email=req.email, reason="email_taken"
+        )
         raise HTTPException(status.HTTP_409_CONFLICT, detail="email already registered")
     user = store.create_user(req.email, req.name, provider="email", password=req.password)
-    return SessionResult(token=store.create_session(user["id"]), user=to_public(user))
+    return _signed_in("register", request, user)
 
 
 @router.post("/login", response_model=SessionResult)
-async def login(req: LoginRequest) -> SessionResult:
+async def login(req: LoginRequest, request: Request) -> SessionResult:
     user = store.by_email(req.email)
     if not user or not store.check_password(user, req.password):
+        # Logged with the attempted address (never the password) so repeated
+        # failures against one account, or one IP, are visible in Kibana.
+        log_auth_event(
+            "login", request, outcome="failure", email=req.email, reason="bad_credentials"
+        )
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="wrong email or password")
-    return SessionResult(token=store.create_session(user["id"]), user=to_public(user))
+    return _signed_in("login", request, user)
 
 
 from pydantic import BaseModel, Field  # noqa: E402
@@ -86,11 +106,14 @@ async def reset_start(req: ResetStartRequest) -> OkResult:
 
 
 @router.post("/reset/complete", response_model=SessionResult)
-async def reset_complete(req: ResetCompleteRequest) -> SessionResult:
+async def reset_complete(req: ResetCompleteRequest, request: Request) -> SessionResult:
     user = complete_password_reset(req.email, req.code, req.newPassword)
     if not user:
+        log_auth_event(
+            "password_reset", request, outcome="failure", email=req.email, reason="bad_code"
+        )
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="wrong or expired reset code")
-    return SessionResult(token=store.create_session(user["id"]), user=to_public(user))
+    return _signed_in("password_reset", request, user)
 
 
 class GoogleStartResult(BaseModel):
@@ -144,17 +167,18 @@ async def google_result(loginId: str = "") -> GoogleLoginPoll:
 
 
 @router.post("/google", response_model=SessionResult)
-async def google_login(req: GoogleLoginRequest) -> SessionResult:
+async def google_login(req: GoogleLoginRequest, request: Request) -> SessionResult:
     try:
         claims = await verify_google_id_token(req.idToken)
     except ValueError as exc:
+        log_auth_event("login_google", request, outcome="failure", reason="bad_id_token")
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail=str(exc))
     user = store.by_email(claims["email"])
     if not user:
         user = store.create_user(
             claims["email"], claims.get("name", ""), provider="google", password=None
         )
-    return SessionResult(token=store.create_session(user["id"]), user=to_public(user))
+    return _signed_in("login_google", request, user)
 
 
 # --- GitHub sign-in (server-driven start/poll — same pattern as Google) ---
@@ -212,7 +236,9 @@ class AppleLoginRequest(BaseModel):
 
 @router.post("/apple", response_model=SessionResult)
 async def apple_signin(
-    req: AppleLoginRequest, x_mayo_session: Optional[str] = Header(default=None)
+    req: AppleLoginRequest,
+    request: Request,
+    x_mayo_session: Optional[str] = Header(default=None),
 ) -> SessionResult:
     link_user = store.user_for_session(x_mayo_session or "") if req.link else None
     if req.link and not link_user:
@@ -220,7 +246,14 @@ async def apple_signin(
     try:
         result = await apple_login(req.identityToken, req.name, link_user=link_user)
     except ValueError as exc:
+        log_auth_event("login_apple", request, outcome="failure", reason="bad_identity_token")
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail=str(exc))
+    # Apple builds the session itself, so this path cannot use _signed_in().
+    action = "link_apple" if req.link else "login_apple"
+    user = store.users.get(result["user"].get("id", ""))
+    where = log_auth_event(action, request, user=user or {"email": result["user"].get("email", "")})
+    if user and not req.link:
+        stamp_last_login(store, user, where)
     # For a link request there's no new session — hand the caller's back.
     token = result["token"] or (x_mayo_session or "")
     return SessionResult(token=token, user=AuthUser(**result["user"]))

@@ -30,6 +30,28 @@ filebeat.inputs:
           negate: false
           match: after
 
+  # Authentication events, one JSON object per line (app/access_log.py).
+  # Parsed as ndjson so client.ip, client.geo.country_iso_code and
+  # event.outcome arrive as real fields — a Kibana map and a "failed logins by
+  # country" chart work with no extra mapping.
+  - type: filestream
+    id: mayo-auth
+    enabled: true
+    paths:
+      - /hostlogs/mayo-auth.log
+    fields:
+      service.name: mayo-api
+      component: auth
+    fields_under_root: true
+    prospector.scanner.fingerprint.enabled: false
+    file_identity.native: ~
+    parsers:
+      - ndjson:
+          target: ''
+          overwrite_keys: true
+          add_error_key: true
+          expand_keys: true
+
   - type: filestream
     id: mayo-expo
     enabled: true

@@ -41,8 +41,36 @@ mini's `~/Library/Logs`:
 | `mayo-autopull.log` | `mayo-autopull` | `deploy` |
 | `mayo-comfy.log` | `mayo-comfy` | `generation` |
 | `mayo-tunnel.log` | `mayo-tunnel` | `network` |
+| `mayo-auth.log` | `mayo-api` | `auth` — **JSON lines**, parsed as ndjson |
 
 Every event also carries `host_role: home-server`.
+
+### 인증 이벤트 (`mayo-auth.log`)
+
+[[mayo]]의 `app/access_log.py`가 로그인·가입·비밀번호 재설정·소셜 로그인을
+**한 줄 JSON**으로 기록합니다. Filebeat가 `ndjson` 파서로 읽어서 다음이 **필드로**
+들어옵니다 — Kibana 지도와 "국가별 로그인 실패" 차트가 추가 매핑 없이 동작합니다:
+
+| 필드 | 내용 |
+|---|---|
+| `event.action` | `login` · `register` · `login_google` · `login_apple` · `password_reset` · `link_apple` |
+| `event.outcome` | `success` / `failure` |
+| `event.reason` | 실패 사유 — `bad_credentials`, `email_taken`, `bad_id_token` … |
+| `client.ip` | `CF-Connecting-IP` (터널 뒤라 `request.client.host`는 127.0.0.1이라 쓸모없음) |
+| `client.geo.country_iso_code` | `CF-IPCountry`. **GeoIP DB를 두지 않은 이유** — Cloudflare 엣지가 이미 판정해서 무료로 주고, 번들 DB는 낡습니다 |
+| `user.id` · `user.email` | 실패 시에는 시도된 이메일만 (비밀번호는 어떤 필드에도 안 들어감) |
+| `user_agent.original` | 400자로 절단 |
+
+터널을 거치지 않은 LAN 요청에는 국가가 없습니다 — **추측하지 않고 빈 값**으로 둡니다.
+Cloudflare가 판정 실패 시 보내는 `XX`와 Tor의 `T1`도 마찬가지로 미상 처리합니다.
+
+**개인정보.** IP는 GDPR·개인정보보호법상 개인정보입니다. 기본값은 오너 요청대로 전체
+기록이지만 `MAYO_ACCESS_LOG_IP=masked`로 호스트 부분을 0으로 만들 수 있고
+(IPv4 `/24`, IPv6 `/48` — 국가 단위 분석에는 충분), `none`으로 끌 수도 있습니다.
+보존은 위 ILM 30일 정책이 관리합니다.
+
+계정 레코드에는 **최신 값만** `lastLoginAt` / `lastLoginIp` / `lastLoginCountry`로
+남습니다 ("이 계정이 어디서 쓰이는가"). 이력은 로그 파일 쪽에 있습니다.
 
 **Not collected yet:** stdout of the Docker containers ([[richclub]], [[jenkins]]).
 On Docker Desktop for Mac the container log directory lives inside the Linux VM
