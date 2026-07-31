@@ -67,7 +67,17 @@ class DirectorModel(BaseModel):
     blurb: str
 
 
-SegmentStatus = Literal["draft", "approved", "imaged", "rendered"]
+# A segment's furthest point in the pipeline. Linear on purpose: a gate asks
+# "has every segment reached at least X", which is one comparison rather than a
+# set of independent flags that can contradict each other.
+SegmentStatus = Literal[
+    "draft",          # text written, not yet accepted
+    "approved",       # text accepted — stage 1 gate cleared
+    "imaged",         # still generated, awaiting review
+    "imageApproved",  # still accepted — stage 2 gate cleared
+    "rendered",       # clip generated, awaiting review
+    "clipApproved",   # clip accepted — ready to stitch
+]
 
 JobStage = Literal["beats", "stills", "clips", "done"]
 

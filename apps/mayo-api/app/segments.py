@@ -101,8 +101,32 @@ async def rewrite_segment(
 
 def stage_is_complete(segments: list[Segment], required: str) -> bool:
     """Whether every segment has reached the status a gate demands."""
-    order = ["draft", "approved", "imaged", "rendered"]
+    order = ["draft", "approved", "imaged", "imageApproved", "rendered", "clipApproved"]
     if required not in order:
         return False
     need = order.index(required)
     return bool(segments) and all(order.index(s.status) >= need for s in segments)
+
+
+# --- Stage 2: one still per segment ----------------------------------------
+
+
+async def render_segment_image(job_id: str, segment: Segment, style_prompt: str = "") -> Segment:
+    """Generate (or regenerate) the still for ONE segment.
+
+    Reuses the storyboard renderer, which already handles all three backends.
+    The style block is prepended on every call — including a regenerate — so a
+    single replaced image does not drift away from the look of its neighbours
+    (ADR 0014). That is the whole reason regenerating one image is safe.
+    """
+    from . import storyboard
+
+    prompt = f"{style_prompt}\n{segment.prompt}".strip() if style_prompt else segment.prompt
+    key = await storyboard._render_one(f"job-{job_id}", segment.index, prompt)
+
+    updated = segment.model_copy()
+    updated.imageKey = key
+    # A fresh image is unreviewed, even if the previous one had been approved.
+    updated.status = "imaged"
+    updated.imageRuns = segment.imageRuns + 1
+    return updated

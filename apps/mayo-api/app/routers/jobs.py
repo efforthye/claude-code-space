@@ -208,15 +208,61 @@ async def rewrite_one_segment(job_id: str, index: int, req: RewriteSegmentReques
     return updated
 
 
+# What "approve" means depends on what is being looked at. One endpoint, so the
+# app does not have to know which verb belongs to which stage.
+_APPROVES = {"draft": "approved", "imaged": "imageApproved", "rendered": "clipApproved"}
+
+
 @router.post("/{job_id}/segments/{index}/approve", response_model=Job)
 async def approve_segment(job_id: str, index: int) -> Job:
     job = await job_store.get(job_id)
     if job is None or not 0 <= index < len(job.segments):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
     target = job.segments[index].model_copy()
-    if target.status == "draft":
-        target.status = "approved"
+    target.status = _APPROVES.get(target.status, target.status)
     updated = await job_store.set_segment(job_id, target)
+    if updated is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+    return updated
+
+
+@router.post("/{job_id}/stills", response_model=Job)
+async def render_stills(job_id: str) -> Job:
+    """Stage 2: a still for every segment. Cheap next to video, so it runs for
+    the whole beat sheet at once rather than one at a time."""
+    job = await job_store.get(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    if job.stage != "stills":
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, detail=f"job is at stage '{job.stage}', not 'stills'"
+        )
+
+    from .. import segments as seg
+
+    done = [
+        await seg.render_segment_image(job_id, s, job.stylePrompt or "") for s in job.segments
+    ]
+    updated = await job_store.set_segments(job_id, done)
+    if updated is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    return updated
+
+
+@router.post("/{job_id}/segments/{index}/reimage", response_model=Job)
+async def reimage_segment(job_id: str, index: int) -> Job:
+    """Regenerate ONE still, leaving every other segment alone.
+
+    Safe because the style block is reapplied, so the replacement matches the
+    look of its neighbours instead of drifting (ADR 0014)."""
+    job = await job_store.get(job_id)
+    if job is None or not 0 <= index < len(job.segments):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+
+    from .. import segments as seg
+
+    redone = await seg.render_segment_image(job_id, job.segments[index], job.stylePrompt or "")
+    updated = await job_store.set_segment(job_id, redone)
     if updated is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
     return updated
@@ -247,7 +293,19 @@ async def advance_stage(job_id: str) -> Job:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
         return updated
 
+    if job.stage == "stills":
+        if not seg.stage_is_complete(job.segments, "imageApproved"):
+            pending = [s.index for s in job.segments if s.status in ("draft", "approved", "imaged")]
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail=f"approve every still first — still pending: {pending}",
+            )
+        updated = await job_store.set_segments(job_id, job.segments, stage="clips")
+        if updated is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+        return updated
+
     raise HTTPException(
         status.HTTP_409_CONFLICT,
-        detail=f"advancing from '{job.stage}' is not implemented yet (MAYO-27/28)",
+        detail=f"advancing from '{job.stage}' is not implemented yet (MAYO-28)",
     )

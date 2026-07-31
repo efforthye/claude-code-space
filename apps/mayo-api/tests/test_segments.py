@@ -148,3 +148,76 @@ def test_legacy_jobs_are_untouched_by_any_of_this():
     assert r.status_code == 201
     assert r.json()["stage"] == "clips"
     assert r.json()["segments"] == []
+
+
+# --- stage 2: stills --------------------------------------------------------
+
+
+def _approved_job(seconds: int = 30) -> tuple[str, int]:
+    """A job whose beat sheet is approved and which sits at the stills stage."""
+    job_id = _job(seconds)
+    n = len(client.post(f"/v1/jobs/{job_id}/beats", json={"prompt": "x"}).json()["segments"])
+    for i in range(n):
+        client.post(f"/v1/jobs/{job_id}/segments/{i}/approve")
+    assert client.post(f"/v1/jobs/{job_id}/advance").json()["stage"] == "stills"
+    return job_id, n
+
+
+def test_stills_render_for_every_segment():
+    job_id, n = _approved_job()
+    r = client.post(f"/v1/jobs/{job_id}/stills")
+    assert r.status_code == 200, r.text
+    segs = r.json()["segments"]
+    assert len(segs) == n
+    assert all(s["imageKey"] for s in segs)
+    assert all(s["status"] == "imaged" for s in segs)
+    assert all(s["imageRuns"] == 1 for s in segs)
+
+
+def test_stills_refuse_to_run_at_the_wrong_stage():
+    job_id = _job(30)
+    client.post(f"/v1/jobs/{job_id}/beats", json={"prompt": "x"})
+    r = client.post(f"/v1/jobs/{job_id}/stills")  # still at "beats"
+    assert r.status_code == 409
+
+
+def test_the_image_gate_refuses_until_every_still_is_approved():
+    job_id, n = _approved_job()
+    client.post(f"/v1/jobs/{job_id}/stills")
+    r = client.post(f"/v1/jobs/{job_id}/advance")
+    assert r.status_code == 409
+    assert "approve every still" in r.json()["detail"]
+
+    for i in range(n):
+        client.post(f"/v1/jobs/{job_id}/segments/{i}/approve")
+    r = client.post(f"/v1/jobs/{job_id}/advance")
+    assert r.status_code == 200, r.text
+    assert r.json()["stage"] == "clips"
+
+
+def test_reimaging_one_segment_leaves_the_rest_untouched():
+    job_id, _ = _approved_job()
+    before = client.post(f"/v1/jobs/{job_id}/stills").json()["segments"]
+    for i in range(len(before)):
+        client.post(f"/v1/jobs/{job_id}/segments/{i}/approve")
+
+    r = client.post(f"/v1/jobs/{job_id}/segments/1/reimage")
+    assert r.status_code == 200, r.text
+    after = r.json()["segments"]
+
+    assert after[0]["imageRuns"] == 1 and after[2]["imageRuns"] == 1
+    assert after[1]["imageRuns"] == 2
+    # A fresh image is unreviewed again, so the gate re-closes on it.
+    assert after[1]["status"] == "imaged"
+    assert after[0]["status"] == "imageApproved"
+
+    assert client.post(f"/v1/jobs/{job_id}/advance").status_code == 409
+
+
+def test_approve_means_the_right_thing_at_each_stage():
+    job_id, _ = _approved_job()
+    segs = client.post(f"/v1/jobs/{job_id}/stills").json()["segments"]
+    assert segs[0]["status"] == "imaged"
+    after = client.post(f"/v1/jobs/{job_id}/segments/0/approve").json()["segments"]
+    # Same endpoint, different meaning — the app should not have to know.
+    assert after[0]["status"] == "imageApproved"
