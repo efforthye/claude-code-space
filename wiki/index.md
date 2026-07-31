@@ -23,6 +23,10 @@ Updated whenever pages are added/renamed or a service's status changes.
 ## Infra
 - [[home-server]] — Apple M1 Mac mini (8-core, 16 GB, 1 TB, macOS 15.4.1, `arm64`; `m1mini` /
   `home.efforthye.com`) running Docker; CI/CD via [[jenkins]] webhooks. _(status: live)_
+- [[elk]] — Centralised logging: Elasticsearch + Kibana + Filebeat on the mini, loopback-only,
+  reached from the laptop over a launchd-supervised SSH tunnel. _(status: building)_
+- [[terraform-onprem]] — Infrastructure as code for the mini: Docker containers + Cloudflare DNS,
+  import-first. _(status: building)_
 
 ## Runbooks
 - [[deploy-home-server]] — Deploy a service to the home server (current path: Jenkins webhook).
@@ -73,6 +77,11 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[0017-pricing-credits-subscriptions]] — **Pricing v2**: Pro $24/700cr, Studio $59/2,500cr
   monthly + standalone credit packs ($12/100 · $30/300 · $85/1,000, no subscription needed —
   packs unlock premium); BYOK free-of-credits.
+- [[0018-terraform-for-onprem-infra]] — Terraform for the mini only (Docker containers +
+  Cloudflare DNS), import-first; launchd, tunnels and the ELK stack deliberately excluded.
+  One container, one tool.
+- [[0019-centralised-logging-elk]] — Elasticsearch + Kibana + Filebeat (no Logstash), sized to
+  fit the mini's Docker VM because ComfyUI needs the host RAM; loopback-only + SSH tunnel.
 
 ## Incidents
 _(none yet — postmortems)_

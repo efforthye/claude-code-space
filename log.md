@@ -241,3 +241,46 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 - Backlog registered: SCRUM-5 힉스필드 실생성 검증, SCRUM-6 BYOK 점검, SCRUM-7
   수익률 분석, SCRUM-9 웹 UI 재구성, SCRUM-10 사용량 로그, SCRUM-11 IAP
   클라이언트, SCRUM-12 웹 결제 PG, SCRUM-13 앱스토어 등록.
+
+## [2026-07-31] setup | 인프라 코드화 착수 + ELK 로그 수집 + 텔레그램 워치독
+- **Terraform (ADR 0018, [[terraform-onprem]])** — `infra/terraform/onprem/`에 미니의
+  Docker 컨테이너 3종 + Cloudflare DNS 3건을 HCL로 기술. HashiCorp Terraform 1.15.8,
+  kreuzwerker/docker 3.9.0 + cloudflare/cloudflare 5.22.0 실제 스키마 기준으로
+  `validate`/`fmt` 통과. **아직 import/apply 전** — `docker.tf`의 볼륨·재시작 정책은
+  위키 스냅샷에서 추정한 값이라 `scripts/tf-discover.sh`(env는 키 이름만 덤프해 시크릿
+  유출 방지)로 실측 후 교정해야 함. 완료 기준은 "plan에 create/replace/destroy 0건".
+  범위는 오너 지시대로 **미니 전용**(AWS 확장은 무시). 경계 규칙 명문화: 한 컨테이너는
+  한 도구만 — launchd·cloudflared 터널·ELK 스택은 Terraform 밖.
+- **ELK (ADR 0019, [[elk]])** — Elastic 9.4.4 (arm64 매니페스트 확인) Elasticsearch +
+  Kibana + Filebeat를 미니에 Compose로 기동. **Logstash 제외** (1GB JVM이 하는 일을
+  Filebeat가 50MB로 처리). launchd 로그 5종(mayo-api/expo/autopull/comfy/tunnel) 수집 중 —
+  실측 **11,693건 색인 확인**. 전 포트 127.0.0.1 바인딩, 외부 노출 0.
+  - 맥북에서 리허설로 먼저 띄워 **버그 2건을 미니 배포 전에 발견·수정**:
+    (1) filestream이 지문 방식이라 **1KB 미만 파일을 아예 안 읽음** → 작은 로그·갓
+    로테이션된 파일 무음 유실. `fingerprint.enabled: false` + `file_identity.native`로 해결.
+    (2) 커스텀 필드 `service`(문자열)가 ECS `service` **객체** 매핑과 충돌해 색인 단계에서
+    이벤트 드롭 → `service.name`으로 수정.
+  - 메모리: 미니는 **ComfyUI가 Docker 밖에서 도는 16GB 호스트**라 Docker VM(5.77GiB)을
+    늘리면 생성 엔진이 굶음. VM을 키우는 대신 스택을 VM에 맞춤. 최초 설정(ES 1g/Kibana
+    800m)에서 둘 다 **한계의 98%**에 붙어 OOM 직전인 것을 관측 → ES 1.5g,
+    Kibana 1g + Node 힙 700m 상한으로 조정, 현재 ES 70.8% / Kibana 78.2%.
+  - Kibana 접근은 공개 대신 **launchd 감시 SSH 터널**(`scripts/kibana-tunnel-install.sh`) —
+    맥북 `localhost:5601`, KeepAlive로 절전·네트워크 변경·미니 재부팅 후 자동 재연결.
+    AWS SSM 포트포워딩과 같은 구조. 검증: Kibana 200 / ES 401(인증 필요=도달).
+- **텔레그램 워치독** — `scripts/watchdog-telegram.sh` + `watchdog-install.sh`.
+  디스크·시스템 여유 메모리·launchd 에이전트 5종·컨테이너 상태/헬스·컨테이너별 메모리
+  (자기 한도 대비)·mayo-api `/health`·ES 클러스터 상태를 5분마다 점검. 미니에서 **21개
+  검사 전부 통과** 확인, 임계치를 강제로 낮춰 **실패 감지 7건 + 2회차 중복 억제**까지 검증.
+  알림 규율: 실패 전이 시 1회 → 지속 시 6시간 간격 → 복구 시 1회. 토큰은
+  `~/.mayo-watchdog.env`(chmod 600, 레포 밖). **가동 완료** — 봇 `@mayo_server_bot` 생성 후
+  설치, 실제 토큰으로 🔴 경고 발송·중복 억제·🟢 복구 메시지까지 종단 검증. 5분 간격
+  `com.efforthye.watchdog` 에이전트 실행 중. (설치용 임시 스크립트는 토큰이 박혀 있어 삭제함.)
+- **미니 SSH 키 인증** — 맥북에 ed25519 키 생성 후 미니에 등록, `~/.ssh/config`에
+  `Host efforthye m1mini` 별칭. 비밀번호는 레포·tfvars 어디에도 저장하지 않음(오너가
+  채팅에 붙여넣은 값은 **로테이션 권장**).
+- **Jira** — 프로젝트 키 `SCRUM` → `MAYO` 변경 반영(CLAUDE.md). 과거 로그의 `SCRUM-N`은
+  append-only 원칙상 보존(Jira가 옛 키를 리다이렉트). 이 세션엔 Atlassian 커넥터가 없어
+  이슈 생성은 오너 측에서 진행 — 커밋의 `Refs:` 대기 중.
+- 잔여: ELK가 `~/elk-stage/`에서 실행 중(레포 체크아웃에 untracked 파일을 넣으면
+  autopull의 `git pull`이 깨져서). 커밋 후 레포 경로로 이전 필요. ILM 보존기간 미설정.
+  컨테이너 stdout 수집은 Phase B(Docker Desktop for Mac의 VM 경로 제약).

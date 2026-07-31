@@ -186,7 +186,8 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## Work tracking — Jira (owner directive, 2026-07-22)
 
 **All Claude work items are tracked in Jira**: site `efforthye.atlassian.net`,
-project **SCRUM** ("Roadmap Planning"), via the Atlassian MCP connector on the
+project **MAYO** (renamed from `SCRUM` on 2026-07-31 — old keys still redirect,
+so `SCRUM-5` in earlier log entries resolves to `MAYO-5`), via the Atlassian MCP connector on the
 owner's claude.ai account. Workflow for every batch of work:
 1. Create (or pick) an issue BEFORE starting; issue type 작업 unless it's a 버그.
 2. Transition it to In Progress while working.
@@ -195,6 +196,19 @@ owner's claude.ai account. Workflow for every batch of work:
    assigned to the owner. `log.md` stays the append-only timeline; Jira is the
    live board. If the connector is unavailable in a session, note the gap in
    `log.md` and reconcile Jira when it returns.
+
+**Commit messages must carry the ticket** (owner directive, 2026-07-31). Every commit
+body ends with a `Refs:` line naming the MAYO issue(s) the work belongs to:
+
+```
+mayo: measure real Higgsfield per-clip cost
+
+- …
+
+Refs: MAYO-5, MAYO-7
+```
+
+No ticket → make one first; a commit without `Refs:` is not acceptable.
 
 ## Operating principles for the LLM
 

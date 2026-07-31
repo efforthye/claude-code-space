@@ -29,7 +29,7 @@ _(Serial / hardware UUID / provisioning UDID exist but are intentionally NOT rec
 > multi-arch). An `amd64`-only image runs under emulation (slow) or fails. Build with
 > `docker buildx build --platform linux/arm64` when producing images for the M1 mini.
 
-## Currently running (from `docker ps`, 2026-07-15)
+## Currently running (from `docker ps`, re-verified 2026-07-31)
 Containers publish ports directly to the host (no reverse proxy in front yet — see TBD).
 
 | Container | Image | Host→container | Serves |
@@ -37,6 +37,50 @@ Containers publish ports directly to the host (no reverse proxy in front yet —
 | `richclub-api` | `efforthye/richclub-api:latest` | `8000→8000` | [[richclub]] API (FastAPI/uvicorn) |
 | `richclub-front` | `efforthye/richclub-front:latest` | `3000→80` | [[richclub]] frontend (nginx) |
 | `jenkins` | `jenkins/jenkins:lts-jdk17` | `9090→8080`, `50000→50000` | [[jenkins]] CI (web + agent) |
+| `elasticsearch` | `docker.elastic.co/elasticsearch/elasticsearch:9.4.4` | `127.0.0.1:9200` | [[elk]] log store |
+| `kibana` | `docker.elastic.co/kibana/kibana:9.4.4` | `127.0.0.1:5601` | [[elk]] search UI |
+| `filebeat` | `docker.elastic.co/beats/filebeat:9.4.4` | — | [[elk]] log shipper |
+
+The three ELK containers bind to **loopback only** and are reached from the laptop over an
+SSH tunnel — see [[elk]].
+
+## Memory budget (measured 2026-07-31)
+16 GB host, of which the **Docker VM gets 5.77 GiB** (4 CPUs). What matters when adding
+anything: **ComfyUI runs outside Docker** for [[mayo]]'s local generation, so raising the
+Docker VM allocation starves the generation engine. Size containers to fit the VM as it is.
+
+| | |
+|---|---|
+| Docker VM total | 5.77 GiB |
+| jenkins | ~1.0 GiB |
+| richclub-api / front | ~0.57 GiB |
+| [[elk]] (ES 1.5 GiB limit + Kibana 1 GiB + Filebeat 0.3 GiB) | ~2.8 GiB limits, ~2.0 GiB actual |
+| Outside Docker | ComfyUI, Expo dev server, mayo-api (uvicorn), cloudflared |
+
+## Monitoring — live since 2026-07-31
+`scripts/watchdog-telegram.sh` runs every 5 minutes under the `com.efforthye.watchdog`
+launchd agent and sends a **Telegram** message when a threshold is crossed: disk %, system
+free memory, each launchd agent, each container's state/health, per-container memory
+against its own limit, `mayo-api /health`, and Elasticsearch cluster status. Alerts fire on
+the transition into failure, repeat at most every 6 h while broken, and send a recovery
+message — so a persistent fault does not train you to ignore the channel.
+
+Secrets live in `~/.mayo-watchdog.env` (chmod 600, outside the repo); the template is
+`scripts/watchdog.env.example`. Install with `scripts/watchdog-install.sh`
+(`--test` sends a single test message, `--uninstall` removes it).
+
+**Verified end to end 2026-07-31:** all 21 checks green on the mini; forcing a threshold
+produced a real 🔴 Telegram alert, a repeat run stayed silent (dedup), and restoring the
+threshold produced the 🟢 recovery message. Bot: `@mayo_server_bot`.
+
+> The bot token was pasted into a chat during setup and should be rotated
+> (`/revoke` in @BotFather, then rewrite `~/.mayo-watchdog.env`). Same for the SSH
+> login password, now that key auth makes it unnecessary for automation.
+
+## Access from the laptop
+`ssh efforthye` (alias for `m1mini`) connects with a key — see `~/.ssh/config` on the
+laptop. Key-based auth was set up on 2026-07-31 so unattended jobs (the Kibana tunnel,
+remote administration) never need a password.
 
 ## Current state (snapshot 2026-07-15)
 Healthy, lightly loaded.
@@ -88,7 +132,7 @@ The following aren't documented yet — capture them as they're confirmed:
 - Reverse proxy: none visible in `docker ps` (ports published directly, e.g. `:3000`, `:8000`).
   Confirm whether a proxy / TLS terminates `home.efforthye.com`, or access is host:port.
 - DNS: `home.efforthye.com` → the mini (dynamic DNS? router port-forward?).
-- Backup strategy → will get its own [[runbooks]] page.
+- Backup strategy → will get its own runbook page (none written yet).
 - Hardening: SSH currently uses **password** auth — consider moving to key-based auth later.
 - Housekeeping: ~35 GB reclaimable Docker images/build cache (see Current state).
 
