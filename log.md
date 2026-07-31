@@ -301,3 +301,12 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-07-22] incident | deploy restart erased an active render → jobs now persist + resume (batch 44)
 - See wiki/incidents/2026-07-22-restart-erased-active-render.md. pytest 183,
   tsc clean, both exports OK.
+
+## [2026-08-01] deploy | mayo → fast path scene continuity: clip N+1 starts on clip N's last frame (batch 45)
+- Owner: "두 영상이 이어져야지 — 1의 뒷부분 == 2의 앞부분." The quick create
+  path rendered every scene independently (fresh Nano Banana still each time),
+  so cuts jumped. generate_scene() now takes init_image; the worker feeds each
+  scene the LAST FRAME of the previous clip (segments.last_frame_of), and the
+  external backend animates FROM it instead of generating a new still — same
+  continuity the staged flow already had. First scene unchanged; mock/comfy
+  ignore the param. Verified: pytest 183 passed.

@@ -131,6 +131,22 @@ def _extra_clips_needed(requested: float, measured: float, have: int, cap: int) 
     return max(0, min(math.ceil((requested - measured) / max(avg, 0.1)), cap - have))
 
 
+async def _prev_frame(clip_keys: list[str]) -> bytes | None:
+    """The last frame of the most recent clip, to seed the next scene.
+
+    Image-to-video starts from this frame, so scene N+1 begins exactly where
+    scene N ended — continuous cuts instead of a slideshow. None for the first
+    scene or when the frame can't be extracted (the scene still renders)."""
+    if not clip_keys:
+        return None
+    from . import segments as seg
+
+    try:
+        return await asyncio.to_thread(seg.last_frame_of, clip_keys[-1])
+    except Exception:
+        return None
+
+
 async def _run(job_id: str) -> None:
     job = await jobs.patch(job_id, status="generating")
     if job is None:
@@ -159,7 +175,9 @@ async def _run(job_id: str) -> None:
             else job.title
         )
         try:
-            result = await backend.generate_scene(scene_prompt, index)
+            result = await backend.generate_scene(
+                scene_prompt, index, init_image=await _prev_frame(clip_keys)
+            )
             clip_keys.append(result.media_key)
         except Exception:
             await jobs.patch(job_id, status="failed", etaMin=None)
@@ -203,7 +221,9 @@ async def _run(job_id: str) -> None:
                 else job.title
             )
             try:
-                result = await backend.generate_scene(scene_prompt, index)
+                result = await backend.generate_scene(
+                    scene_prompt, index, init_image=await _prev_frame(clip_keys)
+                )
             except Exception:
                 logger.exception("top-up scene %s failed for job %s", index, job_id)
                 rounds = 5  # keep what we have instead of failing the job

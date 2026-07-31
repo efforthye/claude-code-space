@@ -162,7 +162,7 @@ def test_a_job_with_no_media_reports_failure_not_success(monkeypatch):
     from app.providers import ComfyUIModelBackend, SceneResult
     from app.store import jobs as job_store
 
-    async def no_media(self, prompt, index):
+    async def no_media(self, prompt, index, init_image=None):
         return SceneResult(media_key=f"clips/{index:04d}.mp4")  # a key, no bytes
 
     monkeypatch.setattr(ComfyUIModelBackend, "generate_scene", no_media)

@@ -37,8 +37,15 @@ class ModelBackend(ABC):
     id: str
 
     @abstractmethod
-    async def generate_scene(self, prompt: str, index: int) -> SceneResult:
-        """Render scene `index` for `prompt` (image → clip) and return its media."""
+    async def generate_scene(
+        self, prompt: str, index: int, init_image: bytes | None = None
+    ) -> SceneResult:
+        """Render scene `index` for `prompt` (image -> clip) and return its media.
+
+        `init_image` is the LAST FRAME of the previous scene's clip: image-to-
+        video models start from it, so scene N+1 literally begins where scene N
+        ended (owner: "1의 뒷부분 == 2의 앞부분"). Backends without an image
+        input ignore it."""
 
 
 # Aspect presets → render size. Dimensions are multiples of 8 (SD latent
@@ -70,7 +77,9 @@ class MockModelBackend(ModelBackend):
 
     id = "mock"
 
-    async def generate_scene(self, prompt: str, index: int) -> SceneResult:
+    async def generate_scene(
+        self, prompt: str, index: int, init_image: bytes | None = None
+    ) -> SceneResult:
         await asyncio.sleep(settings.tick_seconds)
         return SceneResult(media_key=f"mock/{index:04d}.mp4")
 
@@ -311,14 +320,18 @@ class ExternalModelBackend(ModelBackend):
         self.aspect = aspect  # per-job output shape for the image stage
         self.video_model = video_model  # catalog id, e.g. "dop-lite"
 
-    async def generate_scene(self, prompt: str, index: int) -> SceneResult:  # pragma: no cover
+    async def generate_scene(
+        self, prompt: str, index: int, init_image: bytes | None = None
+    ) -> SceneResult:  # pragma: no cover
         import httpx
 
         from . import catalog
         from .storage import get_storage
 
-        image_bytes: bytes | None = None
-        if settings.external_use_image_stage:
+        # Continuity: the previous clip's last frame beats a freshly generated
+        # still — DoP animates FROM this image, so the cut is seamless.
+        image_bytes: bytes | None = init_image
+        if image_bytes is None and settings.external_use_image_stage:
             image_bytes, _mime = await generate_still(prompt, aspect=self.aspect)
 
         app_id = catalog.higgsfield_app_for(self.video_model)
@@ -383,7 +396,9 @@ class ComfyUIModelBackend(ModelBackend):
             wf["9"]["inputs"]["frame_rate"] = settings.comfy_fps
         return wf
 
-    async def generate_scene(self, prompt: str, index: int) -> SceneResult:
+    async def generate_scene(
+        self, prompt: str, index: int, init_image: bytes | None = None
+    ) -> SceneResult:
         import httpx  # lazy — only needed in comfy mode
 
         from .storage import get_storage
