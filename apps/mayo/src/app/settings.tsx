@@ -16,7 +16,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@/hooks/use-query';
 import { useToast } from '@/components/toast';
 import { useI18n, useSettings, type ThemeMode } from '@/settings/settings';
-import { type Lang } from '@/i18n/translations';
+import { ACTIVE_LANGS, LANG_NAMES, type Lang } from '@/i18n/translations';
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -96,10 +96,11 @@ export default function SettingsScreen() {
     { id: 'light', label: t('theme.light') },
     { id: 'dark', label: t('theme.dark') },
   ];
+  // Endonyms come from LANG_NAMES and are never translated — someone looking
+  // for their language scans for its own name, not for its English label.
   const langOptions: { id: Lang; label: string }[] = [
     { id: 'system', label: t('lang.system') },
-    { id: 'en', label: t('lang.en') },
-    { id: 'ko', label: t('lang.ko') },
+    ...ACTIVE_LANGS.map((code) => ({ id: code as Lang, label: LANG_NAMES[code] })),
   ];
 
   return (

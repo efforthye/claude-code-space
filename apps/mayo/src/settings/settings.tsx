@@ -4,7 +4,7 @@ import { useColorScheme } from 'react-native';
 
 import { DEFAULT_API_KEY, setApiKey } from '@/api/api-key';
 import { DEFAULT_API_BASE_URL, setApiBaseUrl } from '@/api/base-url';
-import { translate, type ActiveLang, type Lang } from '@/i18n/translations';
+import { resolveDeviceLang, translate, type ActiveLang, type Lang } from '@/i18n/translations';
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 export type Scheme = 'light' | 'dark';
@@ -41,8 +41,10 @@ const STORAGE_KEY = 'mayo.settings.v1';
 
 function deviceLang(): ActiveLang {
   try {
+    // resolvedOptions().locale gives the full BCP-47 tag (`zh-Hant-TW`,
+    // `pt-BR`), which resolveDeviceLang needs to tell Chinese scripts apart.
     const loc = new Intl.DateTimeFormat().resolvedOptions().locale ?? 'en';
-    return loc.toLowerCase().startsWith('ko') ? 'ko' : 'en';
+    return resolveDeviceLang(loc);
   } catch {
     return 'en';
   }
