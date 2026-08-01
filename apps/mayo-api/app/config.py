@@ -14,6 +14,23 @@ def _split(csv: str) -> list[str]:
     return [item.strip() for item in csv.split(",") if item.strip()]
 
 
+def _watchdog_env() -> dict[str, str]:
+    """KEY=value pairs from the infra watchdog's ~/.mayo-watchdog.env (the
+    Telegram bot already provisioned for server alerts); {} when absent."""
+    path = os.path.expanduser("~/.mayo-watchdog.env")
+    out: dict[str, str] = {}
+    try:
+        with open(path) as fh:
+            for line in fh:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, _, value = line.partition("=")
+                    out[key.strip()] = value.strip()
+    except OSError:
+        pass
+    return out
+
+
 @dataclass(frozen=True)
 class Settings:
     env: str = field(default_factory=lambda: os.getenv("MAYO_ENV", "dev"))
@@ -246,11 +263,17 @@ class Settings:
         default_factory=lambda: os.getenv("MAYO_PUBLIC_WEB_BASE", "https://mayo.im")
     )
     # Owner alerts via Telegram (ledger events: signups, payments, generations).
+    # Reuses the EXISTING infra-watchdog bot (@mayo_server_bot): when the
+    # MAYO_TELEGRAM_* vars are unset, credentials are read from the watchdog's
+    # ~/.mayo-watchdog.env (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID) — one bot,
+    # one channel, zero extra setup. See wiki/infra/home-server.md.
     telegram_bot_token: str = field(
         default_factory=lambda: os.getenv("MAYO_TELEGRAM_BOT_TOKEN", "")
+        or _watchdog_env().get("TELEGRAM_BOT_TOKEN", "")
     )
     telegram_chat_id: str = field(
         default_factory=lambda: os.getenv("MAYO_TELEGRAM_CHAT_ID", "")
+        or _watchdog_env().get("TELEGRAM_CHAT_ID", "")
     )
     # Outbound mail (password-reset codes). Unset host -> reset endpoints answer
     # an honest 501 instead of pretending to send. Names only in the repo.

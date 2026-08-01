@@ -385,3 +385,9 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   (silent no-op otherwise; the ledger always records).
 - GET /v1/admin/ledger (admin-gated) + "이용 원장" section in the admin console.
 - Verified: pytest 185, tsc clean, both exports OK.
+
+## [2026-08-01] deploy | mayo → ledger alerts reuse the existing watchdog Telegram bot (batch 53b)
+- Owner: a Telegram alert system already exists (@mayo_server_bot, the infra
+  watchdog from 2026-07-31). The business-ledger alerts now read the bot token
+  and chat id from the watchdog's ~/.mayo-watchdog.env when MAYO_TELEGRAM_*
+  are unset — one bot, one channel, zero additional setup. Verified: pytest 185.
