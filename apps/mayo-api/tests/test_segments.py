@@ -410,6 +410,60 @@ def test_clips_refuse_before_the_stills_gate_is_cleared():
     assert r.status_code == 409
 
 
+def test_reclip_refuses_an_anonymous_caller(monkeypatch):
+    # A re-render is a fresh paid clip; without a session there is nobody to
+    # bill, and rendering anyway was a free tunnel around the charge.
+    job_id, _ = _clips_job(monkeypatch)
+    assert client.post(f"/v1/jobs/{job_id}/segments/0/reclip").status_code == 401
+
+
+def test_reclip_charges_the_signed_in_caller(monkeypatch):
+    from app import catalog
+    from app.auth import store as users
+
+    job_id, _ = _clips_job(monkeypatch)
+    user = users.create_user(
+        "reclip-payer@example.com", "R", provider="email", password="pw12345678"
+    )
+    token = users.create_session(user["id"])
+    before = int(users.users[user["id"]]["credits"])
+
+    r = client.post(
+        f"/v1/jobs/{job_id}/segments/0/reclip", headers={"X-Mayo-Session": token}
+    )
+    assert r.status_code == 200, r.text
+    per_clip = catalog.credits_per_scene(catalog.tier_by_id("standard"))
+    assert int(users.users[user["id"]]["credits"]) == before - per_clip
+    assert client.get(f"/v1/jobs/{job_id}").json()["spentCredits"] == per_clip
+
+
+def test_a_failed_clip_render_refunds_the_charge(monkeypatch):
+    # The charge lands before the render is submitted; when the render then
+    # fails, the money must come back and the job must say why it stopped.
+    import asyncio
+
+    from app.auth import store as users
+
+    job_id, _ = _clips_job(monkeypatch)
+
+    async def boom(job, segs, index, model=None):
+        raise RuntimeError("provider fell over")
+
+    monkeypatch.setattr(seg, "render_segment_clip", boom)
+    user = users.create_user(
+        "refund-clip@example.com", "R", provider="email", password="pw12345678"
+    )
+    before = int(users.users[user["id"]]["credits"])
+
+    asyncio.run(seg.render_clips(job_id, user["id"]))
+
+    assert int(users.users[user["id"]]["credits"]) == before  # charged, then refunded
+    job = client.get(f"/v1/jobs/{job_id}").json()
+    assert job["spentCredits"] == 0
+    assert job["failureReason"] and "실패" in job["failureReason"]
+    assert not any(s["clipKey"] for s in job["segments"])
+
+
 def test_per_scene_price_follows_the_tier():
     from app import catalog
 
@@ -440,12 +494,15 @@ def test_a_plain_job_still_renders_in_one_pass():
     assert r.json()["stage"] == "clips"
 
 
-def test_planning_and_previewing_are_free_for_a_free_user(monkeypatch):
-    # The paid gate is at the clips stage, so someone without a plan can still
-    # plan a film and look at its stills. That is also the only honest way to
-    # show what they would be paying for.
+def test_planning_is_free_but_every_external_render_is_gated(monkeypatch):
+    # The FREE part of the staged flow is the text: planning, reviewing and
+    # rewriting beats. Everything that hits the external provider — stills,
+    # reimage, clips, reclip — spends the owner's provider money, so all of it
+    # sits behind the premium gate. A free stills "preview" that ran real image
+    # generations was a paywall bypass, not a feature.
     # settings is a frozen dataclass, so the router's reference is swapped
     # wholesale — the pattern test_gating.py already uses.
+    from app.auth import store as users
     from app.routers import jobs as jobs_router
 
     monkeypatch.setattr(jobs_router, "settings", _GATED)
@@ -466,17 +523,29 @@ def test_planning_and_previewing_are_free_for_a_free_user(monkeypatch):
     assert r.status_code == 201, r.text
     job_id = r.json()["id"]
 
+    # Planning and review cost nothing and stay open.
     assert client.post(f"/v1/jobs/{job_id}/beats", json={"prompt": "x"}).status_code == 200
     n = len(client.get(f"/v1/jobs/{job_id}").json()["segments"])
     for i in range(n):
         client.post(f"/v1/jobs/{job_id}/segments/{i}/approve")
     assert client.post(f"/v1/jobs/{job_id}/advance").status_code == 200
-    assert client.post(f"/v1/jobs/{job_id}/stills").status_code == 200
 
-    # ...and only then does it ask for payment.
+    # Free/anonymous callers bounce off every render endpoint.
+    assert client.post(f"/v1/jobs/{job_id}/stills").status_code == 402
+    assert client.post(f"/v1/jobs/{job_id}/segments/0/reimage").status_code == 402
+
+    # A premium account passes and renders the stills.
+    vip = users.create_user(
+        "staged-vip@example.com", "V", provider="email", password="pw12345678"
+    )
+    users.set_plan(vip["id"], "pro")
+    vip_h = {"X-Mayo-Session": users.create_session(vip["id"])}
+    assert client.post(f"/v1/jobs/{job_id}/stills", headers=vip_h).status_code == 200
     for i in range(n):
         client.post(f"/v1/jobs/{job_id}/segments/{i}/approve")
     client.post(f"/v1/jobs/{job_id}/advance")
+
+    # The clips stage keeps its gate for the free caller.
     r = client.post(f"/v1/jobs/{job_id}/clips", json={"mode": "renderAll"})
     assert r.status_code == 402, r.text
 

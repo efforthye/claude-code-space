@@ -1,13 +1,16 @@
 """App-controllable runtime settings — flip generation mode without SSHing in.
 
-GET /v1/settings  -> current runtime settings
-PUT /v1/settings  -> change them (persisted via runtime.py)
+GET /v1/settings  -> current runtime settings (open: the app renders from it)
+PUT /v1/settings  -> change them (persisted via runtime.py) — ADMIN ONLY:
+these are GLOBAL server backends, so an ordinary session flipping them would
+redirect every user's generations (and the owner's provider spend).
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from .. import runtime
+from .admin import require_admin
 
 router = APIRouter(prefix="/v1/settings", tags=["settings"])
 
@@ -38,7 +41,9 @@ async def get_settings() -> RuntimeSettings:
 
 
 @router.put("", response_model=RuntimeSettings)
-async def put_settings(body: RuntimeSettings) -> RuntimeSettings:
+async def put_settings(
+    body: RuntimeSettings, admin: dict = Depends(require_admin)
+) -> RuntimeSettings:
     try:
         runtime.set_generation_backend(body.generationBackend)
         runtime.set_planner_backend(body.plannerBackend)

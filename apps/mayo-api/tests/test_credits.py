@@ -58,7 +58,7 @@ def test_anonymous_job_is_not_charged():
 def test_cancel_refunds_unrendered_share_pro_rata():
     # Deterministic: craft the job state directly (2 of 6 scenes rendered,
     # 30 credits charged) instead of racing the live worker.
-    user, _ = _signup("credits-refund@example.com")
+    user, token = _signup("credits-refund@example.com")
     users.users[user["id"]]["credits"] = 40
     jid = "jtest-prorata"
     job_store._jobs[jid] = Job(
@@ -66,7 +66,8 @@ def test_cancel_refunds_unrendered_share_pro_rata():
     )
     job_store._owners[jid] = user["id"]
 
-    r = client.delete(f"/v1/jobs/{jid}")
+    # An owned job can only be cancelled by its owner (ownership guard).
+    r = client.delete(f"/v1/jobs/{jid}", headers={"X-Mayo-Session": token})
     assert r.status_code == 200
     body = r.json()
     assert body["refundedCredits"] == 20  # 4/6 of 30
@@ -75,7 +76,7 @@ def test_cancel_refunds_unrendered_share_pro_rata():
 
 
 def test_cancel_done_job_refunds_nothing():
-    user, _ = _signup("credits-done@example.com")
+    user, token = _signup("credits-done@example.com")
     users.users[user["id"]]["credits"] = 10
     jid = "jtest-done"
     job_store._jobs[jid] = Job(
@@ -83,7 +84,7 @@ def test_cancel_done_job_refunds_nothing():
     )
     job_store._owners[jid] = user["id"]
 
-    r = client.delete(f"/v1/jobs/{jid}")
+    r = client.delete(f"/v1/jobs/{jid}", headers={"X-Mayo-Session": token})
     assert r.status_code == 200
     assert r.json()["refundedCredits"] == 0
     assert users.users[user["id"]]["credits"] == 10

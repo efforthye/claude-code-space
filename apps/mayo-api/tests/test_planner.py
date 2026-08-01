@@ -53,13 +53,29 @@ def test_mock_director_replies_in_korean():
     assert turn.reply.strip() != "밤하늘을 나는 고양이 만들어줘"
 
 
-def test_director_settings_roundtrip_and_validation():
+def test_director_settings_roundtrip_and_validation(monkeypatch):
+    from app import auth as auth_mod
     from app.main import app as _app
+    from app.routers import admin as admin_router
     from fastapi.testclient import TestClient
 
     c = TestClient(_app)
     before = c.get("/v1/settings").json()
     assert "plannerBackend" in before and "directorModel" in before
+
+    # PUT flips GLOBAL server backends, so it is admin-only; an anonymous or
+    # ordinary session must bounce off.
+    assert c.put("/v1/settings", json=before).status_code == 403
+    admin = auth_mod.store.by_email("settings-admin@example.com") or auth_mod.store.create_user(
+        "settings-admin@example.com", "A", provider="email", password="pw12345678"
+    )
+    token = auth_mod.store.create_session(admin["id"])
+    monkeypatch.setattr(
+        admin_router,
+        "settings",
+        type("S", (), {"admin_emails": ["settings-admin@example.com"]})(),
+    )
+    h = {"X-Mayo-Session": token}
 
     ok = c.put(
         "/v1/settings",
@@ -69,6 +85,7 @@ def test_director_settings_roundtrip_and_validation():
             "directorModel": "claude-sonnet-5",
             "byok": before["byok"],
         },
+        headers=h,
     )
     assert ok.status_code == 200
     assert ok.json()["plannerBackend"] == "claude"
@@ -82,11 +99,12 @@ def test_director_settings_roundtrip_and_validation():
             "directorModel": "gpt-nope",
             "byok": before["byok"],
         },
+        headers=h,
     )
     assert bad.status_code == 400
 
     # restore original settings so test ordering stays clean
-    c.put("/v1/settings", json=before)
+    c.put("/v1/settings", json=before, headers=h)
 
 
 def test_mock_planner_scenes_sum_to_length():

@@ -8,9 +8,44 @@ from ..auth import premium_user_or_none
 from ..config import settings
 from ..schemas import CreateJobRequest, Estimate, Job
 from ..store import jobs as job_store
-from ..worker import start_generation
+from ..worker import register_task, start_generation
 
 router = APIRouter(prefix="/v1/jobs", tags=["jobs"])
+
+
+def _require_job_access(job_id: str, session_token: Optional[str]) -> None:
+    """403 unless the caller may act on this job.
+
+    A job with an owner belongs to that account: only that owner (or an admin)
+    may read or mutate it — a job id alone is not a credential. Ownerless jobs
+    (anonymous/legacy) stay open to everyone, matching how they are listed.
+    """
+    owner = job_store.owner_of(job_id)
+    if owner is None:
+        return
+    from ..auth import is_admin_user
+    from ..auth import store as users
+
+    caller = users.user_for_session(session_token or "")
+    if caller and (caller["id"] == owner or is_admin_user(caller)):
+        return
+    raise HTTPException(status.HTTP_403_FORBIDDEN, detail="not your job")
+
+
+def _require_premium_for_external(session_token: Optional[str]) -> None:
+    """The paid gate: external generation spends the owner's provider keys, so
+    with premium gating on it is reserved for premium (or admin) accounts.
+    Applied at EVERY endpoint that can trigger an external render — leaving one
+    out is a free tunnel through the paywall."""
+    if (
+        settings.premium_gating
+        and runtime.generation_backend() == "external"
+        and premium_user_or_none(session_token) is None
+    ):
+        raise HTTPException(
+            status.HTTP_402_PAYMENT_REQUIRED,
+            detail="external AI generation is for paid plans — upgrade or switch generation mode",
+        )
 
 
 @router.get("", response_model=list[Job])
@@ -78,16 +113,8 @@ async def create_job(
     # spends nothing until the clips stage, so a free user can plan a film and
     # see its stills first — which is also the only honest way to show what they
     # would be paying for. The gate moves to POST /{id}/clips.
-    if (
-        not req.staged
-        and settings.premium_gating
-        and runtime.generation_backend() == "external"
-        and premium_user_or_none(x_mayo_session) is None
-    ):
-        raise HTTPException(
-            status.HTTP_402_PAYMENT_REQUIRED,
-            detail="external AI generation is for paid plans — upgrade or switch generation mode",
-        )
+    if not req.staged:
+        _require_premium_for_external(x_mayo_session)
     # Charge signed-in users up front; cancelling refunds the unrendered share
     # (pro-rata) via DELETE below. Anonymous callers are not metered.
     from ..auth import store as users
@@ -140,15 +167,31 @@ async def create_job(
 
 
 @router.get("/{job_id}", response_model=Job)
-async def get_job(job_id: str) -> Job:
+async def get_job(
+    job_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
     job = await job_store.get(job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    # A job carries its prompts — the user's creative work — so reading an
+    # owned job is as gated as mutating it.
+    _require_job_access(job_id, x_mayo_session)
     return job
 
 
 @router.post("/{job_id}/retry", response_model=Job)
-async def retry_job(job_id: str) -> Job:
+async def retry_job(
+    job_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
+    current = await job_store.get(job_id)
+    if current is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    _require_job_access(job_id, x_mayo_session)
+    if current.status == "generating":
+        # A second _run on the same job renders — and bills — every scene twice.
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, detail="job is already generating"
+        )
     job = await job_store.retry(job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
@@ -157,13 +200,16 @@ async def retry_job(job_id: str) -> Job:
 
 
 @router.delete("/{job_id}")
-async def delete_job(job_id: str) -> dict:
+async def delete_job(
+    job_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> dict:
     """Cancel/remove a job. If the caller was charged, refund the unrendered
     share pro-rata: cancel a 6-scene job after 2 scenes → 4/6 of the charge back.
     """
     job = await job_store.get(job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    _require_job_access(job_id, x_mayo_session)
     refund = 0
     balance: int | None = None
     owner = job_store.owner_of(job_id)
@@ -171,11 +217,17 @@ async def delete_job(job_id: str) -> dict:
         total = max(1, job.scenesTotal or 1)
         done = min(max(job.scenesDone or 0, 0), total)
         refund = round(job.chargedCredits * (total - done) / total)
-        if refund > 0:
-            from ..auth import store as users
+    # Refund only a removal that actually happened — two concurrent deletes of
+    # the same job must not both put the money back.
+    removed = await job_store.remove(job_id)
+    if not removed:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    if refund > 0 and owner:
+        from ..auth import store as users
 
-            balance = users.add_credits(owner, refund)
-    await job_store.remove(job_id)
+        balance = users.add_credits(owner, refund)
+    else:
+        refund = 0
     return {"deleted": True, "refundedCredits": refund, "credits": balance}
 
 
@@ -194,11 +246,14 @@ class RewriteSegmentRequest(BaseModel):
 
 
 @router.post("/{job_id}/beats", response_model=Job)
-async def plan_beats(job_id: str, req: BeatsRequest) -> Job:
+async def plan_beats(
+    job_id: str, req: BeatsRequest, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
     """Draft the timecoded beat sheet. Safe to re-run: it replaces the draft."""
     job = await job_store.get(job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    _require_job_access(job_id, x_mayo_session)
 
     from .. import segments as seg
 
@@ -212,12 +267,18 @@ async def plan_beats(job_id: str, req: BeatsRequest) -> Job:
 
 
 @router.post("/{job_id}/segments/{index}/rewrite", response_model=Job)
-async def rewrite_one_segment(job_id: str, index: int, req: RewriteSegmentRequest) -> Job:
+async def rewrite_one_segment(
+    job_id: str,
+    index: int,
+    req: RewriteSegmentRequest,
+    x_mayo_session: Optional[str] = Header(default=None),
+) -> Job:
     """Rewrite a single beat. Neighbours are passed as context so the
     replacement still connects; a beat rewritten in isolation reads like it."""
     job = await job_store.get(job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    _require_job_access(job_id, x_mayo_session)
 
     from .. import segments as seg
 
@@ -240,10 +301,13 @@ _APPROVES = {"draft": "approved", "imaged": "imageApproved", "rendered": "clipAp
 
 
 @router.post("/{job_id}/segments/{index}/approve", response_model=Job)
-async def approve_segment(job_id: str, index: int) -> Job:
+async def approve_segment(
+    job_id: str, index: int, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
     job = await job_store.get(job_id)
     if job is None or not 0 <= index < len(job.segments):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+    _require_job_access(job_id, x_mayo_session)
     target = job.segments[index].model_copy()
     nxt = _APPROVES.get(target.status)
     if nxt is None:
@@ -263,12 +327,18 @@ async def approve_segment(job_id: str, index: int) -> Job:
 
 
 @router.post("/{job_id}/stills", response_model=Job)
-async def render_stills(job_id: str) -> Job:
+async def render_stills(
+    job_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
     """Stage 2: a still for every segment. Cheap next to video, so it runs for
-    the whole beat sheet at once rather than one at a time."""
+    the whole beat sheet at once rather than one at a time — but it still spends
+    the owner's provider money on the external backend, so the premium gate
+    applies here exactly as it does at the clips stage."""
     job = await job_store.get(job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    _require_job_access(job_id, x_mayo_session)
+    _require_premium_for_external(x_mayo_session)
     if job.stage != "stills":
         raise HTTPException(
             status.HTTP_409_CONFLICT, detail=f"job is at stage '{job.stage}', not 'stills'"
@@ -286,7 +356,9 @@ async def render_stills(job_id: str) -> Job:
 
 
 @router.post("/{job_id}/segments/{index}/reimage", response_model=Job)
-async def reimage_segment(job_id: str, index: int) -> Job:
+async def reimage_segment(
+    job_id: str, index: int, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
     """Regenerate ONE still, leaving every other segment alone.
 
     Safe because the style block is reapplied, so the replacement matches the
@@ -294,6 +366,8 @@ async def reimage_segment(job_id: str, index: int) -> Job:
     job = await job_store.get(job_id)
     if job is None or not 0 <= index < len(job.segments):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+    _require_job_access(job_id, x_mayo_session)
+    _require_premium_for_external(x_mayo_session)
 
     from .. import segments as seg
 
@@ -305,7 +379,9 @@ async def reimage_segment(job_id: str, index: int) -> Job:
 
 
 @router.post("/{job_id}/advance", response_model=Job)
-async def advance_stage(job_id: str) -> Job:
+async def advance_stage(
+    job_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
     """Move to the next stage — the "OK, next" button.
 
     Refuses while any segment is still unapproved. The gate is the feature: it
@@ -314,6 +390,7 @@ async def advance_stage(job_id: str) -> Job:
     job = await job_store.get(job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    _require_job_access(job_id, x_mayo_session)
 
     from .. import segments as seg
 
@@ -367,6 +444,7 @@ async def clip_quote(job_id: str, x_mayo_session: Optional[str] = Header(default
     job = await job_store.get(job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    _require_job_access(job_id, x_mayo_session)
 
     tier = catalog.tier_by_id((job.tierLabel or "standard").lower())
     per_clip = catalog.credits_per_scene(tier)
@@ -391,21 +469,14 @@ async def start_clips(
     job = await job_store.get(job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    _require_job_access(job_id, x_mayo_session)
     if job.stage != "clips" or not job.segments:
         raise HTTPException(
             status.HTTP_409_CONFLICT, detail=f"job is at stage '{job.stage}', not ready for clips"
         )
 
     # This is the paid boundary for a staged job — everything before it was free.
-    if (
-        settings.premium_gating
-        and runtime.generation_backend() == "external"
-        and premium_user_or_none(x_mayo_session) is None
-    ):
-        raise HTTPException(
-            status.HTTP_402_PAYMENT_REQUIRED,
-            detail="external AI generation is for paid plans — upgrade or switch generation mode",
-        )
+    _require_premium_for_external(x_mayo_session)
 
     from ..auth import store as users
 
@@ -416,7 +487,11 @@ async def start_clips(
 
     from .. import segments as seg
 
-    asyncio.create_task(seg.render_clips(job_id, caller["id"] if caller else None))
+    # register_task keeps a strong reference: asyncio only holds a weak one, so
+    # an untracked render task can be garbage-collected mid-render.
+    register_task(
+        asyncio.create_task(seg.render_clips(job_id, caller["id"] if caller else None))
+    )
     updated = await job_store.get(job_id)
     if updated is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
@@ -424,8 +499,11 @@ async def start_clips(
 
 
 @router.post("/{job_id}/stop", response_model=dict)
-async def stop_clips(job_id: str) -> dict:
+async def stop_clips(
+    job_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> dict:
     """Stop after the clip currently rendering. Nothing after it is charged."""
+    _require_job_access(job_id, x_mayo_session)
     job = await job_store.request_stop(job_id)
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
@@ -446,24 +524,40 @@ async def reclip_segment(
     job = await job_store.get(job_id)
     if job is None or not 0 <= index < len(job.segments):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")
+    _require_job_access(job_id, x_mayo_session)
+    _require_premium_for_external(x_mayo_session)
 
     from ..auth import store as users
     from .. import segments as seg
 
+    # A re-render is a fresh paid clip — it needs someone to bill. Rendering
+    # for a caller with no session would be a free tunnel around the charge.
     caller = users.user_for_session(x_mayo_session or "")
+    if caller is None:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, detail="sign in to re-render clips"
+        )
     tier = catalog.tier_by_id((job.tierLabel or "standard").lower())
     per_clip = catalog.credits_per_scene(tier)
-    if caller:
-        balance = int(caller.get("credits", 0))
-        if balance < per_clip:
-            raise HTTPException(
-                status.HTTP_402_PAYMENT_REQUIRED,
-                detail=f"크레딧이 부족해요 (필요 {per_clip}, 보유 {balance})",
-            )
-        users.add_credits(caller["id"], -per_clip)
-        await job_store.add_spend(job_id, per_clip)
+    balance = int(caller.get("credits", 0))
+    if balance < per_clip:
+        raise HTTPException(
+            status.HTTP_402_PAYMENT_REQUIRED,
+            detail=f"크레딧이 부족해요 (필요 {per_clip}, 보유 {balance})",
+        )
+    users.add_credits(caller["id"], -per_clip)
+    await job_store.add_spend(job_id, per_clip)
 
-    done = await seg.render_segment_clip(job_id, job.segments, index, job.videoModel)
+    try:
+        done = await seg.render_segment_clip(job_id, job.segments, index, job.videoModel)
+    except Exception:
+        # The render never happened, so the charge must not stand.
+        users.add_credits(caller["id"], per_clip)
+        await job_store.add_spend(job_id, -per_clip)
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY,
+            detail="클립 재생성에 실패했어요 — 크레딧은 환불됐어요",
+        )
     updated = await job_store.set_segment(job_id, done)
     if updated is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="segment not found")

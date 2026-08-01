@@ -325,7 +325,8 @@ class LibraryStore:
             scenePrompts=job.scenePrompts,
             stylePrompt=job.stylePrompt,
             ownerId=owner_id,
-            promptPublic=prompt_public,
+            # No promptPublic here: a Video is private library metadata; prompt
+            # visibility is decided per post at publish time (ExploreItem).
         )
         async with self._lock:
             self._videos[video.id] = video

@@ -16,6 +16,24 @@ def _caller_id(session: Optional[str]) -> Optional[str]:
     return user["id"] if user else None
 
 
+def _require_video_access(video, session: Optional[str]) -> None:
+    """403 unless the caller may act on this video.
+
+    A video with an owner belongs to that account: only that owner (or an
+    admin) may read or mutate it — a video id alone is not a credential.
+    Ownerless videos (anonymous/legacy) stay open, matching how they are listed.
+    """
+    if video.ownerId is None:
+        return
+    from ..auth import is_admin_user
+    from ..auth import store as users
+
+    user = users.user_for_session(session or "")
+    if user and (user["id"] == video.ownerId or is_admin_user(user)):
+        return
+    raise HTTPException(status.HTTP_403_FORBIDDEN, detail="not your video")
+
+
 @router.get("/videos", response_model=list[Video])
 async def list_videos(x_mayo_session: Optional[str] = Header(default=None)) -> list[Video]:
     """The caller's own videos (plus legacy ownerless ones) — per-account library."""
@@ -29,25 +47,42 @@ async def storage(x_mayo_session: Optional[str] = Header(default=None)) -> Stora
 
 
 @router.get("/videos/{video_id}", response_model=Video)
-async def get_video(video_id: str) -> Video:
+async def get_video(
+    video_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> Video:
     video = await lib.get(video_id)
     if video is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="video not found")
+    _require_video_access(video, x_mayo_session)
     return video
 
 
 @router.delete("/videos/{video_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_video(video_id: str) -> None:
+async def delete_video(
+    video_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> None:
+    video = await lib.get(video_id)
+    if video is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="video not found")
+    _require_video_access(video, x_mayo_session)
     removed = await lib.remove(video_id)
     if not removed:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="video not found")
 
 
 @router.post("/videos/{video_id}/extend", response_model=Video)
-async def extend(video_id: str, req: ExtendRequest) -> Video:
+async def extend(
+    video_id: str,
+    req: ExtendRequest,
+    x_mayo_session: Optional[str] = Header(default=None),
+) -> Video:
     plan = catalog.retention_by_id(req.plan)
     if plan is None:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown plan '{req.plan}'")
+    current = await lib.get(video_id)
+    if current is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="video not found")
+    _require_video_access(current, x_mayo_session)
     video = await lib.extend(video_id, plan.days)
     if video is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="video not found")
@@ -63,6 +98,7 @@ async def publish(
     video = await lib.get(video_id)
     if video is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="video not found")
+    _require_video_access(video, x_mayo_session)
 
     # Real YouTube upload when this user has connected their channel (ADR 0008
     # follow-up): read the film from storage and run the resumable upload on the

@@ -315,14 +315,35 @@ async def render_clips(job_id: str, owner_id: Optional[str] = None) -> None:
 
         # Charge before submitting: once the request is in, the money is gone
         # whether or not we are still here to see the result.
+        charged = 0
         if owner_id:
             balance = int((users.users.get(owner_id) or {}).get("credits", 0))
             if balance < per_clip:
                 return
             users.add_credits(owner_id, -per_clip)
             await job_store.add_spend(job_id, per_clip)
+            charged = per_clip
 
-        done = await render_segment_clip(job_id, fresh.segments, index, fresh.videoModel)
+        try:
+            done = await render_segment_clip(job_id, fresh.segments, index, fresh.videoModel)
+        except Exception:
+            # The render never happened, so the charge must not stand — put the
+            # clip's credits back, leave the reason on the job, and stop. This
+            # runs as a fire-and-forget task: an unhandled exception here would
+            # otherwise vanish with the user's money.
+            import logging
+
+            logging.getLogger("mayo").exception(
+                "clip %s failed for job %s", index, job_id
+            )
+            if charged and owner_id:
+                users.add_credits(owner_id, charged)
+                await job_store.add_spend(job_id, -charged)
+            reason = f"{index + 1}번 클립 생성에 실패했어요."
+            if charged:
+                reason += " 해당 클립 크레딧은 환불했어요."
+            await job_store.patch(job_id, failureReason=reason)
+            return
         await job_store.set_segment(job_id, done)
 
         if fresh.clipMode == "stopOnReject":

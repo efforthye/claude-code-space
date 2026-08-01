@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import secrets
 import subprocess
 import tempfile
 import time
@@ -235,7 +236,9 @@ async def compose_edit(req: EditRequest, owner_id: str | None = None) -> Optiona
     data = await asyncio.to_thread(_render, sources, req.audioKey, req.keepAudio)
     if not data:
         return None
-    film_key = f"films/edit-{int(time.time() * 1000)}.mp4"
+    # Millisecond timestamps alone can collide when two edits land in the same
+    # tick — the random suffix makes every rendered edit its own file.
+    film_key = f"films/edit-{int(time.time() * 1000)}-{secrets.token_hex(4)}.mp4"
     store.save(film_key, data)
     return await library.add_film(
         req.title or "My edit", film_key, len(data), tier_label="Edit", scenes=scenes,

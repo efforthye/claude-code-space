@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import math
+import secrets
 import time
 import logging
 import os
@@ -100,7 +101,11 @@ def _stitch_sync(job_id: str, clip_keys: list[str]) -> str | None:
     real = [k for k in clip_keys if store.exists(k)]
     if not real:
         return None
-    film_key = f"films/{job_id}.mp4"
+    # Unique per stitch, not per job: a salvage stitch and a retry's full film
+    # would otherwise share films/{job_id}.mp4 and overwrite each other, and a
+    # library entry from the earlier stitch would silently point at the later
+    # file.
+    film_key = f"films/{job_id}-{secrets.token_hex(4)}.mp4"
     if len(real) == 1:
         store.save(film_key, store.read(real[0]))
         return film_key
@@ -338,7 +343,15 @@ async def _run(job_id: str) -> None:
             if store.exists(result.media_key):
                 await jobs.append_scene_url(job_id, f"/v1/media/{result.media_key}")
             await jobs.patch(job_id, scenesDone=len(clip_keys))
-        film_key = await _stitch(job_id, clip_keys) or film_key
+        # Each stitch writes a NEW key; drop the superseded file so top-up
+        # rounds don't accumulate orphaned intermediates in storage.
+        new_key = await _stitch(job_id, clip_keys)
+        if new_key and film_key and new_key != film_key:
+            try:
+                store.delete(film_key)
+            except Exception:
+                pass
+        film_key = new_key or film_key
         measured = await _probe(film_key)
 
     # Duration label: prefer the MEASURED stitched length; fall back to the
@@ -389,10 +402,19 @@ async def _run(job_id: str) -> None:
         )
 
 
-def start_generation(job_id: str) -> None:
-    task = asyncio.create_task(_run(job_id))
+def register_task(task: asyncio.Task) -> None:
+    """Hold a strong reference until the task finishes.
+
+    asyncio keeps only a weak reference to running tasks, so a render task
+    nobody holds can be garbage-collected mid-render. Shared with the staged
+    clips renderer (routers/jobs.py), which also gains shutdown cancellation.
+    """
     _tasks.add(task)
     task.add_done_callback(_tasks.discard)
+
+
+def start_generation(job_id: str) -> None:
+    register_task(asyncio.create_task(_run(job_id)))
 
 
 async def shutdown() -> None:

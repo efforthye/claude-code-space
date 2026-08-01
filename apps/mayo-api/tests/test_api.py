@@ -84,6 +84,34 @@ def test_delete_job():
     assert client.get(f"/v1/jobs/{job_id}").status_code == 404
 
 
+def test_add_from_job_files_the_finished_film():
+    """Regression: add_from_job referenced an undefined prompt_public name and
+    raised NameError inside the worker's fire-and-forget task — the job said
+    done while the finished film never reached the library."""
+    from app.store import jobs as job_store, library
+
+    job = asyncio.run(job_store.create("filed film", 4, "draft", owner_id="u_filed"))
+    video = asyncio.run(library.add_from_job(job, owner_id="u_filed"))
+    assert video.title == "filed film"
+    assert video.ownerId == "u_filed"
+    stored = asyncio.run(library.get(video.id))
+    assert stored is not None and stored.title == "filed film"
+    asyncio.run(job_store.remove(job.id))
+    asyncio.run(library.remove(video.id))
+
+
+def test_retry_refuses_a_job_already_generating():
+    """A second _run on a generating job renders — and bills — scenes twice."""
+    from app.store import jobs as job_store
+
+    job = asyncio.run(job_store.create("busy job", 4, "draft"))
+    asyncio.run(job_store.patch(job.id, status="generating"))
+    r = client.post(f"/v1/jobs/{job.id}/retry")
+    assert r.status_code == 409
+    assert "already generating" in r.json()["detail"]
+    asyncio.run(job_store.remove(job.id))
+
+
 def test_billing_products_and_validate():
     products = client.get("/v1/billing/products").json()
     ids = {p["planId"] for p in products}
