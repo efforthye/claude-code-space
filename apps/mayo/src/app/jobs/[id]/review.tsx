@@ -17,6 +17,7 @@ import {
   advanceStage,
   ApiError,
   approveSegment,
+  getClipQuote,
   getJob,
   mediaUrl,
   planBeats,
@@ -78,6 +79,11 @@ export default function ReviewScreen() {
 
   const segments: Segment[] = useMemo(() => job?.segments ?? [], [job]);
   const stage = job?.stage ?? 'clips';
+  // Money is announced BEFORE it is spent: the start button carries the quote.
+  const { data: quote } = useQuery(() => getClipQuote(String(id)), {
+    enabled: stage === 'clips',
+    deps: [id, stage, segments.filter((s) => s.clipKey).length],
+  });
   const current = segments[selected];
 
   // What "approved" means right now, so the gate can be read off the list.
@@ -313,7 +319,10 @@ export default function ReviewScreen() {
             // (POST /clips). Without it the stage sat at 0/N forever — nothing
             // was rendering, so "approve" had nothing to approve.
             <Action
-              label={t('review.startClips')}
+              label={
+                t('review.startClips') +
+                (quote ? t('review.quoteSuffix', { n: quote.remainingCredits }) : '')
+              }
               primary
               disabled={busy}
               onPress={() => run(() => startClips(String(id)))}

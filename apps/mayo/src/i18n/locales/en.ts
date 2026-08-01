@@ -480,6 +480,7 @@ export const en: Dict = {
   'review.tip.1': 'Each scene continues from the last frame of the previous one.',
   'review.tip.2': 'You can redo any single segment you do not like.',
   'review.tip.3': 'Almost there — hang tight.',
+  'review.quoteSuffix': ' · uses {n} credits',
   'jobDetail.review': 'Review and continue',
   'create.staged': 'Build it step by step',
   'create.stagedHint': 'Review the flow, then the images, then render. Nothing is charged until you render.',

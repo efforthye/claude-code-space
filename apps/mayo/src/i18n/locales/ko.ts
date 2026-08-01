@@ -482,6 +482,7 @@ export const ko: Dict = {
   'review.tip.1': '장면마다 이전 장면의 마지막 프레임에서 이어서 만들어요.',
   'review.tip.2': '마음에 안 드는 구간은 그 구간만 다시 만들 수 있어요.',
   'review.tip.3': '거의 다 됐어요 — 조금만 기다려주세요.',
+  'review.quoteSuffix': ' · {n}크레딧 사용',
   'jobDetail.review': '검수하고 이어가기',
   'create.staged': '단계별로 만들기',
   'create.stagedHint': '흐름을 먼저 보고, 이미지를 보고, 그다음 영상. 영상 만들기 전까지는 과금 없어요.',

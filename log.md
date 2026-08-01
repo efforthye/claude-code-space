@@ -355,3 +355,15 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   is a CENTERED overlay with rotating tips + "나가도 계속 진행, 끝나면 알림"
   note, replacing the beside-the-button spinner.
 - Verified: pytest 184, tsc clean, iOS + web exports OK.
+
+## [2026-08-01] deploy | mayo → failed films salvage their scenes; quotes on the pay button (batch 51)
+- Owner: two films died at scene 2/2 and the PAID scene 1 vanished with them.
+  (1) A scene that fails WITH the continuity frame retries once without it —
+  the chaining input was the prime suspect for the scene-2 deaths, and it is a
+  quality bonus, not a requirement. (2) On a definitive scene failure the
+  worker now stitches every rendered clip and files "<title> (부분 N/M)" into
+  the library BEFORE marking the job failed — paid material is never discarded
+  again; failureReason says which scene died and what was saved.
+- The clips-stage start button now carries the cost: "영상 렌더 시작 · N크레딧
+  사용" (live /clip-quote). Money is announced before it is spent.
+- Verified: pytest 184, tsc clean, iOS + web exports OK.

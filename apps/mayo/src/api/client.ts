@@ -299,6 +299,17 @@ export const reimageSegment = (jobId: string, index: number) =>
 export const advanceStage = (jobId: string) =>
   req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/advance`, { method: 'POST' });
 
+/** Cost preview for the clips stage — shown BEFORE any money is spent. */
+export const getClipQuote = (jobId: string) =>
+  req<{
+    perClipCredits: number;
+    remaining: number;
+    remainingCredits: number;
+    spentCredits: number;
+    stopCostsCredits: number;
+    etaSeconds: number;
+  }>(`/v1/jobs/${encodeURIComponent(jobId)}/clip-quote`);
+
 /** Begin rendering clips — the paid boundary of a staged job (ADR 0020). */
 export const startClips = (jobId: string, mode: 'renderAll' | 'stopOnReject' = 'renderAll') =>
   req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/clips`, {

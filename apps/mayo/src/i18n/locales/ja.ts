@@ -482,6 +482,7 @@ export const ja: Dict = {
   'review.tip.1': '各シーンは前のシーンの最後のフレームから続きます。',
   'review.tip.2': '気に入らない区間だけ作り直せます。',
   'review.tip.3': 'もうすぐ完了します — お待ちください。',
+  'review.quoteSuffix': ' · {n}クレジット使用',
   'jobDetail.review': '確認して進む',
   'create.staged': 'ステップごとに作る',
   'create.stagedHint': '流れを確認し、画像を確認してから動画へ。動画を作るまで料金はかかりません。',

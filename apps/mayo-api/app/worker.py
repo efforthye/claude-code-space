@@ -243,12 +243,37 @@ async def _run(job_id: str) -> None:
             else job.title
         )
         try:
-            result = await backend.generate_scene(
-                scene_prompt, index, init_image=await _prev_frame(clip_keys)
-            )
+            try:
+                result = await backend.generate_scene(
+                    scene_prompt, index, init_image=await _prev_frame(clip_keys)
+                )
+            except Exception:
+                # The continuity frame is a quality bonus, not a requirement —
+                # if the provider rejects it, retry the scene WITHOUT it before
+                # giving up (this was failing whole films at scene 2).
+                logger.exception("scene %s failed with init image; retrying plain", index)
+                result = await backend.generate_scene(scene_prompt, index)
             clip_keys.append(result.media_key)
         except Exception:
-            await jobs.patch(job_id, status="failed", etaMin=None)
+            logger.exception("scene %s failed for job %s", index, job_id)
+            # NEVER discard paid material: stitch whatever DID render and file
+            # it in the library before marking the job failed.
+            salvaged = ""
+            real = [k for k in clip_keys if get_storage().exists(k)]
+            if real:
+                film_key = await _stitch(job_id, real)
+                if film_key:
+                    data_len = len(get_storage().read(film_key))
+                    await library.add_film(
+                        f"{job.title} (부분 {len(real)}/{total})", film_key, data_len,
+                        tier_label=job.tierLabel or "", scenes=len(real),
+                        owner_id=jobs.owner_of(job_id),
+                    )
+                    salvaged = f" 완성된 {len(real)}개 씬은 보관함에 저장해뒀어요."
+            await jobs.patch(
+                job_id, status="failed", etaMin=None,
+                failureReason=f"{index + 1}번 씬 생성에 실패했어요.{salvaged}",
+            )
             return
         if await jobs.get(job_id) is None:
             return  # cancelled/deleted mid-flight
@@ -289,9 +314,13 @@ async def _run(job_id: str) -> None:
                 else job.title
             )
             try:
-                result = await backend.generate_scene(
-                    scene_prompt, index, init_image=await _prev_frame(clip_keys)
-                )
+                try:
+                    result = await backend.generate_scene(
+                        scene_prompt, index, init_image=await _prev_frame(clip_keys)
+                    )
+                except Exception:
+                    logger.exception("top-up scene %s failed with init image; retrying", index)
+                    result = await backend.generate_scene(scene_prompt, index)
             except Exception:
                 logger.exception("top-up scene %s failed for job %s", index, job_id)
                 rounds = 5  # keep what we have instead of failing the job
