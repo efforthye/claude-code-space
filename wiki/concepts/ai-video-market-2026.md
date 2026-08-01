@@ -54,3 +54,27 @@ Sources: [LaoZhang 4-model comparison](https://blog.laozhang.ai/en/posts/seedanc
 [Novi Seedance review](https://www.noviai.ai/video-tips/seedance-2-reivew/),
 [Higgsfield vs Runway vs Pika](https://growwithba.com/blog/higgsfield-vs-runway-vs-pika-2026),
 [Pinggy model roundup](https://pinggy.io/blog/best_video_generation_ai_models/).
+
+## Update 2026-08-01 — Seedance 2.5 (owner tip, verified)
+
+ByteDance announced **Seedance 2.5** at Volcano Engine FORCE (2026-06-23; the
+2.0 row above is one generation stale): **native 30-second single clips** with
+scene changes and tempo shifts INSIDE one generation (no stitching), up to
+**50 multimodal references**, and **region-level editing** (change part of a
+frame without regenerating). Rolling out via ByteDance apps since early July.
+
+**What this means for mayo:**
+- The 5-10s scene is no longer the atomic unit. When 2.5 is reachable (check
+  Higgsfield's model list first, else Volcano Engine API), a "scene" can be a
+  30s BLOCK — a 1-3min film becomes 2-6 blocks with only 1-5 seams, and our
+  frame chaining + dissolve applies at block boundaries. Nobody else offers
+  "minutes-long films from one prompt with review gates"; 2.5 makes ours
+  dramatically better.
+- Director prompts should then write 30s multi-beat blocks (the MCSLA scene
+  form already ends on the final frame — unchanged).
+- Economics unknown: measure won/credit per 30s clip before repricing
+  (scripts/margin.py takes the new number).
+
+Sources: [TechTimes](https://www.techtimes.com/articles/318975/20260624/bytedance-seedance-25-native-30-second-ai-video-no-stitching-required.htm),
+[kie.ai deep dive](https://kie.ai/blog/seedance-2-5-release-deep-dive),
+[oimi release notes](https://oimi.ai/en/blog/seedance-2-5-release).

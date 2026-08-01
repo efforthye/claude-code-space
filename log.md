@@ -426,3 +426,5 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   retry 409, refund-on-failure, add_from_job). tsc clean, iOS + web exports OK.
 
 ## [2026-08-01] query | competitive landscape research -> wiki/concepts/ai-video-market-2026.md
+
+## [2026-08-01] query | Seedance 2.5 verified (native 30s clips, 50 refs, region edit) -> market page updated
