@@ -103,6 +103,20 @@ def append(kind: str, doc_id: str, doc: dict) -> None:
         c.commit()
 
 
+def exists(kind: str, doc_id: str) -> bool:
+    """Whether a document of this kind/id is already stored.
+
+    The cheap primitive behind idempotency checks (processed Stripe event ids,
+    consumed App Store transaction ids) — loading the whole kind to answer a
+    point lookup would grow with history.
+    """
+    with _lock:
+        row = conn().execute(
+            "SELECT 1 FROM docs WHERE kind = ? AND id = ?", (kind, doc_id)
+        ).fetchone()
+    return row is not None
+
+
 def migrate_legacy_json(kind: str, path: str, to_docs) -> list[dict]:
     """If `kind` is empty but a legacy JSON file exists, import it once.
 

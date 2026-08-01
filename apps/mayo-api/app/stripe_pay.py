@@ -136,6 +136,18 @@ async def create_pack_checkout(pack_id: str, credits: int, user_id: str) -> str:
     return url
 
 
+def parse_event_id(payload: bytes) -> str:
+    """The Stripe event id ("evt_...") from a webhook payload, "" if absent.
+
+    Stripe retries deliveries until acknowledged, so the same event can arrive
+    more than once — the id is the key that lets the webhook grant exactly once.
+    """
+    try:
+        return str(json.loads(payload).get("id") or "")
+    except ValueError:
+        return ""
+
+
 def parse_completed_checkout(payload: bytes) -> dict | None:
     """If the event is a completed checkout, return what to grant:
     {"userId", "planId"} for a subscription or {"userId", "credits"} for a

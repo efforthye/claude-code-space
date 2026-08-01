@@ -86,8 +86,15 @@ async def stripe_webhook(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="bad signature")
     completed = stripe_pay.parse_completed_checkout(payload)
     if completed:
-        from .. import ledger
+        import time as _time
 
+        from .. import db, ledger
+
+        # Stripe retries deliveries until acknowledged, so the same event can
+        # arrive twice — grant on the FIRST delivery only, ack the rest.
+        event_id = stripe_pay.parse_event_id(payload)
+        if event_id and db.exists("stripe_evt", event_id):
+            return {"received": True}
         ledger.record(
             "purchase",
             completed.get("userId"),
@@ -104,6 +111,12 @@ async def stripe_webhook(
                 users.add_credits(completed["userId"], plan.monthlyCredits)
         elif completed.get("credits"):
             users.add_purchased_credits(completed["userId"], int(completed["credits"]))
+        if event_id:
+            db.append(
+                "stripe_evt",
+                event_id,
+                {"at": _time.time(), "userId": completed.get("userId", "")},
+            )
     # Other event types are acknowledged and ignored.
     return {"received": True}
 
@@ -168,9 +181,32 @@ async def validate(
     purchases = list(data.get("latest_receipt_info") or []) + list(
         (data.get("receipt") or {}).get("in_app") or []
     )
-    if not any(p.get("product_id") == req.productId for p in purchases):
+    purchase = next(
+        (p for p in purchases if p.get("product_id") == req.productId), None
+    )
+    if purchase is None:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST, detail="receipt does not contain this product"
+        )
+    if req.productId not in IAP_SUBSCRIPTIONS and req.productId not in IAP_PACKS:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, detail=f"unknown product '{req.productId}'"
+        )
+
+    # A receipt can be replayed (the app retries, restores, or a user re-sends
+    # it) — each Apple transaction grants exactly once. Especially consumable
+    # packs: double-granting those is minting free credits.
+    import time as _time
+
+    from .. import db
+
+    txn_id = str(
+        purchase.get("transaction_id") or purchase.get("original_transaction_id") or ""
+    )
+    if txn_id and db.exists("iap_txn", txn_id):
+        return ValidateResult(
+            entitled=True,
+            planId=users.users.get(user["id"], user).get("planId", "free"),
         )
 
     from .. import ledger
@@ -179,6 +215,12 @@ async def validate(
         "purchase", user["id"], email=user.get("email", ""), product=req.productId,
         amount="appstore",
     )
+    if txn_id:
+        db.append(
+            "iap_txn",
+            txn_id,
+            {"at": _time.time(), "userId": user["id"], "productId": req.productId},
+        )
     if req.productId in IAP_SUBSCRIPTIONS:
         plan_id = IAP_SUBSCRIPTIONS[req.productId]
         users.set_plan(user["id"], plan_id)
@@ -186,7 +228,5 @@ async def validate(
         if plan and plan.monthlyCredits:
             users.add_credits(user["id"], plan.monthlyCredits)
         return ValidateResult(entitled=True, planId=plan_id)
-    if req.productId in IAP_PACKS:
-        users.add_purchased_credits(user["id"], IAP_PACKS[req.productId])
-        return ValidateResult(entitled=True, planId=user.get("planId", "free"))
-    raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"unknown product '{req.productId}'")
+    users.add_purchased_credits(user["id"], IAP_PACKS[req.productId])
+    return ValidateResult(entitled=True, planId=user.get("planId", "free"))

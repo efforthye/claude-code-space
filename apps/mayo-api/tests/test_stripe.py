@@ -156,6 +156,83 @@ def test_credit_pack_listing_checkout_and_webhook_grant(monkeypatch):
     assert to_public(rec).premium is True
 
 
+def test_webhook_replay_grants_only_once(monkeypatch):
+    """Stripe retries deliveries until acknowledged — the same completed
+    checkout arriving twice must grant once and still be acked both times."""
+    import secrets as _secrets
+
+    secret = "whsec_testsecret"
+    monkeypatch.setattr(
+        stripe_pay, "settings", type("S", (), {"stripe_webhook_secret": secret})()
+    )
+    user = users.create_user(
+        "replayer@example.com", "R", provider="email", password="pw12345678"
+    )
+    event = {
+        # Unique per run: processed ids persist in SQLite across suite runs.
+        "id": f"evt_test_{_secrets.token_hex(6)}",
+        "type": "checkout.session.completed",
+        "data": {
+            "object": {
+                "client_reference_id": user["id"],
+                "metadata": {"packId": "pack300", "credits": "300"},
+            }
+        },
+    }
+    payload = json.dumps(event).encode()
+    before = int(users.users[user["id"]].get("credits", 0))
+
+    for _ in range(2):
+        r = client.post(
+            "/v1/billing/stripe-webhook",
+            content=payload,
+            headers={"Stripe-Signature": _sign(payload, secret)},
+        )
+        assert r.status_code == 200 and r.json() == {"received": True}
+
+    assert users.users[user["id"]]["credits"] == before + 300  # once, not twice
+    assert users.users[user["id"]]["purchasedCredits"] == 300
+
+
+def test_appstore_receipt_replay_grants_only_once(monkeypatch):
+    """A consumable-pack receipt re-sent (restore, retry, or deliberate replay)
+    must not mint credits again: each Apple transaction id grants exactly once,
+    and the replay still answers with the current entitlement."""
+    import secrets as _secrets
+
+    from app.routers import billing as billing_router
+
+    monkeypatch.setattr(
+        billing_router, "settings", type("S", (), {"apple_shared_secret": "shhh"})()
+    )
+    user = users.create_user(
+        "iap-replay@example.com", "I", provider="email", password="pw12345678"
+    )
+    token = users.create_session(user["id"])
+    h = {"X-Mayo-Session": token}
+    txn = f"txn_test_{_secrets.token_hex(6)}"
+
+    async def apple_ok(receipt):
+        return {
+            "status": 0,
+            "receipt": {
+                "in_app": [{"product_id": "im.mayo.pack300", "transaction_id": txn}]
+            },
+        }
+
+    monkeypatch.setattr(billing_router, "_apple_verify", apple_ok)
+    before = int(users.users[user["id"]].get("credits", 0))
+    body = {"productId": "im.mayo.pack300", "platform": "appstore", "receipt": "b64"}
+
+    first = client.post("/v1/billing/validate", json=body, headers=h)
+    assert first.status_code == 200 and first.json()["entitled"] is True
+    replay = client.post("/v1/billing/validate", json=body, headers=h)
+    assert replay.status_code == 200 and replay.json()["entitled"] is True
+
+    assert users.users[user["id"]]["credits"] == before + 300  # once, not twice
+    assert users.users[user["id"]]["purchasedCredits"] == 300
+
+
 def test_appstore_receipt_validation_grants(monkeypatch):
     """Real IAP path: Apple-approved receipts grant plans/credits; rejected or
     mismatched receipts grant nothing."""
