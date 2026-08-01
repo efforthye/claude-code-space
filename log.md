@@ -424,3 +424,5 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
     stored token — only a real 401/403 signs the user out.
 - Tests: 185 → 197 (ownership 403s, gate 401/402, webhook + IAP replay,
   retry 409, refund-on-failure, add_from_job). tsc clean, iOS + web exports OK.
+
+## [2026-08-01] query | competitive landscape research -> wiki/concepts/ai-video-market-2026.md

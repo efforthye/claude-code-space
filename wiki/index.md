@@ -87,6 +87,7 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[2026-07-22-restart-erased-active-render]] — deploy restart wiped an actively rendering job; jobs now persist + resume.
 
 ## Concepts
+- [[ai-video-market-2026]] — 2026 경쟁 지형(Seedance/Kling/Veo/Higgsfield)·트렌드·mayo 강화 우선순위.
 - [[ai-video-prompting]] — Higgsfield/Seedance/Kling 실전 프롬프트 규칙 (MCSLA, 샷 구조,
   캐릭터 일관성) — mayo 감독 프롬프트에 반영할 기준.
 - [[expo-go-vs-dev-build]] — Expo Go (generic container, SDK-locked) vs a development build
