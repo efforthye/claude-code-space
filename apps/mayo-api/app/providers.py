@@ -342,7 +342,11 @@ class ExternalModelBackend(ModelBackend):
             clip.raise_for_status()
             content = clip.content
 
-        key = f"clips/{index:04d}-external.mp4"
+        # Unique per render: index-only keys made every job overwrite the
+        # previous job's scene files — paid clips silently vanished.
+        import secrets as _secrets
+
+        key = f"clips/{index:04d}-{_secrets.token_hex(4)}-external.mp4"
         get_storage().save(key, content)
         return SceneResult(media_key=key)
 
@@ -440,7 +444,9 @@ class ComfyUIModelBackend(ModelBackend):
             )
             clip.raise_for_status()
 
-        key = f"clips/{index:04d}-{filename}"
+        import secrets as _secrets
+
+        key = f"clips/{index:04d}-{_secrets.token_hex(4)}-{filename}"
         get_storage().save(key, clip.content)
         return SceneResult(media_key=key)
 

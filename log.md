@@ -367,3 +367,12 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 - The clips-stage start button now carries the cost: "영상 렌더 시작 · N크레딧
   사용" (live /clip-quote). Money is announced before it is spent.
 - Verified: pytest 184, tsc clean, iOS + web exports OK.
+
+## [2026-08-01] deploy | mayo → clip files are unique per render — jobs stop overwriting each other (batch 52)
+- Scene clips were stored as clips/0000-external.mp4 etc — index-only keys, so
+  EVERY job overwrote the previous job's scene files. That is why the failed
+  films' paid scene-1 clips cannot be salvaged retroactively: the completed
+  film's render overwrote them. Keys now carry a random token per render
+  (external + comfy). Found while answering "are my lost scenes back?" —
+  honestly: no, and this is the reason they are unrecoverable.
+- Verified: pytest 184 passed.
