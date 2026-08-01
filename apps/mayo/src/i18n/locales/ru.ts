@@ -464,4 +464,5 @@ export const ru: Dict = {
   'review.makingClips': 'Рендерим клипы… {done}/{total}',
   'review.etaMin': 'осталось ~{n} мин',
   'review.etaSec': 'осталось ~{n} с',
+  'review.approveAllNext': 'Принять всё и далее',
 };

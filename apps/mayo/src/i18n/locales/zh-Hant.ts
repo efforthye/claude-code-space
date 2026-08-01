@@ -461,4 +461,5 @@ export const zhHant: Dict = {
   'review.makingClips': '正在算圖… {done}/{total}',
   'review.etaMin': '約剩 {n} 分鐘',
   'review.etaSec': '約剩 {n} 秒',
+  'review.approveAllNext': '全部核准並繼續',
 };

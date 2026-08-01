@@ -653,3 +653,25 @@ def test_the_in_flight_flag_clears_even_when_the_render_raises():
     finally:
         seg._render_clips = original
     assert not seg.is_rendering_clips("j-crash")
+
+
+def test_approving_everything_never_approves_what_does_not_exist():
+    """A blanket approve must not mark un-rendered segments as reviewed.
+
+    Approving is a claim about an artefact. Marking a segment imageApproved
+    when no still was ever rendered would send a blank frame to the (paid)
+    renderer.
+    """
+    from app.schemas import Segment
+
+    drafted = Segment(index=0, startSec=0, endSec=5, text="t", prompt="p", status="draft")
+    imaged = drafted.model_copy(update={"imageKey": "k", "status": "imaged"})
+    clipped = imaged.model_copy(update={"clipKey": "c", "status": "rendered"})
+
+    # A beat always exists, so it can always be approved.
+    assert seg.can_reach(drafted, "approved")
+    # A still that was never rendered cannot be.
+    assert not seg.can_reach(drafted, "imageApproved")
+    assert seg.can_reach(imaged, "imageApproved")
+    assert not seg.can_reach(imaged, "clipApproved")
+    assert seg.can_reach(clipped, "clipApproved")

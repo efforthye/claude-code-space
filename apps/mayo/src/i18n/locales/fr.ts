@@ -464,4 +464,5 @@ export const fr: Dict = {
   'review.makingClips': 'Rendu des clips… {done}/{total}',
   'review.etaMin': '~{n} min restantes',
   'review.etaSec': '~{n} s restantes',
+  'review.approveAllNext': 'Tout valider et continuer',
 };

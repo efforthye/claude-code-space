@@ -465,4 +465,5 @@ export const th: Dict = {
   'review.makingClips': 'กำลังเรนเดอร์คลิป… {done}/{total}',
   'review.etaMin': 'เหลือ ~{n} นาที',
   'review.etaSec': 'เหลือ ~{n} วินาที',
+  'review.approveAllNext': 'อนุมัติทั้งหมดแล้วไปต่อ',
 };

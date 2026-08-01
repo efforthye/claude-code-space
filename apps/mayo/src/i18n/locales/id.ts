@@ -461,4 +461,5 @@ export const id: Dict = {
   'review.makingClips': 'Merender klip… {done}/{total}',
   'review.etaMin': '~{n} menit lagi',
   'review.etaSec': '~{n} detik lagi',
+  'review.approveAllNext': 'Setujui semua & lanjut',
 };

@@ -510,4 +510,5 @@ export const ko: Dict = {
   'review.makingClips': '영상 렌더 중… {done}/{total}',
   'review.etaMin': '약 {n}분 남음',
   'review.etaSec': '약 {n}초 남음',
+  'review.approveAllNext': '전체 승인하고 다음',
 };

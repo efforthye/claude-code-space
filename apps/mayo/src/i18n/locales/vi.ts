@@ -461,4 +461,5 @@ export const vi: Dict = {
   'review.makingClips': 'Đang dựng clip… {done}/{total}',
   'review.etaMin': 'còn ~{n} phút',
   'review.etaSec': 'còn ~{n} giây',
+  'review.approveAllNext': 'Duyệt tất cả & tiếp tục',
 };

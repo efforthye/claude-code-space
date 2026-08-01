@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException, status
@@ -9,6 +10,8 @@ from ..config import settings
 from ..schemas import CreateJobRequest, Estimate, Job
 from ..store import jobs as job_store
 from ..worker import register_task, start_generation
+
+logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter(prefix="/v1/jobs", tags=["jobs"])
 
@@ -326,6 +329,34 @@ async def approve_segment(
     return updated
 
 
+async def _render_stills_task(job_id: str) -> None:
+    """Render every missing still for a job, in the background.
+
+    Failures are logged and left for the user to retry per segment rather than
+    failing the job: a still is cheap to redo, and losing the whole beat sheet
+    over one image would be the expensive kind of strict.
+    """
+    from .. import segments as seg
+
+    job = await job_store.get(job_id)
+    if job is None:
+        return
+    for i, segment in enumerate(job.segments):
+        fresh = await job_store.get(job_id)
+        if fresh is None or fresh.stage != "stills":
+            return  # the user moved on or cancelled
+        if fresh.segments[i].imageKey:
+            continue
+        try:
+            done = await seg.render_segment_image(job_id, fresh.segments[i], fresh.stylePrompt or "")
+        except Exception:
+            logger.exception("still %s failed for job %s", i, job_id)
+            continue
+        segs = list((await job_store.get(job_id)).segments)
+        segs[i] = done
+        await job_store.set_segments(job_id, segs, stage="stills")
+
+
 @router.post("/{job_id}/stills", response_model=Job)
 async def render_stills(
     job_id: str, x_mayo_session: Optional[str] = Header(default=None)
@@ -378,6 +409,47 @@ async def reimage_segment(
     return updated
 
 
+@router.post("/{job_id}/approve-all", response_model=Job)
+async def approve_all(
+    job_id: str, x_mayo_session: Optional[str] = Header(default=None)
+) -> Job:
+    """Approve every segment at the current stage at once.
+
+    Reviewing is the point of the staged flow; pressing approve twelve separate
+    times is not. Someone who has read the sheet and is happy with it needs one
+    action, and the per-segment approve stays for the case it was built for —
+    accepting most of a film and redoing one part of it.
+    """
+    job = await job_store.get(job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    _require_job_access(job_id, x_mayo_session)
+
+    required = {"beats": "approved", "stills": "imageApproved", "clips": "clipApproved"}.get(
+        job.stage
+    )
+    if required is None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, detail=f"nothing to approve at stage '{job.stage}'"
+        )
+
+    from .. import segments as seg
+
+    segs = []
+    for segment in job.segments:
+        # Only ever moves a segment FORWARD: a still that has not been rendered
+        # cannot be image-approved, and blanket-approving one would send an
+        # empty frame to the renderer.
+        if seg.can_reach(segment, required):
+            segs.append(segment.model_copy(update={"status": required}))
+        else:
+            segs.append(segment)
+    updated = await job_store.set_segments(job_id, segs, stage=job.stage)
+    if updated is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+    return updated
+
+
 @router.post("/{job_id}/advance", response_model=Job)
 async def advance_stage(
     job_id: str, x_mayo_session: Optional[str] = Header(default=None)
@@ -404,6 +476,13 @@ async def advance_stage(
         updated = await job_store.set_segments(job_id, job.segments, stage="stills")
         if updated is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
+        # Start the stills immediately. They cost nothing and there is no
+        # decision to make between approving the beats and wanting to see them,
+        # so a screen that says "stills" and then sits there waiting for another
+        # press is just a dead end wearing a stage name.
+        import asyncio
+
+        register_task(asyncio.create_task(_render_stills_task(job_id)))
         return updated
 
     if job.stage == "stills":

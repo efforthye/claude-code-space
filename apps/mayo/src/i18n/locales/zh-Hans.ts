@@ -479,4 +479,5 @@ export const zhHans: Dict = {
   'review.makingClips': '正在渲染片段… {done}/{total}',
   'review.etaMin': '约剩 {n} 分钟',
   'review.etaSec': '约剩 {n} 秒',
+  'review.approveAllNext': '全部通过并继续',
 };

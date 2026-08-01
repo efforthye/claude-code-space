@@ -298,6 +298,9 @@ export const reimageSegment = (jobId: string, index: number) =>
   req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/segments/${index}/reimage`, { method: 'POST' });
 
 /** The "OK, next" button. 409 when the gate is still closed — show the reason. */
+/** Approve every segment at the current stage — the "I've read it, go" button. */
+export const approveAll = (jobId: string) =>
+  req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/approve-all`, { method: 'POST' });
 export const advanceStage = (jobId: string) =>
   req<Job>(`/v1/jobs/${encodeURIComponent(jobId)}/advance`, { method: 'POST' });
 

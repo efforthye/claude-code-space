@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   advanceStage,
+  approveAll,
   ApiError,
   approveSegment,
   getClipQuote,
@@ -377,7 +378,9 @@ export default function ReviewScreen() {
               disabled={busy}
               onPress={() => run(() => planBeats(String(id), job?.title ?? ''))}
             />
-          ) : stage === 'stills' && !segments.some((s) => s.imageKey) ? (
+          ) : stage === 'stills' && !segments.some((s) => s.imageKey) && !busy ? (
+            // Stills start on their own when the beats gate clears; this is the
+            // repair path for when that background run died.
             <Action
               label={t('review.renderStills')}
               primary
@@ -404,10 +407,19 @@ export default function ReviewScreen() {
             />
           ) : (
             <Action
-              label={gateOpen ? t('review.next') : t('review.nextBlocked', { n: pending.length })}
+              // One button, not two states of a dead one. Having read the
+              // sheet, the user's next action is the same whether they
+              // approved each part or not — so approve what is left and move
+              // on, rather than blocking behind twelve separate presses.
+              label={gateOpen ? t('review.next') : t('review.approveAllNext')}
               primary
-              disabled={busy || !gateOpen}
-              onPress={() => run(() => advanceStage(String(id)))}
+              disabled={busy || segments.length === 0}
+              onPress={() =>
+                run(async () => {
+                  if (!gateOpen) await approveAll(String(id));
+                  return advanceStage(String(id));
+                })
+              }
             />
           )}
         </View>

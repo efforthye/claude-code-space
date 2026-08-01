@@ -460,4 +460,5 @@ export const ptBR: Dict = {
   'review.makingClips': 'Renderizando clipes… {done}/{total}',
   'review.etaMin': '~{n} min restantes',
   'review.etaSec': '~{n} s restantes',
+  'review.approveAllNext': 'Aprovar tudo e continuar',
 };

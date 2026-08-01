@@ -467,4 +467,5 @@ export const ar: Dict = {
   'review.makingClips': 'جارٍ إخراج المقاطع… {done}/{total}',
   'review.etaMin': 'يتبقى ~{n} دقيقة',
   'review.etaSec': 'يتبقى ~{n} ثانية',
+  'review.approveAllNext': 'اعتماد الكل والمتابعة',
 };

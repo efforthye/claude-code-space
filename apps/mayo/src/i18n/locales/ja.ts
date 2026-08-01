@@ -510,4 +510,5 @@ export const ja: Dict = {
   'review.makingClips': 'クリップを生成中… {done}/{total}',
   'review.etaMin': '残り約{n}分',
   'review.etaSec': '残り約{n}秒',
+  'review.approveAllNext': 'すべて承認して次へ',
 };

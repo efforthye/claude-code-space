@@ -151,6 +151,24 @@ async def rewrite_segment(
     return updated
 
 
+def can_reach(segment, required: str) -> bool:
+    """Whether this segment has the artefact `required` claims it approves.
+
+    Approving is a statement about something that exists. A beat always exists,
+    so "approved" is always reachable; "imageApproved" needs a rendered still
+    and "clipApproved" needs a rendered clip. Without this a blanket approve
+    would mark un-rendered segments as reviewed and hand blank frames to the
+    renderer.
+    """
+    if required == "approved":
+        return True
+    if required == "imageApproved":
+        return bool(segment.imageKey)
+    if required == "clipApproved":
+        return bool(segment.clipKey)
+    return False
+
+
 def stage_is_complete(segments: list[Segment], required: str) -> bool:
     """Whether every segment has reached the status a gate demands."""
     order = ["draft", "approved", "imaged", "imageApproved", "rendered", "clipApproved"]

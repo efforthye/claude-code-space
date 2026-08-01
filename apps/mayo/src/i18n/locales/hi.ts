@@ -464,4 +464,5 @@ export const hi: Dict = {
   'review.makingClips': 'क्लिप रेंडर हो रही हैं… {done}/{total}',
   'review.etaMin': '~{n} मिनट बाकी',
   'review.etaSec': '~{n} सेकंड बाकी',
+  'review.approveAllNext': 'सभी स्वीकृत करें और आगे बढ़ें',
 };
