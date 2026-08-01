@@ -88,6 +88,16 @@ def _telegram_async(event: str, row: dict) -> None:
         pass  # no loop (sync/test context) — the ledger row is already saved
 
 
+def for_user(user_id: str, limit: int = 100) -> list[dict]:
+    """One user's own history (credit top-ups, spends, generations), newest
+    first — served to THAT user, so rows are filtered strictly by userId."""
+    from . import db
+
+    rows = [r for r in db.load("ledger") if r.get("userId") == user_id]
+    rows.sort(key=lambda r: r.get("at", 0), reverse=True)
+    return rows[: max(1, min(500, limit))]
+
+
 def entries(limit: int = 100) -> list[dict]:
     """Newest-first ledger rows for the admin console."""
     from . import db

@@ -145,3 +145,24 @@ def test_business_ledger_records_and_serves(monkeypatch):
     r = client.get("/v1/admin/ledger", headers={"X-Mayo-Session": admin_token})
     assert r.status_code == 200 and len(r.json()) >= 2
     assert client.get("/v1/admin/ledger").status_code == 403
+
+
+def test_user_sees_only_their_own_ledger():
+    from app import db
+
+    db.replace_kind("ledger", [])
+    a = auth_mod.store.create_user("mine-a@example.com", "A", provider="email", password="pw12345678")
+    b = auth_mod.store.create_user("mine-b@example.com", "B", provider="email", password="pw12345678")
+    ta = auth_mod.store.create_session(a["id"])
+    client.post(
+        "/v1/jobs", json={"prompt": "a's film", "seconds": 4, "tier": "draft"},
+        headers={"X-Mayo-Session": ta},
+    )
+    mine = client.get("/v1/auth/me/ledger", headers={"X-Mayo-Session": ta})
+    assert mine.status_code == 200
+    rows = mine.json()
+    assert rows and all(r["userId"] == a["id"] for r in rows)
+    tb = auth_mod.store.create_session(b["id"])
+    theirs = client.get("/v1/auth/me/ledger", headers={"X-Mayo-Session": tb}).json()
+    assert all(r["userId"] == b["id"] for r in theirs)
+    assert client.get("/v1/auth/me/ledger").status_code == 401

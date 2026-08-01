@@ -89,6 +89,20 @@ class OkResult(BaseModel):
     ok: bool = True
 
 
+@router.get("/me/ledger")
+async def my_ledger(
+    limit: int = 100, x_mayo_session: Optional[str] = Header(default=None)
+) -> list[dict]:
+    """The signed-in user's own credit/usage history: purchases, charges,
+    generations with prompts and outcomes — the user-facing ledger."""
+    user = store.user_for_session(x_mayo_session or "")
+    if not user:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="sign in first")
+    from .. import ledger
+
+    return ledger.for_user(user["id"], limit)
+
+
 @router.post("/reset/start", response_model=OkResult)
 async def reset_start(req: ResetStartRequest) -> OkResult:
     """Email a reset code. Always 200 for a valid request shape — whether the
