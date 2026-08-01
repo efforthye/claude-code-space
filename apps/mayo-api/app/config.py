@@ -245,6 +245,13 @@ class Settings:
     public_web_base: str = field(
         default_factory=lambda: os.getenv("MAYO_PUBLIC_WEB_BASE", "https://mayo.im")
     )
+    # Owner alerts via Telegram (ledger events: signups, payments, generations).
+    telegram_bot_token: str = field(
+        default_factory=lambda: os.getenv("MAYO_TELEGRAM_BOT_TOKEN", "")
+    )
+    telegram_chat_id: str = field(
+        default_factory=lambda: os.getenv("MAYO_TELEGRAM_CHAT_ID", "")
+    )
     # Outbound mail (password-reset codes). Unset host -> reset endpoints answer
     # an honest 501 instead of pretending to send. Names only in the repo.
     smtp_host: str = field(default_factory=lambda: os.getenv("MAYO_SMTP_HOST", ""))

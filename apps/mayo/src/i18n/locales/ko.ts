@@ -236,6 +236,7 @@ export const ko: Dict = {
   'admin.timeseries': '일별 지표 (최근 14일)',
   'admin.seriesRow': '유저 {users} · 영상 {videos} · 게시물 {posts} · 조회 {views}',
   'admin.audit': '감사 로그',
+  'admin.ledger': '이용 원장 (크레딧·프롬프트·결과)',
   'myPosts.title': '내 게시물',
   'myPosts.empty': '아직 게시한 영상이 없어요 — 보관함에서 공유해보세요.',
   'myPosts.stats': '좋아요 {likes} · 댓글 {comments} · 조회 {views}',

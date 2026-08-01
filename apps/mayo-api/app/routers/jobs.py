@@ -125,6 +125,17 @@ async def create_job(
     # clips-stage start button.
     if not req.staged:
         start_generation(job.id)
+    from .. import ledger
+
+    ledger.record(
+        "job_created",
+        caller["id"] if caller else None,
+        email=(caller or {}).get("email", ""),
+        title=job.title,
+        prompt=(req.prompt or "")[:300],
+        credits=charge or 0,
+        product="staged" if req.staged else "quick",
+    )
     return job
 
 

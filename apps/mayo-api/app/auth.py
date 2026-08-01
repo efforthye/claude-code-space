@@ -151,6 +151,9 @@ class _Store:
             rec["hash"] = hashlib.scrypt(password.encode(), salt=salt, **_SCRYPT).hex()
         self.users[uid] = rec
         self.save()
+        from . import ledger
+
+        ledger.record("signup", uid, email=rec["email"], product=provider)
         return rec
 
     def set_password(self, user_id: str, password: str) -> bool:

@@ -274,6 +274,13 @@ async def _run(job_id: str) -> None:
                 job_id, status="failed", etaMin=None,
                 failureReason=f"{index + 1}번 씬 생성에 실패했어요.{salvaged}",
             )
+            from . import ledger
+
+            ledger.record(
+                "job_failed", jobs.owner_of(job_id), title=job.title,
+                reason=f"scene {index + 1} failed;{salvaged or ' nothing salvaged'}",
+                product=backend.id,
+            )
             return
         if await jobs.get(job_id) is None:
             return  # cancelled/deleted mid-flight
@@ -372,6 +379,13 @@ async def _run(job_id: str) -> None:
             film_key=film_key,
             duration_seconds=duration_seconds,
             owner_id=jobs.owner_of(job_id),
+        )
+        from . import ledger
+
+        ledger.record(
+            "job_done", jobs.owner_of(job_id), title=done.title,
+            credits=done.spentCredits or done.chargedCredits or 0,
+            product=backend.id,
         )
 
 

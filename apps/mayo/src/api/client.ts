@@ -135,6 +135,8 @@ export const adminSetPlan = (userId: string, planId: string) =>
 export const adminDeleteExplore = (id: string) =>
   req<{ deleted: boolean }>(`/v1/admin/explore/${encodeURIComponent(id)}`, { method: 'DELETE' });
 export const getAdminAudit = () => req<AdminAuditEntry[]>('/v1/admin/audit');
+export const getAdminLedger = () =>
+  req<Record<string, unknown>[]>('/v1/admin/ledger');
 export const getAdminTimeseries = () => req<AdminMetricPoint[]>('/v1/admin/timeseries');
 
 // --- Auth (accounts + sessions; session token via X-Mayo-Session) ---

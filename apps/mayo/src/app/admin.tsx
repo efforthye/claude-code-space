@@ -13,6 +13,7 @@ import {
   adminDeleteExplore,
   adminSetPlan,
   getAdminAudit,
+  getAdminLedger,
   getAdminStats,
   getAdminTimeseries,
   getAdminUsers,
@@ -38,6 +39,7 @@ export default function AdminScreen() {
   const { data: usersList, refetch: refetchUsers } = useQuery(getAdminUsers);
   const { data: posts, refetch: refetchPosts } = useQuery(() => getExplore('latest'));
   const { data: audit, refetch: refetchAudit } = useQuery(getAdminAudit);
+  const { data: ledgerRows } = useQuery(getAdminLedger);
   const { data: series } = useQuery(getAdminTimeseries);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -183,6 +185,27 @@ export default function AdminScreen() {
                       views: p.views,
                     })}
                   </ThemedText>
+                </ThemedView>
+              ))}
+            </>
+          ) : null}
+
+          {/* Business ledger — who spent what on which prompt, newest first */}
+          {ledgerRows && ledgerRows.length > 0 ? (
+            <>
+              <ThemedText type="smallBold">{t('admin.ledger')}</ThemedText>
+              {ledgerRows.slice(0, 30).map((r) => (
+                <ThemedView key={String(r.id)} type="backgroundElement" style={styles.userRow}>
+                  <View style={styles.flex}>
+                    <ThemedText type="small" numberOfLines={1}>
+                      {String(r.event)}
+                      {r.credits ? ` · ${r.credits}cr` : ''}
+                      {r.title ? ` · ${r.title}` : r.product ? ` · ${r.product}` : ''}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                      {String(r.email || r.userId || '-')} · {new Date(Number(r.at) * 1000).toLocaleString()}
+                    </ThemedText>
+                  </View>
                 </ThemedView>
               ))}
             </>

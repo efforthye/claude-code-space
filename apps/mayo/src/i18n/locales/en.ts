@@ -234,6 +234,7 @@ export const en: Dict = {
   'admin.timeseries': 'Daily metrics (last 14 days)',
   'admin.seriesRow': 'Users {users} · Videos {videos} · Posts {posts} · Views {views}',
   'admin.audit': 'Audit log',
+  'admin.ledger': 'Business ledger (credits · prompts · results)',
   'myPosts.title': 'My posts',
   'myPosts.empty': 'Nothing published yet — share a video from your library.',
   'myPosts.stats': 'Likes {likes} · Comments {comments} · Views {views}',

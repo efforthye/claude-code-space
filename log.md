@@ -376,3 +376,12 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   (external + comfy). Found while answering "are my lost scenes back?" —
   honestly: no, and this is the reason they are unrecoverable.
 - Verified: pytest 184 passed.
+
+## [2026-08-01] deploy | mayo → business ledger + Telegram owner alerts (batch 53a)
+- New app/ledger.py: every signup, payment (Stripe webhook + App Store
+  validate), and generation start/done/failed is appended to SQLite kind
+  `ledger` (who, when, email, credits, prompt, product, outcome) and mirrored
+  to the owner's Telegram when MAYO_TELEGRAM_BOT_TOKEN/CHAT_ID are set
+  (silent no-op otherwise; the ledger always records).
+- GET /v1/admin/ledger (admin-gated) + "이용 원장" section in the admin console.
+- Verified: pytest 185, tsc clean, both exports OK.

@@ -117,3 +117,31 @@ def test_admin_audit_log_and_timeseries(monkeypatch):
     # non-admin gets nothing
     anon = client.get("/v1/admin/audit")
     assert anon.status_code == 403
+
+
+def test_business_ledger_records_and_serves(monkeypatch):
+    """Signups and job creation land in the ledger; /v1/admin/ledger serves
+    them newest-first to admins only. Telegram unset -> silent no-op."""
+    from app import db, ledger
+
+    db.replace_kind("ledger", [])
+    user = auth_mod.store.create_user(
+        "ledgered@example.com", "L", provider="email", password="pw12345678"
+    )
+    token = auth_mod.store.create_session(user["id"])
+    client.post(
+        "/v1/jobs",
+        json={"prompt": "ledger film", "seconds": 4, "tier": "draft"},
+        headers={"X-Mayo-Session": token},
+    )
+    rows = ledger.entries()
+    events = [r["event"] for r in rows]
+    assert "signup" in events and "job_created" in events
+    created = next(r for r in rows if r["event"] == "job_created")
+    assert created["prompt"].startswith("ledger film")
+    assert created["email"] == "ledgered@example.com"
+
+    _, admin_token = _admin_session(monkeypatch)
+    r = client.get("/v1/admin/ledger", headers={"X-Mayo-Session": admin_token})
+    assert r.status_code == 200 and len(r.json()) >= 2
+    assert client.get("/v1/admin/ledger").status_code == 403

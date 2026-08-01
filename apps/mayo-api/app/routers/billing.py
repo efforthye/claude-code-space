@@ -86,6 +86,14 @@ async def stripe_webhook(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="bad signature")
     completed = stripe_pay.parse_completed_checkout(payload)
     if completed:
+        from .. import ledger
+
+        ledger.record(
+            "purchase",
+            completed.get("userId"),
+            product=completed.get("planId") or f"pack:{completed.get('credits')}",
+            amount=completed.get("planId") or f"{completed.get('credits')} credits",
+        )
         if completed.get("planId"):
             plan_id = completed["planId"]
             users.set_plan(completed["userId"], plan_id)
@@ -165,6 +173,12 @@ async def validate(
             status.HTTP_400_BAD_REQUEST, detail="receipt does not contain this product"
         )
 
+    from .. import ledger
+
+    ledger.record(
+        "purchase", user["id"], email=user.get("email", ""), product=req.productId,
+        amount="appstore",
+    )
     if req.productId in IAP_SUBSCRIPTIONS:
         plan_id = IAP_SUBSCRIPTIONS[req.productId]
         users.set_plan(user["id"], plan_id)

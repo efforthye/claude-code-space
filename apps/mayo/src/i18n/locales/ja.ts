@@ -236,6 +236,7 @@ export const ja: Dict = {
   'admin.timeseries': '日次指標 (直近14日)',
   'admin.seriesRow': 'ユーザー {users} · 動画 {videos} · 投稿 {posts} · 再生 {views}',
   'admin.audit': '監査ログ',
+  'admin.ledger': '利用台帳（クレジット・プロンプト・結果）',
   'myPosts.title': 'マイ投稿',
   'myPosts.empty': 'まだ投稿がありません。ライブラリから動画を公開してみましょう。',
   'myPosts.stats': 'いいね {likes} · コメント {comments} · 再生 {views}',

@@ -263,6 +263,15 @@ async def delete_explore_item(item_id: str, admin: dict = Depends(require_admin)
     return {"deleted": True}
 
 
+@router.get("/ledger")
+async def business_ledger(limit: int = 100, admin: dict = Depends(require_admin)) -> list[dict]:
+    """Who spent which credits on what prompt and what came back, newest first.
+    Signups and payments are in here too — the single money timeline."""
+    from .. import ledger
+
+    return ledger.entries(limit)
+
+
 @router.get("/audit", response_model=list[AuditEntry])
 async def audit_log(limit: int = 100, admin: dict = Depends(require_admin)) -> list[AuditEntry]:
     """Recent admin actions, newest first."""
