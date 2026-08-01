@@ -391,3 +391,8 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
   watchdog from 2026-07-31). The business-ledger alerts now read the bot token
   and chat id from the watchdog's ~/.mayo-watchdog.env when MAYO_TELEGRAM_*
   are unset — one bot, one channel, zero additional setup. Verified: pytest 185.
+
+## [2026-08-01] deploy | mayo → tap a scene preview to watch it fullscreen (batch 54)
+- Job-detail scene previews are now tappable: fullscreen modal player with
+  native controls (sound on, loop), close button top-right. Verified: tsc
+  clean, iOS + web exports OK.

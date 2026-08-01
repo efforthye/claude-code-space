@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import {ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import {ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getApiKey } from '@/api/api-key';
@@ -32,6 +33,29 @@ function PreviewClip({ uri }: { uri: string }) {
   return <VideoView player={player} style={styles.preview} contentFit="cover" nativeControls={false} />;
 }
 
+function FullscreenPlayer({ uri, onClose }: { uri: string; onClose: () => void }) {
+  const key = getApiKey();
+  const player = useVideoPlayer(
+    { uri, headers: key ? { Authorization: `Bearer ${key}` } : undefined },
+    (p) => {
+      p.loop = true;
+      p.play();
+    },
+  );
+  return (
+    <Modal visible animationType="fade" onRequestClose={onClose}>
+      <View style={styles.fullRoot}>
+        <VideoView player={player} style={styles.fullVideo} contentFit="contain" nativeControls />
+        <SafeAreaView edges={['top']} style={styles.fullClose} pointerEvents="box-none">
+          <Pressable onPress={onClose} hitSlop={12} accessibilityLabel="Close">
+            <Ionicons name="close" size={28} color="#ffffff" />
+          </Pressable>
+        </SafeAreaView>
+      </View>
+    </Modal>
+  );
+}
+
 export default function JobDetailScreen() {
   const theme = useTheme();
   const router = useRouter();
@@ -39,6 +63,7 @@ export default function JobDetailScreen() {
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const jobId = id ?? '';
+  const [fullUri, setFullUri] = useState<string | null>(null);
   const { data: job, loading, error, refetch } = useQuery(() => getJob(jobId), {
     pollMs: 1500,
     enabled: !!jobId,
@@ -123,7 +148,9 @@ export default function JobDetailScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.previewRow}>
                   {job.sceneUrls.map((u, i) => (
-                    <PreviewClip key={i} uri={mediaUrl(u)} />
+                    <Pressable key={i} onPress={() => setFullUri(mediaUrl(u))}>
+                      <PreviewClip uri={mediaUrl(u)} />
+                    </Pressable>
                   ))}
                 </ScrollView>
               </>
@@ -242,6 +269,7 @@ export default function JobDetailScreen() {
             </Pressable>
           </ScrollView>
         ) : null}
+        {fullUri ? <FullscreenPlayer uri={fullUri} onClose={() => setFullUri(null)} /> : null}
       </SafeAreaView>
     </ThemedView>
   );
@@ -305,6 +333,9 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     borderRadius: Spacing.four,
   },
+  fullRoot: { flex: 1, backgroundColor: '#000' },
+  fullVideo: { ...StyleSheet.absoluteFillObject },
+  fullClose: { position: 'absolute', top: 0, right: 0, padding: Spacing.four },
   primary: {
     flexDirection: 'row',
     alignItems: 'center',
