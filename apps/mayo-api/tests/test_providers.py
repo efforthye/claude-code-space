@@ -115,3 +115,33 @@ def test_nano_banana_requires_key(monkeypatch):
         raise AssertionError("expected RuntimeError")
     except RuntimeError as exc:
         assert "GEMINI_API_KEY" in str(exc)
+
+
+def test_the_concurrency_refusal_is_recognised_as_temporary():
+    """A full queue must not fail a film.
+
+    Higgsfield answers 400 for everything, so the only way to tell "your request
+    is invalid" from "come back in a minute" is the message. On 2026-08-02 this
+    distinction was missing and a momentary capacity limit killed whole films
+    at clip 1.
+    """
+    from app.providers import _is_concurrency_error
+
+    assert _is_concurrency_error(
+        Exception("Maximum number of concurrent requests (4) has been reached")
+    )
+    # Real faults must still fail fast rather than being retried for minutes.
+    assert not _is_concurrency_error(Exception("model_not_found"))
+    assert not _is_concurrency_error(Exception("invalid_image_url"))
+
+
+def test_every_submission_shares_one_gate():
+    """The cap is per API key, so a per-instance semaphore cannot enforce it.
+
+    The staged renderer called the provider directly and never queued at all,
+    which is how five renderers managed to exceed a limit of four.
+    """
+    from app import providers
+
+    assert providers._HF_SLOTS is not None
+    assert not hasattr(providers.ExternalModelBackend, "_slots")

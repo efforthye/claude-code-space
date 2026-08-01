@@ -262,7 +262,7 @@ async def render_segment_clip(
     """
     import asyncio
 
-    from .providers import _higgsfield_video_sync
+    from .providers import _higgsfield_video_sync, hf_submit
     from .storage import get_storage
 
     segment = segments[index]
@@ -271,9 +271,9 @@ async def render_segment_clip(
     from . import catalog
 
     app_id = catalog.higgsfield_app_for(video_model)
-    url = await asyncio.to_thread(
-        _higgsfield_video_sync, segment.prompt, start_image, app_id
-    )
+    # Through the shared gate: the staged path used to call the provider
+    # directly, so it neither queued behind the cap nor retried when it hit it.
+    url = await hf_submit(_higgsfield_video_sync, segment.prompt, start_image, app_id)
 
     import httpx
 

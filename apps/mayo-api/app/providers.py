@@ -19,11 +19,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import time
 from abc import ABC, abstractmethod
 
 from .config import settings
+
+logger = logging.getLogger("uvicorn.error")
 
 
 class SceneResult:
@@ -211,6 +214,47 @@ def _higgsfield_image_sync(prompt: str, aspect: str | None = None) -> bytes:  # 
     raise RuntimeError("Higgsfield image job timed out")
 
 
+# Every Higgsfield submission in the process passes through here.
+#
+# The cap is per API KEY, so it has to be process-wide. It used to live on
+# ExternalModelBackend, which meant the quick path respected it and the staged
+# path — which calls _higgsfield_video_sync directly — did not. On 2026-08-02
+# that gap turned a transient "Maximum number of concurrent requests (4) has
+# been reached" into whole films failing at clip 1.
+_HF_SLOTS = asyncio.Semaphore(settings.higgsfield_max_concurrency)
+
+
+def _is_concurrency_error(exc: Exception) -> bool:
+    """True for the provider's 'too many at once' refusal, which is temporary.
+
+    Matched on the message because the SDK raises one exception type for every
+    400. Failing a film on this is wrong: nothing about the request is invalid,
+    the queue was simply full a moment ago.
+    """
+    return "concurrent request" in str(exc).lower()
+
+
+async def hf_submit(fn, *args):
+    """Run a blocking Higgsfield call under the shared cap, retrying if it is full.
+
+    Backs off 15s, 30s, 60s. Long waits on purpose: the thing being waited for
+    is another clip of ours finishing, which takes a minute or more.
+    """
+    delays = (15, 30, 60)
+    for attempt in range(len(delays) + 1):
+        async with _HF_SLOTS:
+            try:
+                return await asyncio.to_thread(fn, *args)
+            except Exception as exc:
+                if attempt >= len(delays) or not _is_concurrency_error(exc):
+                    raise
+        # Sleep OUTSIDE the semaphore so waiting here does not hold a slot shut.
+        logger.warning(
+            "higgsfield at capacity; retrying in %ss (attempt %s)", delays[attempt], attempt + 1
+        )
+        await asyncio.sleep(delays[attempt])
+
+
 def _higgsfield_video_sync(  # pragma: no cover — needs paid credits to exercise
     prompt: str, image_bytes: bytes | None, model: str | None = None
 ) -> str:
@@ -312,10 +356,6 @@ class ExternalModelBackend(ModelBackend):
 
     id = "external"
 
-    # Higgsfield refuses a 5th simultaneous request, so scenes queue here rather
-    # than failing mid-film. Class-level: the cap is per API key, not per job.
-    _slots = asyncio.Semaphore(settings.higgsfield_max_concurrency)
-
     def __init__(self, aspect: str | None = None, video_model: str | None = None) -> None:
         self.aspect = aspect  # per-job output shape for the image stage
         self.video_model = video_model  # catalog id, e.g. "dop-lite"
@@ -335,8 +375,7 @@ class ExternalModelBackend(ModelBackend):
             image_bytes, _mime = await generate_still(prompt, aspect=self.aspect)
 
         app_id = catalog.higgsfield_app_for(self.video_model)
-        async with self._slots:
-            url = await asyncio.to_thread(_higgsfield_video_sync, prompt, image_bytes, app_id)
+        url = await hf_submit(_higgsfield_video_sync, prompt, image_bytes, app_id)
         async with httpx.AsyncClient(timeout=settings.higgsfield_max_wait) as client:
             clip = await client.get(url)
             clip.raise_for_status()
