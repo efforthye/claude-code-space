@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 
-import { authGoogle, authLogin, authLogout, authMe, authRegister } from '@/api/client';
+import { ApiError, authGoogle, authLogin, authLogout, authMe, authRegister } from '@/api/client';
 import type { AuthUser } from '@/api/types';
 
 import { setSessionToken } from './session';
@@ -70,9 +70,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const me = await authMe(); // throws if expired/invalid
           if (active) setUser(me);
         }
-      } catch {
-        setSessionToken('');
-        AsyncStorage.removeItem(STORAGE_KEY).catch(() => {});
+      } catch (e) {
+        // Only a definitive rejection (401/403) means the session is dead. A
+        // network failure (status 0) or server error must keep the stored
+        // token so a later launch can retry — deleting it here signed users
+        // out whenever the app was opened offline.
+        const rejected = e instanceof ApiError && (e.status === 401 || e.status === 403);
+        if (rejected) {
+          setSessionToken('');
+          AsyncStorage.removeItem(STORAGE_KEY).catch(() => {});
+        }
       } finally {
         if (active) setRestoring(false);
       }

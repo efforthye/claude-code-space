@@ -396,3 +396,31 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 - Job-detail scene previews are now tappable: fullscreen modal player with
   native controls (sound on, loop), close button top-right. Verified: tsc
   clean, iOS + web exports OK.
+
+## [2026-08-01] deploy | mayo → reliability audit fixes: ownership, paywall, payment idempotency (batch 55)
+- Audit fixes, in order of blast radius:
+  - IDOR: every job mutator (retry/delete/beats/rewrite/approve/stills/
+    reimage/advance/clips/stop/reclip) and the prompt-carrying reads now
+    refuse a session that is not the job's owner (admin passes; ownerless
+    legacy jobs stay open). Same guard on library get/delete/extend/publish.
+  - PUT /v1/settings is admin-only — it flips GLOBAL server backends.
+  - Premium-gate bypass closed: stills/reimage/reclip enforce the same
+    external-backend gate as the clips stage, and reclip requires a signed-in
+    caller to bill (was rendering free without a session).
+  - Payment idempotency: Stripe webhook dedupes by event id (SQLite kind
+    stripe_evt), App Store validate dedupes by transaction id (kind iap_txn)
+    — replays ack/answer without granting again; consumable packs can no
+    longer double-grant.
+  - Refund on failed render: the per-clip charge in render_clips (and reclip)
+    is returned when the render throws; failureReason lands on the job.
+  - retry answers 409 while a job is generating (double _run = double bill);
+    delete refunds only a removal that actually happened.
+  - Orphaned-film NameError: add_from_job passed an undefined prompt_public —
+    every completed film was silently dropped from the library. Fixed + test.
+  - Film keys unique per stitch (films/{job}-{token}.mp4, edits too) so
+    salvage and retry stop overwriting each other; staged clip render tasks
+    are strongly referenced (worker.register_task) so GC can't kill them.
+  - App: a network failure during session restore no longer deletes the
+    stored token — only a real 401/403 signs the user out.
+- Tests: 185 → 197 (ownership 403s, gate 401/402, webhook + IAP replay,
+  retry 409, refund-on-failure, add_from_job). tsc clean, iOS + web exports OK.
