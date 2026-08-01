@@ -1,3 +1,5 @@
+import pytest
+
 """Stage 1 of the staged flow: the beat sheet, and the gate in front of money.
 
 The gate is the feature. Everything here exists so that an unreviewed plan
@@ -616,3 +618,38 @@ def test_moments_are_rebased_onto_the_films_clock():
     for s_ in out:
         for m in s_.timeline:
             assert s_.startSec <= m.fromSec and m.toSec <= s_.endSec
+
+
+def test_a_second_render_start_is_refused_while_one_is_in_flight():
+    """Pressing the button twice must not bill the film twice.
+
+    A clip takes minutes, and render_clips picks work by looking for segments
+    with no clipKey — so two loops started seconds apart both see the same empty
+    segment, both charge for it, and both submit it. The owner hit this: the
+    button gave no feedback, so they pressed it five times and five renderers
+    billed the same film in parallel.
+    """
+    seg._rendering.add("j-busy")
+    try:
+        assert seg.is_rendering_clips("j-busy")
+        assert not seg.is_rendering_clips("j-idle")
+    finally:
+        seg._rendering.discard("j-busy")
+    assert not seg.is_rendering_clips("j-busy")
+
+
+def test_the_in_flight_flag_clears_even_when_the_render_raises():
+    """A crashed render must not lock the job out of ever rendering again."""
+    import asyncio
+
+    async def boom(job_id, owner_id=None):
+        raise RuntimeError("provider exploded")
+
+    original = seg._render_clips
+    seg._render_clips = boom
+    try:
+        with pytest.raises(RuntimeError):
+            asyncio.run(seg.render_clips("j-crash"))
+    finally:
+        seg._render_clips = original
+    assert not seg.is_rendering_clips("j-crash")

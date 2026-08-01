@@ -460,4 +460,8 @@ export const hi: Dict = {
   'reels.expand': 'फ़ुल स्क्रीन',
   'reels.collapse': 'बाहर निकलें',
   'plan.iapUnavailable': 'इन-ऐप ख़रीदारी अभी उपलब्ध नहीं है।',
+  'review.makingStills': 'इमेज बन रही हैं… {done}/{total}',
+  'review.makingClips': 'क्लिप रेंडर हो रही हैं… {done}/{total}',
+  'review.etaMin': '~{n} मिनट बाकी',
+  'review.etaSec': '~{n} सेकंड बाकी',
 };

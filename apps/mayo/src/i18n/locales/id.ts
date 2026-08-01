@@ -457,4 +457,8 @@ export const id: Dict = {
   'reels.expand': 'Layar penuh',
   'reels.collapse': 'Keluar',
   'plan.iapUnavailable': 'Pembelian dalam aplikasi belum tersedia.',
+  'review.makingStills': 'Membuat gambar… {done}/{total}',
+  'review.makingClips': 'Merender klip… {done}/{total}',
+  'review.etaMin': '~{n} menit lagi',
+  'review.etaSec': '~{n} detik lagi',
 };

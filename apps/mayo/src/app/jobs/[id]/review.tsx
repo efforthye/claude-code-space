@@ -92,6 +92,27 @@ export default function ReviewScreen() {
   const pending = segments.filter((s) => !isAtLeast(s.status, approvedStatus));
   const gateOpen = segments.length > 0 && pending.length === 0;
 
+  // How far the current long stage has got. Counted from the segments
+  // themselves rather than a separate progress field, so it cannot drift from
+  // what the sheet shows.
+  const doneCount = segments.filter((s) =>
+    stage === 'stills' ? !!s.imageKey : !!s.clipKey,
+  ).length;
+  const working =
+    segments.length > 0 &&
+    ((stage === 'stills' && doneCount < segments.length && segments.some((s) => s.imageKey)) ||
+      (stage === 'clips' && doneCount < segments.length && job?.status === 'generating'));
+  const ratio = segments.length ? doneCount / segments.length : 0;
+  // Measured seconds per piece: a still is quick, a clip is minutes. Shown as a
+  // rough remaining time because "3/12" alone does not tell you whether to wait.
+  const perPiece = stage === 'stills' ? 12 : 70;
+  const remain = Math.max(0, segments.length - doneCount) * perPiece;
+  const etaLabel = working
+    ? remain >= 60
+      ? t('review.etaMin', { n: Math.ceil(remain / 60) })
+      : t('review.etaSec', { n: remain })
+    : '';
+
   const run = async (fn: () => Promise<Job>) => {
     if (busy) return;
     setBusy(true);
@@ -297,6 +318,39 @@ export default function ReviewScreen() {
           ))}
         </View>
 
+        {/*
+          Progress for the two stages that take minutes. Without it the screen
+          is identical before and after you press the button, which reads as
+          "nothing happened" — the owner pressed Start five times, and until the
+          server guard landed that was five renderers billing the same film.
+        */}
+        {working ? (
+          <View style={styles.progress}>
+            <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
+              <View
+                style={[
+                  styles.fill,
+                  { backgroundColor: theme.text, width: `${Math.round(ratio * 100)}%` },
+                ]}
+              />
+            </View>
+            <View style={styles.progressRow}>
+              <ActivityIndicator size="small" color={theme.textSecondary} />
+              <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
+                {t(stage === 'stills' ? 'review.makingStills' : 'review.makingClips', {
+                  done: doneCount,
+                  total: segments.length,
+                })}
+              </ThemedText>
+              {etaLabel ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {etaLabel}
+                </ThemedText>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
         {segments.length === 0 && stage === 'clips' ? (
           <View style={styles.center}>
             <ThemedText type="small" themeColor="textSecondary">
@@ -451,6 +505,10 @@ const styles = StyleSheet.create({
   },
   time: { width: 92 },
   still: { width: '100%', aspectRatio: 16 / 9, borderRadius: 12 },
+  progress: { paddingHorizontal: Spacing.screen, paddingBottom: Spacing.two, gap: Spacing.one },
+  track: { height: 4, borderRadius: 2, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 2 },
+  progressRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   timeline: { gap: Spacing.one },
   moment: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start' },
   momentAt: { width: 92 },

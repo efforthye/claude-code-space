@@ -457,4 +457,8 @@ export const es: Dict = {
   'reels.expand': 'Pantalla completa',
   'reels.collapse': 'Salir',
   'plan.iapUnavailable': 'La compra dentro de la app aún no está disponible.',
+  'review.makingStills': 'Creando imágenes… {done}/{total}',
+  'review.makingClips': 'Renderizando clips… {done}/{total}',
+  'review.etaMin': '~{n} min restantes',
+  'review.etaSec': '~{n} s restantes',
 };

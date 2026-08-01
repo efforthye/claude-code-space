@@ -506,4 +506,8 @@ export const ja: Dict = {
   'reels.expand': '全画面',
   'reels.collapse': '全画面を終了',
   'plan.iapUnavailable': 'アプリ内課金はまだ利用できません。',
+  'review.makingStills': '静止画を生成中… {done}/{total}',
+  'review.makingClips': 'クリップを生成中… {done}/{total}',
+  'review.etaMin': '残り約{n}分',
+  'review.etaSec': '残り約{n}秒',
 };

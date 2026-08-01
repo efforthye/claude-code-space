@@ -460,4 +460,8 @@ export const ru: Dict = {
   'reels.expand': 'Во весь экран',
   'reels.collapse': 'Выйти',
   'plan.iapUnavailable': 'Покупки в приложении пока недоступны.',
+  'review.makingStills': 'Создаём кадры… {done}/{total}',
+  'review.makingClips': 'Рендерим клипы… {done}/{total}',
+  'review.etaMin': 'осталось ~{n} мин',
+  'review.etaSec': 'осталось ~{n} с',
 };

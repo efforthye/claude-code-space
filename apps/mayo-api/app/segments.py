@@ -308,6 +308,24 @@ def invalidated_by(segments: list[Segment], index: int) -> list[int]:
     return []
 
 
+# Jobs with a clip render in flight right now.
+#
+# Nothing about the job record can stand in for this. A clip takes minutes, and
+# the loop below decides what to render by looking for segments with no clipKey
+# — so two loops started a second apart both see the same empty segment, both
+# charge for it, and both submit it. The owner hit exactly this: the button gave
+# no feedback, they pressed it five times, and five renderers billed the same
+# film in parallel.
+#
+# In-process and deliberately not persisted: after a restart nothing is
+# rendering, so the set being empty is the truth.
+_rendering: set[str] = set()
+
+
+def is_rendering_clips(job_id: str) -> bool:
+    return job_id in _rendering
+
+
 async def render_clips(job_id: str, owner_id: Optional[str] = None) -> None:
     """Render a film's clips in order, billing each as it lands.
 
@@ -320,6 +338,16 @@ async def render_clips(job_id: str, owner_id: Optional[str] = None) -> None:
     (`Request is in progress`) and charges for it regardless — pretending
     otherwise would mean absorbing a cost we cannot avoid.
     """
+    if job_id in _rendering:
+        return  # belt and braces: the router rejects this first
+    _rendering.add(job_id)
+    try:
+        await _render_clips(job_id, owner_id)
+    finally:
+        _rendering.discard(job_id)
+
+
+async def _render_clips(job_id: str, owner_id: Optional[str] = None) -> None:
     from . import catalog
     from .auth import store as users
     from .store import jobs as job_store

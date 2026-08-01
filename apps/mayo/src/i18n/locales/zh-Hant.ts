@@ -457,4 +457,8 @@ export const zhHant: Dict = {
   'reels.expand': '全螢幕',
   'reels.collapse': '結束全螢幕',
   'plan.iapUnavailable': '應用程式內購買尚未開放。',
+  'review.makingStills': '正在生成圖片… {done}/{total}',
+  'review.makingClips': '正在算圖… {done}/{total}',
+  'review.etaMin': '約剩 {n} 分鐘',
+  'review.etaSec': '約剩 {n} 秒',
 };

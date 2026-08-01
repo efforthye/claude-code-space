@@ -461,4 +461,8 @@ export const th: Dict = {
   'reels.expand': 'เต็มจอ',
   'reels.collapse': 'ออกจากเต็มจอ',
   'plan.iapUnavailable': 'การซื้อในแอปยังไม่พร้อมใช้งาน',
+  'review.makingStills': 'กำลังสร้างภาพ… {done}/{total}',
+  'review.makingClips': 'กำลังเรนเดอร์คลิป… {done}/{total}',
+  'review.etaMin': 'เหลือ ~{n} นาที',
+  'review.etaSec': 'เหลือ ~{n} วินาที',
 };

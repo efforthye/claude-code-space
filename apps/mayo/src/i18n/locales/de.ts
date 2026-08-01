@@ -459,4 +459,8 @@ export const de: Dict = {
   'reels.expand': 'Vollbild',
   'reels.collapse': 'Beenden',
   'plan.iapUnavailable': 'In-App-Kauf ist noch nicht verfügbar.',
+  'review.makingStills': 'Bilder werden erstellt… {done}/{total}',
+  'review.makingClips': 'Clips werden gerendert… {done}/{total}',
+  'review.etaMin': 'noch ca. {n} Min.',
+  'review.etaSec': 'noch ca. {n} Sek.',
 };

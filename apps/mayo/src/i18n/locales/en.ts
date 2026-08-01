@@ -504,4 +504,8 @@ export const en: Dict = {
   'reels.expand': 'Expand',
   'reels.collapse': 'Exit fullscreen',
   'plan.iapUnavailable': "In-app purchase isn't available yet.",
+  'review.makingStills': 'Making stills… {done}/{total}',
+  'review.makingClips': 'Rendering clips… {done}/{total}',
+  'review.etaMin': '~{n} min left',
+  'review.etaSec': '~{n}s left',
 };

@@ -475,4 +475,8 @@ export const zhHans: Dict = {
   'reels.expand': '全屏',
   'reels.collapse': '退出全屏',
   'plan.iapUnavailable': '应用内购买尚未开放。',
+  'review.makingStills': '正在生成图片… {done}/{total}',
+  'review.makingClips': '正在渲染片段… {done}/{total}',
+  'review.etaMin': '约剩 {n} 分钟',
+  'review.etaSec': '约剩 {n} 秒',
 };

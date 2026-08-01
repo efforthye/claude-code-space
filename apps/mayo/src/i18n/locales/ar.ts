@@ -463,4 +463,8 @@ export const ar: Dict = {
   'reels.expand': 'ملء الشاشة',
   'reels.collapse': 'إنهاء',
   'plan.iapUnavailable': 'الشراء داخل التطبيق غير متاح بعد.',
+  'review.makingStills': 'جارٍ إنشاء الصور… {done}/{total}',
+  'review.makingClips': 'جارٍ إخراج المقاطع… {done}/{total}',
+  'review.etaMin': 'يتبقى ~{n} دقيقة',
+  'review.etaSec': 'يتبقى ~{n} ثانية',
 };

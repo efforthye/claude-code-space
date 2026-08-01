@@ -456,4 +456,8 @@ export const ptBR: Dict = {
   'reels.expand': 'Tela cheia',
   'reels.collapse': 'Sair',
   'plan.iapUnavailable': 'A compra no app ainda não está disponível.',
+  'review.makingStills': 'Criando imagens… {done}/{total}',
+  'review.makingClips': 'Renderizando clipes… {done}/{total}',
+  'review.etaMin': '~{n} min restantes',
+  'review.etaSec': '~{n} s restantes',
 };

@@ -460,4 +460,8 @@ export const fr: Dict = {
   'reels.expand': 'Plein écran',
   'reels.collapse': 'Quitter',
   'plan.iapUnavailable': "L'achat intégré n'est pas encore disponible.",
+  'review.makingStills': 'Création des images… {done}/{total}',
+  'review.makingClips': 'Rendu des clips… {done}/{total}',
+  'review.etaMin': '~{n} min restantes',
+  'review.etaSec': '~{n} s restantes',
 };

@@ -506,4 +506,8 @@ export const ko: Dict = {
   'reels.expand': '크게보기',
   'reels.collapse': '작게보기',
   'plan.iapUnavailable': '인앱 결제는 아직 준비되지 않았어요.',
+  'review.makingStills': '이미지 생성 중… {done}/{total}',
+  'review.makingClips': '영상 렌더 중… {done}/{total}',
+  'review.etaMin': '약 {n}분 남음',
+  'review.etaSec': '약 {n}초 남음',
 };

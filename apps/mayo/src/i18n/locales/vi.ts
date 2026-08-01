@@ -457,4 +457,8 @@ export const vi: Dict = {
   'reels.expand': 'Toàn màn hình',
   'reels.collapse': 'Thoát',
   'plan.iapUnavailable': 'Mua trong ứng dụng chưa khả dụng.',
+  'review.makingStills': 'Đang tạo ảnh… {done}/{total}',
+  'review.makingClips': 'Đang dựng clip… {done}/{total}',
+  'review.etaMin': 'còn ~{n} phút',
+  'review.etaSec': 'còn ~{n} giây',
 };

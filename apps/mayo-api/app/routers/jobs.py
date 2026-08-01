@@ -475,6 +475,16 @@ async def start_clips(
             status.HTTP_409_CONFLICT, detail=f"job is at stage '{job.stage}', not ready for clips"
         )
 
+    from .. import segments as _seg
+
+    # Idempotent: a second press while the first render is in flight must not
+    # start a second renderer. Each one charges per clip before submitting, so
+    # the duplicate is not just wasted work — it is duplicate money.
+    if _seg.is_rendering_clips(job_id):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, detail="이미 렌더링 중이에요 — 진행 상황을 확인해 주세요."
+        )
+
     # This is the paid boundary for a staged job — everything before it was free.
     _require_premium_for_external(x_mayo_session)
 
