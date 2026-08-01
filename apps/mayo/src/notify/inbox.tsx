@@ -12,6 +12,11 @@ export type InboxItem = {
   body: string;
   createdAt: number; // epoch ms
   read: boolean;
+  /**
+   * Where tapping this takes you. Without it a notification is a dead end: it
+   * tells you the film is ready and then makes you go find it yourself.
+   */
+  href?: string;
 };
 
 type InboxValue = {

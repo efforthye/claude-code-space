@@ -4,6 +4,7 @@
 // development build with a push token would be needed later.
 
 import * as Notifications from 'expo-notifications';
+import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 
@@ -37,6 +38,20 @@ export function JobNotifier() {
   notifyRef.current = notifyOnDone;
   const known = useRef<Record<string, string>>({});
   const grantedRef = useRef(false);
+
+  const router = useRouter();
+
+  // Tapping the SYSTEM notification has to land somewhere too. Without this the
+  // OS opens the app at whatever screen it was last on, which after "your film
+  // is ready" is the one place the news is not.
+  useEffect(() => {
+    if (!NOTIFY_SUPPORTED) return;
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const href = response.notification.request.content.data?.href;
+      if (typeof href === 'string' && href) router.push(href as never);
+    });
+    return () => sub.remove();
+  }, [router]);
 
   useEffect(() => {
     let alive = true;
@@ -72,6 +87,9 @@ export function JobNotifier() {
               icon: done ? 'film' : 'alert',
               title: done ? tRef.current('notify.doneTitle') : tRef.current('notify.failTitle'),
               body: job.title,
+              // A finished film lives in the library; a failed one is only
+              // explicable on its own job screen, where the reason is shown.
+              href: done ? '/(tabs)/library' : `/jobs/${job.id}`,
             });
             // …and additionally pop a system notification where supported.
             if (NOTIFY_SUPPORTED && grantedRef.current && notifyRef.current) {
@@ -79,6 +97,7 @@ export function JobNotifier() {
                 content: {
                   title: done ? tRef.current('notify.doneTitle') : tRef.current('notify.failTitle'),
                   body: job.title,
+                  data: { href: done ? '/(tabs)/library' : `/jobs/${job.id}` },
                 },
                 trigger: null,
               }).catch(() => {});

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -73,28 +73,52 @@ export default function NotificationsScreen() {
             </View>
           }
           renderItem={({ item }) => (
-            <ThemedView type="backgroundElement" style={styles.item}>
-              <Ionicons
-                name={ICONS[item.icon]}
-                size={22}
-                color={item.icon === 'alert' ? '#E5484D' : theme.text}
-              />
-              <View style={styles.flex}>
-                <ThemedText type="smallBold">{item.title}</ThemedText>
-                {item.body ? (
-                  <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
-                    {item.body}
+            <Row href={item.href}>
+                <ThemedView type="backgroundElement" style={styles.item}>
+                <Ionicons
+                  name={ICONS[item.icon]}
+                  size={22}
+                  color={item.icon === 'alert' ? '#E5484D' : theme.text}
+                />
+                <View style={styles.flex}>
+                  <ThemedText type="smallBold">{item.title}</ThemedText>
+                  {item.body ? (
+                    <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
+                      {item.body}
+                    </ThemedText>
+                  ) : null}
+                </View>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {timeAgo(item.createdAt, t)}
                   </ThemedText>
-                ) : null}
-              </View>
-              <ThemedText type="small" themeColor="textSecondary">
-                {timeAgo(item.createdAt, t)}
-              </ThemedText>
-            </ThemedView>
+                </ThemedView>
+            </Row>
           )}
         />
       </SafeAreaView>
     </ThemedView>
+  );
+}
+
+/**
+ * A notification row, tappable only when it leads somewhere.
+ *
+ * This screen is a modal, so it dismisses itself before navigating — pushing
+ * on top of it would leave the film playing underneath a sheet of
+ * notifications.
+ */
+function Row({ href, children }: { href?: string; children: ReactNode }) {
+  const router = useRouter();
+  if (!href) return <>{children}</>;
+  return (
+    <Pressable
+      onPress={() => {
+        router.back();
+        router.push(href as never);
+      }}
+      style={({ pressed }) => (pressed ? { opacity: 0.8 } : undefined)}>
+      {children}
+    </Pressable>
   );
 }
 
