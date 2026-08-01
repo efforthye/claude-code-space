@@ -181,6 +181,27 @@ export default function ReviewScreen() {
 
       <ThemedText>{current.text}</ThemedText>
 
+      {/*
+        The second-by-second breakdown. A paragraph cannot be reviewed at the
+        resolution people actually think about video — "the door opens at two
+        seconds" is a note you can only give if the plan says when things
+        happen, and it is what a revision instruction points at.
+      */}
+      {current.timeline?.length ? (
+        <View style={styles.timeline}>
+          {current.timeline.map((m, i) => (
+            <View key={`${m.fromSec}-${i}`} style={styles.moment}>
+              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.momentAt}>
+                {fmt(Math.round(m.fromSec))}–{fmt(Math.round(m.toSec))}
+              </ThemedText>
+              <ThemedText type="small" style={styles.flex}>
+                {m.action}
+              </ThemedText>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       {stage === 'beats' ? (
         <>
           <TextInput
@@ -430,6 +451,9 @@ const styles = StyleSheet.create({
   },
   time: { width: 92 },
   still: { width: '100%', aspectRatio: 16 / 9, borderRadius: 12 },
+  timeline: { gap: Spacing.one },
+  moment: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start' },
+  momentAt: { width: 92 },
   input: { borderWidth: 1, borderRadius: 12, padding: Spacing.two, minHeight: 72 },
   footer: {
     flexDirection: 'row',

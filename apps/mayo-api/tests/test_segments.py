@@ -557,3 +557,62 @@ def test_a_one_pass_job_is_still_gated_at_creation(monkeypatch):
     monkeypatch.setattr(jobs_router.runtime, "generation_backend", lambda: "external")
     r = client.post("/v1/jobs", json={"prompt": "x", "seconds": 20})
     assert r.status_code == 402
+
+
+# --- the reviewable plan (2026-08-01) ---------------------------------------
+
+
+def test_the_review_text_is_the_beat_not_the_slug():
+    """What the user approves has to describe the shot, not label it.
+
+    `text` fell back to `heading` — a four-word slug like "Dawn over the
+    harbour" — so the beat sheet was a list of labels and reviewing it told you
+    nothing about what would be made.
+    """
+    from app.planner import Scene, Screenplay
+
+    sp = Screenplay(
+        title="t",
+        logline="l",
+        style="s",
+        scenes=[
+            Scene(
+                index=0,
+                heading="Dawn over the harbour",
+                beat="등대지기가 바람을 밀고 문을 연다. 불빛이 그의 얼굴을 스친다.",
+                prompt="35mm anamorphic, f/2.8 ...",
+                seconds=5,
+            )
+        ],
+    )
+    out = seg.segments_from_screenplay(sp, seconds=int(seg.segment_seconds()))
+    assert out[0].text.startswith("등대지기"), out[0].text
+
+
+def test_moments_are_rebased_onto_the_films_clock():
+    """The director writes moments inside its own scene; the sheet shows the film."""
+    from app.planner import Moment, Scene, Screenplay
+
+    step = int(seg.segment_seconds())
+    sp = Screenplay(
+        title="t",
+        logline="l",
+        style="s",
+        scenes=[
+            Scene(
+                index=0,
+                heading="h",
+                beat="b",
+                timeline=[Moment(fromSec=0, toSec=1, action="문이 열린다")],
+                prompt="p",
+                seconds=step,
+            )
+        ],
+    )
+    out = seg.segments_from_screenplay(sp, seconds=step * 2)
+    # Second segment starts at `step`, so its first moment must too.
+    assert out[1].timeline[0].fromSec == step
+    # And nothing may run past the slice it belongs to.
+    for s_ in out:
+        for m in s_.timeline:
+            assert s_.startSec <= m.fromSec and m.toSec <= s_.endSec

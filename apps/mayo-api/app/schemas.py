@@ -82,6 +82,14 @@ SegmentStatus = Literal[
 JobStage = Literal["beats", "stills", "clips", "done"]
 
 
+class Moment(BaseModel):
+    """One instant inside a segment — see planner.Moment for why this exists."""
+
+    fromSec: float
+    toSec: float
+    action: str
+
+
 class Segment(BaseModel):
     """One timecoded slice of a film, carried through every stage.
 
@@ -103,6 +111,9 @@ class Segment(BaseModel):
     # The generation prompt derived from `text` (camera, subject, look, action).
     prompt: str = ""
     status: SegmentStatus = "draft"
+    # The slice broken down instant by instant. This is what the review screen
+    # renders and what a revision instruction points at ("slow the 2-3s bit").
+    timeline: list[Moment] = []
     # Filled in as later stages complete.
     imageKey: Optional[str] = None
     clipKey: Optional[str] = None

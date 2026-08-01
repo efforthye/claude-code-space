@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import Optional
 
 from .planner import Screenplay, get_scenario_planner
-from .schemas import Segment
+from .schemas import Moment, Segment
 
 def segment_seconds() -> float:
     """One segment per clip — whatever a clip actually is on this backend.
@@ -69,7 +69,22 @@ def segments_from_screenplay(screenplay: Screenplay, seconds: int) -> list[Segme
                 index=len(out),
                 startSec=start,
                 endSec=end,
-                text=scene.heading or scene.prompt[:80],
+                # The beat is written for the user, in their language; the heading is a
+                # four-word slug and the prompt is English render-speak. Falling
+                # back to the heading made the review sheet a list of labels.
+                text=scene.beat or scene.heading or scene.prompt[:80],
+                # Rebased onto this segment's place on the timeline: the director
+                # writes moments relative to its own scene, the review screen
+                # shows them against the film's clock.
+                timeline=[
+                    Moment(
+                        fromSec=start + m.fromSec,
+                        toSec=min(start + m.toSec, end),
+                        action=m.action,
+                    )
+                    for m in (scene.timeline or [])
+                    if start + m.fromSec < end
+                ],
                 prompt=scene.prompt,
                 status="draft",
             )
@@ -119,8 +134,18 @@ async def rewrite_segment(
     scene = replacement.scenes[0] if replacement.scenes else None
     updated = target.model_copy()
     if scene:
-        updated.text = scene.heading or scene.prompt[:80]
+        updated.text = scene.beat or scene.heading or scene.prompt[:80]
         updated.prompt = scene.prompt
+        if scene.timeline:
+            updated.timeline = [
+                Moment(
+                    fromSec=target.startSec + m.fromSec,
+                    toSec=min(target.startSec + m.toSec, target.endSec),
+                    action=m.action,
+                )
+                for m in scene.timeline
+                if target.startSec + m.fromSec < target.endSec
+            ]
     updated.status = "draft"  # a rewrite un-approves it
     updated.rewrites = target.rewrites + 1
     return updated

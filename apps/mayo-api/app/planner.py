@@ -56,9 +56,32 @@ def _clean_reply(text: str) -> str:
     return re.sub(r"[ \t]{2,}", " ", t).strip()
 
 
+class Moment(BaseModel):
+    """One instant inside a shot: what happens between two timestamps.
+
+    A shot prompt is a paragraph, and a paragraph cannot be reviewed at the
+    resolution people actually think about video — "the door opens at two
+    seconds" is a note you can only give if the plan says when things happen.
+    This is the structure the review screen renders, and the beat the user
+    approves before any money is spent.
+    """
+
+    fromSec: float
+    toSec: float
+    action: str  # in the user's language — this is read, not rendered
+
+
 class Scene(BaseModel):
     index: int
     heading: str  # short scene slug, e.g. "Dawn over the harbor"
+    # What the viewer will SEE in this slice, in the user's own language. This
+    # is the text on the review screen — the thing being approved before any
+    # money is spent. It used to fall back to `heading`, so the beat sheet was a
+    # list of four-word labels and reviewing it told you nothing.
+    beat: str = ""
+    # The same slice broken down instant by instant, for review and for
+    # targeted revision ("make the 2-3s bit slower").
+    timeline: list[Moment] = []
     prompt: str  # detailed image/video-generation prompt for this scene
     motion: str = ""  # camera/motion notes (pan, dolly, etc.)
     seconds: int
@@ -246,11 +269,9 @@ _DIRECTOR_SYSTEM = (
     "-> Look (style/palette/mood) -> Action (what happens). Keep identity fixed and "
     "vary ONLY the motion/action between scenes. Give the film an escalation arc "
     "(calm -> tension -> turn -> aftermath). "
-    "DETAIL: every scene prompt is 3-5 sentences that walk the shot second by "
-    "second — the camera's path, the subject's micro-actions in order, environment "
-    "dynamics (particles, weather, light shifts), and the exact composition of the "
-    "FINAL frame (the next clip is generated FROM that frame, so describe how the "
-    "shot ends). One-line prompts produce flat, generic clips."
+    "TIMELINE: each scene also carries `timeline` — the slice broken into 1-2 second moments, each {fromSec, toSec, action}, action written IN THE USER'S OWN LANGUAGE. The moments must tile the scene with no gaps and no overlap, and together they must add up to exactly what the prompt describes. This is how the user reads the plan ('0-2s: the door opens'), so it is where they will point when asking for a change.\n"
+    "BEAT: alongside each scene prompt write `beat` — one or two sentences, IN THE USER'S OWN LANGUAGE, saying plainly what the viewer sees in this slice. This is what the user reviews and approves before paying, so it must describe the shot, not label it: 'A lighthouse keeper pushes the door open against the wind; the beam sweeps past his face' — never 'Lighthouse, night'.\n"
+    "DETAIL: every scene `prompt` is 60-120 words of English shot description covering all six of: SUBJECT (the verbatim character descriptor), ACTION (micro-actions in order, second by second), CAMERA (shot size, angle, move, AND the optics — a focal length and aperture such as '35mm anamorphic, f/2.8', because 'close-up' alone no longer specifies an image), LIGHTING (quality, direction and colour temperature of the key, plus practicals in frame), ENVIRONMENT (place, time of day, weather, and what moves in the air — dust, rain, embers), and STYLE (palette, film stock or camera body for colour science, grain, mood). End by describing the EXACT composition of the FINAL frame: the next clip is generated FROM that frame, so a shot that does not say how it ends will not cut. Stay inside 120 words — past that the model starts contradicting itself. One-line prompts produce flat, generic clips."
 )
 
 
@@ -282,11 +303,18 @@ _DIRECTOR_CHAT_SYSTEM = (
     "(style/palette/mood) -> Action (the motion of this scene). Identity stays fixed; only the "
     "motion varies between scenes. Shape the scene list with an escalation arc "
     "(calm -> tension -> turn -> aftermath).\n"
-    "DETAIL: each scene prompt is 3-5 sentences that walk the shot second by second — the "
-    "camera's path, the subject's micro-actions in order, environment dynamics (particles, "
-    "weather, light shifts), and the exact composition of the FINAL frame (the next clip is "
-    "generated FROM that ending frame, so say how the shot ends). One-line prompts produce "
-    "flat, generic clips."
+    "TIMELINE: each scene also carries `timeline` — 1-2 second moments {fromSec, toSec, action} in the user's language, tiling the scene with no gaps or overlap.\n"
+    "BEAT: each scene also carries `beat` — one or two sentences IN THE USER'S OWN LANGUAGE "
+    "describing what the viewer sees in that slice. It is what the user reviews and approves "
+    "before paying, so describe the shot rather than labelling it.\n"
+    "DETAIL: each scene `prompt` is 60-120 words of English shot description covering all six "
+    "of SUBJECT (verbatim descriptor), ACTION (micro-actions in order), CAMERA (shot size, "
+    "angle, move AND the optics — focal length and aperture, e.g. '35mm anamorphic, f/2.8'), "
+    "LIGHTING (quality, direction, colour temperature, practicals in frame), ENVIRONMENT "
+    "(place, time, weather, what moves in the air), and STYLE (palette, film stock or camera "
+    "body for colour science, grain, mood). Finish on the EXACT composition of the FINAL "
+    "frame — the next clip is generated from it, so a shot that does not say how it ends will "
+    "not cut. Stay within 120 words; past that the model contradicts itself."
 )
 
 
@@ -295,7 +323,7 @@ _DIRECTOR_CHAT_SYSTEM = (
 _SCREENPLAY_JSON_SHAPE = (
     ' Respond with ONLY a JSON object, no markdown, exactly: '
     '{"title": string, "logline": string, "style": string, "characters": [string], "scenes": '
-    '[{"index": integer, "heading": string, "prompt": string, "motion": string, '
+    '[{"index": integer, "heading": string, "beat": string, "timeline": [{"fromSec": number, "toSec": number, "action": string}], "prompt": string, "motion": string, '
     '"seconds": integer}]}.'
 )
 _TURN_JSON_SHAPE = (

@@ -92,6 +92,9 @@ export type SegmentStatus =
 
 export type JobStage = 'beats' | 'stills' | 'clips' | 'done';
 
+/** One instant inside a segment — the resolution people think about video at. */
+export type Moment = { fromSec: number; toSec: number; action: string };
+
 /** One timecoded slice — the unit of review and of billing (ADR 0020). */
 export type Segment = {
   index: number;
@@ -100,6 +103,8 @@ export type Segment = {
   text: string;
   prompt: string;
   status: SegmentStatus;
+  /** The slice broken down instant by instant, in the user's language. */
+  timeline?: Moment[];
   imageKey?: string | null;
   clipKey?: string | null;
   rewrites: number;
