@@ -329,34 +329,6 @@ async def approve_segment(
     return updated
 
 
-async def _render_stills_task(job_id: str) -> None:
-    """Render every missing still for a job, in the background.
-
-    Failures are logged and left for the user to retry per segment rather than
-    failing the job: a still is cheap to redo, and losing the whole beat sheet
-    over one image would be the expensive kind of strict.
-    """
-    from .. import segments as seg
-
-    job = await job_store.get(job_id)
-    if job is None:
-        return
-    for i, segment in enumerate(job.segments):
-        fresh = await job_store.get(job_id)
-        if fresh is None or fresh.stage != "stills":
-            return  # the user moved on or cancelled
-        if fresh.segments[i].imageKey:
-            continue
-        try:
-            done = await seg.render_segment_image(job_id, fresh.segments[i], fresh.stylePrompt or "")
-        except Exception:
-            logger.exception("still %s failed for job %s", i, job_id)
-            continue
-        segs = list((await job_store.get(job_id)).segments)
-        segs[i] = done
-        await job_store.set_segments(job_id, segs, stage="stills")
-
-
 @router.post("/{job_id}/stills", response_model=Job)
 async def render_stills(
     job_id: str, x_mayo_session: Optional[str] = Header(default=None)
@@ -376,10 +348,32 @@ async def render_stills(
         )
 
     from .. import segments as seg
+    from ..auth import store as users
 
-    done = [
-        await seg.render_segment_image(job_id, s, job.stylePrompt or "") for s in job.segments
-    ]
+    caller = users.user_for_session(x_mayo_session or "")
+    owner = caller["id"] if caller else None
+
+    done = []
+    for segment in job.segments:
+        if segment.imageKey:
+            done.append(segment)  # already rendered — never charge twice
+            continue
+        try:
+            charged = await seg.charge_for_still(job_id, owner, job.tierLabel or "standard")
+        except seg.InsufficientCredits as exc:
+            # Keep what was paid for and rendered; say plainly why it stopped.
+            if done:
+                await job_store.set_segments(job_id, done + job.segments[len(done) :])
+            raise HTTPException(
+                status.HTTP_402_PAYMENT_REQUIRED,
+                detail=f"크레딧이 부족해요 — {exc.needed}크레딧 필요, 잔액 {exc.balance}크레딧.",
+            ) from exc
+        try:
+            done.append(await seg.render_segment_image(job_id, segment, job.stylePrompt or ""))
+        except Exception:
+            await seg.refund_still(job_id, owner, charged)
+            logger.exception("still %s failed for job %s", segment.index, job_id)
+            done.append(segment)
     updated = await job_store.set_segments(job_id, done)
     if updated is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
@@ -476,13 +470,10 @@ async def advance_stage(
         updated = await job_store.set_segments(job_id, job.segments, stage="stills")
         if updated is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="job not found")
-        # Start the stills immediately. They cost nothing and there is no
-        # decision to make between approving the beats and wanting to see them,
-        # so a screen that says "stills" and then sits there waiting for another
-        # press is just a dead end wearing a stage name.
-        import asyncio
-
-        register_task(asyncio.create_task(_render_stills_task(job_id)))
+        # Deliberately does NOT start rendering. Stills looked free and were
+        # briefly auto-started here; they are not — Higgsfield charges about
+        # $0.06 an image, so this is a paid step and a paid step is never
+        # implicit. The screen shows the price and waits for a press.
         return updated
 
     if job.stage == "stills":

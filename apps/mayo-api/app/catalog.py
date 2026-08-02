@@ -210,6 +210,27 @@ def credits_per_scene(tier: Tier | None) -> int:
     return max(1, round(rate * SCENE_SECONDS_FOR_PRICING / 60))
 
 
+def credits_per_still(tier: Tier | None) -> int:
+    """Credits for ONE still.
+
+    A still is not free. Higgsfield's soul/standard costs one provider credit
+    (about $0.06) per image, and until 2026-08-02 the stills stage charged the
+    user nothing for them — every image was a straight loss, and the stage ran
+    for the whole beat sheet at once. A twelve-scene film gave away $0.75 of
+    provider spend before a single clip was paid for.
+
+    Priced as a fixed fraction of a scene rather than its own band: the point is
+    that it is charged at all, and one credit is the smallest unit the ledger
+    can move.
+    """
+    return max(1, round(credits_per_scene(tier) * STILL_SHARE_OF_SCENE))
+
+
+# A still is roughly a seventh of a scene's provider cost (1.0 credit against
+# the measured 5.83 for the clip) — see ADR 0017 v3.1.
+STILL_SHARE_OF_SCENE = 1 / 7
+
+
 def scenes_for(seconds: int) -> int:
     """Narrative scene count — ~1 scene per 10s, at least 1 (used by the planner).
 

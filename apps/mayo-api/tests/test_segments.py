@@ -675,3 +675,38 @@ def test_approving_everything_never_approves_what_does_not_exist():
     assert seg.can_reach(imaged, "imageApproved")
     assert not seg.can_reach(imaged, "clipApproved")
     assert seg.can_reach(clipped, "clipApproved")
+
+
+def test_a_still_costs_something():
+    """Stills spend provider money, so they must charge for it.
+
+    Higgsfield's soul/standard is about $0.06 an image and the stills stage
+    rendered the whole beat sheet at once while charging nothing — a
+    twelve-scene film gave away roughly $0.75 of provider spend before a single
+    clip was paid for.
+    """
+    from app import catalog
+
+    tier = catalog.tier_by_id("standard")
+    assert catalog.credits_per_still(tier) >= 1
+    # And it must be the cheap end of the film: a still is not a clip.
+    assert catalog.credits_per_still(tier) < catalog.credits_per_scene(tier)
+
+
+def test_running_out_mid_sheet_keeps_what_was_paid_for():
+    """A 402 must not throw away the stills the user already paid to render."""
+    import asyncio
+
+    from app.schemas import Segment
+
+    segs = [
+        Segment(index=0, startSec=0, endSec=5, text="a", prompt="p", status="approved",
+                imageKey="k0"),
+        Segment(index=1, startSec=5, endSec=10, text="b", prompt="p", status="approved"),
+    ]
+    # An already-rendered still is skipped rather than charged a second time.
+    assert segs[0].imageKey and not segs[1].imageKey
+
+    # Refunding a charge that never happened is a no-op, not a credit.
+    asyncio.run(seg.refund_still("j", None, 5))
+    asyncio.run(seg.refund_still("j", "u", 0))

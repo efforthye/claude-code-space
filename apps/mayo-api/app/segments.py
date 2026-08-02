@@ -16,6 +16,15 @@ from typing import Optional
 from .planner import Screenplay, get_scenario_planner
 from .schemas import Moment, Segment
 
+class InsufficientCredits(Exception):
+    """Not enough credits for the next paid step."""
+
+    def __init__(self, needed: int, balance: int) -> None:
+        super().__init__(f"needs {needed} credits, balance {balance}")
+        self.needed = needed
+        self.balance = balance
+
+
 def segment_seconds() -> float:
     """One segment per clip — whatever a clip actually is on this backend.
 
@@ -179,6 +188,40 @@ def stage_is_complete(segments: list[Segment], required: str) -> bool:
 
 
 # --- Stage 2: one still per segment ----------------------------------------
+
+
+async def charge_for_still(job_id: str, owner_id: Optional[str], tier_label: str) -> int:
+    """Take payment for one still, or raise if the account cannot cover it.
+
+    Same shape as the clip charge: money moves BEFORE the request goes out,
+    because once the provider has it we owe for it whether or not we are still
+    here to see the result.
+    """
+    from . import catalog
+    from .auth import store as users
+    from .store import jobs as job_store
+
+    if not owner_id:
+        return 0
+    tier = catalog.tier_by_id((tier_label or "standard").lower())
+    price = catalog.credits_per_still(tier)
+    balance = int((users.users.get(owner_id) or {}).get("credits", 0))
+    if balance < price:
+        raise InsufficientCredits(price, balance)
+    users.add_credits(owner_id, -price)
+    await job_store.add_spend(job_id, price)
+    return price
+
+
+async def refund_still(job_id: str, owner_id: Optional[str], amount: int) -> None:
+    """Put a still's credits back when its render never happened."""
+    if not owner_id or amount <= 0:
+        return
+    from .auth import store as users
+    from .store import jobs as job_store
+
+    users.add_credits(owner_id, amount)
+    await job_store.add_spend(job_id, -amount)
 
 
 async def render_segment_image(job_id: str, segment: Segment, style_prompt: str = "") -> Segment:
