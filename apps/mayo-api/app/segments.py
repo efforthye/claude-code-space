@@ -312,6 +312,21 @@ def continuity_source(segments: list[Segment], index: int) -> Optional[bytes]:
     return None
 
 
+def _next_still(segments: list[Segment], index: int) -> Optional[bytes]:
+    """The still the NEXT segment starts from, i.e. where this clip must land.
+
+    None for the last clip of a film — it has nowhere to land, and should end
+    on whatever the shot's own prompt describes.
+    """
+    from .storage import get_storage
+
+    if index + 1 >= len(segments):
+        return None
+    key = segments[index + 1].imageKey
+    store = get_storage()
+    return store.read(key) if key and store.exists(key) else None
+
+
 async def render_segment_clip(
     job_id: str, segments: list[Segment], index: int, video_model: Optional[str] = None
 ) -> Segment:
@@ -331,10 +346,22 @@ async def render_segment_clip(
 
     from . import catalog
 
-    app_id = catalog.higgsfield_app_for(video_model)
+    # Where this clip must LAND: the next segment's approved still. Pinning both
+    # ends is what stops a chained film drifting — otherwise each clip ends
+    # wherever the model wandered to and the next starts from that wander, which
+    # is most of what "the cuts do not connect" means. Free: the
+    # /first-last-frame variants cost the same as their base model.
+    end_image = _next_still(segments, index) if settings.higgsfield_end_image_arg else None
+    app_id = (
+        catalog.higgsfield_first_last_app(video_model)
+        if end_image is not None
+        else catalog.higgsfield_app_for(video_model)
+    )
     # Through the shared gate: the staged path used to call the provider
     # directly, so it neither queued behind the cap nor retried when it hit it.
-    url = await hf_submit(_higgsfield_video_sync, segment.prompt, start_image, app_id)
+    url = await hf_submit(
+        _higgsfield_video_sync, segment.prompt, start_image, app_id, end_image
+    )
 
     import httpx
 

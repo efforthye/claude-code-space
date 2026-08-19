@@ -710,3 +710,49 @@ def test_running_out_mid_sheet_keeps_what_was_paid_for():
     # Refunding a charge that never happened is a no-op, not a credit.
     asyncio.run(seg.refund_still("j", None, 5))
     asyncio.run(seg.refund_still("j", "u", 0))
+
+
+def test_the_landing_frame_is_the_next_segments_still():
+    """A clip must land where the next one starts, not near it."""
+    from app.schemas import Segment
+    from app.storage import get_storage
+
+    store = get_storage()
+    store.save("t/next.png", b"next-still-bytes")
+    segs = [
+        Segment(index=0, startSec=0, endSec=5, text="a", prompt="p", status="approved"),
+        Segment(index=1, startSec=5, endSec=10, text="b", prompt="p", status="approved",
+                imageKey="t/next.png"),
+    ]
+    assert seg._next_still(segs, 0) == b"next-still-bytes"
+    # The last clip has nowhere to land and must not be pinned.
+    assert seg._next_still(segs, 1) is None
+    # A segment whose still was never rendered cannot pin the one before it.
+    segs[1].imageKey = None
+    assert seg._next_still(segs, 0) is None
+
+
+def test_the_end_frame_is_off_until_its_argument_name_is_known():
+    """Guessing an argument name on this API costs money.
+
+    Higgsfield publishes no schema for the first-last-frame models
+    (input_schema: null) and accepts-and-bills requests with nonsense
+    arguments — the trap that cost four unauthorised generations on
+    2026-08-01. So the feature ships dark and the plain variant is used until
+    the name is read off Higgsfield's own docs.
+    """
+    from app.config import settings
+
+    assert settings.higgsfield_end_image_arg == "", (
+        "an end-image argument name was set — it must come from Higgsfield's "
+        "documentation, never a guess"
+    )
+
+
+def test_the_first_last_variant_is_named_off_the_base_model():
+    from app import catalog
+
+    assert catalog.higgsfield_first_last_app("dop-standard") == (
+        "higgsfield-ai/dop/standard/first-last-frame"
+    )
+    assert catalog.higgsfield_first_last_app("nonsense") is None

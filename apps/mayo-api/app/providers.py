@@ -256,7 +256,10 @@ async def hf_submit(fn, *args):
 
 
 def _higgsfield_video_sync(  # pragma: no cover — needs paid credits to exercise
-    prompt: str, image_bytes: bytes | None, model: str | None = None
+    prompt: str,
+    image_bytes: bytes | None,
+    model: str | None = None,
+    end_image_bytes: bytes | None = None,
 ) -> str:
     """Render one scene on Higgsfield and return the finished video URL.
 
@@ -309,6 +312,14 @@ def _higgsfield_video_sync(  # pragma: no cover — needs paid credits to exerci
     }
     if image_bytes is not None:
         arguments[settings.higgsfield_image_arg] = client.upload(image_bytes, "image/png")
+    # The end frame only goes out when we KNOW what to call it. An unknown
+    # argument name is not a free experiment on this API: it accepts nonsense
+    # and bills for it, so an empty setting means fall back to the plain
+    # variant rather than guess.
+    if end_image_bytes is not None and settings.higgsfield_end_image_arg:
+        arguments[settings.higgsfield_end_image_arg] = client.upload(
+            end_image_bytes, "image/png"
+        )
 
     try:
         ctrl = client.submit(app_id, arguments=arguments)
