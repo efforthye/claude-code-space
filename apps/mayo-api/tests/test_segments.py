@@ -732,27 +732,15 @@ def test_the_landing_frame_is_the_next_segments_still():
     assert seg._next_still(segs, 0) is None
 
 
-def test_the_end_frame_is_off_until_its_argument_name_is_known():
-    """Guessing an argument name on this API costs money.
+def test_the_end_frame_argument_came_from_the_published_spec():
+    """This name must never be a guess.
 
-    Higgsfield publishes no schema for the first-last-frame models
-    (input_schema: null) and accepts-and-bills requests with nonsense
-    arguments — the trap that cost four unauthorised generations on
-    2026-08-01. So the feature ships dark and the plain variant is used until
-    the name is read off Higgsfield's own docs.
+    Higgsfield accepts requests with nonsense arguments and bills for them —
+    the trap that cost four unauthorised generations on 2026-08-01 — so an
+    invented key would be paid for, not rejected. `end_image_url` is listed on
+    /higgsfield-ai/dop/{lite,standard,turbo} in Higgsfield's own OpenAPI spec
+    (docs.higgsfield.ai/docs/openapi.json), alongside image_url.
     """
     from app.config import settings
 
-    assert settings.higgsfield_end_image_arg == "", (
-        "an end-image argument name was set — it must come from Higgsfield's "
-        "documentation, never a guess"
-    )
-
-
-def test_the_first_last_variant_is_named_off_the_base_model():
-    from app import catalog
-
-    assert catalog.higgsfield_first_last_app("dop-standard") == (
-        "higgsfield-ai/dop/standard/first-last-frame"
-    )
-    assert catalog.higgsfield_first_last_app("nonsense") is None
+    assert settings.higgsfield_end_image_arg == "end_image_url"

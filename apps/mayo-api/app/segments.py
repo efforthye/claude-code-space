@@ -352,11 +352,10 @@ async def render_segment_clip(
     # is most of what "the cuts do not connect" means. Free: the
     # /first-last-frame variants cost the same as their base model.
     end_image = _next_still(segments, index) if settings.higgsfield_end_image_arg else None
-    app_id = (
-        catalog.higgsfield_first_last_app(video_model)
-        if end_image is not None
-        else catalog.higgsfield_app_for(video_model)
-    )
+    # The base DoP endpoint takes both frames — the separate /first-last-frame
+    # slugs in the model catalogue are absent from the documented API, so this
+    # deliberately does not switch endpoints.
+    app_id = catalog.higgsfield_app_for(video_model)
     # Through the shared gate: the staged path used to call the provider
     # directly, so it neither queued behind the cap nor retried when it hit it.
     url = await hf_submit(

@@ -140,20 +140,18 @@ class Settings:
     higgsfield_image_arg: str = field(
         default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_IMAGE_ARG", "image_url")
     )
-    # Second image for the `/first-last-frame` variants: the frame the clip must
-    # END on. Pinning both ends is what stops a chained film drifting — each clip
-    # lands exactly where the next one starts instead of somewhere near it — and
-    # the variants cost the SAME as their base model (verified in the catalogue
-    # 2026-08-02), so the continuity is free.
+    # The frame a clip must END on. Pinning both ends is what stops a chained
+    # film drifting: each clip lands exactly where the next one starts instead
+    # of somewhere near it, and the accumulated wander is most of what "the cuts
+    # do not connect" means.
     #
-    # EMPTY BY DEFAULT, and that is deliberate. Higgsfield publishes no schema
-    # for these models (`input_schema: null`) and no docs name the argument, and
-    # this API bills for requests it accepts with nonsense arguments — the same
-    # trap that cost four unauthorised generations on 2026-08-01. Set this only
-    # to a name read off Higgsfield's own playground or docs, never a guess.
-    # While it is empty the renderer uses the plain variant, exactly as before.
+    # Read off Higgsfield's own OpenAPI spec (docs.higgsfield.ai/docs/openapi.json,
+    # 2026-08-02), NOT guessed — `/higgsfield-ai/dop/{lite,standard,turbo}` list
+    # `end_image_url` alongside `image_url`. The separate `/first-last-frame`
+    # model slugs in the catalogue are not in the documented API and are not
+    # needed: the base endpoint takes both frames. It costs nothing extra.
     higgsfield_end_image_arg: str = field(
-        default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_END_IMAGE_ARG", "")
+        default_factory=lambda: os.getenv("MAYO_HIGGSFIELD_END_IMAGE_ARG", "end_image_url")
     )
     # Image stage on Higgsfield rather than a second vendor. Verified in their
     # docs 2026-08-01: unlike DoP, this one DOES take aspect_ratio, so the

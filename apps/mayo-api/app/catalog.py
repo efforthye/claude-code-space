@@ -80,18 +80,6 @@ HIGGSFIELD_SECONDS_PER_SCENE: dict[str, int] = {
 }
 
 
-def higgsfield_first_last_app(model_id: str | None) -> str | None:
-    """The /first-last-frame twin of a cinematic variant, if there is one.
-
-    Same price as the base model, and it accepts the frame the clip must end on
-    as well as the one it starts from. Chaining without it means every clip ends
-    wherever the model drifts to and the next one starts from that drift, which
-    is most of what "the cuts do not connect" means.
-    """
-    base = higgsfield_app_for(model_id)
-    return f"{base}/first-last-frame" if base else None
-
-
 def higgsfield_app_for(video_model: str | None) -> str | None:
     """Application id for a catalog video model, or None to use the default."""
     return HIGGSFIELD_VARIANTS.get(video_model or "")
