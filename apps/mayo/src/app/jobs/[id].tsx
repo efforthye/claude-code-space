@@ -15,6 +15,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/toast';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { waitingLabel } from '@/api/types';
 import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
 
@@ -130,7 +131,7 @@ export default function JobDetailScreen() {
                 <ThemedText type="smallBold">{t('jobDetail.status')}</ThemedText>
                 {active ? <ActivityIndicator size="small" /> : null}
                 <ThemedText type="small" themeColor="textSecondary">
-                  {t(`status.${job.status}`)}
+                  {t(waitingLabel(job) ?? `status.${job.status}`)}
                 </ThemedText>
               </View>
               <ProgressBar value={done ? 1 : progress} />

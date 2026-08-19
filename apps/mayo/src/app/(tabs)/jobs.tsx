@@ -10,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { waitingLabel } from '@/api/types';
 import { useQuery } from '@/hooks/use-query';
 import { useI18n } from '@/settings/settings';
 
@@ -67,7 +68,7 @@ export default function JobsScreen() {
                 </ThemedText>
                 <View style={[styles.statusDot, { backgroundColor: statusColor(job.status) }]} />
                 <ThemedText type="small" themeColor="textSecondary">
-                  {t(`status.${job.status}`)}
+                  {t(waitingLabel(job) ?? `status.${job.status}`)}
                 </ThemedText>
                 <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
               </View>

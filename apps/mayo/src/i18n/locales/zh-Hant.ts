@@ -462,4 +462,8 @@ export const zhHant: Dict = {
   'review.etaMin': '約剩 {n} 分鐘',
   'review.etaSec': '約剩 {n} 秒',
   'review.approveAllNext': '全部核准並繼續',
+  'status.yourTurn.beats': '輪到你了 — 檢查計畫',
+  'status.yourTurn.stills': '輪到你了 — 點擊生成圖片',
+  'status.yourTurn.clips': '輪到你了 — 點擊算圖',
+  'jobDetail.note.yourTurn': '等你操作。不點就不會開始 — 花錢的步驟從不自動執行。',
 };

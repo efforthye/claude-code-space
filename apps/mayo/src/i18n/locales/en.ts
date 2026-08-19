@@ -509,4 +509,8 @@ export const en: Dict = {
   'review.etaMin': '~{n} min left',
   'review.etaSec': '~{n}s left',
   'review.approveAllNext': 'Approve all & continue',
+  'status.yourTurn.beats': 'Your turn — review the plan',
+  'status.yourTurn.stills': 'Your turn — press to make the images',
+  'status.yourTurn.clips': 'Your turn — press to render the video',
+  'jobDetail.note.yourTurn': 'Waiting for you. Nothing runs until you start it — the steps that cost money are never automatic.',
 };

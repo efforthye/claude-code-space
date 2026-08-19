@@ -462,4 +462,8 @@ export const es: Dict = {
   'review.etaMin': '~{n} min restantes',
   'review.etaSec': '~{n} s restantes',
   'review.approveAllNext': 'Aprobar todo y continuar',
+  'status.yourTurn.beats': 'Te toca — revisa el plan',
+  'status.yourTurn.stills': 'Te toca — pulsa para crear las imágenes',
+  'status.yourTurn.clips': 'Te toca — pulsa para renderizar el vídeo',
+  'jobDetail.note.yourTurn': 'Esperándote. Nada empieza hasta que lo inicies: los pasos que cuestan dinero nunca son automáticos.',
 };

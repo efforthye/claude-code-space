@@ -466,4 +466,8 @@ export const th: Dict = {
   'review.etaMin': 'เหลือ ~{n} นาที',
   'review.etaSec': 'เหลือ ~{n} วินาที',
   'review.approveAllNext': 'อนุมัติทั้งหมดแล้วไปต่อ',
+  'status.yourTurn.beats': 'ตาคุณแล้ว — ตรวจแผน',
+  'status.yourTurn.stills': 'ตาคุณแล้ว — กดเพื่อสร้างภาพ',
+  'status.yourTurn.clips': 'ตาคุณแล้ว — กดเพื่อเรนเดอร์วิดีโอ',
+  'jobDetail.note.yourTurn': 'กำลังรอคุณอยู่ ไม่มีอะไรเริ่มจนกว่าคุณจะกด — ขั้นตอนที่มีค่าใช้จ่ายไม่เริ่มเองอัตโนมัติ',
 };

@@ -465,4 +465,8 @@ export const hi: Dict = {
   'review.etaMin': '~{n} मिनट बाकी',
   'review.etaSec': '~{n} सेकंड बाकी',
   'review.approveAllNext': 'सभी स्वीकृत करें और आगे बढ़ें',
+  'status.yourTurn.beats': 'आपकी बारी — प्लान देखें',
+  'status.yourTurn.stills': 'आपकी बारी — इमेज बनाने के लिए दबाएं',
+  'status.yourTurn.clips': 'आपकी बारी — वीडियो रेंडर करने के लिए दबाएं',
+  'jobDetail.note.yourTurn': 'आपका इंतज़ार है। जब तक आप शुरू न करें कुछ नहीं चलेगा — पैसे वाले चरण कभी अपने आप नहीं चलते।',
 };

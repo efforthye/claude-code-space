@@ -480,4 +480,8 @@ export const zhHans: Dict = {
   'review.etaMin': '约剩 {n} 分钟',
   'review.etaSec': '约剩 {n} 秒',
   'review.approveAllNext': '全部通过并继续',
+  'status.yourTurn.beats': '轮到你了 — 检查计划',
+  'status.yourTurn.stills': '轮到你了 — 点击生成图片',
+  'status.yourTurn.clips': '轮到你了 — 点击渲染视频',
+  'jobDetail.note.yourTurn': '等你操作。不点就不会开始 — 花钱的步骤从不自动执行。',
 };

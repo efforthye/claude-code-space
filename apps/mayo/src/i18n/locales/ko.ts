@@ -511,4 +511,8 @@ export const ko: Dict = {
   'review.etaMin': '약 {n}분 남음',
   'review.etaSec': '약 {n}초 남음',
   'review.approveAllNext': '전체 승인하고 다음',
+  'status.yourTurn.beats': '내 차례 — 계획 확인',
+  'status.yourTurn.stills': '내 차례 — 눌러서 이미지 생성',
+  'status.yourTurn.clips': '내 차례 — 눌러서 영상 렌더',
+  'jobDetail.note.yourTurn': '오너님 차례예요. 눌러야 시작합니다 — 돈이 나가는 단계는 자동으로 시작하지 않아요.',
 };

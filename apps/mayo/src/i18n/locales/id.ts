@@ -462,4 +462,8 @@ export const id: Dict = {
   'review.etaMin': '~{n} menit lagi',
   'review.etaSec': '~{n} detik lagi',
   'review.approveAllNext': 'Setujui semua & lanjut',
+  'status.yourTurn.beats': 'Giliranmu — periksa rencananya',
+  'status.yourTurn.stills': 'Giliranmu — tekan untuk membuat gambar',
+  'status.yourTurn.clips': 'Giliranmu — tekan untuk merender video',
+  'jobDetail.note.yourTurn': 'Menunggu kamu. Tidak ada yang jalan sampai kamu mulai — langkah berbayar tidak pernah otomatis.',
 };

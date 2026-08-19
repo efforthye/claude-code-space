@@ -462,4 +462,8 @@ export const vi: Dict = {
   'review.etaMin': 'còn ~{n} phút',
   'review.etaSec': 'còn ~{n} giây',
   'review.approveAllNext': 'Duyệt tất cả & tiếp tục',
+  'status.yourTurn.beats': 'Đến lượt bạn — xem lại kế hoạch',
+  'status.yourTurn.stills': 'Đến lượt bạn — nhấn để tạo ảnh',
+  'status.yourTurn.clips': 'Đến lượt bạn — nhấn để dựng video',
+  'jobDetail.note.yourTurn': 'Đang chờ bạn. Không có gì chạy cho đến khi bạn bắt đầu — các bước tốn tiền không bao giờ tự động.',
 };

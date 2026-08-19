@@ -461,4 +461,8 @@ export const ptBR: Dict = {
   'review.etaMin': '~{n} min restantes',
   'review.etaSec': '~{n} s restantes',
   'review.approveAllNext': 'Aprovar tudo e continuar',
+  'status.yourTurn.beats': 'É a sua vez — revise o plano',
+  'status.yourTurn.stills': 'É a sua vez — toque para criar as imagens',
+  'status.yourTurn.clips': 'É a sua vez — toque para renderizar',
+  'jobDetail.note.yourTurn': 'Esperando por você. Nada começa até você iniciar: as etapas pagas nunca são automáticas.',
 };

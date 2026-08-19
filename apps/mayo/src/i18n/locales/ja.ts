@@ -511,4 +511,8 @@ export const ja: Dict = {
   'review.etaMin': '残り約{n}分',
   'review.etaSec': '残り約{n}秒',
   'review.approveAllNext': 'すべて承認して次へ',
+  'status.yourTurn.beats': 'あなたの番 — 構成を確認',
+  'status.yourTurn.stills': 'あなたの番 — 押して画像を生成',
+  'status.yourTurn.clips': 'あなたの番 — 押して動画を生成',
+  'jobDetail.note.yourTurn': 'あなたの操作待ちです。押すまで始まりません — 費用の発生する工程は自動では動きません。',
 };

@@ -464,4 +464,8 @@ export const de: Dict = {
   'review.etaMin': 'noch ca. {n} Min.',
   'review.etaSec': 'noch ca. {n} Sek.',
   'review.approveAllNext': 'Alles freigeben und weiter',
+  'status.yourTurn.beats': 'Du bist dran — Plan prüfen',
+  'status.yourTurn.stills': 'Du bist dran — tippen für die Bilder',
+  'status.yourTurn.clips': 'Du bist dran — tippen zum Rendern',
+  'jobDetail.note.yourTurn': 'Wartet auf dich. Nichts startet von selbst — kostenpflichtige Schritte laufen nie automatisch.',
 };

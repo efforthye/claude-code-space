@@ -279,3 +279,19 @@ export type AdminMetricPoint = {
 
 export type PublishRequest = { title: string; description?: string; visibility: Visibility; tags?: string[] };
 export type PublishResult = { accepted: boolean; videoId: string; visibility: Visibility; url?: string | null };
+
+/**
+ * What a job is actually waiting for.
+ *
+ * A staged job sits at "queued" between every gate, and "대기 중 — 곧 시작돼요"
+ * was a straight lie there: nothing starts on its own, because the stages that
+ * cost money are never implicit. The owner read it twice as "the system will
+ * get to it" and waited an hour. A waiting job now names whose turn it is.
+ */
+export function waitingLabel(job: { status: string; stage?: string }): string | null {
+  if (job.status !== 'queued' || !job.stage) return null;
+  if (job.stage === 'beats') return 'status.yourTurn.beats';
+  if (job.stage === 'stills') return 'status.yourTurn.stills';
+  if (job.stage === 'clips') return 'status.yourTurn.clips';
+  return null;
+}

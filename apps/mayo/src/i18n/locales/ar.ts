@@ -468,4 +468,8 @@ export const ar: Dict = {
   'review.etaMin': 'يتبقى ~{n} دقيقة',
   'review.etaSec': 'يتبقى ~{n} ثانية',
   'review.approveAllNext': 'اعتماد الكل والمتابعة',
+  'status.yourTurn.beats': 'دورك — راجع الخطة',
+  'status.yourTurn.stills': 'دورك — اضغط لإنشاء الصور',
+  'status.yourTurn.clips': 'دورك — اضغط لإخراج الفيديو',
+  'jobDetail.note.yourTurn': 'بانتظارك. لا شيء يبدأ حتى تضغط — الخطوات المدفوعة لا تعمل تلقائيًا أبدًا.',
 };

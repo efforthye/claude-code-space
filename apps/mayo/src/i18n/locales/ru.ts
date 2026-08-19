@@ -465,4 +465,8 @@ export const ru: Dict = {
   'review.etaMin': 'осталось ~{n} мин',
   'review.etaSec': 'осталось ~{n} с',
   'review.approveAllNext': 'Принять всё и далее',
+  'status.yourTurn.beats': 'Ваш ход — проверьте план',
+  'status.yourTurn.stills': 'Ваш ход — нажмите, чтобы создать кадры',
+  'status.yourTurn.clips': 'Ваш ход — нажмите, чтобы отрендерить',
+  'jobDetail.note.yourTurn': 'Ждём вас. Ничего не начнётся, пока вы не нажмёте: платные шаги никогда не запускаются сами.',
 };

@@ -21,6 +21,9 @@ Keep the wire types in `src/api/types.ts` in sync with the server's `app/schemas
 
 ## Payments
 
-In-app purchases are scaffolded but **off by default** — see `src/payments/`. The provider is a
-local mock until a real IAP library is added in a dev build (Expo Go can't do StoreKit). Flip
-`EXPO_PUBLIC_PAYMENTS` to enable the flow; see the payments README.
+In-app purchases are scaffolded but **not available** — see `src/payments/`. The provider reports
+no products and refuses purchases, so the plan screen says so. It replaced a mock that granted the
+plan after a simulated store sheet: no money moved, but the app believed you had paid and unlocked
+whatever the plan gated. A real provider (RevenueCat / react-native-iap) needs a dev build, since
+Expo Go can't load StoreKit — MAYO-11, blocked on the Apple renewal. Web has no IAP at all; card
+payments there go through the API's Stripe checkout.
