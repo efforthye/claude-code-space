@@ -28,6 +28,10 @@ REPEAT_HOURS="${REPEAT_HOURS:-6}"
 DISK_PCT_MAX="${DISK_PCT_MAX:-85}"        # alert above this % used on /
 MEM_FREE_PCT_MIN="${MEM_FREE_PCT_MIN:-15}" # alert below this % system-wide free
 CONTAINER_MEM_PCT_MAX="${CONTAINER_MEM_PCT_MAX:-90}" # % of a container's own limit
+# JVM heap, which is the number that actually predicts an Elasticsearch OOM.
+# 85 rather than 90: above ~85% the GC starts spending real time on full
+# collections, so this is meant to fire while there is still room to act.
+ES_HEAP_PCT_MAX="${ES_HEAP_PCT_MAX:-85}"
 
 # --- alert glyphs ----------------------------------------------------------
 # Override in the env file if you want a different set. Keep failure and
@@ -129,8 +133,15 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
 
   # Memory pressure per container, as a % of its own limit. This is the signal
   # that preceded the ELK OOM risk found on 2026-07-31.
+  #
+  # JVM containers are exempt and checked on their HEAP instead (below). A JVM
+  # claims its container's memory and does not hand it back, so Elasticsearch
+  # sat at 90-97% of its limit while its heap was 55% used and it held a few MB
+  # of data — healthy, and alerting every cycle. Resident size against a limit
+  # is not a fault for a process designed to fill that limit; heap exhaustion is.
   while IFS=$'\t' read -r cname cperc; do
     [ -z "$cname" ] && continue
+    case "$cname" in elasticsearch|kibana) continue ;; esac
     pct=${cperc%%.*}
     [ -z "$pct" ] && continue
     if [ "$pct" -ge "$CONTAINER_MEM_PCT_MAX" ]; then
@@ -139,6 +150,22 @@ if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
       report "ctrmem-${cname}" ok "컨테이너 ${cname} 메모리 ${cperc}%"
     fi
   done < <(docker stats --no-stream --format '{{.Name}}\t{{.MemPerc}}' 2>/dev/null | tr -d '%')
+
+  # Elasticsearch: heap is the number that predicts trouble. Sustained high heap
+  # means the GC is fighting to keep up and an OOM is ahead of you; container RSS
+  # means the JVM was given memory and took it.
+  if [ -n "${ELASTIC_PASSWORD:-}" ]; then
+    es_heap=$(curl -sf -m 10 -u "${ELASTIC_USER:-elastic}:${ELASTIC_PASSWORD}" \
+      "http://127.0.0.1:${ELASTIC_PORT:-9200}/_nodes/stats/jvm" 2>/dev/null |
+      sed -n 's/.*"heap_used_percent":\([0-9]*\).*/\1/p' | head -1)
+    if [ -n "$es_heap" ]; then
+      if [ "$es_heap" -ge "$ES_HEAP_PCT_MAX" ]; then
+        report es-heap fail "Elasticsearch 힙 ${es_heap}% (임계 ${ES_HEAP_PCT_MAX}%)"
+      else
+        report es-heap ok "Elasticsearch 힙 ${es_heap}%"
+      fi
+    fi
+  fi
 fi
 
 # --- mayo-api actually answers ---------------------------------------------
