@@ -3,7 +3,7 @@ title: Index
 type: index
 tags: [meta]
 created: 2026-07-15
-updated: 2026-07-16
+updated: 2026-08-19
 ---
 
 # Index — Service Registry & Catalog
@@ -19,6 +19,8 @@ Updated whenever pages are added/renamed or a service's status changes.
 | Jenkins (CI) | live | `home.efforthye.com:9090` | [[jenkins]] |
 | Mayo (AI video platform) | live | Expo Go 앱 + **mayo.im** (Vercel) | [[mayo]] |
 | mayo-api (orchestration API) | live | mini `:8001` → `mayo-api.efforthye.dev` (tunnel) | [[mayo]] |
+| 팔자 EIGHT PILLARS (premium game) | building | 클라이언트 온리 (한국 App Store 유료 1위 목표) | [[eight-pillars]] |
+| ~~WHALE FARM~~ | deprecated | 폐기 — [[0026-pivot-whale-farm-to-eight-pillars]] | [[whale-farm]] |
 
 ## Infra
 - [[home-server]] — Apple M1 Mac mini (8-core, 16 GB, 1 TB, macOS 15.4.1, `arm64`; `m1mini` /
@@ -82,6 +84,18 @@ Updated whenever pages are added/renamed or a service's status changes.
   One container, one tool.
 - [[0019-centralised-logging-elk]] — Elasticsearch + Kibana + Filebeat (no Logstash), sized to
   fit the mini's Docker VM because ComfyUI needs the host RAM; loopback-only + SSH tunnel.
+- [[0021-whale-farm-premium-no-iap]] — WHALE FARM은 **$4.99 선불 유료, IAP·광고 없음**. 유료 차트는
+  선불 앱만 집계하므로 가격은 전제조건; "IAP를 소재로 한 게임에 IAP가 없다"가 마케팅 자산.
+- [[0022-whale-farm-godot-steam-first]] — 경제 코어(TS) → 웹 설계 리그 → **Godot 4** 출시 빌드,
+  **Steam 데모 선행**으로 발매일 수요(위시리스트 10만)를 저장.
+- [[0023-whale-farm-zero-asset-art-pipeline]] — 아트 파이프라인과 **라이선스 위생**(에셋 매니페스트
+  강제, OFL 폰트·CC0 사운드, 실존 브랜드 금지). _"에셋 0" 전제는 2026-08-19 정정됨._
+- [[0024-whale-farm-iap-payment-system]] — **선불 $4.99 + 비소모성 콘텐츠 IAP.** 유료 차트 1·2·4위가
+  모두 하이브리드이므로 1위 목표와 양립. 소모성·랜덤·구독은 팔지 않음.
+- [[0025-whale-farm-korea-first]] — **1차 시장은 한국.** 한국 유료 1위는 2011년 한국 인디(`Paladog`),
+  동일 장르가 10위. 미국은 스트레치 골로, Steam은 선택 사항으로 강등.
+- [[0026-pivot-whale-farm-to-eight-pillars]] — WHALE FARM 폐기, **팔자**로 전환. 후킹이 이미지가
+  아니라 아이디어였던 것이 구조적 결함. 앞으로 게임 기획은 "6초 영상의 한 장면"에서 역산한다.
 
 ## Incidents
 - [[2026-07-22-restart-erased-active-render]] — deploy restart wiped an actively rendering job; jobs now persist + resume.
@@ -94,3 +108,5 @@ Updated whenever pages are added/renamed or a service's status changes.
   (your own compiled app); why mayo will need a dev build.
 - [[mayo-web-target]] — running the same Expo app on the **web** (react-native-web, `web.output:
   single`, Vercel) for mayo.im; native-module web guards + the shared-key leak caveat.
+- [[paid-appstore-number-one-2026]] — 앱스토어 **유료 1위** 시장 분석(2026-08): 차트 구조, 미국
+  유료 게임 1위 임계치(≈5,000장/일 `[추정]`), 승자 6개 케이스, 1위를 만드는 조건 공식화.

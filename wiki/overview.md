@@ -23,6 +23,14 @@ Building:
   App shell is a complete UI-only product (`apps/mayo/`); the **orchestration API**
   (`apps/mayo-api/`, FastAPI — [[0005-mayo-backend-fastapi]]) is Phase-1 scaffolded with a
   mock generation pipeline ([[0006-mayo-job-queue-inprocess-then-redis]]).
+- **[[eight-pillars]]** (팔자) — premium ($4.99 + content IAP) roguelite deckbuilder built on the
+  五行 generation/destruction graph, aimed at the **Korean App Store paid games #1**
+  ([[0025-whale-farm-korea-first]]). Client-only, no server — touches no [[home-server]] infra.
+  Scoring engine + Monte Carlo harness are running (`apps/eight-pillars/`, 6/6 design assertions);
+  shipping build is Godot 4 ([[0022-whale-farm-godot-steam-first]]).
+- ~~**[[whale-farm]]**~~ — deprecated 2026-08-19. Its hook was an idea (monetisation satire), not an
+  image, so it could never sell in a 6-second video. Post-mortem: [[0026-pivot-whale-farm-to-eight-pillars]].
+  Code kept for the harness patterns it contributed.
 
 ## Infrastructure
 - **[[home-server]]** — Apple **M1 Mac mini** (8-core, **16 GB**, **1 TB SSD ~771 GB free**,

@@ -428,3 +428,12 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-08-01] query | competitive landscape research -> wiki/concepts/ai-video-market-2026.md
 
 ## [2026-08-01] query | Seedance 2.5 verified (native 30s clips, 50 refs, region edit) -> market page updated
+## [2026-08-19] query | 앱스토어 유료 1위 시장조사 → wiki/concepts/paid-appstore-number-one-2026.md (차트 구조·1위 임계치 ≈5,000장/일·승자 6케이스)
+## [2026-08-19] service | WHALE FARM — created (프리미엄 경제 로그라이트, 유료 차트 1위 목표, mayo와 무관)
+## [2026-08-19] decision | 0021 WHALE FARM $4.99 선불·IAP 없음 / 0022 TS 코어+웹 리그+Godot 4·Steam 선행 / 0023 외부 에셋 0 아트 파이프라인
+## [2026-08-19] service | WHALE FARM → M1 경제 코어 + 몬테카를로 하네스(설계 명제 5/5 통과) + M2 플레이어블 웹 프로토타입; status building
+## [2026-08-19] setup | Jira 갭: Atlassian 커넥터 미인증 세션 → WHALE FARM 이슈 미생성. 커넥터 복구 시 위 4개 항목을 티켓으로 소급 등록 필요
+## [2026-08-19] decision | 0024 선불+콘텐츠 IAP 하이브리드 (오독 정정) / 0025 1차 시장 한국·Steam 선택화 (한국 유료 1위 = Paladog, 동일장르 10위)
+## [2026-08-19] service | WHALE FARM → v0.2 조합·press-your-luck·이름 있는 고래 7명 추가, 설계 명제 6/6 통과
+## [2026-08-19] decision | 0026 WHALE FARM 폐기 → 팔자(EIGHT PILLARS) 전환. 후킹이 이미지가 아니라 아이디어였던 것이 구조적 결함
+## [2026-08-22] service | 팔자 EIGHT PILLARS — created + M1 완료: 오행 채점 엔진, 십신 유물 10종, 완전탐색 최적 배치, 설계 명제 6/6 통과 (배치 ×31.2, 승률 40.5%)
