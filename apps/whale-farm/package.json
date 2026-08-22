@@ -1,0 +1,16 @@
+{
+  "name": "whale-farm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Economy roguelite: run a free-to-play game's monetization for 12 weeks. Premium, no IAP.",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "balance": "node sim/montecarlo.ts 3000",
+    "build": "node tools/build-web.ts",
+    "smoke": "node tools/build-web.ts && node tools/smoke-ui.ts",
+    "check": "npm run balance && npm run smoke"
+  }
+}
