@@ -437,3 +437,4 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-08-19] service | WHALE FARM → v0.2 조합·press-your-luck·이름 있는 고래 7명 추가, 설계 명제 6/6 통과
 ## [2026-08-19] decision | 0026 WHALE FARM 폐기 → 팔자(EIGHT PILLARS) 전환. 후킹이 이미지가 아니라 아이디어였던 것이 구조적 결함
 ## [2026-08-22] service | 팔자 EIGHT PILLARS — created + M1 완료: 오행 채점 엔진, 십신 유물 10종, 완전탐색 최적 배치, 설계 명제 6/6 통과 (배치 ×31.2, 승률 40.5%)
+## [2026-08-22] service | 달항아리(moonjar) — 규칙 하나짜리 머지 게임 프로토타입. 어린이·노인도 즉시 이해하는 방향으로 재조정(한국 유료차트 근거: Paladog 1위·Pou 4위·스이카게임 17위). 기획서는 오너 플레이 판정 후 작성
