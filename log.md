@@ -444,3 +444,24 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-08-29] setup | Xcode 16.4 → 26.6 업그레이드 (iOS/macOS SDK 26.5). 라이선스 미동의로 툴체인 전체가 잠기는 함정 + iOS 플랫폼 별도 설치 필요 → 런북 함정 4번으로 기록. 4개 타깃 재빌드 전부 통과, 코드 수정 0줄
 ## [2026-08-29] service | flame_game — 에셋 파이프라인 개통 (assets/images·audio·fonts·data + pubspec), 첫 스프라이트를 타이틀에 배치 + Flame 이펙트로 애니메이션
 ## [2026-08-29] setup | Flame 게임 템플릿 추출 — templates/flame-game/ + scripts/new-flame-game.sh (flutter create 후 아키텍처 이식 방식). 일회용 프로젝트로 실전 검증: analyze 클린 + 테스트 11개 통과
+
+## [2026-08-29] service | 말랑말랑팡팡 — type system, full-screen modals, settings that persist
+온글잎 은별(본문)·데이지(제목) 번들 + `AppText` 단일 타입 시스템. `pubspec.yaml`의
+`fonts:` 블록이 주석 예제 영역에 들어가 있어 실제로는 시스템 폰트로 렌더되던 것을 발견해
+수정(빌드된 FontManifest.json으로 검증). 라이선스는 `apps/flame_game/assets/LICENSES.md`
+에 기록 — 임베딩 허용, 폰트 파일 재배포 금지.
+
+카메라를 `withFixedResolution`에서 전체 화면 뷰포트 + 계산된 zoom으로 교체.
+`CameraComponent`가 priority `0x7fffffff`로 렌더되기 때문에 게임 루트의 어떤 컴포넌트도
+월드를 덮을 수 없었고(그래서 설정 패널이 배경만 어둡게 하고 로고·버튼은 그대로였음),
+fixed-resolution 뷰포트는 디자인 사각형 밖을 잘라내 레터박스 밴드에 그릴 수도 없었음.
+이제 밴드는 그냥 월드 공간이라 모달이 `camera.visibleWorldRect` 전체를 덮음.
+
+`ModalCard`/`ConfirmDialog` 추가, 게임 종료 확인 다이얼로그 연결(모달 중 게임 정지).
+설정은 shared_preferences로 영구 저장하되 첫 프레임을 막지 않도록 await 하지 않음 —
+스모크 테스트가 이 행(hang)을 먼저 잡아냄. 효과음·배경음악은 on/off가 아니라 볼륨
+레벨(슬라이더 + 스피커 아이콘 뮤트, 뮤트 직전 값 기억), 진동만 스위치 유지.
+
+템플릿(`templates/flame-game/`)에 전부 역이식하고 스캐폴드 스크립트로 검증.
+커밋: ec46a17, 4891217, b421b01, 5db206f.
+Jira: Atlassian MCP 커넥터 미인증 상태라 이슈 생성 못 함 — 세션 복귀 시 반영 필요.
