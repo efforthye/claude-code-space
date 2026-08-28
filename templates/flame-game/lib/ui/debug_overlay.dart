@@ -17,6 +17,10 @@ class DebugOverlay extends PositionComponent
     with HasGameReference<GameFrame>, EventSubscriber {
   DebugOverlay({super.priority});
 
+  /// Hidden scenes still keep the component mounted and listening, so the event
+  /// history is unbroken when it comes back.
+  bool visible = true;
+
   late final TextComponent _sceneLine;
   late final TextComponent _eventLines;
 
@@ -55,6 +59,15 @@ class DebugOverlay extends PositionComponent
     // the overlay listens to the base type rather than to a fixed set.
     listen<GameEvent>((_) => _refresh());
     _refresh();
+  }
+
+  /// Children render independently of a parent's [render], so hiding has to
+  /// happen at the tree level — skipping [render] alone leaves the labels on
+  /// screen with their backing panel gone.
+  @override
+  void renderTree(Canvas canvas) {
+    if (!visible) return;
+    super.renderTree(canvas);
   }
 
   @override

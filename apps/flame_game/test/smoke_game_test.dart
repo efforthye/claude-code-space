@@ -114,6 +114,18 @@ void main() {
     final gameTester = FlameTester(GameFrame.new);
 
     gameTester.testGameWidget(
+      'the frame is fully wired once loaded',
+      verify: (game, tester) async {
+        // Regression: the scene manager performs the first switch inside its own
+        // onLoad, so anything that switch touches must be constructed before the
+        // manager is added. Reading these is what a broken order throws on.
+        expect(game.debugOverlay, isNotNull);
+        expect(game.backdrop, isNotNull);
+        expect(game.currentSceneId, isNotNull);
+      },
+    );
+
+    gameTester.testGameWidget(
       'starts on the title scene',
       verify: (game, tester) async {
         expect(game.currentSceneId, SceneId.title);

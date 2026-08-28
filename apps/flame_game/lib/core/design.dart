@@ -20,4 +20,8 @@ final class Design {
 
   /// Safe inset from the edges, so nothing sits under a notch or a home bar.
   static const double margin = 44;
+
+  /// The name on the screen. One edit here changes it everywhere rather than in
+  /// every scene that prints it.
+  static const String gameName = '말랑말랑팡팡';
 }

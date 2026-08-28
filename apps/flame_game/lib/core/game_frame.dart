@@ -48,6 +48,9 @@ class GameFrame extends FlameGame {
   /// necessarily creates. Scenes set it and clear it as they come and go.
   late final ScreenBackdrop backdrop;
 
+  /// Developer overlay. Scenes opt out via [SceneComponent.showsDebugOverlay].
+  late final DebugOverlay debugOverlay;
+
   /// Where the player is right now.
   SceneId? get currentSceneId => sceneManager.currentSceneId;
 
@@ -83,7 +86,12 @@ class GameFrame extends FlameGame {
     backdrop = ScreenBackdrop(priority: -1000);
     await add(backdrop);
 
-    // Into the world, so everything inherits the fixed-resolution coordinates.
+    debugOverlay = DebugOverlay(priority: 1000);
+    await world.add(debugOverlay);
+
+    // Last, and deliberately so. Adding the manager runs its onLoad here, which
+    // performs the first scene switch — and that switch touches the fields above.
+    // Anything the manager can reach has to exist before this line.
     await world.add(sceneManager);
 
     // Session bookkeeping is the frame's job: scenes report what happened, the
@@ -93,7 +101,6 @@ class GameFrame extends FlameGame {
     });
     bus.on<GameStarted>().listen((_) => session.beginRun());
 
-    await world.add(DebugOverlay(priority: 1000));
   }
 
   @override

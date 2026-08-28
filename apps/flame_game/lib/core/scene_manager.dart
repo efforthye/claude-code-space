@@ -68,6 +68,7 @@ class SceneManager extends Component
     // finishes, and every event after it arrives out of order. The switch is
     // committed the moment _current is reassigned; mounting catches up next tick.
     add(next);
+    game.debugOverlay.visible = next.showsDebugOverlay;
 
     bus.emit(SceneChanged(from: previous, to: target));
   }

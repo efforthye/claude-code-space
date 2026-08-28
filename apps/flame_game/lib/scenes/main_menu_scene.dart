@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/painting.dart' show TextStyle;
 
+import '../core/design.dart';
 import '../core/scene.dart';
 import '../core/scene_id.dart';
 import '../ui/sprite_button.dart';
@@ -12,6 +13,9 @@ import '../ui/sprite_button.dart';
 class MainMenuScene extends SceneComponent {
   @override
   SceneId get id => SceneId.mainMenu;
+
+  @override
+  bool get showsDebugOverlay => false;
 
   @override
   void onExitScene() => frame.backdrop.clear();
@@ -30,14 +34,14 @@ class MainMenuScene extends SceneComponent {
 
     await add(
       TextComponent(
-        text: 'MAIN MENU',
+        text: Design.gameName,
         anchor: Anchor.center,
         position: Vector2(sceneSize.x / 2, sceneSize.y * 0.28),
         textRenderer: TextPaint(
           style: const TextStyle(
             color: Color(0xFFFFFFFF),
-            fontSize: 54,
-            letterSpacing: 5,
+            fontSize: 72,
+            letterSpacing: 2,
             fontWeight: FontWeight.w600,
             // Illustrated backgrounds are bright and busy. A shadow keeps the
             // label readable without dimming the art everyone came to see.

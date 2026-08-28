@@ -59,6 +59,10 @@ abstract class SceneComponent extends Component
   /// same on every device instead of drifting with the aspect ratio.
   Vector2 get sceneSize => Design.size;
 
+  /// Whether the developer overlay belongs on this scene. Off for anything a
+  /// player is meant to look at.
+  bool get showsDebugOverlay => true;
+
   /// Subclass hook: add backgrounds, UI and objects here.
   Future<void> buildScene();
 
