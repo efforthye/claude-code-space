@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/painting.dart' show TextStyle;
 
+import '../core/design.dart';
 import '../core/events.dart';
 import '../core/scene.dart';
 import '../core/scene_id.dart';
@@ -13,16 +14,26 @@ import '../world/game_object.dart';
 
 /// The play scene.
 ///
-/// It owns a world layer, a HUD layer and a list of [GameSystem]s. Note what it
-/// does *not* contain: no scoring maths, no spawn timing. Those live in systems,
-/// so this class stays about composition and stays short as the game grows.
+/// Rules, stated once: orbs appear on a timer, tapping one is worth points, and
+/// the run ends when the score reaches [targetScore] (cleared) or too many orbs
+/// pile up unpopped (failed).
+///
+/// Note what this class does *not* contain: no scoring maths, no spawn timing.
+/// Those live in [GameSystem] implementations it steps without knowing what they
+/// do, so this stays about composition and stays short as the game grows.
 class GameScene extends SceneComponent {
-  static const int targetScore = 60;
+  /// Points needed to clear. Ten orbs at ten points each.
+  static const int targetScore = 100;
+
+  /// Lose the run when this many orbs are alive at once.
+  static const int crowdLimit = 8;
 
   final List<GameSystem> _systems = [];
   late final Component _world;
   late final ScoreSystem _score;
+  late final SpawnSystem _spawner;
   late final TextComponent _scoreLabel;
+  late final TextComponent _crowdLabel;
 
   bool _ending = false;
 
@@ -38,34 +49,47 @@ class GameScene extends SceneComponent {
       ),
     );
 
-    // Actors live in their own container so the HUD never collides with them
-    // and the whole world can be cleared in one call.
+    // Orbs live in their own container so the HUD never collides with them and
+    // the whole field can be cleared in one call.
     _world = Component();
     await add(_world);
 
     _scoreLabel = TextComponent(
-      text: 'score 0',
+      text: '0 / $targetScore',
       anchor: Anchor.topRight,
-      position: Vector2(sceneSize.x - 16, 16),
+      position: Vector2(sceneSize.x - Design.margin, 28),
       priority: 10,
       textRenderer: TextPaint(
         style: const TextStyle(
           color: Color(0xFFF0B34A),
-          fontSize: 20,
+          fontSize: 38,
           letterSpacing: 1,
         ),
       ),
     );
-    await add(_scoreLabel);
+    _crowdLabel = TextComponent(
+      text: 'orbs 0 / $crowdLimit',
+      anchor: Anchor.topRight,
+      position: Vector2(sceneSize.x - Design.margin, 76),
+      priority: 10,
+      textRenderer: TextPaint(
+        style: const TextStyle(color: Color(0x8899A3B5), fontSize: 20),
+      ),
+    );
+    await addAll([_scoreLabel, _crowdLabel]);
 
     await add(
       TextComponent(
-        text: 'reach $targetScore to clear',
-        anchor: Anchor.topRight,
-        position: Vector2(sceneSize.x - 16, 42),
+        text: 'TAP THE ORBS',
+        anchor: Anchor.center,
+        position: Vector2(sceneSize.x / 2, sceneSize.y - 210),
         priority: 10,
         textRenderer: TextPaint(
-          style: const TextStyle(color: Color(0x8899A3B5), fontSize: 12),
+          style: const TextStyle(
+            color: Color(0x66C8D2E0),
+            fontSize: 24,
+            letterSpacing: 3,
+          ),
         ),
       ),
     );
@@ -74,16 +98,17 @@ class GameScene extends SceneComponent {
       Button(
         id: 'quit_run',
         label: 'MENU',
-        size: Vector2(120, 40),
-        position: Vector2(sceneSize.x - 76, sceneSize.y - 32),
+        size: Vector2(260, 84),
+        position: Vector2(sceneSize.x / 2, sceneSize.y - Design.margin - 42),
         onPressed: () => _finish(GameOutcome.quit),
       ),
     );
 
     _score = ScoreSystem();
+    _spawner = SpawnSystem(parent: _world, area: sceneSize);
     _systems
       ..add(_score)
-      ..add(SpawnSystem(parent: _world, area: sceneSize));
+      ..add(_spawner);
   }
 
   @override
@@ -93,9 +118,9 @@ class GameScene extends SceneComponent {
       system.onAttach(bus);
     }
     // The HUD listens rather than polls — the score system is the only owner of
-    // the number, and everyone else finds out the same way.
+    // the number and everyone else finds out the same way.
     listen<ScoreChanged>((event) {
-      _scoreLabel.text = 'score ${event.score}';
+      _scoreLabel.text = '${event.score} / $targetScore';
       if (event.score >= targetScore) _finish(GameOutcome.cleared);
     });
   }
@@ -104,9 +129,14 @@ class GameScene extends SceneComponent {
   void update(double dt) {
     super.update(dt);
     if (_ending) return;
+
     for (final system in _systems) {
       system.step(dt);
     }
+
+    final live = _spawner.liveTargets;
+    _crowdLabel.text = 'orbs $live / $crowdLimit';
+    if (live >= crowdLimit) _finish(GameOutcome.failed);
   }
 
   void _finish(GameOutcome outcome) {

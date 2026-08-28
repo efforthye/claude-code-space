@@ -3,6 +3,9 @@ import 'package:flame_game/core/events.dart';
 import 'package:flame_game/core/game_frame.dart';
 import 'package:flame_game/core/game_session.dart';
 import 'package:flame_game/core/scene_id.dart';
+import 'package:flame/components.dart';
+import 'package:flame_game/systems/game_system.dart';
+import 'package:flame_game/world/game_object.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -53,6 +56,57 @@ void main() {
       expect(session.lastScore, 12);
       expect(session.highScore, 40);
       expect(session.runCount, 2);
+    });
+  });
+
+  group('tap-to-score loop', () {
+    test('an actor reports its own defeat exactly once', () {
+      var defeats = 0;
+      final actor = Actor(
+        position: Vector2.zero(),
+        velocity: Vector2.zero(),
+        radius: 40,
+        onDefeated: (_) => defeats++,
+      );
+
+      expect(actor.isAlive, isTrue);
+      actor.takeDamage(1);
+      actor.takeDamage(1); // already dead — must not fire again
+
+      expect(actor.isAlive, isFalse);
+      expect(defeats, 1);
+    });
+
+    test('the score system counts pops and announces the total', () async {
+      final bus = EventBus();
+      final score = ScoreSystem()..onAttach(bus);
+      final announced = <int>[];
+      bus.on<ScoreChanged>().listen((e) => announced.add(e.score));
+
+      bus
+        ..emit(const TargetPopped(10))
+        ..emit(const TargetPopped(10));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(score.score, 20);
+      expect(announced.last, 20);
+      score.onDetach();
+      await bus.dispose();
+    });
+
+    test('a detached score system stops counting', () async {
+      final bus = EventBus();
+      final score = ScoreSystem()..onAttach(bus);
+      bus.emit(const TargetPopped(10));
+      await Future<void>.delayed(Duration.zero);
+      expect(score.score, 10);
+
+      score.onDetach();
+      bus.emit(const TargetPopped(10));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(score.score, 10, reason: 'subscription must be cancelled');
+      await bus.dispose();
     });
   });
 

@@ -42,6 +42,17 @@ final class GameStarted extends GameEvent {
   const GameStarted();
 }
 
+/// A target was tapped out of existence. The actor announces the hit; the score
+/// system decides what it is worth to the score. Neither knows the other exists.
+final class TargetPopped extends GameEvent {
+  const TargetPopped(this.points);
+
+  final int points;
+
+  @override
+  String get label => 'TargetPopped(+$points)';
+}
+
 final class ScoreChanged extends GameEvent {
   const ScoreChanged(this.score);
 

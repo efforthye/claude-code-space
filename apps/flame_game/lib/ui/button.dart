@@ -23,7 +23,7 @@ class Button extends PositionComponent
     this.onPressed,
     bool enabled = true,
   })  : _enabled = enabled,
-        super(size: size ?? Vector2(240, 56), anchor: Anchor.center);
+        super(size: size ?? Vector2(400, 96), anchor: Anchor.center);
 
   /// Stable identifier used in events — not the visible text, so copy changes
   /// never break a listener.
@@ -46,8 +46,8 @@ class Button extends PositionComponent
   TextPaint get _labelStyle => TextPaint(
         style: TextStyle(
           color: _enabled ? const Color(0xFFF2F4F7) : const Color(0xFF6B7280),
-          fontSize: 17,
-          letterSpacing: 1.2,
+          fontSize: 30,
+          letterSpacing: 2,
         ),
       );
 
@@ -74,7 +74,7 @@ class Button extends PositionComponent
               : const Color(0xFF1D2530);
     final border = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
+      ..strokeWidth = 2.5
       ..color = !_enabled
           ? const Color(0xFF2A3140)
           : _pressed

@@ -1,5 +1,6 @@
 import 'package:flame/components.dart';
 
+import 'design.dart';
 import 'event_bus.dart';
 import 'events.dart';
 import 'game_frame.dart';
@@ -51,8 +52,12 @@ abstract class SceneComponent extends Component
   @override
   EventBus get bus => frame.bus;
 
-  /// Screen size, so scenes lay themselves out without reaching into the game.
-  Vector2 get sceneSize => frame.size;
+  /// The layout space scenes position themselves in.
+  ///
+  /// Deliberately the fixed design size, never the device size: the camera
+  /// letterboxes this onto the real screen, so a scene laid out once looks the
+  /// same on every device instead of drifting with the aspect ratio.
+  Vector2 get sceneSize => Design.size;
 
   /// Subclass hook: add backgrounds, UI and objects here.
   Future<void> buildScene();

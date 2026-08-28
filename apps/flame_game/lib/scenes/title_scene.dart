@@ -31,12 +31,12 @@ class TitleScene extends SceneComponent with TapCallbacks {
       TextComponent(
         text: 'HELLO FLAME!',
         anchor: Anchor.center,
-        position: sceneSize / 2 - Vector2(0, 14),
+        position: sceneSize / 2 - Vector2(0, 24),
         textRenderer: TextPaint(
           style: const TextStyle(
             color: Color(0xFFF0B34A),
-            fontSize: 44,
-            letterSpacing: 4,
+            fontSize: 76,
+            letterSpacing: 7,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -47,9 +47,9 @@ class TitleScene extends SceneComponent with TapCallbacks {
       TextComponent(
         text: 'tap to continue',
         anchor: Anchor.center,
-        position: sceneSize / 2 + Vector2(0, 34),
+        position: sceneSize / 2 + Vector2(0, 60),
         textRenderer: TextPaint(
-          style: const TextStyle(color: Color(0x99C8D2E0), fontSize: 14),
+          style: const TextStyle(color: Color(0x99C8D2E0), fontSize: 24),
         ),
       ),
     );

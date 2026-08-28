@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/painting.dart' show TextStyle;
 
+import '../core/design.dart';
 import '../core/event_bus.dart';
 import '../core/events.dart';
 import '../core/game_frame.dart';
@@ -25,23 +26,23 @@ class DebugOverlay extends PositionComponent
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    position = Vector2(12, 12);
+    position = Vector2(Design.margin, 28);
 
     _sceneLine = TextComponent(
       text: 'scene: -',
       textRenderer: TextPaint(
         style: const TextStyle(
           color: Color(0xFF8FD6B5),
-          fontSize: 12,
-          letterSpacing: 0.6,
+          fontSize: 21,
+          letterSpacing: 0.8,
         ),
       ),
     );
     _eventLines = TextComponent(
       text: '',
-      position: Vector2(0, 18),
+      position: Vector2(0, 32),
       textRenderer: TextPaint(
-        style: const TextStyle(color: Color(0x8899A3B5), fontSize: 11),
+        style: const TextStyle(color: Color(0x8899A3B5), fontSize: 18),
       ),
     );
     await addAll([_sceneLine, _eventLines]);

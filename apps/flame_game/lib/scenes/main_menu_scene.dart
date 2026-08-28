@@ -31,8 +31,8 @@ class MainMenuScene extends SceneComponent {
         textRenderer: TextPaint(
           style: const TextStyle(
             color: Color(0xFFF2F4F7),
-            fontSize: 30,
-            letterSpacing: 3,
+            fontSize: 54,
+            letterSpacing: 5,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -44,9 +44,9 @@ class MainMenuScene extends SceneComponent {
       TextComponent(
         text: best > 0 ? 'best $best' : 'no runs yet',
         anchor: Anchor.center,
-        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.28 + 30),
+        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.28 + 54),
         textRenderer: TextPaint(
-          style: const TextStyle(color: Color(0x8899A3B5), fontSize: 13),
+          style: const TextStyle(color: Color(0x8899A3B5), fontSize: 23),
         ),
       ),
     );
@@ -64,7 +64,7 @@ class MainMenuScene extends SceneComponent {
       Button(
         id: 'back_to_title',
         label: 'TITLE',
-        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.5 + 70),
+        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.5 + 126),
         onPressed: () => goTo(SceneId.title),
       ),
     );

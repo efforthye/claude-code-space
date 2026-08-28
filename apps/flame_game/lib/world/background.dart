@@ -2,18 +2,18 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 
+import '../core/design.dart';
+
 /// A full-screen backdrop that resizes itself.
 ///
 /// Abstract on purpose: every scene wants a background, none of them should
 /// care how it is painted. Swapping a scene's look is changing one constructor
 /// call, not editing the scene.
 abstract class Background extends PositionComponent {
-  Background({super.priority = -100});
-
-  @override
-  void onGameResize(Vector2 size) {
-    super.onGameResize(size);
-    this.size = size;
+  Background({super.priority = -100}) {
+    // Fills the design space. The camera handles the device; a background that
+    // chased the real window size would fight the letterbox.
+    size = Design.size;
   }
 }
 

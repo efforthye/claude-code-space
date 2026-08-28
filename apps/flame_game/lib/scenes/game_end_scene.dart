@@ -47,8 +47,8 @@ class GameEndScene extends SceneComponent {
             color: outcome == GameOutcome.cleared
                 ? const Color(0xFF8FD6B5)
                 : const Color(0xFFF2F4F7),
-            fontSize: 32,
-            letterSpacing: 3,
+            fontSize: 58,
+            letterSpacing: 5,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -59,9 +59,9 @@ class GameEndScene extends SceneComponent {
       TextComponent(
         text: 'score $score   ·   best ${frame.session.highScore}',
         anchor: Anchor.center,
-        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.3 + 34),
+        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.3 + 60),
         textRenderer: TextPaint(
-          style: const TextStyle(color: Color(0x99C8D2E0), fontSize: 14),
+          style: const TextStyle(color: Color(0x99C8D2E0), fontSize: 25),
         ),
       ),
     );
@@ -79,7 +79,7 @@ class GameEndScene extends SceneComponent {
       Button(
         id: 'to_menu',
         label: 'MAIN MENU',
-        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.55 + 70),
+        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.55 + 126),
         onPressed: () => goTo(SceneId.mainMenu),
       ),
     );
