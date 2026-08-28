@@ -1,14 +1,15 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
-import 'package:flutter/painting.dart' show TextStyle;
 
 import '../core/design.dart';
 import '../core/events.dart';
 import '../core/scene.dart';
 import '../core/scene_id.dart';
+import '../core/typography.dart';
 import '../systems/game_system.dart';
 import '../ui/button.dart';
+import '../ui/modal_card.dart';
 import '../world/background.dart';
 import '../world/game_object.dart';
 
@@ -59,48 +60,34 @@ class GameScene extends SceneComponent {
       anchor: Anchor.topRight,
       position: Vector2(sceneSize.x - Design.margin, 28),
       priority: 10,
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          color: Color(0xFFF0B34A),
-          fontSize: 38,
-          letterSpacing: 1,
-        ),
-      ),
+      textRenderer: AppText.paint(size: 40, color: const Color(0xFFF0B34A)),
     );
     _crowdLabel = TextComponent(
-      text: 'orbs 0 / $crowdLimit',
+      text: '구슬 0 / $crowdLimit',
       anchor: Anchor.topRight,
       position: Vector2(sceneSize.x - Design.margin, 76),
       priority: 10,
-      textRenderer: TextPaint(
-        style: const TextStyle(color: Color(0x8899A3B5), fontSize: 20),
-      ),
+      textRenderer: AppText.paint(size: 22, color: const Color(0x8899A3B5)),
     );
     await addAll([_scoreLabel, _crowdLabel]);
 
     await add(
       TextComponent(
-        text: 'TAP THE ORBS',
+        text: '구슬을 톡톡 터뜨려요',
         anchor: Anchor.center,
         position: Vector2(sceneSize.x / 2, sceneSize.y - 210),
         priority: 10,
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Color(0x66C8D2E0),
-            fontSize: 24,
-            letterSpacing: 3,
-          ),
-        ),
+        textRenderer: AppText.paint(size: 26, color: const Color(0x66C8D2E0)),
       ),
     );
 
     await add(
       Button(
         id: 'quit_run',
-        label: 'MENU',
+        label: '그만하기',
         size: Vector2(260, 84),
         position: Vector2(sceneSize.x / 2, sceneSize.y - Design.margin - 42),
-        onPressed: () => _finish(GameOutcome.quit),
+        onPressed: _confirmQuit,
       ),
     );
 
@@ -128,15 +115,39 @@ class GameScene extends SceneComponent {
   @override
   void update(double dt) {
     super.update(dt);
-    if (_ending) return;
+    // Frozen while a prompt is up. Asking "really quit?" and then letting the
+    // orbs pile up behind it would punish the player for reading the question.
+    if (_ending || hasModal) return;
 
     for (final system in _systems) {
       system.step(dt);
     }
 
     final live = _spawner.liveTargets;
-    _crowdLabel.text = 'orbs $live / $crowdLimit';
+    _crowdLabel.text = '구슬 $live / $crowdLimit';
     if (live >= crowdLimit) _finish(GameOutcome.failed);
+  }
+
+  /// Quitting mid-run throws away points, so it asks first.
+  void _confirmQuit() {
+    if (hasModal) return;
+    frame.settings.tapFeedback();
+    openModal(
+      ConfirmDialog(
+        title: '그만할까요?',
+        message: '지금 나가면 이번 판 점수는 사라져요.',
+        confirmLabel: '나갈래요',
+        cancelLabel: '더 할래요',
+        onConfirm: () {
+          closeModal();
+          _finish(GameOutcome.quit);
+        },
+        onCancel: () {
+          frame.settings.tapFeedback();
+          closeModal();
+        },
+      ),
+    );
   }
 
   void _finish(GameOutcome outcome) {

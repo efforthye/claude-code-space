@@ -2,14 +2,25 @@ import 'package:flame_game/core/event_bus.dart';
 import 'package:flame_game/core/events.dart';
 import 'package:flame_game/core/game_frame.dart';
 import 'package:flame_game/core/game_session.dart';
+import 'package:flame_game/core/design.dart';
 import 'package:flame_game/core/scene_id.dart';
+import 'package:flame_game/core/scene_manager.dart';
 import 'package:flame/components.dart';
 import 'package:flame_game/systems/game_system.dart';
+import 'package:flame_game/ui/modal_card.dart';
+import 'package:flame_game/ui/settings_panel.dart';
 import 'package:flame_game/world/game_object.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  // GameSettings reads preferences over a platform channel, which has no
+  // implementation under flutter_test — without a stub the failed call surfaces
+  // as an uncaught error and fails whichever test happens to be running.
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   group('EventBus', () {
     test('delivers only the requested type', () async {
       final bus = EventBus();
@@ -178,6 +189,66 @@ void main() {
         }
 
         expect(game.currentSceneId, SceneId.game);
+      },
+    );
+  });
+
+  group('modals', () {
+    final gameTester = FlameTester(GameFrame.new);
+
+    gameTester.testGameWidget(
+      'a modal sits above the scene and dims past the design rectangle',
+      verify: (game, tester) async {
+        final scene = game.currentScene!;
+        scene.openModal(
+          ConfirmDialog(
+            title: '그만할까요?',
+            message: '점수가 사라져요.',
+            confirmLabel: '네',
+            onConfirm: () {},
+            onCancel: () {},
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 16));
+        await tester.pump(const Duration(milliseconds: 16));
+
+        // In the world, not on the game root: CameraComponent renders at the
+        // maximum priority, so a root-level modal can never cover the scene.
+        final modals = game.world.children.whereType<ModalCard>();
+        expect(modals, hasLength(1));
+        expect(game.children.whereType<ModalCard>(), isEmpty);
+        expect(scene.hasModal, isTrue);
+
+        // And it must outrank the scene manager, or it would draw underneath
+        // the very scene it is interrupting.
+        final manager = game.world.children.whereType<SceneManager>().single;
+        expect(modals.single.priority, greaterThan(manager.priority));
+
+        // The dimmable area has to be the whole viewport. On anything taller
+        // than 9:16 that is strictly larger than the design rectangle, and
+        // dimming only the design rectangle is what leaves lit bands.
+        final visible = game.camera.visibleWorldRect;
+        expect(visible.width, greaterThanOrEqualTo(Design.width));
+        expect(visible.height, greaterThanOrEqualTo(Design.height));
+      },
+    );
+
+    gameTester.testGameWidget(
+      'leaving a scene takes its modal with it',
+      verify: (game, tester) async {
+        final scene = game.currentScene!;
+        scene.openModal(SettingsPanel(onClose: () {}));
+        await tester.pump(const Duration(milliseconds: 16));
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(game.world.children.whereType<ModalCard>(), hasLength(1));
+
+        game.bus.emit(const SceneRequested(SceneId.game));
+        await tester.pump(const Duration(milliseconds: 16));
+        await tester.pump(const Duration(milliseconds: 16));
+
+        // A modal stranded after its scene is gone would sit over the next
+        // scene with no way to dismiss it.
+        expect(game.world.children.whereType<ModalCard>(), isEmpty);
       },
     );
   });

@@ -3,11 +3,11 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/animation.dart' show Curves;
-import 'package:flutter/painting.dart' show TextStyle;
 
 import '../core/design.dart';
 import '../core/scene.dart';
 import '../core/scene_id.dart';
+import '../core/typography.dart';
 import '../ui/gear_button.dart';
 import '../ui/progress_bar.dart';
 import '../ui/settings_panel.dart';
@@ -21,8 +21,6 @@ class MainMenuScene extends SceneComponent {
 
   /// Components that belong to the opening beat only.
   final List<Component> _transient = [];
-
-  SettingsPanel? _settings;
 
   @override
   SceneId get id => SceneId.mainMenu;
@@ -71,20 +69,7 @@ class MainMenuScene extends SceneComponent {
             sceneSize.x / 2,
             sceneSize.y * 0.24 + (logoWidth / logoRatio) / 2 + 34,
           ),
-          textRenderer: TextPaint(
-            style: const TextStyle(
-              color: Color(0xFFFFFFFF),
-              fontSize: 24,
-              shadows: [
-                Shadow(
-                  color: Color(0xE6101828),
-                  blurRadius: 12,
-                  offset: Offset(0, 2),
-                ),
-                Shadow(color: Color(0x99101828), blurRadius: 3),
-              ],
-            ),
-          ),
+          textRenderer: AppText.paint(size: 26),
         ),
       );
     }
@@ -102,13 +87,7 @@ class MainMenuScene extends SceneComponent {
       text: '© 2026 creiip. All rights reserved.',
       anchor: Anchor.center,
       position: Vector2(sceneSize.x / 2, sceneSize.y - 132),
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          color: Color(0x8CFFFFFF),
-          fontSize: 17,
-          shadows: [Shadow(color: Color(0xB3101828), blurRadius: 8)],
-        ),
-      ),
+      textRenderer: AppText.paint(size: 18, color: const Color(0x8CFFFFFF)),
     );
     _transient.addAll([bar, copyright]);
     await addAll([bar, copyright]);
@@ -131,7 +110,7 @@ class MainMenuScene extends SceneComponent {
       // Cropped from the same rect as the idle art, so the two frames line up
       // to the pixel and the button does not jump when it is pressed.
       pressedSprite: await Sprite.load('btn_game_start_pressed.png'),
-      position: Vector2(sceneSize.x / 2, sceneSize.y * 0.66),
+      position: Vector2(sceneSize.x / 2, sceneSize.y * 0.72),
       size: Vector2(startWidth, startWidth / artRatio),
       onPressed: () {
         frame.settings.tapFeedback();
@@ -160,15 +139,8 @@ class MainMenuScene extends SceneComponent {
   }
 
   void _openSettings() {
-    if (_settings != null) return;
+    if (hasModal) return;
     frame.settings.tapFeedback();
-    final panel = SettingsPanel(onClose: _closeSettings);
-    _settings = panel;
-    add(panel);
-  }
-
-  void _closeSettings() {
-    _settings?.removeFromParent();
-    _settings = null;
+    openModal(SettingsPanel(onClose: closeModal));
   }
 }

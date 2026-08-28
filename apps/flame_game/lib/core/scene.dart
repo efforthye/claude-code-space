@@ -1,5 +1,6 @@
 import 'package:flame/components.dart';
 
+import '../ui/modal_card.dart';
 import 'design.dart';
 import 'event_bus.dart';
 import 'events.dart';
@@ -44,7 +45,15 @@ abstract class SceneComponent extends Component
 
   /// Told by the scene manager that this scene has been replaced. Explicit
   /// rather than inferred from tree state, which is ambiguous mid-teardown.
-  void markSuperseded() => _superseded = true;
+  ///
+  /// Takes the modal down here as well as in [onRemove]: a scene swapped out
+  /// while it is still loading never mounts, so `onRemove` never runs, and its
+  /// modal would sit on the game root over the next scene with nothing left
+  /// alive to dismiss it.
+  void markSuperseded() {
+    _superseded = true;
+    closeModal();
+  }
 
   /// True once this scene has been swapped out — its work no longer matters.
   bool get isSuperseded => _superseded;
@@ -84,9 +93,37 @@ abstract class SceneComponent extends Component
 
   @override
   void onRemove() {
+    closeModal();
     onExitScene();
     disposeSubscriptions();
     super.onRemove();
+  }
+
+  ModalCard? _modal;
+
+  /// True while an interruption is on screen. Gameplay should check this and
+  /// hold still — a timer that keeps running behind a "really quit?" prompt
+  /// punishes the player for reading it.
+  bool get hasModal => _modal != null;
+
+  /// Puts a modal in the world alongside the scene manager rather than inside
+  /// this scene.
+  ///
+  /// It has to be in the world to cover the scene at all — the camera renders
+  /// at maximum priority, so nothing on the game root can draw over it — and a
+  /// sibling of the manager rather than a child of the scene so its priority is
+  /// weighed against the whole scene rather than against its contents. The scene
+  /// still owns it and takes it down on exit, so navigating away can never
+  /// strand one on screen.
+  void openModal(ModalCard modal) {
+    if (_modal != null) return;
+    _modal = modal;
+    frame.world.add(modal);
+  }
+
+  void closeModal() {
+    _modal?.removeFromParent();
+    _modal = null;
   }
 
   /// Ask for a scene change. Scenes never switch each other directly; they
