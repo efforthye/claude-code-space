@@ -9,8 +9,12 @@ import '../core/scene_id.dart';
 import '../ui/title_art.dart';
 import '../world/background.dart';
 
-/// Splash. Shows the title, then hands over to the menu on its own — or sooner
-/// if the player taps, because nobody should be made to wait through a splash.
+/// Splash. Hands over to the menu on its own after [hold]; a tap only skips the
+/// wait. Nobody should be made to sit through a splash, and nobody should have to
+/// tap to get past one either — hence both paths, and copy that says "skip"
+/// rather than "continue" so the screen does not lie about which is required.
+///
+/// To make the tap mandatory instead, delete the TimerComponent in buildScene.
 class TitleScene extends SceneComponent with TapCallbacks {
   static const Duration hold = Duration(milliseconds: 2200);
 
@@ -33,7 +37,7 @@ class TitleScene extends SceneComponent with TapCallbacks {
     await add(
       TitleArt(
         sprite: await Sprite.load('blossom_tree.png'),
-        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.36),
+        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.33),
         artSize: Vector2.all(440),
       ),
     );
@@ -42,12 +46,12 @@ class TitleScene extends SceneComponent with TapCallbacks {
       TextComponent(
         text: 'HELLO FLAME!',
         anchor: Anchor.center,
-        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.68),
+        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.60),
         textRenderer: TextPaint(
           style: const TextStyle(
             color: Color(0xFFF0B34A),
-            fontSize: 76,
-            letterSpacing: 7,
+            fontSize: 64,
+            letterSpacing: 4,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -56,9 +60,9 @@ class TitleScene extends SceneComponent with TapCallbacks {
 
     await add(
       TextComponent(
-        text: 'tap to continue',
+        text: 'tap to skip',
         anchor: Anchor.center,
-        position: sceneSize / 2 + Vector2(0, 60),
+        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.60 + 66),
         textRenderer: TextPaint(
           style: const TextStyle(color: Color(0x99C8D2E0), fontSize: 24),
         ),
