@@ -1,0 +1,157 @@
+import 'dart:ui';
+
+import 'package:flame/components.dart';
+import 'package:flutter/painting.dart' show TextStyle;
+
+import '../core/design.dart';
+import '../core/events.dart';
+import '../core/scene.dart';
+import '../core/scene_id.dart';
+import '../systems/game_system.dart';
+import '../ui/button.dart';
+import '../world/background.dart';
+import '../world/game_object.dart';
+
+/// The play scene.
+///
+/// Rules, stated once: orbs appear on a timer, tapping one is worth points, and
+/// the run ends when the score reaches [targetScore] (cleared) or too many orbs
+/// pile up unpopped (failed).
+///
+/// Note what this class does *not* contain: no scoring maths, no spawn timing.
+/// Those live in [GameSystem] implementations it steps without knowing what they
+/// do, so this stays about composition and stays short as the game grows.
+class GameScene extends SceneComponent {
+  /// Points needed to clear. Ten orbs at ten points each.
+  static const int targetScore = 100;
+
+  /// Lose the run when this many orbs are alive at once.
+  static const int crowdLimit = 8;
+
+  final List<GameSystem> _systems = [];
+  late final Component _world;
+  late final ScoreSystem _score;
+  late final SpawnSystem _spawner;
+  late final TextComponent _scoreLabel;
+  late final TextComponent _crowdLabel;
+
+  bool _ending = false;
+
+  @override
+  SceneId get id => SceneId.game;
+
+  @override
+  Future<void> buildScene() async {
+    await add(
+      GridBackground(
+        top: const Color(0xFF12203A),
+        bottom: const Color(0xFF070C16),
+      ),
+    );
+
+    // Orbs live in their own container so the HUD never collides with them and
+    // the whole field can be cleared in one call.
+    _world = Component();
+    await add(_world);
+
+    _scoreLabel = TextComponent(
+      text: '0 / $targetScore',
+      anchor: Anchor.topRight,
+      position: Vector2(sceneSize.x - Design.margin, 28),
+      priority: 10,
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          color: Color(0xFFF0B34A),
+          fontSize: 38,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+    _crowdLabel = TextComponent(
+      text: 'orbs 0 / $crowdLimit',
+      anchor: Anchor.topRight,
+      position: Vector2(sceneSize.x - Design.margin, 76),
+      priority: 10,
+      textRenderer: TextPaint(
+        style: const TextStyle(color: Color(0x8899A3B5), fontSize: 20),
+      ),
+    );
+    await addAll([_scoreLabel, _crowdLabel]);
+
+    await add(
+      TextComponent(
+        text: 'TAP THE ORBS',
+        anchor: Anchor.center,
+        position: Vector2(sceneSize.x / 2, sceneSize.y - 210),
+        priority: 10,
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            color: Color(0x66C8D2E0),
+            fontSize: 24,
+            letterSpacing: 3,
+          ),
+        ),
+      ),
+    );
+
+    await add(
+      Button(
+        id: 'quit_run',
+        label: 'MENU',
+        size: Vector2(260, 84),
+        position: Vector2(sceneSize.x / 2, sceneSize.y - Design.margin - 42),
+        onPressed: () => _finish(GameOutcome.quit),
+      ),
+    );
+
+    _score = ScoreSystem();
+    _spawner = SpawnSystem(parent: _world, area: sceneSize);
+    _systems
+      ..add(_score)
+      ..add(_spawner);
+  }
+
+  @override
+  Future<void> onEnterScene() async {
+    bus.emit(const GameStarted());
+    for (final system in _systems) {
+      system.onAttach(bus);
+    }
+    // The HUD listens rather than polls — the score system is the only owner of
+    // the number and everyone else finds out the same way.
+    listen<ScoreChanged>((event) {
+      _scoreLabel.text = '${event.score} / $targetScore';
+      if (event.score >= targetScore) _finish(GameOutcome.cleared);
+    });
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (_ending) return;
+
+    for (final system in _systems) {
+      system.step(dt);
+    }
+
+    final live = _spawner.liveTargets;
+    _crowdLabel.text = 'orbs $live / $crowdLimit';
+    if (live >= crowdLimit) _finish(GameOutcome.failed);
+  }
+
+  void _finish(GameOutcome outcome) {
+    if (_ending) return;
+    _ending = true;
+    bus.emit(GameEnded(outcome: outcome, score: _score.score));
+    goTo(SceneId.gameEnd);
+  }
+
+  @override
+  void onExitScene() {
+    for (final system in _systems) {
+      system.onDetach();
+    }
+    _systems.clear();
+    _world.removeWhere((child) => child is GameObject);
+  }
+}

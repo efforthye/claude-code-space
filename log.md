@@ -443,3 +443,4 @@ Format: `## [YYYY-MM-DD] <op> | <summary>` where `<op>` is one of
 ## [2026-08-28] service | apps/flame_game 생성 (Flutter+Flame 스캐폴드, org com.efforthye). 게임 기획은 미정
 ## [2026-08-29] setup | Xcode 16.4 → 26.6 업그레이드 (iOS/macOS SDK 26.5). 라이선스 미동의로 툴체인 전체가 잠기는 함정 + iOS 플랫폼 별도 설치 필요 → 런북 함정 4번으로 기록. 4개 타깃 재빌드 전부 통과, 코드 수정 0줄
 ## [2026-08-29] service | flame_game — 에셋 파이프라인 개통 (assets/images·audio·fonts·data + pubspec), 첫 스프라이트를 타이틀에 배치 + Flame 이펙트로 애니메이션
+## [2026-08-29] setup | Flame 게임 템플릿 추출 — templates/flame-game/ + scripts/new-flame-game.sh (flutter create 후 아키텍처 이식 방식). 일회용 프로젝트로 실전 검증: analyze 클린 + 테스트 11개 통과

@@ -1,0 +1,21 @@
+# Fragment, not a pubspec. `scripts/new-flame-game.sh` merges this into the
+# pubspec that `flutter create` generates — deps via `flutter pub add` (so version
+# constraints stay current) and the assets block by patch.
+#
+# Kept as a readable record of what the template needs, so the same setup can be
+# done by hand if the script is ever unavailable.
+
+dependencies:
+  flame: ^1.38.2 # requires Flutter >= 3.41
+
+dev_dependencies:
+  flame_test: any # FlameTester / testGameWidget, used by test/architecture_test.dart
+
+# Asset roots. `images` and `audio` are Flame's lookup convention, not a
+# preference: Sprite.load and FlameAudio read from exactly those paths.
+# Registered by folder, so adding art later needs no pubspec edit.
+flutter:
+  assets:
+    - assets/images/
+    - assets/audio/
+    - assets/data/

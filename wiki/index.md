@@ -34,7 +34,7 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[mayo-dev-autosync]] — push → mini auto-pulls → phone Fast-Refreshes (polling script + webhook option).
 - [[claude-remote-control]] — Operate the home server from your phone (Claude Remote Control / SSH).
 - [[deploy-mayo-api]] — Build & run the mayo-api FastAPI container on the home server _(draft)_.
-- [[flutter-dev-setup]] — Flutter 3.47 + Flame 개발 환경 세팅(macOS): 확정 버전 조합, cmdline-tools 23.0 함정, iOS 시뮬레이터 런타임.
+- [[flutter-dev-setup]] — Flutter 3.47 + Flame 개발 환경 세팅(macOS): 확정 버전 조합, cmdline-tools 23.0 함정, iOS 플랫폼/런타임, Xcode 메이저 업그레이드 함정.
 
 ## Decisions (ADRs)
 - [[0002-cicd-via-jenkins-webhook]] — **Current** CI/CD: Jenkins builds & deploys, triggered by
@@ -95,5 +95,7 @@ Updated whenever pages are added/renamed or a service's status changes.
   (your own compiled app); why mayo will need a dev build.
 - [[mayo-web-target]] — running the same Expo app on the **web** (react-native-web, `web.output:
   single`, Vercel) for mayo.im; native-module web guards + the shared-key leak caveat.
+- [[flame-game-template]] — 새 Flutter+Flame 게임의 재사용 구조와 `scripts/new-flame-game.sh`
+  스캐폴딩. 복사 대신 `flutter create` + 아키텍처 이식을 쓰는 이유, 구현 중 잡은 버그 4개.
 - [[paid-appstore-number-one-2026]] — 앱스토어 **유료 1위** 시장 분석(2026-08): 차트 구조, 미국
   유료 게임 1위 임계치(≈5,000장/일 `[추정]`), 승자 6개 케이스, 1위를 만드는 조건 공식화.

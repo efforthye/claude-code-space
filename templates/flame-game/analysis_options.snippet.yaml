@@ -1,0 +1,9 @@
+# Rules the template's own code depends on. Merged into the generated
+# analysis_options.yaml by scripts/new-flame-game.sh.
+
+linter:
+  rules:
+    # Fields are private with public constructor parameters on purpose: state is
+    # encapsulated behind getters, and taking `this._velocity` as a formal would
+    # leak underscore-prefixed names into the public API of every component.
+    prefer_initializing_formals: false
