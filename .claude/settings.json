@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -m 25 \"https://docs.higgsfield.ai/docs/guides/video.md\" -o /tmp/vid.md -w \"video.md=%{http_code} %{size_download}b\\\\n\")",
+      "Bash(curl -s -m 30 \"https://docs.higgsfield.ai/docs/openapi.json\" -o /tmp/hfoa.json -w \"status=%{http_code} size=%{size_download}\\\\n\")",
+      "Bash(python3 -c \"import ast;[ast.parse\\(open\\(f\\).read\\(\\)\\) for f in \\('app/config.py','app/segments.py','app/catalog.py'\\)]\")",
+      "Bash(node --check /tmp/wf_ui.js)",
+      "Bash(node tools/smoke-ui.ts)",
+      "Bash(grep -v \"ExperimentalWarning\\\\|trace-warnings\\\\|^> \\\\|^$\")",
+      "Bash(sed -i '' 's/const WHALE_BASE = 23_000;/const WHALE_BASE = 11_000;/' sim/engine.ts)",
+      "Bash(sed -i '' 's/target: 2_050_000/target: 1_900_000/' sim/engine.ts)",
+      "Bash(node sim/montecarlo.ts 1500)",
+      "Bash(sed -i '' 's/Math.pow\\(2.35, stage - 1\\)/Math.pow\\(2.28, stage - 1\\)/' sim/run.ts)",
+      "Bash(sed -i '' 's/p99 peak ≥ 100× median peak/p99 peak ≥ 10× the final target/' sim/montecarlo.ts)",
+      "Bash(sed -i '' 's/Math.pow\\(2.18, stage - 1\\)/Math.pow\\(2.10, stage - 1\\)/' sim/run.ts)",
+      "Bash(sed -i '' 's/    breakMult: 2.6,/    breakMult: 2.2,/' sim/relics.ts)",
+      "Bash(sed -i '' 's/Math.pow\\(2.10, stage - 1\\)/Math.pow\\(2.06, stage - 1\\)/' sim/run.ts)",
+      "Bash(sed -i '' 's/describeBoard\\(bestPlacement\\(hand, relics\\).board\\)/describeBoard\\(bestPlacement\\(hand, relics\\).board, relics\\)/; s/describeBoard\\(randomPlacement\\(hand, relics, rng\\).board\\)/describeBoard\\(randomPlacement\\(hand, relics, rng\\).board, relics\\)/' sim/montecarlo.ts)",
+      "Bash(git checkout *)",
+      "Bash(git commit *)",
+      "Bash(node --check /tmp/mj.js)",
+      "Bash(python3 -c ' *)",
+      "Bash(node --check /tmp/mj2.js)",
+      "Bash(git rm *)"
+    ]
+  }
+}
