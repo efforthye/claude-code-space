@@ -34,6 +34,7 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[mayo-dev-autosync]] — push → mini auto-pulls → phone Fast-Refreshes (polling script + webhook option).
 - [[claude-remote-control]] — Operate the home server from your phone (Claude Remote Control / SSH).
 - [[deploy-mayo-api]] — Build & run the mayo-api FastAPI container on the home server _(draft)_.
+- [[flutter-dev-setup]] — Flutter 3.47 + Flame 개발 환경 세팅(macOS): 확정 버전 조합, cmdline-tools 23.0 함정, iOS 시뮬레이터 런타임.
 
 ## Decisions (ADRs)
 - [[0002-cicd-via-jenkins-webhook]] — **Current** CI/CD: Jenkins builds & deploys, triggered by
