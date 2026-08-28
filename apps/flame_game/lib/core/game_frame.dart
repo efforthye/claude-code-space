@@ -6,13 +6,13 @@ import 'package:flame/game.dart';
 import '../scenes/game_end_scene.dart';
 import '../scenes/game_scene.dart';
 import '../scenes/main_menu_scene.dart';
-import '../scenes/title_scene.dart';
 import '../ui/debug_overlay.dart';
 import '../ui/screen_backdrop.dart';
 import 'design.dart';
 import 'event_bus.dart';
 import 'events.dart';
 import 'game_session.dart';
+import 'game_settings.dart';
 import 'scene.dart';
 import 'scene_id.dart';
 import 'scene_manager.dart';
@@ -28,9 +28,10 @@ import 'scene_manager.dart';
 /// camera letterboxes that onto the real device. One layout, every screen —
 /// phone, tablet, or a desktop window the player drags around.
 class GameFrame extends FlameGame {
-  GameFrame({EventBus? bus, GameSession? session})
+  GameFrame({EventBus? bus, GameSession? session, GameSettings? settings})
       : bus = bus ?? EventBus(),
         session = session ?? GameSession(),
+        settings = settings ?? GameSettings(),
         super(
           camera: CameraComponent.withFixedResolution(
             width: Design.width,
@@ -40,6 +41,7 @@ class GameFrame extends FlameGame {
 
   final EventBus bus;
   final GameSession session;
+  final GameSettings settings;
 
   late final SceneManager sceneManager;
 
@@ -74,12 +76,11 @@ class GameFrame extends FlameGame {
     // Factories, not instances, so each entry builds a clean scene.
     sceneManager = SceneManager(
       factories: <SceneId, SceneComponent Function()>{
-        SceneId.title: TitleScene.new,
         SceneId.mainMenu: MainMenuScene.new,
         SceneId.game: GameScene.new,
         SceneId.gameEnd: GameEndScene.new,
       },
-      initial: SceneId.title,
+      initial: SceneId.mainMenu,
     );
     // Added to the game, not the world: outside the camera and therefore not
     // clipped to the design rectangle.

@@ -126,9 +126,9 @@ void main() {
     );
 
     gameTester.testGameWidget(
-      'starts on the title scene',
+      'starts on the main menu',
       verify: (game, tester) async {
-        expect(game.currentSceneId, SceneId.title);
+        expect(game.currentSceneId, SceneId.mainMenu);
       },
     );
 
@@ -138,15 +138,15 @@ void main() {
         final changes = <String>[];
         game.bus.on<SceneChanged>().listen((e) => changes.add(e.to.name));
 
-        game.bus.emit(const SceneRequested(SceneId.mainMenu));
+        game.bus.emit(const SceneRequested(SceneId.game));
         // The bus delivers on a microtask and mounting a scene costs a frame,
         // so a transition is never same-tick. Pump a few frames for it.
         for (var i = 0; i < 5; i++) {
           await tester.pump(const Duration(milliseconds: 16));
         }
 
-        expect(game.currentSceneId, SceneId.mainMenu);
-        expect(changes, contains('mainMenu'));
+        expect(game.currentSceneId, SceneId.game);
+        expect(changes, contains('game'));
       },
     );
 
@@ -154,12 +154,12 @@ void main() {
       'a repeat request for the live scene changes nothing',
       verify: (game, tester) async {
         await tester.pump();
-        await game.sceneManager.switchTo(SceneId.mainMenu);
+        await game.sceneManager.switchTo(SceneId.game);
         final before = game.bus.history.length;
 
-        await game.sceneManager.switchTo(SceneId.mainMenu);
+        await game.sceneManager.switchTo(SceneId.game);
 
-        expect(game.currentSceneId, SceneId.mainMenu);
+        expect(game.currentSceneId, SceneId.game);
         expect(game.bus.history.length, before);
       },
     );
@@ -170,7 +170,7 @@ void main() {
         await tester.pump();
         // Fired without awaiting the first — the switch is atomic, so nothing
         // can be lost in between and the player ends up where they last asked.
-        final first = game.sceneManager.switchTo(SceneId.mainMenu);
+        final first = game.sceneManager.switchTo(SceneId.gameEnd);
         await game.sceneManager.switchTo(SceneId.game);
         await first;
         for (var i = 0; i < 5; i++) {
