@@ -35,6 +35,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flame: ^1.38.2
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +67,18 @@ flutter:
     - assets/images/
     - assets/audio/
     - assets/data/
+
+  # Handwriting faces, bundled rather than fetched — see assets/LICENSES.md for
+  # the terms (임베딩 허용) and why a webfont URL is not an option here.
+  fonts:
+    # Body copy: soft, readable at small sizes.
+    - family: Eunbyul
+      fonts:
+        - asset: assets/fonts/Ownglyph-Eunbyul.ttf
+    # Headings: heavier and rounder, so titles carry against busy artwork.
+    - family: Daisy
+      fonts:
+        - asset: assets/fonts/Ownglyph-Daisy.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

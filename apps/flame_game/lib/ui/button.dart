@@ -2,9 +2,9 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flutter/painting.dart' show TextStyle;
 
 import '../core/events.dart';
+import '../core/typography.dart';
 import '../core/game_frame.dart';
 
 /// One button class for the whole game.
@@ -43,12 +43,9 @@ class Button extends PositionComponent
     _text.textRenderer = _labelStyle;
   }
 
-  TextPaint get _labelStyle => TextPaint(
-        style: TextStyle(
-          color: _enabled ? const Color(0xFFF2F4F7) : const Color(0xFF6B7280),
-          fontSize: 30,
-          letterSpacing: 2,
-        ),
+  TextPaint get _labelStyle => AppText.paint(
+        size: 32,
+        color: _enabled ? const Color(0xFFF2F4F7) : const Color(0xFF6B7280),
       );
 
   @override

@@ -1,11 +1,11 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
-import 'package:flutter/painting.dart' show TextStyle;
 
 import '../core/events.dart';
 import '../core/scene.dart';
 import '../core/scene_id.dart';
+import '../core/typography.dart';
 import '../ui/button.dart';
 import '../world/background.dart';
 
@@ -36,40 +36,34 @@ class GameEndScene extends SceneComponent {
     await add(
       TextComponent(
         text: switch (outcome) {
-          GameOutcome.cleared => 'CLEARED',
-          GameOutcome.failed => 'FAILED',
-          GameOutcome.quit => 'RUN ENDED',
+          GameOutcome.cleared => '클리어!',
+          GameOutcome.failed => '아쉬워요',
+          GameOutcome.quit => '그만뒀어요',
         },
         anchor: Anchor.center,
         position: Vector2(sceneSize.x / 2, sceneSize.y * 0.3),
-        textRenderer: TextPaint(
-          style: TextStyle(
-            color: outcome == GameOutcome.cleared
-                ? const Color(0xFF8FD6B5)
-                : const Color(0xFFF2F4F7),
-            fontSize: 58,
-            letterSpacing: 5,
-            fontWeight: FontWeight.w600,
-          ),
+        textRenderer: AppText.displayPaint(
+          size: 64,
+          color: outcome == GameOutcome.cleared
+              ? const Color(0xFF8FD6B5)
+              : const Color(0xFFF2F4F7),
         ),
       ),
     );
 
     await add(
       TextComponent(
-        text: 'score $score   ·   best ${frame.session.highScore}',
+        text: '점수 $score   ·   최고 ${frame.session.highScore}',
         anchor: Anchor.center,
         position: Vector2(sceneSize.x / 2, sceneSize.y * 0.3 + 60),
-        textRenderer: TextPaint(
-          style: const TextStyle(color: Color(0x99C8D2E0), fontSize: 25),
-        ),
+        textRenderer: AppText.paint(size: 27, color: const Color(0x99C8D2E0)),
       ),
     );
 
     await add(
       Button(
         id: 'retry',
-        label: 'PLAY AGAIN',
+        label: '다시 하기',
         position: Vector2(sceneSize.x / 2, sceneSize.y * 0.55),
         onPressed: () => goTo(SceneId.game),
       ),
@@ -78,7 +72,7 @@ class GameEndScene extends SceneComponent {
     await add(
       Button(
         id: 'to_menu',
-        label: 'MAIN MENU',
+        label: '메인으로',
         position: Vector2(sceneSize.x / 2, sceneSize.y * 0.55 + 126),
         onPressed: () => goTo(SceneId.mainMenu),
       ),
