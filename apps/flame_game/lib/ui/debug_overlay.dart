@@ -20,6 +20,10 @@ class DebugOverlay extends PositionComponent
   late final TextComponent _sceneLine;
   late final TextComponent _eventLines;
 
+  /// Panel behind the text. Over an illustrated background the overlay is
+  /// otherwise invisible, which defeats the whole point of having it.
+  static final Paint _panel = Paint()..color = const Color(0xB2070B14);
+
   @override
   EventBus get bus => game.bus;
 
@@ -51,6 +55,16 @@ class DebugOverlay extends PositionComponent
     // the overlay listens to the base type rather than to a fixed set.
     listen<GameEvent>((_) => _refresh());
     _refresh();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final w = _eventLines.width > _sceneLine.width ? _eventLines.width : _sceneLine.width;
+    canvas.drawRRect(
+      RRect.fromLTRBR(-10, -8, w + 14, _eventLines.position.y + _eventLines.height + 8, const Radius.circular(6)),
+      _panel,
+    );
+    super.render(canvas);
   }
 
   void _refresh() {

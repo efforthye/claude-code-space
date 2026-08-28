@@ -53,6 +53,66 @@ class GradientBackground extends Background {
   }
 }
 
+/// Full-bleed artwork.
+///
+/// Art almost never matches the design ratio, and stretching it to fit is the
+/// one thing that always looks wrong. This crops instead: the sprite is scaled
+/// until it covers the design space and the overflow is cut from a source rect,
+/// so the picture keeps its proportions on every screen.
+///
+/// [dim] darkens it. Illustrated backgrounds are busy and bright, and text laid
+/// over them stops being readable; a scrim is cheaper than outlining every label.
+class SpriteBackground extends Background {
+  SpriteBackground(
+    this.sprite, {
+    this.dim = 0,
+    this.alignX = 0.5,
+    this.alignY = 0.5,
+    super.priority,
+  });
+
+  final Sprite sprite;
+
+  /// 0 = untouched, 1 = black.
+  final double dim;
+
+  /// Which part survives the crop. 0 = keep the left/top edge, 1 = right/bottom.
+  final double alignX;
+  final double alignY;
+
+  late final Sprite _cover = _buildCover();
+
+  Sprite _buildCover() {
+    final image = sprite.image;
+    final imageSize = Vector2(image.width.toDouble(), image.height.toDouble());
+    final targetRatio = size.x / size.y;
+    final imageRatio = imageSize.x / imageSize.y;
+
+    final Vector2 src;
+    if (imageRatio > targetRatio) {
+      src = Vector2(imageSize.y * targetRatio, imageSize.y); // too wide: trim sides
+    } else {
+      src = Vector2(imageSize.x, imageSize.x / targetRatio); // too tall: trim top/bottom
+    }
+    final offset = Vector2(
+      (imageSize.x - src.x) * alignX,
+      (imageSize.y - src.y) * alignY,
+    );
+    return Sprite(image, srcPosition: offset, srcSize: src);
+  }
+
+  @override
+  void render(Canvas canvas) {
+    _cover.render(canvas, position: Vector2.zero(), size: size);
+    if (dim > 0) {
+      canvas.drawRect(
+        size.toRect(),
+        Paint()..color = Color.fromRGBO(4, 6, 12, dim.clamp(0, 1)),
+      );
+    }
+  }
+}
+
 /// Gradient plus a faint grid, so the play area reads as a distinct space.
 class GridBackground extends Background {
   GridBackground({

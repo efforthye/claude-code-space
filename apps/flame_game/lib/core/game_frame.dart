@@ -8,6 +8,7 @@ import '../scenes/game_scene.dart';
 import '../scenes/main_menu_scene.dart';
 import '../scenes/title_scene.dart';
 import '../ui/debug_overlay.dart';
+import '../ui/screen_backdrop.dart';
 import 'design.dart';
 import 'event_bus.dart';
 import 'events.dart';
@@ -42,6 +43,11 @@ class GameFrame extends FlameGame {
 
   late final SceneManager sceneManager;
 
+  /// Full-device artwork behind everything. Lives on the game root rather than
+  /// in the world, so it paints across the letterbox the fixed-resolution camera
+  /// necessarily creates. Scenes set it and clear it as they come and go.
+  late final ScreenBackdrop backdrop;
+
   /// Where the player is right now.
   SceneId? get currentSceneId => sceneManager.currentSceneId;
 
@@ -72,6 +78,11 @@ class GameFrame extends FlameGame {
       },
       initial: SceneId.title,
     );
+    // Added to the game, not the world: outside the camera and therefore not
+    // clipped to the design rectangle.
+    backdrop = ScreenBackdrop(priority: -1000);
+    await add(backdrop);
+
     // Into the world, so everything inherits the fixed-resolution coordinates.
     await world.add(sceneManager);
 

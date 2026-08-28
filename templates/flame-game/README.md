@@ -37,8 +37,13 @@ lib/
     game_session  씬보다 오래 사는 상태(점수·최고기록·런 횟수)
   scenes/       title · main_menu · game · game_end  ← 갈아끼우는 곳
   systems/      GameSystem 인터페이스 + 예시 구현  ← 게임 규칙이 사는 곳
-  ui/           button · debug_overlay · title_art(스프라이트+이펙트 참고용)
-  world/        background(3종) · GameObject/Actor/Damageable
+  ui/           button           그린 사각형 버튼
+                sprite_button    아트 버튼 — 알파 히트테스트, 눌림 파생, 아이들 펄스
+                screen_backdrop  기기 전체 배경 (레터박스까지 덮음)
+                progress_bar     하단 진행 바
+                debug_overlay    현재 씬 + 최근 이벤트
+                title_art        스프라이트 + 이펙트 참고 구현
+  world/        background(4종, SpriteBackground 포함) · GameObject/Actor/Damageable
 assets/
   images/       Sprite.load('name.png') 가 여기서 찾습니다
   audio/        FlameAudio 가 여기서 찾습니다
@@ -66,6 +71,10 @@ assets/
   제거 시 자동 취소합니다. 잊을 수가 없는 구조입니다.
 - **좌표는 언제나 `sceneSize`(디자인 공간)** 입니다. 실기기 크기(`game.size`)를 쓰면
   기기 비율이 바뀔 때 레이아웃이 무너집니다. 카메라가 레터박스를 처리합니다.
+- **배경은 `frame.backdrop`, 레이아웃은 디자인 공간.** 고정 해상도 카메라는 디자인 사각형을
+  잘라내므로, 배경을 씬 안에 두면 레터박스 검은 띠를 절대 못 넘습니다. `ScreenBackdrop`은
+  카메라 밖(게임 루트)에 있어서 기기 끝까지 그립니다. 대신 **배경에 중요한 정보를 넣지 마세요**
+  — 기기 비율마다 잘리는 양이 다릅니다.
 - **애니메이션은 `update()`의 sin 계산이 아니라 Flame 이펙트**로. 이펙트는 조합되고,
   자기 컨트롤러를 갖고, 런타임에 붙였다 뗄 수 있습니다. `ui/title_art.dart`가 참고 구현입니다.
 - **버스는 비동기 전달**입니다(broadcast stream). 동기 버스는 핸들러가 순회 중에 emit해서

@@ -6,6 +6,7 @@ import 'package:flutter/painting.dart' show TextStyle;
 
 import '../core/scene.dart';
 import '../core/scene_id.dart';
+import '../ui/progress_bar.dart';
 import '../ui/title_art.dart';
 import '../world/background.dart';
 
@@ -62,20 +63,22 @@ class TitleScene extends SceneComponent with TapCallbacks {
       TextComponent(
         text: 'tap to skip',
         anchor: Anchor.center,
-        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.60 + 66),
+        position: Vector2(sceneSize.x / 2, sceneSize.y - 110),
         textRenderer: TextPaint(
-          style: const TextStyle(color: Color(0x99C8D2E0), fontSize: 24),
+          style: const TextStyle(color: Color(0x66C8D2E0), fontSize: 20, letterSpacing: 2),
         ),
       ),
     );
 
-    // Auto-advance. removeOnFinish keeps the scene from accumulating timers if
-    // it is ever re-entered.
+    // The bar and the hand-off run off the same duration, so the bar reaching
+    // its end *is* the transition rather than something that merely happens near
+    // it. One clock, not two that drift.
     await add(
-      TimerComponent(
-        period: hold.inMilliseconds / 1000,
-        removeOnFinish: true,
-        onTick: _advance,
+      ProgressBar(
+        duration: hold.inMilliseconds / 1000,
+        position: Vector2(sceneSize.x / 2, sceneSize.y - 150),
+        size: Vector2(300, 7),
+        onComplete: _advance,
       ),
     );
   }
