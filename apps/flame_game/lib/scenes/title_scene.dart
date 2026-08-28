@@ -6,6 +6,7 @@ import 'package:flutter/painting.dart' show TextStyle;
 
 import '../core/scene.dart';
 import '../core/scene_id.dart';
+import '../ui/title_art.dart';
 import '../world/background.dart';
 
 /// Splash. Shows the title, then hands over to the menu on its own — or sooner
@@ -27,11 +28,21 @@ class TitleScene extends SceneComponent with TapCallbacks {
       ),
     );
 
+    // First real art asset. Sprite.load reads from assets/images/, which is why
+    // the folder is named that — it is Flame's convention, not a preference.
+    await add(
+      TitleArt(
+        sprite: await Sprite.load('blossom_tree.png'),
+        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.36),
+        artSize: Vector2.all(440),
+      ),
+    );
+
     await add(
       TextComponent(
         text: 'HELLO FLAME!',
         anchor: Anchor.center,
-        position: sceneSize / 2 - Vector2(0, 24),
+        position: Vector2(sceneSize.x / 2, sceneSize.y * 0.68),
         textRenderer: TextPaint(
           style: const TextStyle(
             color: Color(0xFFF0B34A),

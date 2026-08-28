@@ -3,7 +3,7 @@ title: Flutter 개발 환경 세팅 (macOS)
 type: runbook
 tags: [flutter, dart, flame, android, ios, macos, setup]
 created: 2026-08-28
-updated: 2026-08-28
+updated: 2026-08-29
 ---
 
 # Flutter 개발 환경 세팅 (macOS)
@@ -23,8 +23,9 @@ updated: 2026-08-28
 | Android Studio | 2025.1 (AI-251) | JBR 제공원 |
 | Android SDK | platform 36, build-tools 36.1.0 / 36.0.0, NDK r28c | |
 | **Android cmdline-tools** | **22.0** | ⚠️ 23.0 아님 — 아래 함정 참조 |
-| Xcode | 16.4 (iOS SDK 18.5) | macOS 26.3에 비해 구버전. 26.6 업그레이드 가능 |
-| iOS 시뮬레이터 런타임 | **iOS 18.6** | Xcode 16부터 별도 다운로드 (~7GB) |
+| Xcode | **26.6** (Build 17F113) | iOS SDK 26.5 / macOS SDK 26.5 |
+| iOS 플랫폼 지원 | **iOS 26.5 필수** | Xcode 26은 자기 세대 플랫폼이 없으면 빌드 대상이 0개 (~9GB) |
+| iOS 시뮬레이터 런타임 | iOS 26.5 + 18.6 | 런타임은 Xcode.app과 별도 저장소라 Xcode 교체에도 살아남음 |
 | CocoaPods | 1.17.0 | brew 설치 (시스템 ruby 2.6으로 gem 설치 금지) |
 | VS Code 확장 | Dart + **Flutter 3.140.0** | |
 
@@ -44,12 +45,12 @@ sdkmanager --sdk_root="$HOME/Library/Android/sdk" "cmdline-tools;latest"
 cd "$HOME/Library/Android/sdk/cmdline-tools" && mv latest 23.0 && ln -s 22.0 latest
 
 yes | flutter doctor --android-licenses
-xcodebuild -downloadPlatform iOS   # iOS 시뮬레이터 런타임 (~7GB, sudo 불필요)
+xcodebuild -downloadPlatform iOS   # iOS 플랫폼 + 시뮬레이터 런타임 (~9GB, sudo 불필요)
 
 code --install-extension dart-code.flutter
 ```
 
-## 함정 3가지 (전부 실제로 걸렸음)
+## 함정 4가지 (전부 실제로 걸렸음)
 
 ### 1. cmdline-tools 23.0은 Flutter와 맞지 않는다 ⚠️
 `cmdline-tools;latest`를 설치하면 **23.0**이 오는데, 여기서 `sdkmanager`가 폐기되고 새 `android`
@@ -79,6 +80,44 @@ Xcode 16부터 시뮬레이터 런타임이 별도 다운로드입니다. 하나
 두 번째 오류는 원인이 전혀 드러나지 않아 헤매기 쉽습니다. 원인은 시뮬레이터 대상이 0개라
 `xcodebuild`가 빌드 설정을 만들지 못하는 것입니다. **런타임을 받으면 둘 다 해결됩니다.**
 
+### 4. Xcode 메이저 업그레이드 뒤에는 툴체인 전체가 잠긴다 ⚠️
+
+2026-08-28에 Xcode 16.4 → 26.6(App Store 설치본, `mas upgrade 497799835`, ~15GB)을 올린 뒤
+겪은 것. **설치는 성공했는데 모든 것이 실패한 것처럼 보입니다:**
+
+```
+xcodebuild -checkFirstLaunchStatus  → exit 69
+xcodebuild -showsdks               → 빈 출력
+xcrun simctl list runtimes         → 빈 출력
+pod --version                      → "You have not agreed to the Xcode license"
+```
+
+원인은 **라이선스 미동의 하나**입니다. 이게 막히면 SDK 조회·시뮬레이터·CocoaPods가 전부
+빈 출력을 내서 설치 실패로 오인하기 쉽습니다. **sudo가 필요하므로 사람이 직접 해야 합니다:**
+
+```bash
+sudo xcodebuild -license accept
+sudo xcodebuild -runFirstLaunch
+```
+
+이어서 두 번째 함정: 라이선스를 풀어도 **iOS 빌드가 계속 실패**합니다.
+`xcodebuild -showsdks`는 iOS 26.5를 보여주지만 그건 SDK 헤더일 뿐이고, 플랫폼 지원은 별도입니다.
+
+```bash
+cd ios && xcodebuild -project Runner.xcodeproj -scheme Runner -showdestinations
+#   Available destinations: (없음)
+#   Ineligible: error: iOS 26.5 is not installed.
+```
+
+**구세대 런타임(18.6)을 갖고 있어도 소용없습니다** — Xcode 26은 자기 세대 플랫폼을 요구합니다.
+`xcodebuild -downloadPlatform iOS`(~9GB)로 받으면 풀립니다.
+
+> **진단 요령:** iOS 빌드가 `No Xcode build settings have been found`로 죽으면 로그를 뒤지지 말고
+> 위 `-showdestinations`를 먼저 치세요. 원인을 한 줄로 말해줍니다.
+
+**업그레이드 결과:** 프로젝트 코드는 **한 줄도 고칠 필요가 없었습니다.** macOS SDK가
+15.5 → 26.5로 한 세대 점프했는데도 빌드가 그대로 통과했습니다.
+
 ## 검증 (새 환경에서 이걸 통과하면 끝)
 
 ```bash
@@ -87,15 +126,17 @@ cd apps/flame_game
 flutter analyze && flutter test
 flutter build apk --debug                       # Gradle+JDK21+AGP 검증 (최초 ~190초)
 flutter build macos --debug
-flutter build ios --simulator --debug           # 시뮬레이터 런타임 검증
+flutter build ios --simulator --debug           # iOS 플랫폼/런타임 검증
 ```
+
+2026-08-29 실측: 4개 타깃 전부 통과 (Xcode 26.6 · iOS SDK 26.5 · macOS SDK 26.5).
 
 ## 남은 것
 
-- **Xcode 16.4 → 26.6** 업그레이드 가능(App Store 설치본, `mas upgrade 497799835`).
-  Xcode 16.4의 SDK는 iOS 18.5 / macOS 15.5인데 OS는 macOS 26.3이라 어긋나 있습니다.
-  지금 개발에는 지장 없지만 앱스토어 제출 요건을 맞추려면 언젠가 필요합니다.
 - `.zshrc`에 `ANDROID_HOME`은 넣지 않았습니다(오너 요청). Flutter는 자체 설정으로 SDK를
   찾으므로 개발에 지장 없고, 터미널에서 `adb`·`emulator`를 직접 칠 때만 PATH가 필요합니다.
+- `docker-desktop` cask 업그레이드는 sudo가 필요해 자동화하지 못했습니다(`brew upgrade --cask
+  docker-desktop`을 사람이 실행). 나머지 brew formulae 90개는 무인 업그레이드에 성공했고,
+  `mayo-api`의 `.venv`(brew python@3.14 기반)도 3.14.4 → 3.14.7 업그레이드 후 정상 동작합니다.
 
 관련: [[flame-game]] _(게임 기획 확정 시 생성)_
