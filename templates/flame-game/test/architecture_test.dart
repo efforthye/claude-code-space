@@ -8,8 +8,15 @@ import 'package:flame_game/systems/game_system.dart';
 import 'package:flame_game/world/game_object.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  // GameSettings reads preferences over a platform channel, which has no
+  // implementation under flutter_test — without a stub the failed call surfaces
+  // as an uncaught error and fails whichever test happens to be running.
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   group('EventBus', () {
     test('delivers only the requested type', () async {
       final bus = EventBus();

@@ -2,27 +2,232 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flutter/painting.dart' show TextStyle;
 
-import '../core/design.dart';
-import '../core/game_frame.dart';
+import '../core/typography.dart';
+import 'modal_card.dart';
 
-/// A row with a label and a switch.
+const Color _ink = Color(0xFF5C4150);
+const Color _mutedInk = Color(0xFFB9A3AE);
+const Color _trackOff = Color(0xFFE4DAE0);
+const List<Color> _hot = [Color(0xFFFF8FB8), Color(0xFFF06BA0)];
+
+/// Speaker glyph that doubles as the mute button.
+///
+/// Drawn rather than shipped as art: at this size a PNG buys nothing, and the
+/// muted state needs to be the *same* speaker with a cross through it, which is
+/// easier to guarantee from one path than from two files that can drift apart.
+class _SpeakerIcon extends PositionComponent with TapCallbacks {
+  _SpeakerIcon({
+    required super.position,
+    required this.isOn,
+    required this.onTap,
+  }) : super(size: Vector2.all(46), anchor: Anchor.centerLeft);
+
+  final bool Function() isOn;
+  final void Function() onTap;
+
+  @override
+  void render(Canvas canvas) {
+    final on = isOn();
+    final colour = on ? _ink : _mutedInk;
+    final w = size.x, h = size.y;
+
+    // Cone: a small rectangle at the back opening out into a trapezoid.
+    canvas.drawPath(
+      Path()
+        ..moveTo(w * 0.06, h * 0.36)
+        ..lineTo(w * 0.26, h * 0.36)
+        ..lineTo(w * 0.50, h * 0.14)
+        ..lineTo(w * 0.50, h * 0.86)
+        ..lineTo(w * 0.26, h * 0.64)
+        ..lineTo(w * 0.06, h * 0.64)
+        ..close(),
+      Paint()..color = colour,
+    );
+
+    final stroke = Paint()
+      ..color = colour
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.4
+      ..strokeCap = StrokeCap.round;
+
+    if (on) {
+      // Arcs of sound, present only when there is sound to represent.
+      for (final r in [w * 0.16, w * 0.30]) {
+        canvas.drawArc(
+          Rect.fromCircle(center: Offset(w * 0.50, h / 2), radius: r),
+          -0.85,
+          1.7,
+          false,
+          stroke,
+        );
+      }
+    } else {
+      // The universal cross, which reads faster than a greyed-out speaker.
+      canvas.drawLine(
+        Offset(w * 0.62, h * 0.34),
+        Offset(w * 0.92, h * 0.66),
+        stroke,
+      );
+      canvas.drawLine(
+        Offset(w * 0.92, h * 0.34),
+        Offset(w * 0.62, h * 0.66),
+        stroke,
+      );
+    }
+  }
+
+  @override
+  void onTapUp(TapUpEvent event) => onTap();
+}
+
+/// A label, a mute button, a draggable level and a percentage.
+///
+/// A level rather than a switch: a player who finds the music slightly loud
+/// wants it quieter, not gone, and on/off throws away the only adjustment most
+/// of them actually want.
+class _VolumeRow extends PositionComponent with TapCallbacks, DragCallbacks {
+  _VolumeRow({
+    required this.label,
+    required this.read,
+    required this.write,
+    required this.onMute,
+    required super.position,
+    required Vector2 size,
+  }) : super(size: size);
+
+  final String label;
+  final double Function() read;
+  final void Function(double value) write;
+  final void Function() onMute;
+
+  static const double _labelW = 128;
+  static const double _iconW = 58;
+  static const double _percentW = 76;
+  static const double _trackH = 14;
+  static const double _knobR = 15;
+
+  late final TextComponent _percent;
+
+  double get _left => _labelW + _iconW;
+  double get _right => size.x - _percentW;
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    await add(
+      TextComponent(
+        text: label,
+        anchor: Anchor.centerLeft,
+        position: Vector2(0, size.y / 2),
+        textRenderer: AppText.paint(size: 30, color: _ink, onArt: false),
+      ),
+    );
+    await add(
+      _SpeakerIcon(
+        position: Vector2(_labelW, size.y / 2),
+        isOn: () => read() > 0,
+        onTap: () {
+          onMute();
+          _refresh();
+        },
+      ),
+    );
+    _percent = TextComponent(
+      anchor: Anchor.centerRight,
+      position: Vector2(size.x, size.y / 2),
+      textRenderer: AppText.paint(size: 26, color: _mutedInk, onArt: false),
+    );
+    await add(_percent);
+    _refresh();
+  }
+
+  void _refresh() => _percent.text = '${(read() * 100).round()}%';
+
+  /// Maps a horizontal position to a level, so a tap anywhere on the track
+  /// jumps there and a drag follows the finger past either end.
+  void _seek(double localX) {
+    write(((localX - _left) / (_right - _left)).clamp(0.0, 1.0));
+    _refresh();
+  }
+
+  /// Only the track responds — tapping the label or the percentage does
+  /// nothing, and the speaker icon keeps its own hits.
+  bool _onTrack(Vector2 p) => p.x >= _left - _knobR && p.x <= _right + _knobR;
+
+  @override
+  void render(Canvas canvas) {
+    final y = size.y / 2;
+    final rect = Rect.fromLTWH(_left, y - _trackH / 2, _right - _left, _trackH);
+    const radius = Radius.circular(_trackH / 2);
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, radius),
+      Paint()..color = _trackOff,
+    );
+
+    final value = read();
+    if (value > 0) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(rect.left, rect.top, rect.width * value, rect.height),
+          radius,
+        ),
+        Paint()
+          ..shader = Gradient.linear(rect.centerLeft, rect.centerRight, _hot),
+      );
+    }
+
+    final knob = Offset(rect.left + rect.width * value, y);
+    canvas.drawCircle(
+      knob.translate(0, 2),
+      _knobR,
+      Paint()
+        ..color = const Color(0x334A2436)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    canvas.drawCircle(knob, _knobR, Paint()..color = const Color(0xFFFFFFFF));
+    canvas.drawCircle(
+      knob,
+      _knobR,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..color = value > 0 ? _hot.last : _trackOff,
+    );
+  }
+
+  @override
+  void onTapUp(TapUpEvent event) {
+    if (_onTrack(event.localPosition)) _seek(event.localPosition.x);
+  }
+
+  @override
+  void onDragStart(DragStartEvent event) {
+    super.onDragStart(event);
+    if (_onTrack(event.localPosition)) _seek(event.localPosition.x);
+  }
+
+  @override
+  void onDragUpdate(DragUpdateEvent event) => _seek(event.localEndPosition.x);
+}
+
+/// A label and a switch, for the things that genuinely are on or off.
 class _ToggleRow extends PositionComponent with TapCallbacks {
   _ToggleRow({
     required this.label,
-    required bool value,
+    required this.read,
+    required this.onChanged,
     required super.position,
     required Vector2 size,
-    required this.onChanged,
-  }) : _value = value,
-       super(size: size);
+  }) : super(size: size);
 
   final String label;
-  final void Function(bool value) onChanged;
-  bool _value;
+  final bool Function() read;
+  final void Function() onChanged;
 
-  /// 0 = off, 1 = on. Eased toward [_value] so the knob slides.
+  /// 0 = off, 1 = on. Eased toward the value so the knob slides rather than
+  /// teleports — the movement is what tells the player the tap registered.
   double _t = 0;
 
   static const double _trackW = 96;
@@ -31,15 +236,13 @@ class _ToggleRow extends PositionComponent with TapCallbacks {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    _t = _value ? 1 : 0;
+    _t = read() ? 1 : 0;
     await add(
       TextComponent(
         text: label,
         anchor: Anchor.centerLeft,
         position: Vector2(0, size.y / 2),
-        textRenderer: TextPaint(
-          style: const TextStyle(color: Color(0xFF4A3340), fontSize: 30),
-        ),
+        textRenderer: AppText.paint(size: 30, color: _ink, onArt: false),
       ),
     );
   }
@@ -47,7 +250,7 @@ class _ToggleRow extends PositionComponent with TapCallbacks {
   @override
   void update(double dt) {
     super.update(dt);
-    final target = _value ? 1.0 : 0.0;
+    final target = read() ? 1.0 : 0.0;
     if ((_t - target).abs() < 0.01) {
       _t = target;
     } else {
@@ -59,144 +262,103 @@ class _ToggleRow extends PositionComponent with TapCallbacks {
   void render(Canvas canvas) {
     final left = size.x - _trackW;
     final top = (size.y - _trackH) / 2;
-    final track = RRect.fromLTRBR(
-      left,
-      top,
-      left + _trackW,
-      top + _trackH,
+    final rect = Rect.fromLTWH(left, top, _trackW, _trackH);
+    final track = RRect.fromRectAndRadius(
+      rect,
       const Radius.circular(_trackH / 2),
     );
-    final off = const Color(0xFFD9CFD4);
-    final on = const Color(0xFFF06BA0);
+
     canvas.drawRRect(
       track,
-      Paint()..color = Color.lerp(off, on, _t) ?? on,
+      Paint()
+        ..shader = Gradient.linear(
+          rect.topCenter,
+          rect.bottomCenter,
+          _t > 0.5 ? _hot : const [_trackOff, Color(0xFFD3C6CE)],
+        ),
     );
 
     final knobR = _trackH / 2 - 5;
     final knobX = left + 5 + knobR + (_trackW - 10 - knobR * 2) * _t;
+    final knob = Offset(knobX, top + _trackH / 2);
     canvas.drawCircle(
-      Offset(knobX, top + _trackH / 2),
+      knob.translate(0, 2),
       knobR,
-      Paint()..color = const Color(0xFFFFFFFF),
+      Paint()
+        ..color = const Color(0x334A2436)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
+    canvas.drawCircle(knob, knobR, Paint()..color = const Color(0xFFFFFFFF));
   }
 
   @override
-  void onTapUp(TapUpEvent event) {
-    _value = !_value;
-    onChanged(_value);
-  }
+  void onTapUp(TapUpEvent event) => onChanged();
 }
 
-/// The settings card.
-///
-/// Modal by construction: it covers the screen with a scrim that swallows taps,
-/// so nothing behind it can be pressed by accident while it is open. Closing is
-/// the scene's business — the panel just reports it.
-class SettingsPanel extends PositionComponent
-    with TapCallbacks, HasGameReference<GameFrame> {
-  SettingsPanel({required this.onClose, super.priority = 500});
-
-  final void Function() onClose;
-
-  static final Paint _scrim = Paint()..color = const Color(0x8C0B1020);
-  static final Paint _card = Paint()..color = const Color(0xFFFFF6FA);
-  static final Paint _cardEdge = Paint()
-    ..color = const Color(0xFFF06BA0)
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 4;
-
-  late final Rect _cardRect;
-
-  @override
-  Future<void> onLoad() async {
-    await super.onLoad();
-    size = Design.size;
-
-    const w = 560.0;
-    const h = 460.0;
-    _cardRect = Rect.fromLTWH(
-      (Design.width - w) / 2,
-      (Design.height - h) / 2,
-      w,
-      h,
-    );
-
-    await add(
-      TextComponent(
-        text: '설정',
-        anchor: Anchor.center,
-        position: Vector2(Design.width / 2, _cardRect.top + 58),
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Color(0xFF4A3340),
-            fontSize: 40,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-
-    final settings = game.settings;
-    final rowW = _cardRect.width - 96;
-    var y = _cardRect.top + 120;
-    for (final row in [
-      ('효과음', settings.sound, settings.toggleSound),
-      ('배경음악', settings.music, settings.toggleMusic),
-      ('진동', settings.haptics, settings.toggleHaptics),
-    ]) {
-      await add(
-        _ToggleRow(
-          label: row.$1,
-          value: row.$2,
-          position: Vector2(_cardRect.left + 48, y),
-          size: Vector2(rowW, 72),
-          onChanged: (_) {
-            row.$3();
-            settings.tapFeedback();
-          },
-        ),
+/// Sound, music and haptics.
+class SettingsPanel extends ModalCard {
+  SettingsPanel({required void Function() onClose})
+    : super(
+        title: '설정',
+        actions: [ModalAction('닫기', onClose, primary: true)],
       );
-      y += 88;
-    }
 
-    await add(
-      TextComponent(
-        text: '닫기',
-        anchor: Anchor.center,
-        position: Vector2(Design.width / 2, _cardRect.bottom - 52),
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Color(0xFFB0879A),
-            fontSize: 28,
-            letterSpacing: 2,
-          ),
-        ),
+  static const double _rowH = 76;
+  static const double _rowGap = 20;
+
+  /// Three rows plus the gaps between them.
+  @override
+  double get bodyHeight => _rowH * 3 + _rowGap * 2;
+
+  @override
+  Future<void> buildBody(Rect body) async {
+    final settings = game.settings;
+    final rowSize = Vector2(body.width, _rowH);
+    var y = body.top;
+
+    await addToBody(
+      _VolumeRow(
+        label: '효과음',
+        read: () => settings.soundVolume,
+        write: settings.setSoundVolume,
+        onMute: () {
+          settings.toggleSound();
+          settings.tapFeedback();
+        },
+        position: Vector2(body.left, y),
+        size: rowSize,
       ),
     );
-  }
+    y += _rowH + _rowGap;
 
-  @override
-  void render(Canvas canvas) {
-    canvas.drawRect(size.toRect(), _scrim);
-    final card = RRect.fromRectAndRadius(_cardRect, const Radius.circular(28));
-    canvas.drawRRect(card, _card);
-    canvas.drawRRect(card, _cardEdge);
-  }
+    await addToBody(
+      _VolumeRow(
+        label: '배경음악',
+        read: () => settings.musicVolume,
+        write: settings.setMusicVolume,
+        onMute: () {
+          settings.toggleMusic();
+          settings.tapFeedback();
+        },
+        position: Vector2(body.left, y),
+        size: rowSize,
+      ),
+    );
+    y += _rowH + _rowGap;
 
-  /// The whole screen is the hit area, so a tap outside the card closes it and a
-  /// tap inside is caught before it can reach the menu behind.
-  @override
-  bool containsLocalPoint(Vector2 point) => true;
-
-  @override
-  void onTapUp(TapUpEvent event) {
-    if (!_cardRect.contains(event.localPosition.toOffset())) {
-      onClose();
-      return;
-    }
-    // Inside the card: only the close label acts, the rest is absorbed.
-    if (event.localPosition.y > _cardRect.bottom - 84) onClose();
+    await addToBody(
+      _ToggleRow(
+        label: '진동',
+        read: () => settings.haptics,
+        onChanged: () {
+          settings.toggleHaptics();
+          // Fired after the toggle, so switching it off is silent and switching
+          // it on confirms itself.
+          settings.tapFeedback();
+        },
+        position: Vector2(body.left, y),
+        size: rowSize,
+      ),
+    );
   }
 }

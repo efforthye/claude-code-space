@@ -6,6 +6,7 @@ import 'package:flutter/painting.dart' show TextStyle;
 import '../core/scene.dart';
 import '../core/scene_id.dart';
 import '../ui/button.dart';
+import '../ui/settings_panel.dart';
 import '../world/background.dart';
 
 /// The hub. Owns its buttons and decides what each press means; the buttons
@@ -62,11 +63,17 @@ class MainMenuScene extends SceneComponent {
 
     await add(
       Button(
-        id: 'back_to_title',
-        label: 'TITLE',
+        id: 'settings',
+        label: 'SETTINGS',
         position: Vector2(sceneSize.x / 2, sceneSize.y * 0.5 + 126),
-        onPressed: () => goTo(SceneId.title),
+        onPressed: _openSettings,
       ),
     );
+  }
+
+  void _openSettings() {
+    if (hasModal) return;
+    frame.settings.tapFeedback();
+    openModal(SettingsPanel(onClose: closeModal));
   }
 }

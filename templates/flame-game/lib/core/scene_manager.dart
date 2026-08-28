@@ -31,6 +31,12 @@ class SceneManager extends Component
   /// the single source of truth for navigation state.
   SceneId? get currentSceneId => _current?.id;
 
+  /// The live scene itself. Read-only, and answered from the manager's own
+  /// bookkeeping rather than from the component tree: a scene is current the
+  /// moment it is chosen, but does not appear in the tree until it has finished
+  /// loading its assets, so a tree walk gives the wrong answer during startup.
+  SceneComponent? get currentScene => _current;
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();

@@ -70,8 +70,11 @@ fi
 printf '    lib/ (%s files) + test/ + assets/\n' "$(find "$DEST/lib" -name '*.dart' | wc -l | tr -d ' ')"
 
 step "dependencies"
-( cd "$DEST" && flutter pub add flame >/dev/null && flutter pub add dev:flame_test >/dev/null )
-printf '    flame + flame_test\n'
+# One invocation, and stderr left alone. Chaining two `pub add` calls with && and
+# discarding their output once swallowed a failure and produced a project whose
+# tests could not compile.
+( cd "$DEST" && flutter pub add flame shared_preferences dev:flame_test >/dev/null )
+printf '    flame + shared_preferences + flame_test\n'
 
 step "pubspec assets + analyzer rules"
 python3 - "$DEST" "$TEMPLATE" <<'PY'
@@ -159,7 +162,7 @@ $(printf '\033[32mdone\033[0m') — apps/$SLUG
 
   cd apps/$SLUG && flutter run
 
-  Flow: TITLE -> MAIN MENU -> GAME -> GAME END, every hop a SceneRequested event.
+  Flow: MAIN MENU -> GAME -> GAME END, every hop a SceneRequested event.
   The tap-to-score demo in lib/scenes/game_scene.dart and lib/systems/ is a
   placeholder: replace those systems with the real game, leave core/ alone.
 

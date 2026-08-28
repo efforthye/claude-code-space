@@ -7,6 +7,7 @@
 
 dependencies:
   flame: ^1.38.2 # requires Flutter >= 3.41
+  shared_preferences: ^2.5.3 # GameSettings persistence
 
 dev_dependencies:
   flame_test: any # FlameTester / testGameWidget, used by test/architecture_test.dart
@@ -19,3 +20,16 @@ flutter:
     - assets/images/
     - assets/audio/
     - assets/data/
+
+  # A game with no font of its own renders in the platform's system face, which
+  # looks like a placeholder. Drop a licensed .ttf into assets/fonts/ and name
+  # it here; AppText in lib/core/typography.dart reads these two family names
+  # and nothing else refers to a font by name.
+  #
+  # fonts:
+  #   - family: Body
+  #     fonts:
+  #       - asset: assets/fonts/<body>.ttf
+  #   - family: Display
+  #     fonts:
+  #       - asset: assets/fonts/<display>.ttf
