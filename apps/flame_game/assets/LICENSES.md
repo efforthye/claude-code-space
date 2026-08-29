@@ -26,6 +26,31 @@ equivalent, and a network-fetched font would leave the first launch showing a
 fallback face and would fail outright offline — which this game is meant to be.
 Bundling is both the correct engineering choice and the licensed one.
 
+## Music — `audio/bgm_*.mp3`
+
+**魔王魂 (maou.audio)**, composer 交一. Free for commercial use in a paid game,
+no registration, no fee, no reporting — and **credit is required**. This is not
+CC0: the music stays copyrighted, and the permission comes with that one string
+attached.
+
+The credit is rendered in the settings panel as `음악: 魔王魂`, because a credit
+that only exists in this file is not a credit — it never reaches a player.
+
+| File in this repo | Original | Used for |
+| --- | --- | --- |
+| `bgm_menu.mp3` | `maou_game_village04.mp3` | Main menu, from the end of the opening beat |
+| `bgm_main.mp3` | `maou_game_village09.mp3` | A round in progress |
+| `bgm_tense.mp3` | `maou_game_village08.mp3` | Held for a moment with something at stake |
+| `bgm_fun.mp3` | `maou_game_village05.mp3` | Held for a draw / reward moment |
+
+Download rule, for adding more: `https://maou.audio/sound/game/maou_game_<name><NN>.mp3`
+(and `/sound/bgm/maou_bgm_<name><NN>.mp3`), two-digit numbers. The server answers
+403 to a bare `curl` — it needs a browser User-Agent and `Referer: https://maou.audio/`.
+
+**Forbidden** regardless of the above: redistributing or selling the audio files
+themselves, uploading them to streaming platforms, feeding them to AI training,
+minting them. Shipping them inside the app is none of those.
+
 ## Sound — `audio/`
 
 All from **Kenney** (kenney.nl), released **CC0 / public domain**: no attribution
@@ -41,6 +66,10 @@ pages; each pack's own `License.txt` ships in the download.
 | `ui_error.ogg` | `error_005.ogg` | Interface Sounds | A run lost (not a run quit) |
 | `ui_switch.ogg` | `switch_007.ogg` | Interface Sounds | The 진동 toggle |
 | `ui_tick.ogg` | `tick_001.ogg` | Interface Sounds | One notch of a volume slider |
+| `ui_clear.ogg` | `confirmation_002.ogg` | Interface Sounds | A run cleared (same clip as the modal confirm, deliberately) |
+| `ui_enter.ogg` | `maximize_006.ogg` | Interface Sounds | Moving forward into a scene |
+| `ui_leave.ogg` | `minimize_006.ogg` | Interface Sounds | Coming back out of one |
+| `ui_combo_0..7.wav` | `bong_001.ogg` | Interface Sounds | The combo ladder — one clip, re-rendered here a whole tone apart per step by resampling. Offline rather than at runtime because playback-rate APIs disagree across platforms about whether they move pitch at all |
 | `impact/*.ogg` (130) | whole pack, unchanged names | Impact Sounds | `impactSoft_*` are the block pops; the rest are held for later |
 
 CC0 asks for nothing, but crediting Kenney in the app's about screen is the

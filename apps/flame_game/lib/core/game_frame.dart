@@ -107,6 +107,10 @@ class GameFrame extends FlameGame {
     // rather than broken.
     unawaited(audio.preload());
 
+    // The slider moves while music is already playing, so the change has to be
+    // pushed into the player rather than picked up at the next playback.
+    settings.onMusicChanged = audio.syncMusic;
+
     // Fire-and-forget: see GameSettings.load. Whoever reads a preference in the
     // first few frames gets the default, which is the same value a first-time
     // player would have had anyway.
@@ -130,7 +134,9 @@ class GameFrame extends FlameGame {
     // Every button already announces itself on the bus, so the click is wired
     // once here rather than in each button — a new button is audible the moment
     // it exists, with nothing to remember to hook up.
-    bus.on<ButtonPressed>().listen((_) => audio.tapSelect());
+    bus.on<ButtonPressed>().listen(
+      (event) => audio.play(event.sound ?? GameAudio.select),
+    );
 
   }
 
@@ -160,6 +166,8 @@ class GameFrame extends FlameGame {
 
   @override
   void onRemove() {
+    settings.onMusicChanged = null;
+    unawaited(audio.stopBgm());
     bus.dispose();
     super.onRemove();
   }

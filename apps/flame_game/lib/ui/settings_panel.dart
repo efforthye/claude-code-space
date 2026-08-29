@@ -104,7 +104,7 @@ class _VolumeRow extends PositionComponent
   final void Function() onMute;
 
   static const double _labelW = 128;
-  static const double _iconW = 58;
+  static const double _iconW = 76;
   static const double _percentW = 76;
   static const double _trackH = 14;
   static const double _knobR = 15;
@@ -119,6 +119,12 @@ class _VolumeRow extends PositionComponent
 
   double get _left => _labelW + _iconW;
   double get _right => size.x - _percentW;
+
+  /// The knob's centre travels inside the track, not to its edges. At zero it
+  /// would otherwise hang a whole radius past the left end and collide with the
+  /// speaker icon — which is exactly what it did.
+  double get _knobMin => _left + _knobR;
+  double get _knobMax => _right - _knobR;
 
   @override
   Future<void> onLoad() async {
@@ -158,7 +164,7 @@ class _VolumeRow extends PositionComponent
   /// Maps a horizontal position to a level, so a tap anywhere on the track
   /// jumps there and a drag follows the finger past either end.
   void _seek(double localX) {
-    final value = ((localX - _left) / (_right - _left)).clamp(0.0, 1.0);
+    final value = ((localX - _knobMin) / (_knobMax - _knobMin)).clamp(0.0, 1.0);
     write(value);
     _refresh();
 
@@ -171,7 +177,7 @@ class _VolumeRow extends PositionComponent
 
   /// Only the track responds — tapping the label or the percentage does
   /// nothing, and the speaker icon keeps its own hits.
-  bool _onTrack(Vector2 p) => p.x >= _left - _knobR && p.x <= _right + _knobR;
+  bool _onTrack(Vector2 p) => p.x >= _left && p.x <= _right;
 
   @override
   void render(Canvas canvas) {
@@ -185,10 +191,11 @@ class _VolumeRow extends PositionComponent
     );
 
     final value = read();
+    final knobX = _knobMin + (_knobMax - _knobMin) * value;
     if (value > 0) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(rect.left, rect.top, rect.width * value, rect.height),
+          Rect.fromLTWH(rect.left, rect.top, knobX - rect.left, rect.height),
           radius,
         ),
         Paint()
@@ -196,7 +203,7 @@ class _VolumeRow extends PositionComponent
       );
     }
 
-    final knob = Offset(rect.left + rect.width * value, y);
+    final knob = Offset(knobX, y);
     canvas.drawCircle(
       knob.translate(0, 2),
       _knobR,
@@ -330,10 +337,11 @@ class SettingsPanel extends ModalCard {
 
   static const double _rowH = 76;
   static const double _rowGap = 20;
+  static const double _creditH = 46;
 
-  /// Three rows plus the gaps between them.
+  /// Three rows, the gaps between them, and the credit line under it all.
   @override
-  double get bodyHeight => _rowH * 3 + _rowGap * 2;
+  double get bodyHeight => _rowH * 3 + _rowGap * 2 + _creditH;
 
   @override
   Future<void> buildBody(Rect body) async {
@@ -343,11 +351,11 @@ class SettingsPanel extends ModalCard {
 
     await addToBody(
       _VolumeRow(
-        label: '효과음',
-        read: () => settings.soundVolume,
-        write: settings.setSoundVolume,
+        label: '배경음악',
+        read: () => settings.musicVolume,
+        write: settings.setMusicVolume,
         onMute: () {
-          settings.toggleSound();
+          settings.toggleMusic();
           settings.tapFeedback();
         },
         position: Vector2(body.left, y),
@@ -358,11 +366,11 @@ class SettingsPanel extends ModalCard {
 
     await addToBody(
       _VolumeRow(
-        label: '배경음악',
-        read: () => settings.musicVolume,
-        write: settings.setMusicVolume,
+        label: '효과음',
+        read: () => settings.soundVolume,
+        write: settings.setSoundVolume,
         onMute: () {
-          settings.toggleMusic();
+          settings.toggleSound();
           settings.tapFeedback();
         },
         position: Vector2(body.left, y),
@@ -383,6 +391,25 @@ class SettingsPanel extends ModalCard {
         },
         position: Vector2(body.left, y),
         size: rowSize,
+      ),
+    );
+    y += _rowH + _rowGap;
+
+    // Not decoration and not optional. 魔王魂's licence permits commercial use
+    // free of charge and asks for exactly one thing in return — a credit — so
+    // it lives where a player can actually find it rather than in a repo file
+    // nobody ships. Kenney's sounds are CC0 and ask for nothing; naming them
+    // costs a line and is the decent thing.
+    await addToBody(
+      TextComponent(
+        text: '음악: 魔王魂  ·  효과음: Kenney',
+        anchor: Anchor.topCenter,
+        position: Vector2(body.left + body.width / 2, y + 6),
+        textRenderer: AppText.paint(
+          size: 21,
+          color: _mutedInk,
+          onArt: false,
+        ),
       ),
     );
   }

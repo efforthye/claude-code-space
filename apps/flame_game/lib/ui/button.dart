@@ -21,6 +21,7 @@ class Button extends PositionComponent
     required super.position,
     Vector2? size,
     this.onPressed,
+    this.pressSound,
     bool enabled = true,
   })  : _enabled = enabled,
         super(size: size ?? Vector2(400, 96), anchor: Anchor.center);
@@ -30,6 +31,9 @@ class Button extends PositionComponent
   final String id;
   final String label;
   final void Function()? onPressed;
+
+  /// Overrides the default click for this button. See [ButtonPressed.sound].
+  final String? pressSound;
 
   bool _enabled;
   bool _pressed = false;
@@ -93,7 +97,7 @@ class Button extends PositionComponent
     if (!_enabled || !_pressed) return;
     _pressed = false;
     onPressed?.call();
-    game.bus.emit(ButtonPressed(id));
+    game.bus.emit(ButtonPressed(id, sound: pressSound));
   }
 
   @override

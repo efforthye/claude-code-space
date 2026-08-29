@@ -4,12 +4,16 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 
+import '../core/events.dart';
+import '../core/game_frame.dart';
+
 /// The settings entry point: a gear, drawn rather than imported.
 ///
 /// Icons this simple are cheaper as geometry than as an asset — no file to keep
 /// in step with the art, no resolution to pick, and it scales cleanly to any
 /// size the layout wants.
-class GearButton extends PositionComponent with TapCallbacks {
+class GearButton extends PositionComponent
+    with TapCallbacks, HasGameReference<GameFrame> {
   GearButton({
     required super.position,
     double radius = 34,
@@ -76,6 +80,7 @@ class GearButton extends PositionComponent with TapCallbacks {
   @override
   void onTapUp(TapUpEvent event) {
     _pressed = false;
+    game.bus.emit(const ButtonPressed('settings'));
     onPressed?.call();
   }
 

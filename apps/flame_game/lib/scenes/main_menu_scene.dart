@@ -5,6 +5,7 @@ import 'package:flame/effects.dart';
 import 'package:flutter/animation.dart' show Curves;
 
 import '../core/design.dart';
+import '../core/game_audio.dart';
 import '../core/scene.dart';
 import '../core/scene_id.dart';
 import '../core/typography.dart';
@@ -33,6 +34,13 @@ class MainMenuScene extends SceneComponent {
 
   @override
   Future<void> buildScene() async {
+    // Only on a return visit. On the very first launch the music waits for the
+    // opening beat to finish; after that the player has already heard it and a
+    // silent menu would read as a bug.
+    if (frame.audio.track != null) {
+      await frame.audio.playBgm(GameAudio.bgmMenu);
+    }
+
     // Full-bleed, so the art runs into the letterbox bands instead of leaving
     // black bars above and below. Layout still happens in the design space.
     frame.backdrop.show(
@@ -95,6 +103,10 @@ class MainMenuScene extends SceneComponent {
 
   /// Swaps the loading line for the things the player can act on.
   Future<void> _revealControls() async {
+    // Held back until the opening beat is over. Music under a loading bar reads
+    // as an interruption; music arriving with the button reads as the game
+    // opening its doors.
+    await frame.audio.playBgm(GameAudio.bgmMenu);
     for (final component in _transient) {
       component.removeFromParent();
     }
@@ -107,11 +119,9 @@ class MainMenuScene extends SceneComponent {
     final start = SpriteButton(
       id: 'start_game',
       idleSprite: await Sprite.load('btn_game_start.png'),
-      // Cropped from the same rect as the idle art, so the two frames line up
-      // to the pixel and the button does not jump when it is pressed.
-      pressedSprite: await Sprite.load('btn_game_start_pressed.png'),
-      position: Vector2(sceneSize.x / 2, sceneSize.y * 0.72),
+      position: Vector2(sceneSize.x / 2, sceneSize.y * 0.76),
       size: Vector2(startWidth, startWidth / artRatio),
+      pressSound: GameAudio.enter,
       onPressed: () {
         frame.settings.tapFeedback();
         goTo(SceneId.game);
@@ -141,7 +151,6 @@ class MainMenuScene extends SceneComponent {
   void _openSettings() {
     if (hasModal) return;
     frame.settings.tapFeedback();
-    frame.audio.tapClick();
     openModal(SettingsPanel(onClose: closeModal));
   }
 }

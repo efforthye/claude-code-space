@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 
 import '../core/events.dart';
+import '../core/game_audio.dart';
 import '../core/scene.dart';
 import '../core/scene_id.dart';
 import '../core/typography.dart';
@@ -64,6 +65,7 @@ class GameEndScene extends SceneComponent {
       Button(
         id: 'retry',
         label: '다시 하기',
+        pressSound: GameAudio.enter,
         position: Vector2(sceneSize.x / 2, sceneSize.y * 0.55),
         onPressed: () => goTo(SceneId.game),
       ),
@@ -73,6 +75,7 @@ class GameEndScene extends SceneComponent {
       Button(
         id: 'to_menu',
         label: '메인으로',
+        pressSound: GameAudio.leave,
         position: Vector2(sceneSize.x / 2, sceneSize.y * 0.55 + 126),
         onPressed: () => goTo(SceneId.mainMenu),
       ),

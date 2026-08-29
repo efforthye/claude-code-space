@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 
 import '../core/design.dart';
 import '../core/events.dart';
+import '../core/game_audio.dart';
 import '../core/scene.dart';
 import '../core/scene_id.dart';
 import '../core/typography.dart';
@@ -37,6 +38,15 @@ class GameScene extends SceneComponent {
   late final TextComponent _crowdLabel;
 
   bool _ending = false;
+
+  /// Consecutive pops, and how long the chain has left.
+  ///
+  /// The rising bell is most of what makes a match game feel good, and it only
+  /// works if the chain can actually break — a counter that never resets is
+  /// just a score with a sound attached.
+  int _combo = 0;
+  double _comboLeft = 0;
+  static const double comboWindow = 1.4;
 
   @override
   SceneId get id => SceneId.game;
@@ -100,6 +110,10 @@ class GameScene extends SceneComponent {
 
   @override
   Future<void> onEnterScene() async {
+    // Stated on entry rather than switched at the button, so however the player
+    // got here — a fresh start, PLAY AGAIN, a future level select — the right
+    // track is playing.
+    await frame.audio.playBgm(GameAudio.bgmPlay);
     bus.emit(const GameStarted());
     for (final system in _systems) {
       system.onAttach(bus);
@@ -108,6 +122,9 @@ class GameScene extends SceneComponent {
     // the number and everyone else finds out the same way.
     listen<ScoreChanged>((event) {
       frame.audio.pop();
+      frame.audio.combo(_combo);
+      _combo++;
+      _comboLeft = comboWindow;
       _scoreLabel.text = '${event.score} / $targetScore';
       if (event.score >= targetScore) _finish(GameOutcome.cleared);
     });
@@ -124,6 +141,11 @@ class GameScene extends SceneComponent {
       system.step(dt);
     }
 
+    if (_comboLeft > 0) {
+      _comboLeft -= dt;
+      if (_comboLeft <= 0) _combo = 0;
+    }
+
     final live = _spawner.liveTargets;
     _crowdLabel.text = '구슬 $live / $crowdLimit';
     if (live >= crowdLimit) _finish(GameOutcome.failed);
@@ -133,13 +155,15 @@ class GameScene extends SceneComponent {
   void _confirmQuit() {
     if (hasModal) return;
     frame.settings.tapFeedback();
-    frame.audio.askOpen();
     openModal(
       ConfirmDialog(
         title: '그만할까요?',
         message: '지금 나가면 이번 판 점수는 사라져요.',
         confirmLabel: '나갈래요',
         cancelLabel: '더 할래요',
+        // Walking out of a run is not an achievement, and the resolving chime
+        // made it sound like one.
+        confirmTone: ModalTone.depart,
         onConfirm: () {
           closeModal();
           _finish(GameOutcome.quit);
@@ -156,6 +180,7 @@ class GameScene extends SceneComponent {
     if (_ending) return;
     _ending = true;
     bus.emit(GameEnded(outcome: outcome, score: _score.score));
+    if (outcome == GameOutcome.cleared) frame.audio.cleared();
     goTo(SceneId.gameEnd);
   }
 

@@ -81,9 +81,17 @@ final class GameEnded extends GameEvent {
 /// is decided by the scene that owns it, which is why one Button class serves
 /// every screen without a single subclass.
 final class ButtonPressed extends GameEvent {
-  const ButtonPressed(this.id);
+  const ButtonPressed(this.id, {this.sound});
 
   final String id;
+
+  /// What this particular button should sound like, if not the default click.
+  ///
+  /// The click is played once, centrally, by whoever listens for this event —
+  /// which means a button whose handler *also* played a sound fired two at
+  /// once, and two UI sounds landing together is heard as a glitch rather than
+  /// as two sounds. Declaring the exception here keeps it one sound per press.
+  final String? sound;
 
   @override
   String get label => 'ButtonPressed($id)';

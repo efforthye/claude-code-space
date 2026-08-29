@@ -9,9 +9,31 @@ import '../core/design.dart';
 import '../core/game_frame.dart';
 import '../core/typography.dart';
 
+/// What an action *is*, which decides how it sounds.
+///
+/// Looks and meaning had been conflated: the filled button also got the
+/// resolving chime, so "나갈래요" — throwing away a run — was congratulating the
+/// player in the same tone as clearing a stage. Emphasis and consequence are
+/// different questions and now have different answers.
+enum ModalTone {
+  /// Nothing happened worth marking. Closing a panel, backing out.
+  neutral,
+
+  /// Something was achieved or accepted.
+  affirm,
+
+  /// Leaving, giving up, discarding. Not a failure, but not a win.
+  depart,
+}
+
 /// A labelled action inside a modal.
 class ModalAction {
-  const ModalAction(this.label, this.onTap, {this.primary = false});
+  const ModalAction(
+    this.label,
+    this.onTap, {
+    this.primary = false,
+    this.tone = ModalTone.neutral,
+  });
 
   final String label;
   final void Function() onTap;
@@ -19,6 +41,9 @@ class ModalAction {
   /// Primary actions get the filled treatment; everything else stays quiet, so
   /// the eye lands on the thing the player most likely wants.
   final bool primary;
+
+  /// Heard, not seen.
+  final ModalTone tone;
 }
 
 /// Base for anything that interrupts the screen: the whole device dims, a soft
@@ -249,12 +274,13 @@ class _ActionButton extends PositionComponent
   @override
   void onTapUp(TapUpEvent event) {
     _down = false;
-    // The primary action gets the resolving sound; anything else is a plain
-    // click, so backing out never sounds like committing.
-    if (action.primary) {
-      game.audio.confirmed();
-    } else {
-      game.audio.tapClick();
+    switch (action.tone) {
+      case ModalTone.affirm:
+        game.audio.confirmed();
+      case ModalTone.depart:
+        game.audio.sceneLeave();
+      case ModalTone.neutral:
+        game.audio.tapClick();
     }
     action.onTap();
   }
@@ -272,10 +298,11 @@ class ConfirmDialog extends ModalCard {
     required void Function() onConfirm,
     required void Function() onCancel,
     String cancelLabel = '아니요',
+    ModalTone confirmTone = ModalTone.affirm,
   }) : super(
          actions: [
            ModalAction(cancelLabel, onCancel),
-           ModalAction(confirmLabel, onConfirm, primary: true),
+           ModalAction(confirmLabel, onConfirm, primary: true, tone: confirmTone),
          ],
        );
 

@@ -11,6 +11,7 @@ import 'package:flame_game/ui/modal_card.dart';
 import 'package:flame_game/ui/settings_panel.dart';
 import 'package:flame_game/world/game_object.dart';
 import 'package:flame_test/flame_test.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,7 +20,10 @@ void main() {
   // implementation under flutter_test — without a stub the failed call surfaces
   // as an uncaught error and fails whichever test happens to be running.
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    _silenceAudio();
+  });
 
   group('EventBus', () {
     test('delivers only the requested type', () async {
@@ -252,4 +256,22 @@ void main() {
       },
     );
   });
+}
+
+/// audioplayers has no implementation under flutter_test, and the failure does
+/// not come back through the future the game awaits — it surfaces later as an
+/// uncaught error and fails whichever test happens to be running at the time.
+/// Answering its channels with nulls makes the game silent instead of flaky.
+void _silenceAudio() {
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+  for (final name in const [
+    'xyz.luan/audioplayers',
+    'xyz.luan/audioplayers.global',
+  ]) {
+    messenger.setMockMethodCallHandler(
+      MethodChannel(name),
+      (MethodCall call) async => null,
+    );
+  }
 }

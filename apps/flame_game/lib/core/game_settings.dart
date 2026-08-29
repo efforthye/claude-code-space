@@ -37,6 +37,14 @@ class GameSettings {
   double _soundBeforeMute = defaultVolume;
   double _musicBeforeMute = defaultVolume;
 
+  /// Called whenever the music level changes.
+  ///
+  /// Sound effects read the level at playback, so they need nothing. Music is
+  /// already playing when the slider moves, so something has to reach in and
+  /// change it — a callback rather than a poll, because a slider drag is rare
+  /// and a poll would run every frame forever to catch it.
+  void Function()? onMusicChanged;
+
   /// Reads stored values.
   ///
   /// Deliberately *not* awaited by the game's startup: this crosses a platform
@@ -56,6 +64,9 @@ class GameSettings {
       // A player who quit muted should not have unmuting drop them to silence.
       if (_soundVolume > 0) _soundBeforeMute = _soundVolume;
       if (_musicVolume > 0) _musicBeforeMute = _musicVolume;
+      // Stored preferences arrive after the first frame, so anything already
+      // playing at the default level has to be corrected to the saved one.
+      onMusicChanged?.call();
     } catch (_) {
       // No storage on this platform or it failed to open. Defaults stand.
     }
@@ -82,6 +93,7 @@ class GameSettings {
     _musicVolume = _clamp(value);
     if (_musicVolume > 0) _musicBeforeMute = _musicVolume;
     _store?.setDouble(_kMusic, _musicVolume);
+    onMusicChanged?.call();
   }
 
   void toggleSound() =>

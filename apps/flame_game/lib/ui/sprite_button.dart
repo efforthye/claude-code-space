@@ -29,7 +29,9 @@ class SpriteButton extends PositionComponent
     required Vector2 size,
     Sprite? pressedSprite,
     this.onPressed,
+    this.pressSound,
     bool enabled = true,
+    this.pressTint = false,
     this.idlePulse = false,
     this.pulsePeriod = 2.6,
   })  : _idle = idleSprite,
@@ -48,14 +50,28 @@ class SpriteButton extends PositionComponent
   final String id;
   final void Function()? onPressed;
 
+  /// Overrides the default click for this button. See [ButtonPressed.sound].
+  final String? pressSound;
+
   final Sprite _idle;
   final Sprite? _pressedArt;
 
   bool _enabled;
   bool _pressed = false;
 
+  /// Darkens the face while held, for art with no pressed variant.
+  ///
+  /// Off by default: on bright pastel artwork a tint reads as the picture going
+  /// muddy rather than as a button going down, and with the movement and the
+  /// click both present it has nothing left to add.
+  final bool pressTint;
+
   /// How far the face swells when pressed, as a fraction of its size.
-  static const double _pressGrow = 0.07;
+  ///
+  /// Small on purpose. This is a nudge confirming the touch landed, not an
+  /// animation — anything the eye can measure looks like the button is being
+  /// inflated.
+  static const double _pressGrow = 0.03;
 
   /// Eased 0..1 rather than switched, so press and release are both movements.
   /// A button that snaps between two sizes reads as a glitch.
@@ -71,7 +87,7 @@ class SpriteButton extends PositionComponent
 
   /// Darkens only the pixels the artwork actually paints, so the transparent
   /// margin stays transparent instead of becoming a grey box.
-  static final Paint _pressTint = Paint()
+  static final Paint _pressTintPaint = Paint()
     ..colorFilter = const ColorFilter.mode(Color(0x59000000), BlendMode.srcATop);
 
   static final Paint _disabledTint = Paint()
@@ -186,7 +202,9 @@ class SpriteButton extends PositionComponent
       canvas,
       position: inset,
       size: grown,
-      overridePaint: _pressedArt == null && _pressed ? _pressTint : null,
+      overridePaint: _pressedArt == null && _pressed && pressTint
+          ? _pressTintPaint
+          : null,
     );
   }
 
@@ -201,7 +219,7 @@ class SpriteButton extends PositionComponent
     if (!_enabled || !_pressed) return;
     _pressed = false;
     onPressed?.call();
-    game.bus.emit(ButtonPressed(id));
+    game.bus.emit(ButtonPressed(id, sound: pressSound));
   }
 
   @override
