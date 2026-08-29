@@ -6,7 +6,7 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 
 import '../scenes/game_end_scene.dart';
-import '../scenes/game_scene.dart';
+import '../scenes/squish_scene.dart';
 import '../scenes/stroll_scene.dart';
 import '../scenes/main_menu_scene.dart';
 import '../ui/debug_overlay.dart';
@@ -90,7 +90,7 @@ class GameFrame extends FlameGame {
     sceneManager = SceneManager(
       factories: <SceneId, SceneComponent Function()>{
         SceneId.mainMenu: MainMenuScene.new,
-        SceneId.game: GameScene.new,
+        SceneId.game: SquishScene.new,
         SceneId.stroll: StrollScene.new,
         SceneId.gameEnd: GameEndScene.new,
       },
