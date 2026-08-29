@@ -7,6 +7,7 @@ import 'package:flame/game.dart';
 
 import '../scenes/game_end_scene.dart';
 import '../scenes/game_scene.dart';
+import '../scenes/stroll_scene.dart';
 import '../scenes/main_menu_scene.dart';
 import '../ui/debug_overlay.dart';
 import '../ui/screen_backdrop.dart';
@@ -90,6 +91,7 @@ class GameFrame extends FlameGame {
       factories: <SceneId, SceneComponent Function()>{
         SceneId.mainMenu: MainMenuScene.new,
         SceneId.game: GameScene.new,
+        SceneId.stroll: StrollScene.new,
         SceneId.gameEnd: GameEndScene.new,
       },
       initial: SceneId.mainMenu,

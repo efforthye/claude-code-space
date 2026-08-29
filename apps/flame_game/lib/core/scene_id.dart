@@ -5,11 +5,13 @@
 enum SceneId {
   mainMenu,
   game,
+  stroll,
   gameEnd;
 
   String get displayName => switch (this) {
         SceneId.mainMenu => 'MAIN MENU',
         SceneId.game => 'GAME',
+        SceneId.stroll => 'STROLL',
         SceneId.gameEnd => 'GAME END',
       };
 }

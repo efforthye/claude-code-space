@@ -66,6 +66,8 @@ flutter:
   # Trailing slash = every file in the folder, so adding art needs no pubspec edit.
   assets:
     - assets/images/
+    # Again: a trailing slash covers one folder and not its subfolders.
+    - assets/images/character/
     - assets/audio/
     # A trailing slash covers one folder, not its subfolders — without this line
     # the impact clips are absent from the bundle and every pop is silent.

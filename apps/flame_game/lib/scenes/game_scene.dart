@@ -179,8 +179,18 @@ class GameScene extends SceneComponent {
   void _finish(GameOutcome outcome) {
     if (_ending) return;
     _ending = true;
+
+    // Clearing is not the end of the run any more, it is the door to the next
+    // stage — so no GameEnded here, or the results screen would appear behind
+    // it and the session would record a finished run that is still going.
+    if (outcome == GameOutcome.cleared) {
+      frame.audio.cleared();
+      frame.session.carry(_score.score);
+      goTo(SceneId.stroll);
+      return;
+    }
+
     bus.emit(GameEnded(outcome: outcome, score: _score.score));
-    if (outcome == GameOutcome.cleared) frame.audio.cleared();
     goTo(SceneId.gameEnd);
   }
 

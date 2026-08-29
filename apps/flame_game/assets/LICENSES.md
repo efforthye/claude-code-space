@@ -75,6 +75,30 @@ pages; each pack's own `License.txt` ships in the download.
 CC0 asks for nothing, but crediting Kenney in the app's about screen is the
 decent thing and costs a line.
 
+## Character sprites — `images/character/`
+
+**CraftPix** — "Free Tiny Schoolgirl Pixel Art Sprite Pack", the `Schoolgirl_2`
+variant. Free licence: selling and distributing a game containing these assets
+is permitted, and **no attribution is required** (credit is welcomed). Forbidden:
+reselling the art source files, or shipping them in anything that lets a user
+export the artwork itself. See <https://craftpix.net/file-licenses/>.
+
+| File | Frames | Used for |
+| --- | --- | --- |
+| `schoolgirl_idle.png` | 4 | Standing still |
+| `schoolgirl_walk.png` | 6 | Walking |
+| `schoolgirl_hurt.png` | 2 | Held for a hit reaction |
+| `schoolgirl_attack_1.png` | 5 | Held, unused |
+| `schoolgirl_dead.png` | 2 | Held, unused |
+
+**Modified from the original.** The pack ships 128×128 frames in which the
+character occupies a 34×45 patch, off-centre — so she rendered tiny and 7px to
+the left of wherever she was positioned. Every sheet is cropped here to one
+shared 59×57 rect. Shared, because a per-sheet crop would make her jump the
+moment the animation changed. The unmodified originals are in the owner's
+download of the pack; they are not committed, since redistributing the source
+art is exactly what the licence forbids.
+
 ## Images — `images/`
 
 | File | Use | Origin |
