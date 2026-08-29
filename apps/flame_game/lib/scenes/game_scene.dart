@@ -107,6 +107,7 @@ class GameScene extends SceneComponent {
     // The HUD listens rather than polls — the score system is the only owner of
     // the number and everyone else finds out the same way.
     listen<ScoreChanged>((event) {
+      frame.audio.pop();
       _scoreLabel.text = '${event.score} / $targetScore';
       if (event.score >= targetScore) _finish(GameOutcome.cleared);
     });
@@ -132,6 +133,7 @@ class GameScene extends SceneComponent {
   void _confirmQuit() {
     if (hasModal) return;
     frame.settings.tapFeedback();
+    frame.audio.askOpen();
     openModal(
       ConfirmDialog(
         title: '그만할까요?',

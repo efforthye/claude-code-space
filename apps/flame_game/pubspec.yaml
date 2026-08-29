@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flame: ^1.38.2
   shared_preferences: ^2.5.5
+  flame_audio: ^2.12.2
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +67,9 @@ flutter:
   assets:
     - assets/images/
     - assets/audio/
+    # A trailing slash covers one folder, not its subfolders — without this line
+    # the impact clips are absent from the bundle and every pop is silent.
+    - assets/audio/impact/
     - assets/data/
 
   # Handwriting faces, bundled rather than fetched — see assets/LICENSES.md for

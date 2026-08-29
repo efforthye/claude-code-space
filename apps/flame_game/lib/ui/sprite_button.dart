@@ -10,14 +10,16 @@ import '../core/game_frame.dart';
 
 /// A button whose face is artwork.
 ///
-/// [pressedSprite] is optional on purpose. Given one, it is drawn as-is. Given
-/// none, the pressed state is derived from the idle art — shrunk toward its own
-/// centre, dropped a few pixels, and darkened. That derivation is what most
-/// shipped mobile games actually do, and it has one property a second drawing
-/// cannot: it lines up with the idle art exactly, because it *is* the idle art.
+/// The button holds still until it is touched, then swells under the thumb and
+/// settles back on release. Growing rather than sinking is what reads as "this
+/// responded to me" on a phone, where the finger already covers the button and
+/// a shrink mostly disappears under it.
 ///
-/// So the seam stays open — drop in real pressed artwork whenever it exists,
-/// and nothing else changes.
+/// [pressedSprite] is optional. Given one, it is drawn as-is. Given none, the
+/// pressed state is derived from the idle art by darkening it — a derivation
+/// that lines up with the idle art exactly, because it *is* the idle art. So
+/// the seam stays open: drop in real pressed artwork whenever it exists and
+/// nothing else changes.
 class SpriteButton extends PositionComponent
     with TapCallbacks, HasGameReference<GameFrame> {
   SpriteButton({
@@ -28,16 +30,16 @@ class SpriteButton extends PositionComponent
     Sprite? pressedSprite,
     this.onPressed,
     bool enabled = true,
-    this.idlePulse = true,
+    this.idlePulse = false,
     this.pulsePeriod = 2.6,
   })  : _idle = idleSprite,
         _pressedArt = pressedSprite,
         _enabled = enabled,
         super(size: size, anchor: Anchor.center);
 
-  /// A slow scale pulse while idle, so the button reads as the live thing on
-  /// screen. Applied as a transform, which leaves [render] free to handle the
-  /// press independently — the two never fight over the same property.
+  /// An optional slow breathing pulse. Off by default — a button that moves on
+  /// its own competes with the press for the player's attention, and the press
+  /// is the part that carries meaning.
   final bool idlePulse;
   final double pulsePeriod;
 
@@ -52,11 +54,13 @@ class SpriteButton extends PositionComponent
   bool _enabled;
   bool _pressed = false;
 
-  /// How far the face shrinks when pressed, as a fraction of its size.
-  static const double _pressShrink = 0.045;
+  /// How far the face swells when pressed, as a fraction of its size.
+  static const double _pressGrow = 0.07;
 
-  /// How far it sinks, in design-space pixels.
-  static const double _pressSink = 9;
+  /// Eased 0..1 rather than switched, so press and release are both movements.
+  /// A button that snaps between two sizes reads as a glitch.
+  double _grow = 0;
+  static const double _growRate = 18;
 
   bool get enabled => _enabled;
   set enabled(bool value) {
@@ -150,28 +154,39 @@ class SpriteButton extends PositionComponent
   }
 
   @override
+  void update(double dt) {
+    super.update(dt);
+    final target = _pressed ? 1.0 : 0.0;
+    if ((_grow - target).abs() < 0.005) {
+      _grow = target;
+    } else {
+      _grow += (target - _grow) * (dt * _growRate).clamp(0, 1);
+    }
+  }
+
+  @override
   void render(Canvas canvas) {
     if (!_enabled) {
       _idle.render(canvas, position: Vector2.zero(), size: size, overridePaint: _disabledTint);
       return;
     }
 
-    if (!_pressed) {
+    if (_grow <= 0.001 && !_pressed) {
       _idle.render(canvas, position: Vector2.zero(), size: size);
       return;
     }
 
-    // The motion applies either way — a pressed drawing changes the lighting,
-    // not the position, and it is the sink that the thumb actually feels.
-    // Only the tint is conditional: art that is already drawn pressed must not
-    // be darkened a second time.
-    final shrunk = size * (1 - _pressShrink);
-    final inset = (size - shrunk) / 2;
+    // Grown about its own centre, so the button stays where it was put. The
+    // motion applies whether or not there is pressed artwork — a pressed
+    // drawing changes the lighting, not the size. Only the tint is conditional:
+    // art already drawn pressed must not be darkened a second time.
+    final grown = size * (1 + _pressGrow * _grow);
+    final inset = (size - grown) / 2;
     (_pressedArt ?? _idle).render(
       canvas,
-      position: Vector2(inset.x, inset.y + _pressSink),
-      size: shrunk,
-      overridePaint: _pressedArt == null ? _pressTint : null,
+      position: inset,
+      size: grown,
+      overridePaint: _pressedArt == null && _pressed ? _pressTint : null,
     );
   }
 

@@ -141,6 +141,7 @@ class MainMenuScene extends SceneComponent {
   void _openSettings() {
     if (hasModal) return;
     frame.settings.tapFeedback();
+    frame.audio.tapClick();
     openModal(SettingsPanel(onClose: closeModal));
   }
 }

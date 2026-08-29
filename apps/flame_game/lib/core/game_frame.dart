@@ -13,6 +13,7 @@ import '../ui/screen_backdrop.dart';
 import 'design.dart';
 import 'event_bus.dart';
 import 'events.dart';
+import 'game_audio.dart';
 import 'game_session.dart';
 import 'game_settings.dart';
 import 'scene.dart';
@@ -48,6 +49,10 @@ class GameFrame extends FlameGame {
   final EventBus bus;
   final GameSession session;
   final GameSettings settings;
+
+  /// Sound. Reads the volume from [settings] at playback, so the slider takes
+  /// effect on the very next sound with nothing to notify.
+  late final GameAudio audio = GameAudio(settings);
 
   late final SceneManager sceneManager;
 
@@ -97,6 +102,11 @@ class GameFrame extends FlameGame {
     debugOverlay = DebugOverlay(priority: 1000);
     await world.add(debugOverlay);
 
+    // Same reasoning as the settings read below — decoding audio must not hold
+    // up the first frame, and a game that fails to load its clips is silent
+    // rather than broken.
+    unawaited(audio.preload());
+
     // Fire-and-forget: see GameSettings.load. Whoever reads a preference in the
     // first few frames gets the default, which is the same value a first-time
     // player would have had anyway.
@@ -111,8 +121,16 @@ class GameFrame extends FlameGame {
     // frame remembers it.
     bus.on<GameEnded>().listen((event) {
       session.recordEnd(outcome: event.outcome, score: event.score);
+      // Only a real loss gets a sound. Quitting was the player's own choice and
+      // does not need to be scolded for it.
+      if (event.outcome == GameOutcome.failed) audio.failed();
     });
     bus.on<GameStarted>().listen((_) => session.beginRun());
+
+    // Every button already announces itself on the bus, so the click is wired
+    // once here rather than in each button — a new button is audible the moment
+    // it exists, with nothing to remember to hook up.
+    bus.on<ButtonPressed>().listen((_) => audio.tapSelect());
 
   }
 

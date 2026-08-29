@@ -26,6 +26,26 @@ equivalent, and a network-fetched font would leave the first launch showing a
 fallback face and would fail outright offline — which this game is meant to be.
 Bundling is both the correct engineering choice and the licensed one.
 
+## Sound — `audio/`
+
+All from **Kenney** (kenney.nl), released **CC0 / public domain**: no attribution
+required, no restriction on commercial use. Downloaded from the official asset
+pages; each pack's own `License.txt` ships in the download.
+
+| File in this repo | Original | Pack | Used for |
+| --- | --- | --- | --- |
+| `ui_select.ogg` | `select_006.ogg` | Interface Sounds | Any button that emits `ButtonPressed` |
+| `ui_click.ogg` | `click_003.ogg` | Interface Sounds | Small controls — gear, mute, sliders |
+| `ui_ask.ogg` | `question_004.ogg` | Interface Sounds | A confirm dialog opening |
+| `ui_confirm.ogg` | `confirmation_002.ogg` | Interface Sounds | The primary action in a modal |
+| `ui_error.ogg` | `error_005.ogg` | Interface Sounds | A run lost (not a run quit) |
+| `ui_switch.ogg` | `switch_007.ogg` | Interface Sounds | The 진동 toggle |
+| `ui_tick.ogg` | `tick_001.ogg` | Interface Sounds | One notch of a volume slider |
+| `impact/*.ogg` (130) | whole pack, unchanged names | Impact Sounds | `impactSoft_*` are the block pops; the rest are held for later |
+
+CC0 asks for nothing, but crediting Kenney in the app's about screen is the
+decent thing and costs a line.
+
 ## Images — `images/`
 
 | File | Use | Origin |

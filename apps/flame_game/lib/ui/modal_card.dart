@@ -181,7 +181,8 @@ class _CardSurface extends PositionComponent {
   }
 }
 
-class _ActionButton extends PositionComponent with TapCallbacks {
+class _ActionButton extends PositionComponent
+    with TapCallbacks, HasGameReference<GameFrame> {
   _ActionButton({
     required this.action,
     required super.position,
@@ -248,6 +249,13 @@ class _ActionButton extends PositionComponent with TapCallbacks {
   @override
   void onTapUp(TapUpEvent event) {
     _down = false;
+    // The primary action gets the resolving sound; anything else is a plain
+    // click, so backing out never sounds like committing.
+    if (action.primary) {
+      game.audio.confirmed();
+    } else {
+      game.audio.tapClick();
+    }
     action.onTap();
   }
 

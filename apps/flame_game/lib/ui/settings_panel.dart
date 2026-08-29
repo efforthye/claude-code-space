@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 
+import '../core/game_frame.dart';
 import '../core/typography.dart';
 import 'modal_card.dart';
 
@@ -86,7 +87,8 @@ class _SpeakerIcon extends PositionComponent with TapCallbacks {
 /// A level rather than a switch: a player who finds the music slightly loud
 /// wants it quieter, not gone, and on/off throws away the only adjustment most
 /// of them actually want.
-class _VolumeRow extends PositionComponent with TapCallbacks, DragCallbacks {
+class _VolumeRow extends PositionComponent
+    with TapCallbacks, DragCallbacks, HasGameReference<GameFrame> {
   _VolumeRow({
     required this.label,
     required this.read,
@@ -106,6 +108,12 @@ class _VolumeRow extends PositionComponent with TapCallbacks, DragCallbacks {
   static const double _percentW = 76;
   static const double _trackH = 14;
   static const double _knobR = 15;
+
+  /// The slider is continuous, but the *sound* is not. A drag crosses dozens of
+  /// values a second; firing on each one is a buzz, not feedback. Ticking once
+  /// per notch gives the track the feel of detents it does not actually have.
+  static const int _notches = 20;
+  int _lastNotch = -1;
 
   late final TextComponent _percent;
 
@@ -130,6 +138,9 @@ class _VolumeRow extends PositionComponent with TapCallbacks, DragCallbacks {
         onTap: () {
           onMute();
           _refresh();
+          // After the change, so unmuting is audible and muting is not — the
+          // sound is the confirmation.
+          game.audio.tapClick();
         },
       ),
     );
@@ -147,8 +158,15 @@ class _VolumeRow extends PositionComponent with TapCallbacks, DragCallbacks {
   /// Maps a horizontal position to a level, so a tap anywhere on the track
   /// jumps there and a drag follows the finger past either end.
   void _seek(double localX) {
-    write(((localX - _left) / (_right - _left)).clamp(0.0, 1.0));
+    final value = ((localX - _left) / (_right - _left)).clamp(0.0, 1.0);
+    write(value);
     _refresh();
+
+    final notch = (value * _notches).round();
+    if (notch != _lastNotch) {
+      _lastNotch = notch;
+      game.audio.ticked();
+    }
   }
 
   /// Only the track responds — tapping the label or the percentage does
@@ -205,6 +223,9 @@ class _VolumeRow extends PositionComponent with TapCallbacks, DragCallbacks {
   @override
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
+    // Reset so a fresh drag always ticks on its first move, even if it starts
+    // exactly where the last one ended.
+    _lastNotch = -1;
     if (_onTrack(event.localPosition)) _seek(event.localPosition.x);
   }
 
@@ -213,7 +234,8 @@ class _VolumeRow extends PositionComponent with TapCallbacks, DragCallbacks {
 }
 
 /// A label and a switch, for the things that genuinely are on or off.
-class _ToggleRow extends PositionComponent with TapCallbacks {
+class _ToggleRow extends PositionComponent
+    with TapCallbacks, HasGameReference<GameFrame> {
   _ToggleRow({
     required this.label,
     required this.read,
@@ -292,7 +314,10 @@ class _ToggleRow extends PositionComponent with TapCallbacks {
   }
 
   @override
-  void onTapUp(TapUpEvent event) => onChanged();
+  void onTapUp(TapUpEvent event) {
+    game.audio.switched();
+    onChanged();
+  }
 }
 
 /// Sound, music and haptics.
