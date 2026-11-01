@@ -113,7 +113,7 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
       {more.length > 0 && (
         <section className="flex flex-col gap-6">
           <h2 className="border-b border-ink pb-3 text-xl font-bold">{artist?.name}의 다른 작품</h2>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
+          <div className="columns-2 gap-6 md:columns-4">
             {more.map((w) => <WorkCard key={w.id} work={w} artist={artist} school={school} />)}
           </div>
         </section>

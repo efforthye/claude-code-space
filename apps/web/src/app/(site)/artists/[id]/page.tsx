@@ -48,7 +48,7 @@ async function ArtistDetail({ params }: { params: PageProps<"/artists/[id]">["pa
       {own.length === 0 ? (
         <EmptyState title="아직 등록된 작품이 없어요" />
       ) : (
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
+        <div className="columns-2 gap-6 md:columns-3 lg:columns-4">
           {own.map((w) => <WorkCard key={w.id} work={w} artist={artist} school={school} />)}
         </div>
       )}

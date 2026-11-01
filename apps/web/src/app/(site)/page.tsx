@@ -2,20 +2,17 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { Container, EmptyState } from "@/components/ui/container";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { SealIcon } from "@/components/ui/verified-badge";
 import { CollectionBrowser } from "@/features/catalog/collection-browser";
-import { WorkImage } from "@/features/catalog/work-image";
+import { HeroCollage } from "@/features/catalog/hero-collage";
 import { EventBanner } from "@/features/events/event-banner";
-import { exhibitionPhase, getCatalog, indexById } from "@/lib/data/catalog";
-import { formatPeriod, formatPrice } from "@/lib/format";
+import { exhibitionPhase, getCatalog } from "@/lib/data/catalog";
+import { formatPeriod } from "@/lib/format";
 
 export default async function HomePage() {
   const { works, artists, schools, exhibitions, today } = await getCatalog();
-  const artistById = indexById(artists);
-  const schoolById = indexById(schools);
-  const hero = works.find((w) => w.featured && w.status === "available") ?? works.find((w) => w.status === "available");
-  const heroArtist = hero ? artistById.get(hero.artistId) : undefined;
-  const heroSchool = heroArtist?.schoolId ? schoolById.get(heroArtist.schoolId) : undefined;
+  // 서로 다른 매체에서 한 점씩, 대표 작품을 먼저
+  const available = [...works.filter((w) => w.status === "available")].sort((a, b) => Number(b.featured) - Number(a.featured));
+  const heroWorks = available.filter((w, i) => available.findIndex((x) => x.medium === w.medium) === i).slice(0, 4);
   const shows = exhibitions
     .map((e) => ({ e, phase: exhibitionPhase(e, today) }))
     .filter((x) => x.phase !== "ended")
@@ -40,24 +37,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {hero && (
-          <Link href={`/works/${hero.id}`} className="group relative h-[460px] sm:h-[540px]">
-            <div className="glass absolute top-[4%] left-[4%] h-[84%] w-[68%] -rotate-3 rounded-[28px] p-3.5 transition-transform duration-500 group-hover:rotate-0">
-              <WorkImage src={hero.images[0]} alt={hero.title} className="size-full rounded-[18px]" />
-            </div>
-            <div className="glass absolute right-0 bottom-[4%] flex w-[56%] flex-col gap-1.5 rounded-[22px] p-5 transition-transform duration-500 group-hover:-translate-y-1">
-              {heroArtist?.verifiedBy && (
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-violet">
-                  <SealIcon className="size-4" />
-                  {[heroSchool?.shortName, heroArtist.department].filter(Boolean).join(" ")} · 학교 인증
-                </span>
-              )}
-              <span className="text-xl font-semibold">{hero.title}</span>
-              <span className="text-[13px] text-ink-soft">{heroArtist?.name} · {hero.materials}</span>
-              <span className="font-semibold">{formatPrice(hero.price)}</span>
-            </div>
-          </Link>
-        )}
+        <HeroCollage works={heroWorks} artists={artists} schools={schools} />
       </Container>
 
       <Container className="pb-16">

@@ -79,7 +79,7 @@ export function CollectionBrowser({ works, artists, schools }: { works: Work[]; 
       {shown.length === 0 ? (
         <EmptyState title="조건에 맞는 작품이 없어요">필터를 바꿔 보세요.</EmptyState>
       ) : (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4">
+        <div className="columns-2 gap-4 sm:gap-6 md:columns-3 lg:columns-4">
           {shown.map((w) => {
             const artist = artistById.get(w.artistId);
             return <WorkCard key={w.id} work={w} artist={artist} school={artist?.schoolId ? schoolById.get(artist.schoolId) : undefined} />;

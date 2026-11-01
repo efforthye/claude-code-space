@@ -73,7 +73,7 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
+        <div className="columns-2 gap-6 md:columns-3 lg:columns-4">
           {shown.map((w) => {
             const a = artistById.get(w.artistId);
             return <WorkCard key={w.id} work={w} artist={a} school={a?.schoolId ? schoolById.get(a.schoolId) : undefined} />;
