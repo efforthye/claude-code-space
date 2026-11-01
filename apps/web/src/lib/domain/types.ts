@@ -24,6 +24,7 @@ export type Artist = {
   gradYear: number | null; // 졸업(예정) 연도
   status: ArtistStatus;
   verifiedBy: VerifyMethod | null; // null = 미인증
+  verifiedAt: string | null; // 운영자가 확인한 시각
   bio: string;
   instagram: string | null; // handle without @
   portfolioUrl: string | null; // https only

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Container, EmptyState } from "@/components/ui/container";
-import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { VerificationCard } from "@/components/ui/verified-badge";
 import { WorkCard } from "@/features/catalog/work-card";
 import { getCatalog, indexById } from "@/lib/data/catalog";
 import { ARTIST_STATUS_LABEL } from "@/lib/domain/rules";
@@ -30,12 +30,14 @@ async function ArtistDetail({ params }: { params: PageProps<"/artists/[id]">["pa
         <div className="flex flex-wrap items-center gap-2">
           <Badge>{ARTIST_STATUS_LABEL[artist.status]}</Badge>
           {artist.acceptsCommission && <Badge tone="clay">주문제작 가능</Badge>}
-          <VerifiedBadge method={artist.verifiedBy} schoolName={school?.shortName} showMethod />
         </div>
         <h1 className="text-3xl font-black">{artist.name}</h1>
         <p className="text-sm text-ink-soft">
           {[school?.name, artist.department, artist.gradYear && `${artist.gradYear}년 졸업${artist.status === "student" ? " 예정" : ""}`].filter(Boolean).join(" · ")}
         </p>
+        <div className="max-w-xl">
+          <VerificationCard method={artist.verifiedBy} verifiedAt={artist.verifiedAt} schoolName={school?.name} department={artist.department} statusLabel={ARTIST_STATUS_LABEL[artist.status]} />
+        </div>
         {artist.bio && <p className="max-w-2xl leading-relaxed">{artist.bio}</p>}
         <div className="flex gap-4 text-sm font-semibold">
           {artist.instagram && <a href={`https://instagram.com/${artist.instagram}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Instagram</a>}

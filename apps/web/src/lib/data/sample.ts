@@ -19,6 +19,7 @@ export function buildSampleDatabase(): Database {
     gradYear: 2027,
     status: "student",
     verifiedBy: "school_email",
+    verifiedAt: "2026-10-28T10:00:00.000Z",
     bio: "",
     instagram: null,
     portfolioUrl: null,
@@ -66,6 +67,7 @@ export function buildSampleDatabase(): Database {
       name: "최서준",
       department: "조소과",
       verifiedBy: null,
+      verifiedAt: null,
       bio: "버려진 석고 틀로 다시 형태를 만듭니다.",
     }),
   ];

@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { RedDot } from "@/components/ui/red-dot";
-import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { VerificationCard } from "@/components/ui/verified-badge";
 import { AddToCart } from "@/features/cart/add-to-cart";
 import { WorkCard } from "@/features/catalog/work-card";
 import { WorkGallery } from "@/features/catalog/work-gallery";
@@ -52,8 +52,16 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
                 </span>
               </Link>
             )}
-            <VerifiedBadge method={artist?.verifiedBy ?? null} schoolName={school?.shortName} showMethod />
           </div>
+          {artist && (
+            <VerificationCard
+              method={artist.verifiedBy}
+              verifiedAt={artist.verifiedAt}
+              schoolName={school?.name}
+              department={artist.department}
+              statusLabel={ARTIST_STATUS_LABEL[artist.status]}
+            />
+          )}
 
           <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
             <dt className="text-ink-soft">재료</dt><dd>{work.materials}</dd>
