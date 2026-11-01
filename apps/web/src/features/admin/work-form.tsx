@@ -61,7 +61,7 @@ export function WorkForm({ work, artists, exhibitions }: { work?: Work; artists:
             {work.images.map((src, i) => (
               <label key={src + i} className="flex w-24 flex-col items-center gap-1 text-xs">
                 <WorkImage src={src} alt="" className="size-24 border border-line" />
-                <span className="flex items-center gap-1"><input type="checkbox" name="keepImage" value={src} defaultChecked className="accent-ink" /> 유지</span>
+                <span className="flex items-center gap-1"><input type="checkbox" name="keepImage" value={src} defaultChecked className="accent-violet" /> 유지</span>
               </label>
             ))}
           </div>

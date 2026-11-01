@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 660" width="800" height="660"><rect width="800" height="660" fill="#8aa0c8"/><rect y="327.98669867915413" width="800" height="660" fill="#5a6380" opacity="0.8"/><circle cx="478.9012792584958" cy="306.84387682836683" r="121.2845171691312" fill="#2f5d50" opacity="0.8337556553696076"/><circle cx="356.06452335164164" cy="190.3776943184797" r="85.50302392803273" fill="#f3efe6" opacity="0.9985368062036749"/><circle cx="630.7491073362758" cy="557.4195203641056" r="72.5467080609159" fill="#5a6380" opacity="0.7838474660105293"/><line x1="440.00000000000006" y1="66" x2="720" y2="561" stroke="#1b2a55" stroke-width="8.88888888888889"/><path d="M0 561 Q 240 495 480 554.4 T 800 528 V 660 H 0 Z" fill="#5a6380" opacity="0.85"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" width="900" height="720">
+<defs><filter id="b6" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="23"/></filter>
+<radialGradient id="g6" cx="50%" cy="28%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity="0.35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+<rect width="900" height="720" fill="#9c4a2a"/>
+<g filter="url(#b6)">
+<rect x="72" y="50.400000000000006" width="756" height="259.2" rx="27" fill="#e8b04a"/>
+<rect x="90" y="360" width="720" height="216" rx="27" fill="#f6d79a"/>
+</g>
+<rect width="900" height="720" fill="url(#g6)"/>
+</svg>

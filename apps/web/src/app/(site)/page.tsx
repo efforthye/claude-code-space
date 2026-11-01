@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { Container, EmptyState } from "@/components/ui/container";
-import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { SealIcon } from "@/components/ui/verified-badge";
 import { CollectionBrowser } from "@/features/catalog/collection-browser";
 import { WorkImage } from "@/features/catalog/work-image";
-import { exhibitionPhase, getCatalog, indexById, PHASE_LABEL } from "@/lib/data/catalog";
+import { EventBanner } from "@/features/events/event-banner";
+import { exhibitionPhase, getCatalog, indexById } from "@/lib/data/catalog";
 import { formatPeriod, formatPrice } from "@/lib/format";
 
 export default async function HomePage() {
@@ -13,82 +15,95 @@ export default async function HomePage() {
   const schoolById = indexById(schools);
   const hero = works.find((w) => w.featured && w.status === "available") ?? works.find((w) => w.status === "available");
   const heroArtist = hero ? artistById.get(hero.artistId) : undefined;
-  const stories = exhibitions
+  const heroSchool = heroArtist?.schoolId ? schoolById.get(heroArtist.schoolId) : undefined;
+  const shows = exhibitions
     .map((e) => ({ e, phase: exhibitionPhase(e, today) }))
     .filter((x) => x.phase !== "ended")
     .sort((a, b) => a.e.startDate.localeCompare(b.e.startDate))
-    .slice(0, 12);
+    .slice(0, 6);
+  const upcomingCount = exhibitions.filter((e) => exhibitionPhase(e, today) !== "ended").length;
 
   return (
     <>
-      <section className="border-b border-line bg-paper">
-        <Container className="grid items-center gap-10 py-12 md:grid-cols-2 md:py-20">
-          <div className="flex flex-col gap-5">
-            <p className="text-sm font-semibold tracking-widest text-ink-soft">MY ART, YOUR OBJECT</p>
-            <h1 className="text-3xl leading-tight font-black sm:text-4xl">
-              졸업전시가 끝나도
-              <br />
-              작품은 계속 걸려 있어야 하니까.
-            </h1>
-            <p className="max-w-md text-ink-soft">
-              학교 인증을 받은 작가의 졸업작품을 첫 원화로. 회화부터 가구·의상·조각·금속공예까지, 전시장에서 본 그 작품을
-              작가에게서 직접 소장하세요.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <ButtonLink href="#collection" size="lg">작품 둘러보기</ButtonLink>
-              <ButtonLink href="/join" size="lg" variant="secondary">작가 입점 신청</ButtonLink>
-            </div>
+      <Container className="grid items-center gap-12 pt-10 pb-16 md:grid-cols-2 md:pt-16">
+        <div className="flex flex-col gap-6">
+          <Eyebrow>Graduation show 2026</Eyebrow>
+          <h1 className="font-display text-[68px] leading-[0.92] tracking-tight sm:text-[104px]">
+            My art,
+            <br />
+            <i className="text-aurora pr-2">your object.</i>
+          </h1>
+          <p className="text-lg text-ink-soft">졸업전시장에서 본 그 작품을, 첫 원화로.</p>
+          <div className="flex flex-wrap gap-3">
+            <ButtonLink href="#collection" size="lg">Explore works</ButtonLink>
+            <ButtonLink href="/join" size="lg" variant="secondary">For artists</ButtonLink>
           </div>
-          {hero && (
-            <Link href={`/works/${hero.id}`} className="group flex flex-col gap-3">
-              <div className="border-[10px] border-ink bg-paper p-4 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_20px_40px_-16px_rgb(27_42_85/0.45)]">
-                <div className="overflow-hidden">
-                  <WorkImage src={hero.images[0]} alt={hero.title} className="aspect-[5/4] w-full transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span>
-                  <b>{heroArtist?.name}</b> <span className="link-sweep">「{hero.title}」</span> · {formatPrice(hero.price)}
-                </span>
-                <VerifiedBadge method={heroArtist?.verifiedBy ?? null} schoolName={heroArtist?.schoolId ? schoolById.get(heroArtist.schoolId)?.shortName : null} />
-              </div>
-            </Link>
-          )}
-        </Container>
-      </section>
+        </div>
 
-      {stories.length > 0 && (
-        <section className="border-b border-line">
-          <Container className="py-4">
-            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pt-2 pb-4 sm:-mx-6 sm:px-6">
-              {stories.map(({ e, phase }) => (
-                <Link key={e.id} href={`/exhibitions/${e.id}`} className="flex w-60 shrink-0 flex-col gap-1 rounded-md border border-line bg-paper p-4 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-ink hover:shadow-md">
-                  <span className={phase === "ongoing" ? "text-xs font-bold text-dot" : "text-xs font-bold text-ink-soft"}>
-                    {phase === "ongoing" ? "● " : ""}
-                    {PHASE_LABEL[phase]}
-                  </span>
-                  <span className="line-clamp-2 font-semibold">{e.title}</span>
-                  <span className="text-xs text-ink-soft">{formatPeriod(e.startDate, e.endDate)} · {e.venue}</span>
-                </Link>
-              ))}
-              <Link href="/exhibitions" className="flex w-40 shrink-0 items-center justify-center rounded-md border border-line bg-paper p-4 text-sm font-semibold hover:border-ink">
-                전체 전시 일정 →
-              </Link>
-              <Link href="/exhibitions/apply" className="flex w-60 shrink-0 flex-col justify-center gap-1 rounded-md border border-dashed border-ink/40 p-4 hover:border-ink">
-                <span className="text-xs font-bold text-ink-soft">+ 전시 등록</span>
-                <span className="font-semibold">우리 학과 졸업·과제전시도 올려 보세요</span>
-              </Link>
+        {hero && (
+          <Link href={`/works/${hero.id}`} className="group relative h-[460px] sm:h-[540px]">
+            <div className="glass absolute top-[4%] left-[4%] h-[84%] w-[68%] -rotate-3 rounded-[28px] p-3.5 transition-transform duration-500 group-hover:rotate-0">
+              <WorkImage src={hero.images[0]} alt={hero.title} className="size-full rounded-[18px]" />
             </div>
-          </Container>
-        </section>
+            <div className="glass absolute right-0 bottom-[4%] flex w-[56%] flex-col gap-1.5 rounded-[22px] p-5 transition-transform duration-500 group-hover:-translate-y-1">
+              {heroArtist?.verifiedBy && (
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-violet">
+                  <SealIcon className="size-4" />
+                  {[heroSchool?.shortName, heroArtist.department].filter(Boolean).join(" ")} · 학교 인증
+                </span>
+              )}
+              <span className="text-xl font-semibold">{hero.title}</span>
+              <span className="text-[13px] text-ink-soft">{heroArtist?.name} · {hero.materials}</span>
+              <span className="font-semibold">{formatPrice(hero.price)}</span>
+            </div>
+          </Link>
+        )}
+      </Container>
+
+      <Container className="pb-16">
+        <EventBanner />
+      </Container>
+
+      {shows.length > 0 && (
+        <Container className="flex flex-col gap-5 pb-16">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-[44px] leading-none">
+              On view <i>now</i>
+            </h2>
+            <Link href="/exhibitions" className="link-sweep text-sm font-medium">
+              All {upcomingCount} shows →
+            </Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {shows.map(({ e, phase }) => (
+              <Link
+                key={e.id}
+                href={`/exhibitions/${e.id}`}
+                className="glass group flex flex-col gap-2 rounded-[22px] p-5 transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-white/80"
+              >
+                <span className={`w-fit rounded-full px-2.5 py-0.5 text-[11px] font-semibold text-white ${phase === "ongoing" ? "bg-pink" : "bg-violet"}`}>
+                  {phase === "ongoing" ? "Now" : "Soon"}
+                </span>
+                <span className="text-[17px] leading-snug font-semibold">{e.title}</span>
+                <span className="text-[13px] text-ink-soft">
+                  {formatPeriod(e.startDate, e.endDate)} · {e.venue}
+                </span>
+              </Link>
+            ))}
+            <Link
+              href="/exhibitions/apply"
+              className="flex flex-col justify-center gap-1 rounded-[22px] border border-dashed border-violet/40 p-5 transition-colors hover:border-violet hover:bg-white/50"
+            >
+              <span className="text-xs font-semibold text-violet">+ 전시 등록</span>
+              <span className="font-semibold">우리 학과 전시도 올려 보세요</span>
+            </Link>
+          </div>
+        </Container>
       )}
 
-      <section id="collection" className="scroll-mt-20">
-        <Container className="flex flex-col gap-8 py-12">
-          <div className="flex flex-col gap-1 border-b border-ink pb-4">
-            <h2 className="text-2xl font-bold">졸업전시 컬렉션</h2>
-            <p className="text-sm text-ink-soft">빨간 점은 예약 중이거나 판매가 끝난 작품입니다.</p>
-          </div>
+      <section id="collection" className="scroll-mt-24">
+        <Container className="flex flex-col gap-6 pb-16">
+          <h2 className="font-display text-[44px] leading-none">The collection</h2>
           {works.length === 0 ? (
             <EmptyState title="첫 작품을 준비하고 있어요">졸업전시 시즌에 맞춰 작품이 올라옵니다.</EmptyState>
           ) : (

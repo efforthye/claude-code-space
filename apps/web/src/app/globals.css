@@ -1,41 +1,74 @@
 @import "tailwindcss";
 
 /*
- * MAYO design tokens.
- * Palette comes from the business plan artwork: a navy frame, terracotta sun,
- * cream and pale-blue fields. The site reads like a gallery wall — warm
- * off-white ground, navy type, one accent, and the gallery red dot for sold work.
+ * MAYO design tokens — "Aurora".
+ * A warm ivory ground lit by soft colour fields (pink, periwinkle, peach, mint),
+ * frosted-glass surfaces, an ink-plum type colour and one violet→pink→peach
+ * gradient for the moments that matter. English display type in Instrument
+ * Serif, Korean and UI in Pretendard. Secondary text stays plum, never grey.
  */
 @theme {
-  --font-sans: var(--font-pretendard), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), var(--font-pretendard), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-instrument), ui-serif, Georgia, serif;
 
-  --color-ink: #1b2a55;
-  --color-ink-soft: #5a6380;
-  --color-ink-faint: #8a91a8;
-  --color-line: #d9dee8;
-  --color-paper: #ffffff;
-  --color-wall: #f7f5f0;
-  --color-mist: #edf1f8;
-  --color-cream: #e8e3d9;
-  --color-clay: #c47a4e;
-  --color-clay-soft: #f3e4d9;
-  --color-dot: #d0312d;
-  --color-ok: #2f7d5b;
-  --color-ok-soft: #e3f1ea;
-  --color-warn: #a86a12;
-  --color-warn-soft: #fbf0dc;
+  --color-ink: #1d1530;
+  --color-ink-soft: #3f3560;
+  --color-ink-faint: #75679a;
+  --color-line: rgb(29 21 48 / 0.1);
+  --color-paper: rgb(255 255 255 / 0.74);
+  --color-solid: #ffffff;
+  --color-wall: #fbf8f4;
+  --color-mist: #f1ecff;
+  --color-cream: #f3ece2;
+  --color-violet: #6b3cff;
+  --color-pink: #ff5fa2;
+  --color-peach: #ff9d4d;
+  --color-clay: #d43f7d;
+  --color-clay-soft: #ffe3ef;
+  --color-dot: #e5484d;
+  --color-ok: #14866a;
+  --color-ok-soft: #dcf5ec;
+  --color-warn: #a35a00;
+  --color-warn-soft: #fff0d9;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
 }
 
 body {
-  background: var(--color-wall);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   word-break: keep-all;
+  letter-spacing: -0.01em;
+  background:
+    radial-gradient(60% 45% at 8% 0%, #ffd3e8 0%, rgb(255 211 232 / 0) 70%),
+    radial-gradient(50% 40% at 92% 2%, #c9d6ff 0%, rgb(201 214 255 / 0) 70%),
+    radial-gradient(55% 40% at 72% 38%, #ffe2c2 0%, rgb(255 226 194 / 0) 70%),
+    radial-gradient(60% 40% at 6% 64%, #d8f5ec 0%, rgb(216 245 236 / 0) 70%),
+    var(--color-wall);
+  background-attachment: fixed;
+}
+
+/* frosted glass surface */
+@utility glass {
+  background: rgb(255 255 255 / 0.62);
+  border: 1px solid rgb(255 255 255 / 0.85);
+  backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: 0 20px 40px -28px rgb(60 30 120 / 0.35);
+}
+
+/* the one gradient: violet → pink → peach */
+@utility bg-aurora {
+  background: linear-gradient(105deg, var(--color-violet), var(--color-pink) 60%, var(--color-peach));
+}
+
+@utility text-aurora {
+  background: linear-gradient(90deg, var(--color-violet), var(--color-pink) 55%, var(--color-peach));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 @media print {

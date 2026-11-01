@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 700" width="800" height="700"><rect width="800" height="700" fill="#b8463a"/><rect y="404.1705299211529" width="800" height="700" fill="#b8463a" opacity="0.8"/><circle cx="747.2041204686761" cy="276.5253608459725" r="171.1703008826218" fill="#1b2a55" opacity="0.9198439083620179"/><rect x="142.57712370836043" y="117.00339561188753" width="243.2806464346501" height="357.48229807498495" fill="#e8e3d9" opacity="0.9102108778013898"/><circle cx="384.85235491062156" cy="84.34190234371549" r="66.0125293703808" fill="#f3efe6" opacity="0.7826900675579394"/><circle cx="732.2188217075164" cy="181.43824438747868" r="160.6841207496748" fill="#f3efe6" opacity="0.9981846000292267"/><circle cx="572.4324795778061" cy="317.8832116829619" r="82.90617832350833" fill="#b8463a" opacity="0.970553910578859"/><path d="M0 595 Q 240 525 480 588 T 800 560 V 700 H 0 Z" fill="#5a6380" opacity="0.85"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
+<defs><filter id="b5" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="20"/></filter>
+<radialGradient id="g5" cx="50%" cy="28%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity="0.35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+<rect width="800" height="1000" fill="#2b2060"/>
+<g filter="url(#b5)">
+<rect x="64" y="70" width="672" height="440" rx="24" fill="#6b3cff"/>
+<rect x="80" y="530" width="640" height="300" rx="24" fill="#ff7eb6"/>
+</g>
+<rect width="800" height="1000" fill="url(#g5)"/>
+</svg>

@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800"><rect width="800" height="800" fill="#e8e3d9"/><rect y="372.31165081835894" width="800" height="800" fill="#8aa0c8" opacity="0.8"/><rect x="556.6426020472509" y="612.2126081456489" width="197.57098296544092" height="144.1828509095066" fill="#b8463a" opacity="0.8409512599189538"/><rect x="90.60312901185972" y="206.7893023261751" width="254.66433576059728" height="192.26641250960316" fill="#5a6380" opacity="0.7133175494211341"/><circle cx="575.9255919400257" cy="472.62921155087145" r="173.14225839131615" fill="#1b2a55" opacity="0.877695311269581"/><circle cx="443.47238930103947" cy="587.6923687139956" r="195.13344963785886" fill="#f3efe6" opacity="0.990505615594101"/><rect x="386.1553956876301" y="513.7353219994043" width="167.9311192445136" height="239.56734255900088" fill="#f3efe6" opacity="0.8940161449806839"/><line x1="440.00000000000006" y1="80" x2="720" y2="680" stroke="#1b2a55" stroke-width="8.88888888888889"/><path d="M0 680 Q 240 600 480 672 T 800 640 V 800 H 0 Z" fill="#5a6380" opacity="0.85"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" width="900" height="720">
+<defs><filter id="b14" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="23"/></filter>
+<radialGradient id="g14" cx="50%" cy="28%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity="0.35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+<rect width="900" height="720" fill="#5c1a3c"/>
+<g filter="url(#b14)">
+<rect x="72" y="50.400000000000006" width="756" height="316.8" rx="27" fill="#ff5fa2"/>
+<rect x="90" y="360" width="720" height="216" rx="27" fill="#ffd3e8"/>
+</g>
+<rect width="900" height="720" fill="url(#g14)"/>
+</svg>

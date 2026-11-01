@@ -71,7 +71,7 @@ export function CollectionBrowser({ works, artists, schools }: { works: Work[]; 
           ))}
         </FilterSelect>
         <label className="ml-1 flex items-center gap-1.5">
-          <input type="checkbox" className="size-4 accent-ink" checked={f.availableOnly} onChange={(e) => setF({ ...f, availableOnly: e.target.checked })} />
+          <input type="checkbox" className="size-4 accent-violet" checked={f.availableOnly} onChange={(e) => setF({ ...f, availableOnly: e.target.checked })} />
           판매 중인 작품만
         </label>
         <span className="ml-auto text-ink-soft">{shown.length}점</span>
@@ -79,7 +79,7 @@ export function CollectionBrowser({ works, artists, schools }: { works: Work[]; 
       {shown.length === 0 ? (
         <EmptyState title="조건에 맞는 작품이 없어요">필터를 바꿔 보세요.</EmptyState>
       ) : (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-8 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4">
           {shown.map((w) => {
             const artist = artistById.get(w.artistId);
             return <WorkCard key={w.id} work={w} artist={artist} school={artist?.schoolId ? schoolById.get(artist.schoolId) : undefined} />;
@@ -97,8 +97,8 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "h-8 rounded-sm border px-3 text-sm font-medium transition-colors active:scale-[0.97]",
-        active ? "border-ink bg-ink text-paper" : "border-line bg-paper text-ink-soft hover:border-ink hover:text-ink",
+        "h-9 rounded-full px-4 text-sm font-medium transition-colors active:scale-[0.97]",
+        active ? "bg-ink text-white" : "bg-white/70 text-ink-soft backdrop-blur hover:bg-white hover:text-ink",
       )}
     >
       {children}
@@ -108,7 +108,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 
 function FilterSelect({ value, onChange, label, children }: { value: string; onChange: (v: string) => void; label: string; children: React.ReactNode }) {
   return (
-    <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} className="h-9 rounded-sm border border-line bg-paper px-2 text-sm">
+    <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} className="h-9 rounded-full border border-ink/10 bg-white/70 px-3 text-sm backdrop-blur">
       {children}
     </select>
   );

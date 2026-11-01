@@ -3,11 +3,11 @@ import { fill, placeOrder } from "./helpers";
 
 test("browse the collection and filter by medium", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "졸업전시 컬렉션" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The collection" })).toBeVisible();
   await page.getByRole("button", { name: "가구", exact: true }).click();
   const cards = page.locator("#collection a[href^='/works/']");
   await expect(cards.first()).toBeVisible();
-  for (const text of await cards.allInnerTexts()) expect(text).toMatch(/나무|합판|오크/);
+  for (const text of await cards.allInnerTexts()) expect(text).toContain("· 가구");
 });
 
 test("work page shows verification and art-shipping notice", async ({ page }) => {

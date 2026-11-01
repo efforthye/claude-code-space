@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 const control =
-  "w-full rounded-sm border border-line bg-paper px-3 text-sm text-ink placeholder:text-ink-faint focus:border-ink focus:outline-none aria-invalid:border-dot";
+  "w-full rounded-sm border border-ink/12 bg-white/80 px-3.5 text-sm text-ink backdrop-blur placeholder:text-ink-faint transition-[border-color,box-shadow] focus:border-violet focus:shadow-[0_0_0_4px_rgb(107_60_255/0.12)] focus:outline-none aria-invalid:border-dot";
 
 export function Field({
   label,
@@ -51,7 +51,7 @@ export function Checkbox({
 }: Omit<ComponentProps<"input">, "type"> & { label: ReactNode }) {
   return (
     <label className={cn("flex items-start gap-2 text-sm", className)}>
-      <input type="checkbox" className="mt-0.5 size-4 accent-ink" {...props} />
+      <input type="checkbox" className="mt-0.5 size-4 accent-violet" {...props} />
       <span>{label}</span>
     </label>
   );

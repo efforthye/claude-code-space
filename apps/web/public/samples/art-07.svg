@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 800" width="660" height="800"><rect width="660" height="800" fill="#5a6380"/><rect y="449.17971227745517" width="660" height="800" fill="#2f5d50" opacity="0.8"/><rect x="254.53411172262122" y="119.77663284157248" width="202.18054199879083" height="275.4936547899487" fill="#b8463a" opacity="0.8565162406566162"/><circle cx="358.9213720433979" cy="575.937150984042" r="91.36334423411793" fill="#5a6380" opacity="0.7565047128621977"/><rect x="286.0129145747111" y="129.7639480837453" width="265.996917890849" height="248.89726752064342" fill="#e8e3d9" opacity="0.8978716458184046"/><circle cx="184.3059329813374" cy="639.1853613712292" r="144.54106824986687" fill="#d7deec" opacity="0.9775046246254373"/><path d="M0 680 Q 198 600 396 672 T 660 640 V 800 H 0 Z" fill="#5a6380" opacity="0.85"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+<defs><filter id="b7" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="20"/></filter>
+<radialGradient id="g7" cx="50%" cy="28%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity="0.35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+<rect width="800" height="800" fill="#13223d"/>
+<g filter="url(#b7)">
+<rect x="64" y="56.00000000000001" width="672" height="320" rx="24" fill="#24406e"/>
+<rect x="80" y="424" width="640" height="240" rx="24" fill="#5f86c4"/>
+</g>
+<rect width="800" height="800" fill="url(#g7)"/>
+</svg>
