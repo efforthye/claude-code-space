@@ -8,7 +8,7 @@ import { MAX_BYTES } from "@/lib/security/media-sniff";
 /**
  * 관리자 미디어 업로드: multipart `file` 한 개 → { kind, src }.
  * - 관리자 세션 필수(서명 검증), 같은 사이트에서만(SameSite=Strict 쿠키 + Origin 확인)
- * - 분당 60회 제한, Content-Length로 먼저 거르고 저장 시 바이트로 형식·용량 재확인
+ * - 분당 60회 제한, Content-Length로 먼저 거르고 저장 시 바이트로 형식, 용량 재확인
  */
 export async function POST(req: Request) {
   if (!isValidSession((await cookies()).get(ADMIN_COOKIE)?.value)) {

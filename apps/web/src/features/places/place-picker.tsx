@@ -78,7 +78,7 @@ export function PlacePicker({
           </Button>
         </div>
       ) : status === "fallback" ? (
-        <Button type="button" variant="secondary" onClick={openPostcode}>건물·주소 검색</Button>
+        <Button type="button" variant="secondary" onClick={openPostcode}>건물이나 주소로 검색</Button>
       ) : (
         <div className="relative">
           <Input
@@ -106,7 +106,7 @@ export function PlacePicker({
                     className="flex w-full flex-col items-start px-3 py-2 text-left text-sm transition-colors hover:bg-mist"
                   >
                     <b>{r.name}</b>
-                    <span className="text-xs text-ink-soft">{r.address}{r.category && ` · ${r.category.split(" > ").pop()}`}</span>
+                    <span className="text-xs text-ink-soft">{r.address}{r.category && `, ${r.category.split(" > ").pop()}`}</span>
                   </button>
                 </li>
               ))}

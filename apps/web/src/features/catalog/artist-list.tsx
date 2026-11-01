@@ -45,12 +45,12 @@ export function ArtistList({ artists, schools, workCounts }: { artists: Artist[]
           const school = a.schoolId ? schoolById.get(a.schoolId) : undefined;
           return (
             <li key={a.id}>
-              <Link href={`/artists/${a.id}`} className="flex h-full flex-col gap-2 rounded-md border border-line bg-paper p-4 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-ink hover:shadow-md">
+              <Link href={`/artists/${a.id}`} className="flex h-full flex-col gap-2 rounded-md border border-line bg-paper p-4 transition-[border-color,translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-ink hover:shadow-md">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-lg font-bold">{a.name}</span>
                   <span className="text-xs text-ink-soft">작품 {workCounts[a.id] ?? 0}점</span>
                 </div>
-                <span className="text-sm text-ink-soft">{[school?.name, a.department].filter(Boolean).join(" · ") || "소속 없음"}</span>
+                <span className="text-sm text-ink-soft">{[school?.name, a.department].filter(Boolean).join(", ") || "소속 없음"}</span>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge>{ARTIST_STATUS_LABEL[a.status]}</Badge>
                   {a.acceptsCommission && <Badge tone="clay">주문제작</Badge>}

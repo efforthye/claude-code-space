@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 
 const ITEMS = [
   { href: "/admin", label: "대시보드" },
-  { href: "/admin/orders", label: "주문·입금" },
+  { href: "/admin/orders", label: "주문과 입금" },
   { href: "/admin/works", label: "작품" },
   { href: "/admin/artists", label: "작가" },
   { href: "/admin/applications", label: "입점 신청" },

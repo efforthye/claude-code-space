@@ -52,7 +52,7 @@ export function isValidSession(value: string | undefined) {
 
 /**
  * 데이터 가까이에서 하는 인증 확인. proxy.ts의 리디렉션은 화면 편의일 뿐이고,
- * 관리자 페이지·서버 액션·CSV는 모두 이 함수를 거친다.
+ * 관리자 페이지, 서버 액션, CSV는 모두 이 함수를 거친다.
  */
 export async function requireAdmin() {
   await connection(); // 세션 만료 판단(Date.now)은 항상 요청 시점에

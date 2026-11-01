@@ -33,7 +33,7 @@ async function ArtistDetail({ params }: { params: PageProps<"/artists/[id]">["pa
         </div>
         <h1 className="text-3xl font-black">{artist.name}</h1>
         <p className="text-sm text-ink-soft">
-          {[school?.name, artist.department, artist.gradYear && `${artist.gradYear}년 졸업${artist.status === "student" ? " 예정" : ""}`].filter(Boolean).join(" · ")}
+          {[school?.name, artist.department, artist.gradYear && `${artist.gradYear}년 졸업${artist.status === "student" ? " 예정" : ""}`].filter(Boolean).join(", ")}
         </p>
         <div className="max-w-xl">
           <VerificationCard method={artist.verifiedBy} verifiedAt={artist.verifiedAt} schoolName={school?.name} department={artist.department} statusLabel={ARTIST_STATUS_LABEL[artist.status]} />

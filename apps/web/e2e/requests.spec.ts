@@ -23,7 +23,7 @@ test("artist application: age rules, celebration, status, approval", async ({ pa
 
   await adminLogin(page);
   await page.goto("/admin/applications");
-  await page.getByRole("button", { name: "승인 · 작가 만들기" }).first().click();
+  await page.getByRole("button", { name: "승인하고 작가 만들기" }).first().click();
   await expect(page).toHaveURL(/\/admin\/artists\//);
 
   await page.goto("/my");
@@ -47,7 +47,7 @@ test("exhibition request picks the venue from place search and becomes an exhibi
 
   await adminLogin(page);
   await page.goto("/admin/exhibition-requests");
-  await page.getByRole("button", { name: "승인 · 전시 만들기" }).first().click();
+  await page.getByRole("button", { name: "승인하고 전시 만들기" }).first().click();
   await expect(page).toHaveURL(/\/admin\/exhibitions\/exh-/);
   const id = new URL(page.url()).pathname.split("/").pop();
   await page.goto(`/exhibitions/${id}`);
@@ -59,7 +59,7 @@ test("exhibition request picks the venue from place search and becomes an exhibi
 test("without a Kakao key the venue picker offers the postcode finder", async ({ page }) => {
   await page.goto("/exhibitions/apply");
   await page.getByPlaceholder(/장소 이름으로 검색/).fill("홍문관");
-  await expect(page.getByRole("button", { name: "건물·주소 검색" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "건물이나 주소로 검색" })).toBeVisible();
 });
 
 test("inquiry gets an admin answer that shows up in 내 신청 현황", async ({ page }) => {

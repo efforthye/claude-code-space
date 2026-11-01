@@ -23,7 +23,7 @@ const OrderInput = z.object({
   deliveryNote: z.string().trim().max(500),
   depositorName: z.string().trim().min(1, "입금자명을 입력해 주세요").max(40),
   agreeTerms: z.literal(true, { error: "이용약관에 동의해 주세요" }),
-  agreePrivacy: z.literal(true, { error: "개인정보 수집·이용에 동의해 주세요" }),
+  agreePrivacy: z.literal(true, { error: "개인정보 수집 및 이용에 동의해 주세요" }),
   agreeAge: z.literal(true, { error: "만 19세 이상이거나 보호자 동의를 받았는지 확인해 주세요" }),
 });
 

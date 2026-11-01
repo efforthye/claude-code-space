@@ -53,7 +53,7 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
         {e.note && <p className="max-w-2xl rounded-sm bg-warn-soft p-3 text-xs text-warn">{e.note}</p>}
         {e.source && (
           <p className="text-xs text-ink-soft">
-            일정 출처: <a href={e.source.url} target="_blank" rel="noopener noreferrer" className="underline">{e.source.label}</a> · MAYO는 이 전시의 주최자가 아니며, 방문 전 학과 공식 계정에서 확인하세요.
+            일정 출처: <a href={e.source.url} target="_blank" rel="noopener noreferrer" className="underline">{e.source.label}</a>. MAYO는 이 전시의 주최자가 아니며, 방문 전 학과 공식 계정에서 확인하세요.
           </p>
         )}
         {participants.length > 0 && <p className="text-sm text-ink-soft">참여 작가: {participants.join(", ")}</p>}
@@ -67,7 +67,7 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
             <ButtonLink href="/join" variant="secondary" className="w-fit">작가 입점 신청</ButtonLink>
           </div>
           <div className="flex flex-col gap-3 rounded-md border border-line bg-paper p-5">
-            <p className="font-bold">졸업준비위원회·학생회라면</p>
+            <p className="font-bold">졸업준비위원회, 학생회라면</p>
             <p className="text-sm text-ink-soft">전시 전체를 온라인 전시 페이지로 만들고 QR 캡션 라벨을 드려요. 이번 시즌 무료예요.</p>
             <ButtonLink href="/exhibitions/apply" variant="secondary" className="w-fit">전시 등록 신청</ButtonLink>
           </div>

@@ -18,7 +18,7 @@ export function JoinForm() {
   if (state?.ok)
     return (
       <Celebrate eyebrow="입점 신청 완료" title="MAYO 작가가 되는 첫 걸음!" code={state.code} codeTitle={state.title}>
-        운영자가 확인한 뒤 이메일·연락처로 촬영 일정과 학교 인증 방법을 안내드려요. 학생증 등 인증 서류는 확인 후 바로 파기합니다.
+        운영자가 확인한 뒤 이메일, 연락처로 촬영 일정과 학교 인증 방법을 안내드려요. 학생증 등 인증 서류는 확인 후 바로 파기합니다.
       </Celebrate>
     );
 
@@ -55,13 +55,13 @@ export function JoinForm() {
 
       <Field label="인스타그램" hint="@없이 아이디만"><Input name="instagram" placeholder="my.studio" /></Field>
       <Field label="포트폴리오 링크" error={errors.portfolioUrl}><Input name="portfolioUrl" placeholder="https://" /></Field>
-      <Field label="작품 소개 · 하고 싶은 말" className="sm:col-span-2">
-        <Textarea name="message" placeholder="어떤 작업을 하는지, 판매하고 싶은 작품(크기·매체)이 있다면 알려 주세요" />
+      <Field label="작품 소개, 하고 싶은 말" className="sm:col-span-2">
+        <Textarea name="message" placeholder="어떤 작업을 하는지, 판매하고 싶은 작품(크기, 매체)이 있다면 알려 주세요" />
       </Field>
 
       <div className="flex flex-col gap-2 border-t border-line pt-4 sm:col-span-2">
-        <Checkbox name="agreePrivacy" label={<>입점 심사·연락을 위한 <Link href="/legal/privacy" target="_blank" className="underline">개인정보 수집·이용</Link>에 동의해요 (필수)</>} />
-        <Checkbox name="agreeImage" label="판매·홍보와 컬렉터의 소장 인증샷 공유를 위해 MAYO가 작품 이미지를 이용하는 데 동의해요. 저작권은 작가에게 남아요 (필수)" />
+        <Checkbox name="agreePrivacy" label={<>입점 심사, 연락을 위한 <Link href="/legal/privacy" target="_blank" className="underline">개인정보 수집 및 이용</Link>에 동의해요 (필수)</>} />
+        <Checkbox name="agreeImage" label="판매, 홍보와 컬렉터의 소장 인증샷 공유를 위해 MAYO가 작품 이미지를 이용하는 데 동의해요. 저작권은 작가에게 남아요 (필수)" />
         {(errors.agreePrivacy || errors.agreeImage) && <p className="text-xs font-medium text-dot">{errors.agreePrivacy ?? errors.agreeImage}</p>}
       </div>
       {errors.form && <p className="rounded-sm bg-dot/10 p-3 text-sm text-dot sm:col-span-2">{errors.form}</p>}

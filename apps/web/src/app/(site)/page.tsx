@@ -3,15 +3,31 @@ import { ButtonLink } from "@/components/ui/button";
 import { Container, EmptyState } from "@/components/ui/container";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { CollectionBrowser } from "@/features/catalog/collection-browser";
-import { HeroCollage } from "@/features/catalog/hero-collage";
-import { exhibitionPhase, getCatalog } from "@/lib/data/catalog";
-import { formatPeriod } from "@/lib/format";
+import { HeroCollage, type HeroWork } from "@/features/catalog/hero-collage";
+import { coverImage, MEDIUM_LABEL } from "@/lib/domain/rules";
+import { exhibitionPhase, getCatalog, indexById } from "@/lib/data/catalog";
+import { formatPeriod, formatPrice } from "@/lib/format";
 
 export default async function HomePage() {
   const { works, artists, schools, exhibitions, today } = await getCatalog();
-  // 서로 다른 매체에서 한 점씩, 대표 작품을 먼저
-  const available = [...works.filter((w) => w.status === "available")].sort((a, b) => Number(b.featured) - Number(a.featured));
-  const heroWorks = available.filter((w, i) => available.findIndex((x) => x.medium === w.medium) === i).slice(0, 4);
+  // 판매 중인 작품 후보 — 4점은 브라우저에서 방문마다 무작위로 고른다
+  const available = works.filter((w) => w.status === "available");
+  const artistById = indexById(artists);
+  const schoolById = indexById(schools);
+  const heroWorks: HeroWork[] = available
+    .slice(0, 40)
+    .map((w) => {
+      const a = artistById.get(w.artistId);
+      return {
+        id: w.id,
+        title: w.title,
+        cover: coverImage(w),
+        medium: MEDIUM_LABEL[w.medium],
+        artist: a?.name ?? "",
+        verifiedSchool: a?.verifiedBy && a.schoolId ? (schoolById.get(a.schoolId)?.shortName ?? null) : null,
+        price: formatPrice(w.price),
+      };
+    });
   const shows = exhibitions
     .map((e) => ({ e, phase: exhibitionPhase(e, today) }))
     .filter((x) => x.phase !== "ended")
@@ -36,7 +52,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <HeroCollage works={heroWorks} artists={artists} schools={schools} />
+        <HeroCollage works={heroWorks} />
       </Container>
 
       {shows.length > 0 && (
@@ -54,14 +70,14 @@ export default async function HomePage() {
               <Link
                 key={e.id}
                 href={`/exhibitions/${e.id}`}
-                className="glass group flex flex-col gap-2 rounded-[22px] p-5 transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-white/80"
+                className="glass group flex flex-col gap-2 rounded-[22px] p-5 transition-[translate,background-color] duration-200 hover:-translate-y-0.5 hover:bg-white/80"
               >
                 <span className={`w-fit rounded-full px-2.5 py-0.5 text-[11px] font-semibold text-white ${phase === "ongoing" ? "bg-pink" : "bg-violet"}`}>
                   {phase === "ongoing" ? "Now" : "Soon"}
                 </span>
                 <span className="text-[17px] leading-snug font-semibold">{e.title}</span>
                 <span className="text-[13px] text-ink-soft">
-                  {formatPeriod(e.startDate, e.endDate)} · {e.venue}
+                  {formatPeriod(e.startDate, e.endDate)}, {e.venue}
                 </span>
               </Link>
             ))}

@@ -2,7 +2,7 @@ import type { Artist, Database, MediaItem, Work } from "@/lib/domain/types";
 import { buildBaseDatabase } from "./base";
 
 /**
- * 개발용 예시 데이터. 작가·작품은 모두 가상이다 (사업계획서 화면 예시와 같은 원칙).
+ * 개발용 예시 데이터. 작가, 작품은 모두 가상이다 (사업계획서 화면 예시와 같은 원칙).
  * 실제 전시 일정(base) 위에 얹되, 가상 작품을 실제 전시에 출품한 것처럼 연결하지 않는다.
  * 실서비스(production)에서는 절대 시딩하지 않는다 — store.ts 참고.
  */

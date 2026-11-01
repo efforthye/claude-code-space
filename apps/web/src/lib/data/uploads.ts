@@ -9,7 +9,7 @@ import { DATA_DIR } from "./store";
 
 /**
  * 미디어 저장 seam. 개발에서는 `.data/uploads`에 두고 /media/<name>으로 서빙한다.
- * 실서비스는 Vercel 파일시스템이 읽기 전용이라 오브젝트 스토리지(Vercel Blob·R2 등)로 바꿔야 한다
+ * 실서비스는 Vercel 파일시스템이 읽기 전용이라 오브젝트 스토리지(Vercel Blob, R2 등)로 바꿔야 한다
  * — 이 파일만 고치면 된다.
  */
 const DIR = path.join(DATA_DIR, "uploads");
@@ -23,7 +23,7 @@ export async function saveMedia(file: File): Promise<MediaItem> {
   if (file.size > MAX_BYTES.video) throw new UploadError("파일이 너무 커요 (영상 80MB, 3D 30MB, 사진 10MB까지)");
   const data = new Uint8Array(await file.arrayBuffer());
   const sniffed = sniffMedia(data);
-  if (!sniffed) throw new UploadError("사진(JPG·PNG·WEBP·AVIF), 영상(MP4·WebM), 3D(GLB)만 올릴 수 있어요");
+  if (!sniffed) throw new UploadError("사진(JPG, PNG, WEBP, AVIF), 영상(MP4, WebM), 3D(GLB)만 올릴 수 있어요");
   if (data.byteLength > MAX_BYTES[sniffed.kind]) {
     throw new UploadError(sniffed.kind === "image" ? "사진은 10MB 이하로 올려 주세요" : sniffed.kind === "model" ? "3D 파일은 30MB 이하로 올려 주세요" : "영상은 80MB 이하로 올려 주세요");
   }
@@ -36,7 +36,7 @@ export async function saveMedia(file: File): Promise<MediaItem> {
 /** 예전 호출부 호환: 사진만 받는 곳 */
 export async function saveImage(file: File): Promise<string> {
   const item = await saveMedia(file);
-  if (item.kind !== "image") throw new UploadError("JPG·PNG·WEBP·AVIF 이미지만 올릴 수 있어요");
+  if (item.kind !== "image") throw new UploadError("JPG, PNG, WEBP, AVIF 이미지만 올릴 수 있어요");
   return item.src;
 }
 

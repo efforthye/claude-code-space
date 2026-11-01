@@ -19,7 +19,7 @@ export default async function AdminOrders(props: PageProps<"/admin/orders">) {
 
   return (
     <>
-      <AdminHeading title="주문 · 입금 확인" description="통장 입금 내역과 입금자명·금액을 맞춰 보고 ‘입금 확인’을 눌러 주세요. 확인하면 작품이 판매 완료로 바뀝니다." />
+      <AdminHeading title="주문과 입금 확인" description="통장 입금 내역과 입금자명, 금액을 맞춰 보고 ‘입금 확인’을 눌러 주세요. 확인하면 작품이 판매 완료로 바뀝니다." />
       <div className="mb-4 flex flex-wrap gap-1.5 text-sm">
         <Link href="/admin/orders" className={cn("rounded-sm border px-3 py-1", !filter ? "border-ink bg-ink text-paper" : "border-line bg-paper")}>전체</Link>
         {STATUSES.map((st) => (

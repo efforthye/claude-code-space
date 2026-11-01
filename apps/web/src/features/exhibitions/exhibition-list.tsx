@@ -21,7 +21,7 @@ export type ExhibitionRow = {
 };
 
 const PHASES: { id: ExhibitionPhase | "now"; label: string }[] = [
-  { id: "now", label: "진행 중 · 예정" },
+  { id: "now", label: "다가오는 전시" },
   { id: "ongoing", label: "진행 중" },
   { id: "upcoming", label: "예정" },
   { id: "ended", label: "종료" },
@@ -61,7 +61,7 @@ export function ExhibitionList({ rows, schools }: { rows: ExhibitionRow[]; schoo
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="학과·전시명·장소 검색"
+          placeholder="학과, 전시명, 장소 검색"
           className="h-8 min-w-48 flex-1 rounded-sm border border-line bg-paper px-2"
         />
         <span className="text-ink-soft">{shown.length}개</span>
@@ -78,10 +78,10 @@ export function ExhibitionList({ rows, schools }: { rows: ExhibitionRow[]; schoo
                 </Badge>
                 <span className="flex-1 font-semibold"><span className="link-sweep">{r.title}</span></span>
                 <span className="text-sm text-ink-soft sm:text-right">
-                  {formatPeriod(r.startDate, r.endDate)} · {r.venue}
-                  {r.works > 0 && <b className="ml-1 text-ink">· 작품 {r.works}점</b>}
+                  {formatPeriod(r.startDate, r.endDate)}, {r.venue}
+                  {r.works > 0 && <b className="ml-1 text-ink">, 작품 {r.works}점</b>}
                 </span>
-                <span aria-hidden className="hidden text-ink opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-1 group-hover:opacity-100 sm:inline">→</span>
+                <span aria-hidden className="hidden text-ink opacity-0 transition-[opacity,translate] duration-200 group-hover:translate-x-1 group-hover:opacity-100 sm:inline">→</span>
               </Link>
             </li>
           ))}

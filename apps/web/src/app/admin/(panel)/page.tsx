@@ -42,8 +42,8 @@ export default async function AdminDashboard() {
           {recent.map((o) => (
             <li key={o.id}>
               <Link href={`/admin/orders/${o.id}`} className="flex flex-wrap justify-between gap-2 px-4 py-3 hover:bg-mist">
-                <span><b>{o.code}</b> · {o.buyer.name} · {o.items.map((i) => `「${i.title}」`).join(", ")}</span>
-                <span className="text-ink-soft">{ORDER_STATUS_LABEL[o.status]} · {formatDateTime(o.createdAt)}</span>
+                <span><b>{o.code}</b>, {o.buyer.name}, {o.items.map((i) => `「${i.title}」`).join(", ")}</span>
+                <span className="text-ink-soft">{ORDER_STATUS_LABEL[o.status]}, {formatDateTime(o.createdAt)}</span>
               </Link>
             </li>
           ))}

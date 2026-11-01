@@ -145,7 +145,7 @@ export async function saveWork(workId: string | null, _prev: FormState, form: Fo
   redirect(`/admin/works/${id}?saved=1`);
 }
 
-/* ───────────────────────── 작가 · 전시 · 학교 ───────────────────────── */
+/* ───────────────────────── 작가, 전시, 학교 ───────────────────────── */
 
 export async function saveArtist(artistId: string | null, _prev: FormState, form: FormData): Promise<FormState> {
   await requireAdmin();

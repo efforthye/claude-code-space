@@ -5,7 +5,7 @@ import { AdminNav } from "@/features/admin/admin-nav";
 import { logout } from "@/features/admin/auth-actions";
 import { requireAdmin } from "@/features/admin/session";
 
-export const metadata: Metadata = { title: { default: "관리자", template: "%s · MAYO 관리자" }, robots: { index: false } };
+export const metadata: Metadata = { title: { default: "관리자", template: "%s | MAYO 관리자" }, robots: { index: false } };
 
 async function Gate({ children }: { children: ReactNode }) {
   await requireAdmin();

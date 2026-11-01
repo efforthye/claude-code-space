@@ -25,9 +25,9 @@ export default async function AdminInquiries() {
               <Badge tone={q.state === "new" ? "warn" : "ok"}>{STATE[q.state]}</Badge>
               <Badge>{INQUIRY_TOPIC_LABEL[q.topic]}</Badge>
               <b className="text-base">{q.subject}</b>
-              <span className="ml-auto font-mono text-xs text-ink-soft">{q.code} · {formatDateTime(q.createdAt)}</span>
+              <span className="ml-auto font-mono text-xs text-ink-soft">{q.code}, {formatDateTime(q.createdAt)}</span>
             </div>
-            <p className="text-ink-soft">{q.name} · {q.email}{q.phone && ` · ${q.phone}`}{q.relatedCode && ` · 관련 ${q.relatedCode}`}</p>
+            <p className="text-ink-soft">{q.name}, {q.email}{q.phone && `, ${q.phone}`}{q.relatedCode && `, 관련 ${q.relatedCode}`}</p>
             <p className="rounded-sm bg-mist p-3 whitespace-pre-line">{q.message}</p>
             <form action={answerInquiry.bind(null, q.id)} className="flex flex-col gap-2">
               <Textarea name="answer" defaultValue={q.answer ?? ""} placeholder="답변" />

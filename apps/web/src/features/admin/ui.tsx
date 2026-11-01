@@ -21,7 +21,7 @@ export function Stat({ label, value, href, tone }: { label: string; value: React
       <span className="text-2xl font-bold">{value}</span>
     </div>
   );
-  return href ? <Link href={href} className="block transition-transform duration-150 hover:-translate-y-0.5 [&>div]:transition-shadow hover:[&>div]:shadow-md">{body}</Link> : body;
+  return href ? <Link href={href} className="block transition-[translate,rotate,scale,transform] duration-150 hover:-translate-y-0.5 [&>div]:transition-shadow hover:[&>div]:shadow-md">{body}</Link> : body;
 }
 
 export function Table({ head, children }: { head: string[]; children: ReactNode }) {

@@ -1,6 +1,6 @@
 import type { WorkStatus } from "@/lib/domain/types";
 
-/** 갤러리 관례: 예약·판매된 작품 캡션 옆의 빨간 점. */
+/** 갤러리 관례: 예약, 판매된 작품 캡션 옆의 빨간 점. */
 export function RedDot({ status }: { status: WorkStatus }) {
   if (status !== "reserved" && status !== "sold") return null;
   return (

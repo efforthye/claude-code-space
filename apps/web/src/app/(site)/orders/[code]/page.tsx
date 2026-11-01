@@ -30,7 +30,7 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
 
   return (
     <Container className="flex max-w-2xl flex-col gap-8 py-12">
-      {justPlaced && <OrderPlaced code={order.code} title={`주문 · ${order.items.map((i) => `「${i.title}」`).join(", ")}`} />}
+      {justPlaced && <OrderPlaced code={order.code} title={`주문: ${order.items.map((i) => `「${i.title}」`).join(", ")}`} />}
       <header className="flex flex-col gap-2 border-b border-ink pb-5">
         <Badge tone={order.status === "cancelled" ? "neutral" : order.status === "pending_payment" ? "warn" : "ok"} className="w-fit">
           {ORDER_STATUS_LABEL[order.status]}
@@ -38,7 +38,7 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
         <h1 className="text-2xl font-bold">
           {order.status === "pending_payment" ? (justPlaced ? "첫 원화가 곧 당신의 벽으로 🎉" : "주문 신청이 접수됐어요") : "주문 상태"}
         </h1>
-        <p className="text-sm text-ink-soft">주문번호 <b className="text-ink">{order.code}</b> · {formatDateTime(order.createdAt)} — 주문 조회에 필요하니 보관해 주세요.</p>
+        <p className="text-sm text-ink-soft">주문번호 <b className="text-ink">{order.code}</b>, {formatDateTime(order.createdAt)} — 주문 조회에 필요하니 보관해 주세요.</p>
       </header>
 
       {order.status === "pending_payment" && (
@@ -61,7 +61,7 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
               미술품 전문 운송 작품이 있어요. 운송 견적을 받아 연락드리며, 운송비는 견적에 동의하신 뒤에 따로 받습니다.
             </p>
           )}
-          <p className="text-xs text-ink-soft">입금이 확인되면 상태가 ‘입금 확인’으로 바뀌고, 작가와 배송·수령 일정을 조율해 연락드려요.</p>
+          <p className="text-xs text-ink-soft">입금이 확인되면 상태가 ‘입금 확인’으로 바뀌고, 작가와 배송과 수령 일정을 조율해 연락드려요.</p>
         </section>
       )}
 
@@ -70,7 +70,7 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
         <ul className="flex flex-col divide-y divide-line border-y border-line text-sm">
           {order.items.map((i) => (
             <li key={i.workId} className="flex justify-between gap-3 py-3">
-              <span>「{i.title}」 · {i.artistName}{i.edition && ` · ed. ${i.edition}`} <span className="text-ink-soft">· {SHIPPING_LABEL[i.shipping]}</span></span>
+              <span>「{i.title}」, {i.artistName}{i.edition && `, ed. ${i.edition}`} <span className="text-ink-soft">, {SHIPPING_LABEL[i.shipping]}</span></span>
               <span className="font-semibold">{formatPrice(i.price)}</span>
             </li>
           ))}

@@ -62,10 +62,10 @@ export function CartView({ works, artists }: { works: Work[]; artists: Artist[] 
               </Link>
               <div className="flex flex-1 flex-col gap-1 text-sm">
                 <div className="flex justify-between gap-2">
-                  <span className="font-semibold">「{work.title}」 · {artistById.get(work.artistId)?.name}</span>
+                  <span className="font-semibold">「{work.title}」, {artistById.get(work.artistId)?.name}</span>
                   <span className="font-bold">{formatPrice(work.price)}</span>
                 </div>
-                <span className="text-ink-soft">{work.materials} · {formatSize(work.widthCm, work.heightCm, work.depthCm)}</span>
+                <span className="text-ink-soft">{work.materials}, {formatSize(work.widthCm, work.heightCm, work.depthCm)}</span>
                 {unavailable ? (
                   <span className="font-semibold text-dot">● 다른 컬렉터가 먼저 예약했어요 — 주문에서 제외됩니다</span>
                 ) : (
@@ -116,7 +116,7 @@ export function CartView({ works, artists }: { works: Work[]; artists: Artist[] 
 
         <div className="flex flex-col gap-2 border-t border-line pt-4">
           <Checkbox name="agreeTerms" label={<><Link href="/legal/terms" target="_blank" className="underline">이용약관</Link>과 청약철회 안내를 확인했어요 (필수)</>} />
-          <Checkbox name="agreePrivacy" label={<>주문 처리를 위한 <Link href="/legal/privacy" target="_blank" className="underline">개인정보 수집·이용</Link>에 동의해요 (필수)</>} />
+          <Checkbox name="agreePrivacy" label={<>주문 처리를 위한 <Link href="/legal/privacy" target="_blank" className="underline">개인정보 수집 및 이용</Link>에 동의해요 (필수)</>} />
           <Checkbox name="agreeAge" label="만 19세 이상이거나, 법정대리인(보호자)의 동의를 받았어요 (필수)" />
           {(errors.agreeTerms || errors.agreePrivacy || errors.agreeAge) && (
             <p className="text-xs font-medium text-dot">{errors.agreeTerms ?? errors.agreePrivacy ?? errors.agreeAge}</p>

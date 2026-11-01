@@ -3,8 +3,8 @@ import type { MediaKind } from "@/lib/domain/types";
 export type SniffedMedia = { kind: MediaKind; ext: "jpg" | "png" | "webp" | "avif" | "mp4" | "webm" | "glb"; type: string };
 
 /**
- * 업로드 파일의 실제 바이트로 형식을 판별한다 (브라우저가 보낸 Content-Type·확장자는 믿지 않는다).
- * 허용: JPG·PNG·WEBP·AVIF 사진, MP4·WebM 영상, GLB(바이너리 glTF) 3D.
+ * 업로드 파일의 실제 바이트로 형식을 판별한다 (브라우저가 보낸 Content-Type, 확장자는 믿지 않는다).
+ * 허용: JPG, PNG, WEBP, AVIF 사진, MP4, WebM 영상, GLB(바이너리 glTF) 3D.
  */
 export function sniffMedia(bytes: Uint8Array): SniffedMedia | null {
   const b = bytes;

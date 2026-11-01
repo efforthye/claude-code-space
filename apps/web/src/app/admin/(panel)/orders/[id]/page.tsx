@@ -29,7 +29,7 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
     <>
       <AdminHeading
         title={`주문 ${order.code}`}
-        description={<>신청 {formatDateTime(order.createdAt)} · 입금 기한 {formatDateTime(order.paymentDueAt)}</>}
+        description={<>신청 {formatDateTime(order.createdAt)}, 입금 기한 {formatDateTime(order.paymentDueAt)}</>}
         action={<Badge tone={order.status === "pending_payment" ? "warn" : "ok"}>{ORDER_STATUS_LABEL[order.status]}</Badge>}
       />
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
@@ -39,7 +39,7 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
             <ul className="divide-y divide-line text-sm">
               {order.items.map((i) => (
                 <li key={i.workId} className="flex justify-between gap-2 py-2">
-                  <span><Link href={`/admin/works/${i.workId}`} className="underline">「{i.title}」</Link> · {i.artistName}{i.edition && ` · ed. ${i.edition}`} · {SHIPPING_LABEL[i.shipping]}</span>
+                  <span><Link href={`/admin/works/${i.workId}`} className="underline">「{i.title}」</Link>, {i.artistName}{i.edition && `, ed. ${i.edition}`}, {SHIPPING_LABEL[i.shipping]}</span>
                   <span className="font-semibold">{formatPrice(i.price)}</span>
                 </li>
               ))}
@@ -68,7 +68,7 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
             <h2 className="mb-3 font-bold">처리 기록</h2>
             <ol className="flex flex-col gap-1.5">
               {order.history.map((h, i) => (
-                <li key={i} className="flex gap-3"><span className="w-32 shrink-0 text-ink-soft">{formatDateTime(h.at)}</span><span><b>{ORDER_STATUS_LABEL[h.status]}</b> · {h.note}</span></li>
+                <li key={i} className="flex gap-3"><span className="w-32 shrink-0 text-ink-soft">{formatDateTime(h.at)}</span><span><b>{ORDER_STATUS_LABEL[h.status]}</b>, {h.note}</span></li>
               ))}
             </ol>
           </section>
@@ -88,7 +88,7 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
             </section>
           )}
           <form action={updateOrderDetails.bind(null, order.id)} className="flex flex-col gap-3 rounded-md border border-line bg-paper p-4">
-            <h2 className="font-bold">운송 견적 · 메모</h2>
+            <h2 className="font-bold">운송 견적과 메모</h2>
             {hasArt && (
               <Field label="미술품 전문 운송비 (원)" hint="운송 업체 견적을 받아 넣으면 구매자 주문 화면 금액에 더해져요">
                 <Input name="shippingQuote" inputMode="numeric" defaultValue={order.shippingQuote ?? ""} />

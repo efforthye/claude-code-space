@@ -87,7 +87,7 @@ test("uploads that are not really images are refused", async ({ page }) => {
   await page.locator('[name="artistId"]').selectOption({ label: "최서준" });
   for (const [n, v] of [["materials", "x"], ["widthCm", "10"], ["heightCm", "10"], ["price", "1000"]]) await page.locator(`[name="${n}"]`).fill(v);
   await page.getByLabel("미디어 파일").setInputFiles({ name: "evil.png", mimeType: "image/png", buffer: Buffer.from("<svg onload=alert(1)></svg>") });
-  await expect(page.getByText(/사진\(JPG·PNG·WEBP·AVIF\), 영상\(MP4·WebM\), 3D\(GLB\)만/)).toBeVisible();
+  await expect(page.getByText(/사진\(JPG, PNG, WEBP, AVIF\), 영상\(MP4, WebM\), 3D\(GLB\)만/)).toBeVisible();
   await page.getByRole("button", { name: "작품 등록" }).click();
   await expect(page.getByText("대표 사진을 한 장 이상 올려 주세요")).toBeVisible();
 });

@@ -34,7 +34,7 @@ export type Artist = {
 
 /** 장소 검색(카카오 로컬 / 우편번호 서비스)으로 고른 위치. */
 export type Place = {
-  name: string; // 건물·장소 이름
+  name: string; // 건물, 장소 이름
   address: string | null; // 도로명 주소
   lat: number | null;
   lng: number | null;
@@ -55,7 +55,7 @@ export type Exhibition = {
   hours?: string | null; // 관람 시간
   opening?: string | null; // 오프닝
   note?: string | null; // 출처끼리 다른 점 등 안내
-  /** 공개 일정에서 가져온 전시의 출처. 신청·직접 등록한 전시는 null. */
+  /** 공개 일정에서 가져온 전시의 출처. 신청, 직접 등록한 전시는 null. */
   source?: { label: string; url: string } | null;
   createdAt: string;
 };
@@ -83,13 +83,13 @@ export type WorkKind = (typeof WORK_KINDS)[number];
 /** available → reserved(주문 접수, 입금 대기) → sold. hidden = 비공개. */
 export type WorkStatus = "available" | "reserved" | "sold" | "hidden";
 
-/** 작품 미디어: 사진, 영상(작업 과정·회전), 3D 모델(GLB). 첫 번째 사진이 대표 이미지. */
+/** 작품 미디어: 사진, 영상(작업 과정, 회전), 3D 모델(GLB). 첫 번째 사진이 대표 이미지. */
 export const MEDIA_KINDS = ["image", "video", "model"] as const;
 export type MediaKind = (typeof MEDIA_KINDS)[number];
 export type MediaItem = {
   kind: MediaKind;
   src: string;
-  poster?: string | null; // 영상·3D의 미리보기 이미지
+  poster?: string | null; // 영상, 3D의 미리보기 이미지
   alt?: string | null;
 };
 
@@ -105,14 +105,14 @@ export type Work = {
   depthCm: number | null;
   weightKg: number | null;
   year: number;
-  edition: string | null; // "3/10" — 판화·사진 에디션 번호
+  edition: string | null; // "3/10" — 판화, 사진 에디션 번호
   kind: WorkKind;
   price: number; // KRW
   status: WorkStatus;
   media: MediaItem[];
   description: string;
   allowsPickup: boolean; // 직거래(직접 수령)
-  /** 운영자 본인·친족 소유 작품 — 미술진흥법상 사전 고지 대상. */
+  /** 운영자 본인이나 친족 소유 작품 — 미술진흥법상 사전 고지 대상. */
   operatorOwned: boolean;
   featured: boolean;
   createdAt: string;
@@ -143,7 +143,7 @@ export type Buyer = {
   phone: string;
   email: string;
   address: string;
-  /** 미술품 전문 운송용 — 층수·엘리베이터·진입로. */
+  /** 미술품 전문 운송용 — 층수, 엘리베이터, 진입로. */
   deliveryNote: string;
 };
 
@@ -194,7 +194,7 @@ export type Application = {
 export type ExhibitionKind = "graduation" | "coursework" | "other";
 export type ExhibitionSupport = "archive" | "photo" | "qr";
 
-/** 졸업·과제전시 등록 신청 — 졸준위·학생회·학과·작가가 전시를 MAYO에 올려 달라고 요청한다. */
+/** 졸업전시와 과제전 등록 신청 — 졸준위, 학생회, 학과, 작가가 전시를 MAYO에 올려 달라고 요청한다. */
 export type ExhibitionRequest = {
   id: ID;
   code: string; // 신청 현황 조회용 (E-XXXXXXXX)
@@ -231,7 +231,7 @@ export type Inquiry = {
   phone: string | null;
   subject: string;
   message: string;
-  relatedCode: string | null; // 관련 주문·신청 번호
+  relatedCode: string | null; // 관련 주문이나 신청 번호
   state: "new" | "answered" | "closed";
   answer: string | null;
   answeredAt: string | null;

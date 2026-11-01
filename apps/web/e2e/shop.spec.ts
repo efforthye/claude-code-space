@@ -7,7 +7,7 @@ test("browse the collection and filter by medium", async ({ page }) => {
   await page.getByRole("button", { name: "가구", exact: true }).click();
   const cards = page.locator("#collection a[href^='/works/']");
   await expect(cards.first()).toBeVisible();
-  for (const text of await cards.allInnerTexts()) expect(text).toContain("· 가구");
+  for (const text of await cards.allInnerTexts()) expect(text).toContain(", 가구");
 });
 
 test("work page shows verification and art-shipping notice", async ({ page }) => {

@@ -14,7 +14,7 @@ const InquiryInput = z.object({
   subject: z.string().trim().min(2, "제목을 입력해 주세요").max(80),
   message: z.string().trim().min(5, "문의 내용을 조금 더 적어 주세요").max(3000),
   relatedCode: z.string().trim().max(20),
-  agreePrivacy: z.literal(true, { error: "개인정보 수집·이용에 동의해 주세요" }),
+  agreePrivacy: z.literal(true, { error: "개인정보 수집 및 이용에 동의해 주세요" }),
 });
 
 export type InquiryFormState = { ok: false; errors: Record<string, string> } | { ok: true; code: string; title: string } | null;
@@ -57,5 +57,5 @@ export async function submitInquiry(_prev: InquiryFormState, form: FormData): Pr
       createdAt: new Date().toISOString(),
     });
   });
-  return { ok: true, code, title: `문의 · ${v.subject}` };
+  return { ok: true, code, title: `문의: ${v.subject}` };
 }

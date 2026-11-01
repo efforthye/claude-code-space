@@ -43,9 +43,9 @@ export default async function AdminQr(props: PageProps<"/admin/qr">) {
               <p className="font-bold">{artistName.get(w.artistId)}</p>
               <p className="italic">「{w.title}」, {w.year}</p>
               <p>{w.materials}</p>
-              <p>{formatSize(w.widthCm, w.heightCm, w.depthCm)}{w.edition && ` · ed. ${w.edition}`}</p>
+              <p>{formatSize(w.widthCm, w.heightCm, w.depthCm)}{w.edition && `, ed. ${w.edition}`}</p>
               <p className="mt-2 font-bold">{formatPrice(w.price)}</p>
-              <p className="mt-auto pt-2 text-[10px] text-ink-soft">QR로 작품 보기 · 소장 신청 — MAYO</p>
+              <p className="mt-auto pt-2 text-[10px] text-ink-soft">QR로 작품 보기와 소장 신청, MAYO</p>
             </div>
             <div className="size-24 shrink-0" dangerouslySetInnerHTML={{ __html: svg }} />
           </div>

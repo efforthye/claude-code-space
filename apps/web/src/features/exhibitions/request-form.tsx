@@ -23,7 +23,7 @@ export function ExhibitionRequestForm() {
         codeTitle={state.title}
         actions={<Link href="/exhibitions" className="inline-flex h-10 items-center rounded-sm border border-ink px-4 text-sm font-semibold transition hover:bg-ink hover:text-paper">전시 목록으로</Link>}
       >
-        확인 후 담당자 연락처로 전시 페이지 오픈 일정과 촬영·QR 라벨 준비를 안내드릴게요.
+        확인 후 담당자 연락처로 전시 페이지 오픈 일정과 촬영, QR 라벨 준비를 안내드릴게요.
       </Celebrate>
     );
 
@@ -38,7 +38,7 @@ export function ExhibitionRequestForm() {
       <Field label="이메일" required error={errors.email}><Input name="email" type="email" /></Field>
       <Field label="휴대폰" required error={errors.phone}><Input name="phone" inputMode="tel" placeholder="010-0000-0000" /></Field>
       <Field label="학교" required error={errors.schoolName}><Input name="schoolName" placeholder="홍익대학교" /></Field>
-      <Field label="학과·단과대"><Input name="department" placeholder="미술대학 회화과" /></Field>
+      <Field label="학과, 단과대"><Input name="department" placeholder="미술대학 회화과" /></Field>
       <Field label="전시명" required error={errors.title} className="sm:col-span-2"><Input name="title" placeholder="2026 ○○과 졸업전시 〈제목〉" /></Field>
       <Field label="전시 구분" required>
         <Select name="kind" defaultValue="graduation">
@@ -64,7 +64,7 @@ export function ExhibitionRequestForm() {
 
       <Field label="하고 싶은 말" className="sm:col-span-2"><Textarea name="message" placeholder="전시 소개, 촬영 희망 일정, 작품 철수일 등" /></Field>
       <div className="sm:col-span-2">
-        <Checkbox name="agreePrivacy" label={<>전시 등록 연락을 위한 <Link href="/legal/privacy" target="_blank" className="underline">개인정보 수집·이용</Link>에 동의해요 (필수)</>} />
+        <Checkbox name="agreePrivacy" label={<>전시 등록 연락을 위한 <Link href="/legal/privacy" target="_blank" className="underline">개인정보 수집 및 이용</Link>에 동의해요 (필수)</>} />
         {errors.agreePrivacy && <p className="mt-1 text-xs font-medium text-dot">{errors.agreePrivacy}</p>}
       </div>
       {errors.form && <p className="rounded-sm bg-dot/10 p-3 text-sm text-dot sm:col-span-2">{errors.form}</p>}

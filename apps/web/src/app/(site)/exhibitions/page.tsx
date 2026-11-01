@@ -28,12 +28,12 @@ export default async function ExhibitionsPage() {
     <Container className="flex flex-col gap-8 py-10">
       <PageHeading
         eyebrow="Exhibitions"
-        title="졸업전시 · 과제전"
-        description="2026년 가을 미대·디자인 졸업전시 일정을 모았어요. 학과 포스터와 공개 일정표를 정리한 정보라 바뀔 수 있으니, 방문 전 학과 공식 계정에서 확인하세요."
+        title="졸업전시와 과제전"
+        description="2026년 가을 미대, 디자인 졸업전시 일정을 모았어요. 학과 포스터와 공개 일정표를 정리한 정보라 바뀔 수 있으니, 방문 전 학과 공식 계정에서 확인하세요."
       />
       <aside className="flex flex-col gap-3 rounded-md border-2 border-ink bg-paper p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-bold">우리 학과 졸업·과제전시도 MAYO에 올려 보세요</p>
+          <p className="font-bold">우리 학과 졸업전시와 과제전도 MAYO에 올려 보세요</p>
           <p className="text-sm text-ink-soft">목록에 없거나 정보가 다르면 신청해 주세요. 온라인 전시 페이지, 작품 촬영, QR 캡션 라벨까지 — 이번 시즌 무료예요.</p>
         </div>
         <ButtonLink href="/exhibitions/apply" className="shrink-0">전시 등록 신청하기</ButtonLink>

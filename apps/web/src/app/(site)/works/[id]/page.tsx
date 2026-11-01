@@ -9,7 +9,7 @@ import { AddToCart } from "@/features/cart/add-to-cart";
 import { WorkCard } from "@/features/catalog/work-card";
 import { MediaGallery } from "@/features/catalog/media-gallery";
 import { getCatalog, indexById } from "@/lib/data/catalog";
-import { ARTIST_STATUS_LABEL, KIND_LABEL, MEDIUM_LABEL, needsArtShipping, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
+import { ARTIST_STATUS_LABEL, coverImage, KIND_LABEL, MEDIUM_LABEL, needsArtShipping, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
 import { formatPrice, formatSize } from "@/lib/format";
 
 export default function WorkPage(props: PageProps<"/works/[id]">) {
@@ -48,7 +48,7 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
               <Link href={`/artists/${artist.id}`} className="font-semibold underline-offset-4 hover:underline">
                 {artist.name}
                 <span className="ml-2 text-sm font-normal text-ink-soft">
-                  {[school?.name, artist.department, ARTIST_STATUS_LABEL[artist.status]].filter(Boolean).join(" · ")}
+                  {[school?.name, artist.department, ARTIST_STATUS_LABEL[artist.status]].filter(Boolean).join(", ")}
                 </span>
               </Link>
             )}
@@ -83,11 +83,11 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
             </div>
             {needsArtShipping(work) && (
               <p className="rounded-sm bg-warn-soft p-3 text-xs text-warn">
-                크기·무게 때문에 미술품 전문 운송 대상입니다. 주문 신청 후 운송 견적을 먼저 안내드리고, 동의하신 뒤에 운송비를
+                크기와 무게 때문에 미술품 전문 운송 대상입니다. 주문 신청 후 운송 견적을 먼저 안내드리고, 동의하신 뒤에 운송비를
                 받습니다.
               </p>
             )}
-            <AddToCart workId={work.id} status={work.status} defaultShipping={options[0]} />
+            <AddToCart workId={work.id} status={work.status} defaultShipping={options[0]} cover={coverImage(work)} />
             <p className="text-xs text-ink-soft">로그인 없이 담고 주문 신청할 수 있어요. 결제는 무통장 입금으로 진행됩니다.</p>
           </div>
 
@@ -102,9 +102,9 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
           <details className="text-xs text-ink-soft">
             <summary className="cursor-pointer font-semibold text-ink">청약철회(반품) 안내</summary>
             <p className="mt-2 leading-relaxed">
-              작품을 받은 날부터 7일 이내에 청약을 철회할 수 있습니다. 받은 작품이 표시·광고 내용과 다르거나 계약과 다르게
+              작품을 받은 날부터 7일 이내에 청약을 철회할 수 있습니다. 받은 작품이 표시나 광고 내용과 다르거나 계약과 다르게
               이행된 경우에는 받은 날부터 3개월 이내, 그 사실을 안 날(또는 알 수 있었던 날)부터 30일 이내에 철회할 수 있습니다.
-              주문제작 작품은 결제 전에 별도로 안내·동의받은 경우에 한해 철회가 제한될 수 있습니다.
+              주문제작 작품은 결제 전에 별도로 안내하고 동의받은 경우에 한해 철회가 제한될 수 있습니다.
             </p>
           </details>
         </div>

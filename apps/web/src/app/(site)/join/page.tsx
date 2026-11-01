@@ -17,7 +17,7 @@ export default function JoinPage() {
       <PageHeading
         eyebrow="For artists"
         title="졸업작품, 전시 끝나고 창고 말고 새 주인에게"
-        description="회화부터 가구·의상·조각·금속공예까지. 재학생·졸업생·미대 지망생·일반 작가 누구나 신청할 수 있어요."
+        description="회화부터 가구, 의상, 조각, 금속공예까지. 재학생, 졸업생, 미대 지망생, 일반 작가 누구나 신청할 수 있어요."
       />
       <ul className="grid gap-3 sm:grid-cols-2">
         {PERKS.map((p) => (

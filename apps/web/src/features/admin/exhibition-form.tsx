@@ -32,7 +32,7 @@ export function ExhibitionForm({ exhibition, schools }: { exhibition?: Exhibitio
           defaultDetail={exhibition?.place ? exhibition.venue.replace(exhibition.place.name, "").trim() : exhibition?.venue}
         />
       </div>
-      <Field label="관람 시간" hint="예: 월–금 10:00–20:00 · 토 10:00–14:00"><Input name="hours" defaultValue={exhibition?.hours ?? ""} /></Field>
+      <Field label="관람 시간" hint="예: 월–금 10:00–20:00, 토 10:00–14:00"><Input name="hours" defaultValue={exhibition?.hours ?? ""} /></Field>
       <Field label="오프닝"><Input name="opening" defaultValue={exhibition?.opening ?? ""} placeholder="11.16 (월) 14:00" /></Field>
       <Field label="외부 링크" className="md:col-span-2"><Input name="link" defaultValue={exhibition?.link ?? ""} placeholder="https://" /></Field>
       <Field label="소개" className="md:col-span-2"><Textarea name="description" defaultValue={exhibition?.description} /></Field>

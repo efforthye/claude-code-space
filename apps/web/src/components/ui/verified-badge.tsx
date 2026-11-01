@@ -16,7 +16,7 @@ export function SealIcon({ className }: { className?: string }) {
   );
 }
 
-/** 목록·캡션용 작은 인증 배지. */
+/** 목록, 캡션용 작은 인증 배지. */
 export function VerifiedBadge({
   method,
   schoolName,
@@ -34,12 +34,12 @@ export function VerifiedBadge({
     >
       <SealIcon className="size-4" />
       {schoolName ? `${schoolName} 인증` : "학교 인증"}
-      {showMethod && <span className="font-medium text-ink-soft">· {VERIFY_LABEL[method]}</span>}
+      {showMethod && <span className="font-medium text-ink-soft">, {VERIFY_LABEL[method]}</span>}
     </span>
   );
 }
 
-/** 작품·작가 상세의 인증 카드: 무엇으로, 언제 확인했는지까지 보여 준다. */
+/** 작품, 작가 상세의 인증 카드: 무엇으로, 언제 확인했는지까지 보여 준다. */
 export function VerificationCard({
   method,
   verifiedAt,
@@ -65,10 +65,10 @@ export function VerificationCard({
       <SealIcon className="size-9" />
       <div className="flex flex-col gap-0.5 text-sm">
         <p className="font-bold">
-          {[schoolName, department].filter(Boolean).join(" ")} {statusLabel} · MAYO 인증
+          {[schoolName, department].filter(Boolean).join(" ")} {statusLabel}, MAYO 인증
         </p>
         <p className="text-xs text-ink-soft">
-          {VERIFY_LABEL[method]}로 확인{verifiedAt && ` · ${formatDate(verifiedAt)}`} · 확인에 쓴 서류는 보관하지 않고 바로 파기했어요
+          {VERIFY_LABEL[method]}로 확인{verifiedAt && `, ${formatDate(verifiedAt)}`}, 확인에 쓴 서류는 보관하지 않고 바로 파기했어요
         </p>
       </div>
     </div>

@@ -49,7 +49,7 @@ export function MyList() {
       {rows === null ? (
         <p className="text-sm text-ink-soft">불러오는 중…</p>
       ) : rows.length === 0 ? (
-        <EmptyState title="이 기기에서 넣은 신청이 아직 없어요">주문·입점 신청·전시 등록·문의를 하면 여기에서 진행 상황을 볼 수 있어요.</EmptyState>
+        <EmptyState title="이 기기에서 넣은 신청이 아직 없어요">주문, 입점 신청, 전시 등록, 문의를 하면 여기에서 진행 상황을 볼 수 있어요.</EmptyState>
       ) : (
         <ul className="flex flex-col gap-3">
           {rows.map((r) => (

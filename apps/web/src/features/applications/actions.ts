@@ -26,7 +26,7 @@ const ApplicationInput = z.object({
   instagram: z.string().trim().max(60),
   portfolioUrl: httpsUrl,
   message: z.string().trim().max(1000),
-  agreePrivacy: z.literal(true, { error: "개인정보 수집·이용에 동의해 주세요" }),
+  agreePrivacy: z.literal(true, { error: "개인정보 수집 및 이용에 동의해 주세요" }),
   agreeImage: z.literal(true, { error: "작품 이미지 이용 허락에 동의해 주세요" }),
 });
 
@@ -93,5 +93,5 @@ export async function submitApplication(_prev: ApplicationFormState, form: FormD
       createdAt: new Date().toISOString(),
     });
   });
-  return { ok: true, code, title: `작가 입점 신청 · ${v.name}` };
+  return { ok: true, code, title: `작가 입점 신청: ${v.name}` };
 }

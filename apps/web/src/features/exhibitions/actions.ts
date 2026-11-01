@@ -23,7 +23,7 @@ const RequestInput = z
     artistCount: z.string().trim(),
     support: z.array(z.enum(["archive", "photo", "qr"])),
     message: z.string().trim().max(1000),
-    agreePrivacy: z.literal(true, { error: "개인정보 수집·이용에 동의해 주세요" }),
+    agreePrivacy: z.literal(true, { error: "개인정보 수집 및 이용에 동의해 주세요" }),
   })
   .refine((v) => v.endDate >= v.startDate, { message: "종료일이 시작일보다 빨라요", path: ["endDate"] });
 
@@ -82,5 +82,5 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
       createdAt: new Date().toISOString(),
     });
   });
-  return { ok: true, code, title: `전시 등록 신청 · ${v.title}` };
+  return { ok: true, code, title: `전시 등록 신청: ${v.title}` };
 }

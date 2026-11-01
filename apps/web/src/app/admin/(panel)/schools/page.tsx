@@ -6,7 +6,7 @@ export default async function AdminSchools() {
   const db = await adminDb();
   return (
     <>
-      <AdminHeading title="학교" description="학교 이름은 소개용입니다. 학교 로고·교표는 쓰지 않아요 (공식 서비스로 오해받지 않도록)." />
+      <AdminHeading title="학교" description="학교 이름은 소개용입니다. 학교 로고와 교표는 쓰지 않아요 (공식 서비스로 오해받지 않도록)." />
       <div className="mb-6"><SchoolForm /></div>
       <Table head={["학교", "짧은 이름", "작가", "인증 작가", "전시"]}>
         {db.schools.map((s) => {

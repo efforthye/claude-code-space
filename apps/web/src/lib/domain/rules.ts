@@ -15,18 +15,18 @@ export const MEDIUM_LABEL: Record<Medium, string> = {
   drawing: "드로잉",
   print: "판화",
   photo: "사진",
-  sculpture: "조각·설치",
+  sculpture: "조각, 설치",
   furniture: "가구",
   metal: "금속공예",
-  ceramic: "도예·유리",
-  textile: "섬유·의상",
+  ceramic: "도예, 유리",
+  textile: "섬유, 의상",
   digital: "디지털",
   craft: "공예",
 };
 
 export const KIND_LABEL: Record<WorkKind, string> = {
   graduation: "졸업작품",
-  study: "습작·연구작",
+  study: "습작, 연구작",
   coursework: "과제전 출품작",
   personal: "개인 작업",
   edition: "에디션",
@@ -48,7 +48,7 @@ export const ARTIST_STATUS_LABEL: Record<ArtistStatus, string> = {
 
 export const VERIFY_LABEL: Record<VerifyMethod, string> = {
   school_email: "학교 이메일",
-  student_id: "학생증·증명서",
+  student_id: "학생증이나 증명서",
   roster: "졸업전시 명단",
 };
 
@@ -74,7 +74,7 @@ export const PARCEL_FEE = 5_000;
 export const PAYMENT_DUE_HOURS = 48;
 
 /**
- * 100cm 이상·20kg 이상·조소·설치·가구는 미술품 전문 운송이 기본 (가이드 21장 ⑦).
+ * 100cm 이상, 20kg 이상, 조소, 설치, 가구는 미술품 전문 운송이 기본 (가이드 21장 ⑦).
  * 견적을 받은 뒤 운송비를 따로 안내한다.
  */
 export function needsArtShipping(work: Pick<Work, "widthCm" | "heightCm" | "depthCm" | "weightKg" | "medium">) {
@@ -100,7 +100,7 @@ export const ORDER_NEXT: Record<OrderStatus, OrderStatus[]> = {
   cancelled: [],
 };
 
-/** 대표 이미지: 첫 사진, 없으면 첫 영상·3D의 미리보기. */
+/** 대표 이미지: 첫 사진, 없으면 첫 영상, 3D의 미리보기. */
 export function coverImage(work: Pick<Work, "media">): string | undefined {
   return work.media.find((m) => m.kind === "image")?.src ?? work.media.find((m) => m.poster)?.poster ?? undefined;
 }
@@ -134,7 +134,7 @@ export function isPaymentOverdue(order: Pick<Order, "status" | "paymentDueAt">) 
 export const ORGANIZER_LABEL = {
   committee: "졸업준비위원회",
   council: "학생회",
-  department: "학과·교수",
+  department: "학과, 교수",
   artist: "참여 작가",
   other: "기타",
 } as const;
@@ -142,10 +142,10 @@ export const ORGANIZER_LABEL = {
 export const EXHIBITION_KIND_LABEL = { graduation: "졸업전시", coursework: "과제전", other: "기타 전시" } as const;
 
 export const INQUIRY_TOPIC_LABEL = {
-  purchase: "작품 구매·주문",
-  artist: "작가 입점·정산",
-  exhibition: "전시 등록·촬영",
-  partnership: "제휴·협업 (학생회·기업)",
+  purchase: "작품 구매, 주문",
+  artist: "작가 입점, 정산",
+  exhibition: "전시 등록, 촬영",
+  partnership: "제휴, 협업 (학생회, 기업)",
   other: "기타",
 } as const;
 

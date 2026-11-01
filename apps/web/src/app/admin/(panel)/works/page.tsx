@@ -14,13 +14,13 @@ export default async function AdminWorks() {
   return (
     <>
       <AdminHeading title="작품" description={`전체 ${works.length}점`} action={<ButtonLink href="/admin/works/new">작품 등록</ButtonLink>} />
-      <Table head={["", "작품", "작가", "매체 · 구분", "크기", "가격", "상태"]}>
+      <Table head={["", "작품", "작가", "매체와 구분", "크기", "가격", "상태"]}>
         {works.map((w) => (
           <tr key={w.id} className="hover:bg-mist/50">
             <Td><WorkImage src={coverImage(w)} alt="" className="size-12 rounded-sm" /></Td>
-            <Td><Link href={`/admin/works/${w.id}`} className="font-semibold underline underline-offset-2">{w.title}</Link>{w.edition && <span className="text-ink-soft"> · {w.edition}</span>}</Td>
+            <Td><Link href={`/admin/works/${w.id}`} className="font-semibold underline underline-offset-2">{w.title}</Link>{w.edition && <span className="text-ink-soft">, {w.edition}</span>}</Td>
             <Td>{artistName.get(w.artistId)}</Td>
-            <Td className="text-ink-soft">{MEDIUM_LABEL[w.medium]} · {KIND_LABEL[w.kind]}</Td>
+            <Td className="text-ink-soft">{MEDIUM_LABEL[w.medium]}, {KIND_LABEL[w.kind]}</Td>
             <Td className="text-ink-soft">{formatSize(w.widthCm, w.heightCm, w.depthCm)}</Td>
             <Td>{formatPrice(w.price)}</Td>
             <Td><Badge tone={w.status === "available" ? "ok" : w.status === "hidden" ? "neutral" : "dot"}>{WORK_STATUS_LABEL[w.status]}</Badge></Td>

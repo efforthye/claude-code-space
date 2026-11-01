@@ -28,18 +28,18 @@ export default async function AdminExhibitionRequests() {
               <span className="ml-auto text-xs text-ink-soft">{formatDateTime(r.createdAt)}</span>
             </div>
             <p className="text-ink-soft">
-              {[r.schoolName, r.department].filter(Boolean).join(" ")} · {formatPeriod(r.startDate, r.endDate)} · {r.venue}
-              {r.artistCount != null && ` · 작가 ${r.artistCount}명`}
+              {[r.schoolName, r.department].filter(Boolean).join(" ")}, {formatPeriod(r.startDate, r.endDate)}, {r.venue}
+              {r.artistCount != null && `, 작가 ${r.artistCount}명`}
             </p>
             <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
-              <div><dt className="inline text-ink-soft">신청 </dt><dd className="inline">{ORGANIZER_LABEL[r.organizer]} · {r.contactName}</dd></div>
-              <div><dt className="inline text-ink-soft">연락처 </dt><dd className="inline">{r.phone} · {r.email}</dd></div>
+              <div><dt className="inline text-ink-soft">신청 </dt><dd className="inline">{ORGANIZER_LABEL[r.organizer]}, {r.contactName}</dd></div>
+              <div><dt className="inline text-ink-soft">연락처 </dt><dd className="inline">{r.phone}, {r.email}</dd></div>
               <div className="sm:col-span-2"><dt className="inline text-ink-soft">원하는 지원 </dt><dd className="inline">{r.support.map((x) => SUPPORT_LABEL[x]).join(", ") || "없음"}</dd></div>
             </dl>
             {r.message && <p className="rounded-sm bg-mist p-3 whitespace-pre-line">{r.message}</p>}
             {r.state === "new" ? (
               <div className="flex gap-2">
-                <form action={reviewExhibitionRequest.bind(null, r.id, "approved")}><Button type="submit" size="sm">승인 · 전시 만들기</Button></form>
+                <form action={reviewExhibitionRequest.bind(null, r.id, "approved")}><Button type="submit" size="sm">승인하고 전시 만들기</Button></form>
                 <form action={reviewExhibitionRequest.bind(null, r.id, "rejected")}><Button type="submit" size="sm" variant="secondary">보류</Button></form>
               </div>
             ) : (

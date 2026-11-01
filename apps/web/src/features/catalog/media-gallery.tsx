@@ -4,10 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import type { MediaItem } from "@/lib/domain/types";
 import { WorkImage } from "./work-image";
+import { ZoomImage } from "./zoom-image";
 
 /**
- * 작품 미디어 뷰어: 사진·영상·3D(GLB). 썸네일, 좌우 버튼, 키보드 ←/→ 로 넘긴다.
- * 3D는 @google/model-viewer — 드래그로 회전, 휠·핀치로 확대, 휴대폰에선 AR로 내 공간에 놓아 본다.
+ * 작품 미디어 뷰어: 사진, 영상, 3D(GLB). 썸네일, 좌우 버튼, 키보드 ←/→ 로 넘긴다.
+ * 3D는 @google/model-viewer — 드래그로 회전, 휠, 핀치로 확대, 휴대폰에선 AR로 내 공간에 놓아 본다.
  */
 export function MediaGallery({ media, title }: { media: MediaItem[]; title: string }) {
   const [active, setActive] = useState(0);
@@ -27,7 +28,9 @@ export function MediaGallery({ media, title }: { media: MediaItem[]; title: stri
       <div className="glass relative overflow-hidden rounded-lg p-3 sm:p-5" role="region" aria-roledescription="carousel" aria-label={`${title} 미디어`} tabIndex={0}>
         <div className="flex h-[min(70vh,640px)] items-center justify-center">
           {current.kind === "image" && (
-            <WorkImage key={current.src} src={current.src} alt={current.alt ?? `${title} ${active + 1}`} className="max-h-full w-auto max-w-full animate-[rise_300ms_ease-out] rounded-md object-contain" />
+            <div key={current.src} className="flex max-h-full animate-[rise_300ms_ease-out] justify-center">
+              <ZoomImage src={current.src} alt={current.alt ?? `${title} ${active + 1}`} />
+            </div>
           )}
           {current.kind === "video" && (
             <video key={current.src} src={current.src} poster={current.poster ?? undefined} controls playsInline preload="metadata" className="max-h-full max-w-full rounded-md bg-black">

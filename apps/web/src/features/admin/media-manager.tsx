@@ -32,7 +32,7 @@ function upload(file: File, onProgress: (p: number) => void): Promise<MediaItem>
 const KIND_LABEL = { image: "사진", video: "영상", model: "3D" } as const;
 
 /**
- * 작품 미디어 관리: 사진·영상·3D를 올리고 순서를 바꾸고 뺀다. 첫 번째 사진이 대표 이미지.
+ * 작품 미디어 관리: 사진, 영상, 3D를 올리고 순서를 바꾸고 뺀다. 첫 번째 사진이 대표 이미지.
  * 폼에는 hidden `media`(JSON)로 실리고, 서버에서 다시 검증한다.
  */
 export function MediaManager({ initial }: { initial: MediaItem[] }) {
@@ -63,14 +63,14 @@ export function MediaManager({ initial }: { initial: MediaItem[] }) {
       return next;
     });
 
-  // 영상·3D의 미리보기는 목록에서 가장 가까운 사진으로 자동 지정
+  // 영상, 3D의 미리보기는 목록에서 가장 가까운 사진으로 자동 지정
   const withPosters = items.map((m) =>
     m.kind === "image" || m.poster ? m : { ...m, poster: items.find((x) => x.kind === "image")?.src ?? null },
   );
 
   return (
     <fieldset className="glass flex flex-col gap-4 rounded-lg p-4 md:col-span-2">
-      <legend className="px-1 text-sm font-semibold">사진 · 영상 · 3D (첫 번째 사진이 대표 이미지)</legend>
+      <legend className="px-1 text-sm font-semibold">사진, 영상, 3D (첫 번째 사진이 대표 이미지)</legend>
       <input type="hidden" name="media" value={JSON.stringify(withPosters)} />
 
       {items.length > 0 && (
@@ -124,7 +124,7 @@ export function MediaManager({ initial }: { initial: MediaItem[] }) {
             }}
           />
         </label>
-        <span className="text-xs text-ink-soft">사진 10MB, 영상 80MB, 3D(GLB) 30MB까지 · 실물 색에 맞춰 보정한 사진을 올려 주세요</span>
+        <span className="text-xs text-ink-soft">사진 10MB, 영상 80MB, 3D(GLB) 30MB까지. 실물 색에 맞춰 보정한 사진을 올려 주세요</span>
       </div>
       <div className="flex gap-2">
         <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="또는 https:// 이미지 주소" aria-label="이미지 주소" />
