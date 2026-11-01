@@ -36,9 +36,11 @@ class LocalJsonStore implements Store {
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
       // 예시 데이터는 개발 환경에서만 — 실서비스에 가짜 작품이 판매 중으로 뜨면 안 된다.
-      const db = process.env.MAYO_SAMPLE_DATA === "off" || process.env.NODE_ENV === "production"
-        ? structuredClone(EMPTY)
-        : buildSampleDatabase();
+      // 빈 DB는 파일로 남기지 않는다(빌드가 만든 빈 파일이 개발 시딩을 막지 않도록).
+      if (process.env.MAYO_SAMPLE_DATA === "off" || process.env.NODE_ENV === "production") {
+        return structuredClone(EMPTY);
+      }
+      const db = buildSampleDatabase();
       await this.save(db);
       return db;
     }
