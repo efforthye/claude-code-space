@@ -523,3 +523,6 @@ eslint-config-next 하위의 minimatch(개발 도구 전용, 런타임 미포함
 ## [2026-11-01] deploy | web 실서비스 주의: Vercel은 파일 저장 불가라 실서비스에서는 신청·주문 폼이 "오픈 준비 중"으로 막힘
 (STORE_READONLY). 실서비스 저장소(mayo-api 또는 DB) 연결 전까지 유지. 사업자 표시 정보는 Vercel env(BUSINESS_*)로 설정.
 ADMIN_SESSION_SECRET·ADMIN_PASSWORD는 오너가 Vercel에 직접 넣어야 관리자 로그인이 켜짐(비밀 저장소 쓰기는 자동화하지 않음).
+
+## [2026-11-01] service | web — art-law certificates, late artists, managed artist groups, gallery rework
+Certificates of authenticity (request, issue, revoke, public verify with QR), ledger seller snapshot and 2차 판매 marking, admin 미술서비스업 checklist from the 강남구 notice (강남구보건소 5층 문화도시과, 계도기간 to 2027-07-25). Artist groups and categories admin-managed; late artists with estate, provenance, appraisal; work story blocks. Commits 095a0a6 and the follow-up home/footer/map commit. Jira connector not authorized this session: issues to reconcile.
