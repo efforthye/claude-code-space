@@ -4,7 +4,7 @@ import { buildBaseDatabase } from "./base";
 /**
  * 개발용 예시 데이터. 작가, 작품은 모두 가상이다 (사업계획서 화면 예시와 같은 원칙).
  * 실제 전시 일정(base) 위에 얹되, 가상 작품을 실제 전시에 출품한 것처럼 연결하지 않는다.
- * 실서비스(production)에서는 절대 시딩하지 않는다 — store.ts 참고.
+ * 실서비스(production)에서는 절대 시딩하지 않는다, store.ts 참고.
  */
 export function buildSampleDatabase(): Database {
   const now = "2026-11-01T00:00:00.000Z";
@@ -20,6 +20,9 @@ export function buildSampleDatabase(): Database {
     instagram: null,
     portfolioUrl: null,
     acceptsCommission: false,
+    birthYear: null,
+    deathYear: null,
+    estate: null,
     createdAt: now,
     ...a,
   });
@@ -74,9 +77,23 @@ export function buildSampleDatabase(): Database {
       verifiedAt: null,
       bio: "버려진 석고 틀로 다시 형태를 만듭니다.",
     }),
+    artist({
+      id: "art-late-oh",
+      name: "오명수",
+      schoolId: null,
+      gradYear: null,
+      status: "late",
+      verifiedBy: null,
+      verifiedAt: null,
+      birthYear: 1938,
+      deathYear: 2011,
+      estate: "작가 유족",
+      bio: "평생 같은 바닷가 마을의 붉은 지붕을 그렸습니다. 유족이 소장해 온 작품 일부를 소개합니다.",
+    }),
   ];
 
   const base = {
+    story: [] as Work["story"],
     depthCm: null,
     weightKg: null,
     edition: null,
@@ -85,6 +102,9 @@ export function buildSampleDatabase(): Database {
     status: "available" as const,
     allowsPickup: true,
     operatorOwned: false,
+    consignor: null,
+    provenance: null,
+    appraisal: null,
     featured: false,
     createdAt: now,
     updatedAt: now,
@@ -95,7 +115,13 @@ export function buildSampleDatabase(): Database {
   const model = (name: string, poster: string): MediaItem => ({ kind: "model", src: `/samples/3d/${name}.glb`, poster: `/samples/photos/${poster}.jpg` });
 
   const works: Work[] = [
-    { ...base, id: "w-blue-afternoon", title: "푸른 오후의 기억", artistId: "art-jieun", medium: "painting", materials: "캔버스에 아크릴", widthCm: 72.7, heightCm: 60.6, price: 320_000, media: [photo("painting-blue-yellow"), photo("detail-oil-texture"), photo("studio-easel"), video("painting-process")], description: "창가에 오래 머무는 오후 네 시의 빛. 여섯 달 동안 같은 시간의 같은 창을 그렸습니다.", featured: true },
+    { ...base, id: "w-blue-afternoon", title: "푸른 오후의 기억", artistId: "art-jieun", medium: "painting", materials: "캔버스에 아크릴", widthCm: 72.7, heightCm: 60.6, price: 320_000, media: [photo("painting-blue-yellow"), photo("detail-oil-texture"), photo("studio-easel"), video("painting-process")], description: "창가에 오래 머무는 오후 네 시의 빛. 여섯 달 동안 같은 시간의 같은 창을 그렸습니다.", featured: true,
+      story: [
+        { kind: "text", text: "자취방 창문은 서향이었습니다. 오후 네 시가 되면 빛이 바닥을 가로질러 벽까지 올라왔고, 그 시간이 하루 중 유일하게 방이 넓어 보이는 순간이었습니다.\n\n3월부터 8월까지 매일 그 시간에 같은 자리에서 스케치를 했습니다. 이 그림은 그 여섯 달을 한 장에 겹친 것입니다." },
+        { kind: "image", src: "/samples/photos/studio-easel.jpg", caption: "작업실 이젤. 창가 쪽에서 매일 같은 각도로 그렸어요." },
+        { kind: "text", text: "물감은 아크릴을 얇게 여러 번 올렸습니다. 가까이에서 보면 아래 층의 노란색이 군데군데 비쳐 보이는데, 처음 몇 주 동안의 빛이 그대로 남아 있는 부분입니다." },
+        { kind: "image", src: "/samples/photos/detail-oil-texture.jpg", caption: "표면 디테일" },
+      ] },
     { ...base, id: "w-night-garden", title: "밤의 정원", artistId: "art-jieun", medium: "painting", materials: "캔버스에 유채", widthCm: 53, heightCm: 45.5, price: 180_000, media: [photo("painting-abstract"), video("brush-canvas")], description: "불이 꺼진 뒤의 정원." },
     { ...base, id: "w-folding-chair", title: "접히는 의자", artistId: "art-hana", medium: "furniture", materials: "물푸레나무, 오일 마감", widthCm: 48, heightCm: 82, depthCm: 52, weightKg: 9, price: 420_000, media: [photo("chair-cushion"), model("sheen-chair", "chair-cushion"), photo("chair-floor"), photo("detail-wood-board")], description: "펼치면 의자, 접으면 벽에 거는 판이 됩니다." },
     { ...base, id: "w-curly-shelf", title: "곱슬 수납장", artistId: "art-hana", medium: "furniture", materials: "자작나무 합판, 도장", widthCm: 90, heightCm: 140, depthCm: 40, weightKg: 26, price: 1_200_000, media: [photo("cabinet-drawers"), photo("detail-drawer"), photo("detail-wood-board")], description: "물결 모양 옆판의 수납장.", status: "reserved" },
@@ -108,6 +134,7 @@ export function buildSampleDatabase(): Database {
     { ...base, id: "w-clay-time", title: "흙의 시간", artistId: "art-doyun", medium: "ceramic", materials: "백토, 재유", widthCm: 24, heightCm: 9, depthCm: 24, weightKg: 1.2, price: 130_000, media: [photo("bowl-ceramic"), video("pottery-wheel"), video("hands-pottery")], description: "가마에서 세 번 구운 그릇.", kind: "graduation" },
     { ...base, id: "w-white-body", title: "흰 몸", artistId: "art-seojun", medium: "sculpture", materials: "석고", widthCm: 60, heightCm: 40, depthCm: 30, weightKg: 12, price: 480_000, media: [photo("sculpture-white")], description: "누운 몸의 무게를 석고로 떴습니다." },
     { ...base, id: "w-late-summer", title: "늦여름", artistId: "art-jieun", medium: "painting", materials: "캔버스에 유채", widthCm: 90.9, heightCm: 60.6, price: 380_000, media: [photo("painting-warm")], description: "", kind: "personal" },
+    { ...base, id: "w-red-roofs", title: "붉은 지붕", artistId: "art-late-oh", medium: "painting", materials: "캔버스에 유채", widthCm: 65.1, heightCm: 53, year: 1987, price: 2_400_000, media: [photo("painting-red-blue")], description: "작가가 1980년대 내내 그린 마을 연작 가운데 한 점.", kind: "personal", allowsPickup: false, consignor: "작가 유족", provenance: "작가 작업실 보관 (1987–2011), 이후 유족 소장", appraisal: "예시 데이터: 감정서 사본 확인 필요" },
     { ...base, id: "w-small-stool", title: "작은 스툴", artistId: "art-hana", medium: "furniture", materials: "오크", widthCm: 32, heightCm: 40, depthCm: 32, weightKg: 4, price: 210_000, media: [photo("stool-beige")], description: "과제전에 냈던 스툴.", kind: "coursework" },
   ];
 

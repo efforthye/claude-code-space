@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
-import { changeOrderStatus, updateOrderDetails } from "@/features/admin/actions";
+import { changeOrderStatus, issueCertificate, revokeCertificate, updateOrderDetails } from "@/features/admin/actions";
 import { AdminHeading } from "@/features/admin/ui";
 import { adminDb } from "@/features/admin/session";
 import { ORDER_NEXT, ORDER_STATUS_LABEL, SHIPPING_LABEL } from "@/lib/domain/rules";
@@ -24,6 +24,7 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
   if (!order) notFound();
   const total = order.subtotal + order.parcelFee + (order.shippingQuote ?? 0);
   const hasArt = order.items.some((i) => i.shipping === "art_shipping");
+  const certs = db.certificates.filter((c) => c.orderId === order.id);
 
   return (
     <>
@@ -37,12 +38,32 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
           <section className="rounded-md border border-line bg-paper p-4">
             <h2 className="mb-3 font-bold">작품</h2>
             <ul className="divide-y divide-line text-sm">
-              {order.items.map((i) => (
-                <li key={i.workId} className="flex justify-between gap-2 py-2">
-                  <span><Link href={`/admin/works/${i.workId}`} className="underline">「{i.title}」</Link>, {i.artistName}{i.edition && `, ed. ${i.edition}`}, {SHIPPING_LABEL[i.shipping]}</span>
-                  <span className="font-semibold">{formatPrice(i.price)}</span>
-                </li>
-              ))}
+              {order.items.map((i) => {
+                const cert = certs.find((c) => c.workId === i.workId && !c.revokedAt);
+                return (
+                  <li key={i.workId} className="flex flex-col gap-2 py-2">
+                    <div className="flex justify-between gap-2">
+                      <span><Link href={`/admin/works/${i.workId}`} className="underline">「{i.title}」</Link>, {i.artistName}{i.edition && `, ed. ${i.edition}`}, {SHIPPING_LABEL[i.shipping]}{i.seller && <b>, 판매자 {i.seller}</b>}</span>
+                      <span className="font-semibold">{formatPrice(i.price)}</span>
+                    </div>
+                    {cert ? (
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <Badge tone="ok">보증서 {cert.code}</Badge>
+                        <a href={`/certificates/${cert.code}`} target="_blank" rel="noopener noreferrer" className="underline">열기</a>
+                        <form action={revokeCertificate.bind(null, cert.id)} className="flex items-center gap-1">
+                          <Input name="reason" placeholder="취소 사유" aria-label={`${cert.code} 취소 사유`} className="h-8 w-40 text-xs" />
+                          <Button type="submit" size="sm" variant="danger">보증서 취소</Button>
+                        </form>
+                      </div>
+                    ) : order.paidAt && order.status !== "cancelled" ? (
+                      <form action={issueCertificate.bind(null, order.id, i.workId)} className="flex items-center gap-2 text-xs">
+                        {i.certificateRequestedAt && <Badge tone="warn">구매자 요청 {formatDateTime(i.certificateRequestedAt)}</Badge>}
+                        <Button type="submit" size="sm" variant="secondary">작품 보증서 발급</Button>
+                      </form>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
             <dl className="mt-3 flex flex-col gap-1 border-t border-line pt-3 text-sm">
               <div className="flex justify-between"><dt>작품 합계</dt><dd>{formatPrice(order.subtotal)}</dd></div>
@@ -59,7 +80,7 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
               <dt className="text-ink-soft">입금자명</dt><dd className="font-semibold">{order.depositorName}</dd>
               <dt className="text-ink-soft">휴대폰</dt><dd>{order.buyer.phone}</dd>
               <dt className="text-ink-soft">이메일</dt><dd>{order.buyer.email}</dd>
-              <dt className="text-ink-soft">주소</dt><dd>{order.buyer.address || "—"}</dd>
+              <dt className="text-ink-soft">주소</dt><dd>{order.buyer.address || "없음 (직거래)"}</dd>
               {order.buyer.deliveryNote && (<><dt className="text-ink-soft">운송 참고</dt><dd className="whitespace-pre-line">{order.buyer.deliveryNote}</dd></>)}
             </dl>
           </section>
@@ -81,7 +102,7 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
               {ORDER_NEXT[order.status].map((next) => (
                 <form key={next} action={changeOrderStatus.bind(null, order.id, next)} className="flex flex-col gap-2">
                   {next === "paid" && <p className="text-xs text-ink-soft">통장에 <b>{order.depositorName}</b> 이름으로 <b>{formatPrice(total)}</b>이 들어왔는지 확인해 주세요.</p>}
-                  <Input name="note" placeholder="메모 (선택) — 예: 송장번호, 취소 사유" />
+                  <Input name="note" placeholder="메모 (선택). 예: 송장번호, 취소 사유" />
                   <Button type="submit" variant={next === "cancelled" ? "danger" : "primary"}>{ACTION_LABEL[next]}</Button>
                 </form>
               ))}

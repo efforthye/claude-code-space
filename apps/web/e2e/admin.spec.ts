@@ -59,7 +59,7 @@ test("admin registers a work with a photo, a video and a 3D model", async ({ pag
   expect(part.headers()["content-range"]).toMatch(/^bytes 0-99\//);
   // 3D: model-viewer 로 표시
   await page.getByRole("button", { name: /번째 3D 모델 보기/ }).click();
-  // React 19는 커스텀 엘리먼트에 속성(property)으로 넘긴다 — 실제 값을 확인
+  // React 19는 커스텀 엘리먼트에 속성(property)으로 넘긴다, 실제 값을 확인
   await expect.poll(() => page.locator("main model-viewer").evaluate((el) => (el as HTMLElement & { src: string }).src)).toMatch(/\.glb$/);
 });
 
@@ -119,4 +119,124 @@ test("media upload API refuses anonymous and forged sessions", async ({ request 
   expect((await request.post("/api/admin/media", { multipart })).status()).toBe(401);
   const forged = await request.post("/api/admin/media", { multipart, headers: { Cookie: "mayo_admin=9999999999.forged" } });
   expect(forged.status()).toBe(401);
+});
+
+test("admin renames, hides and reorders categories; the works filter follows", async ({ page }) => {
+  const { adminLogin } = await import("./helpers");
+  await adminLogin(page);
+  await page.goto("/admin/categories");
+  const row = page.locator("li", { has: page.getByLabel("ceramic 이름") });
+  await row.getByLabel("ceramic 이름").fill("도자");
+  await row.getByRole("button", { name: "저장" }).click();
+  await expect(row.getByLabel("ceramic 이름")).toHaveValue("도자");
+  const drawing = page.locator("li", { has: page.getByLabel("drawing 이름") });
+  await drawing.getByLabel("보이기").uncheck();
+  await drawing.getByRole("button", { name: "저장" }).click();
+  await expect(drawing.getByLabel("보이기")).not.toBeChecked();
+  await page.goto("/works");
+  await expect(page.getByRole("button", { name: "도자", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "드로잉", exact: true })).toHaveCount(0);
+  // 작품이 쓰는 분류는 삭제 버튼이 없다
+  await page.goto("/admin/categories");
+  await expect(page.locator("li", { has: page.getByLabel("painting 이름") }).getByRole("button", { name: "삭제" })).toHaveCount(0);
+});
+
+test("admin manages artist groups; the artist filter chips follow", async ({ page }) => {
+  await adminLogin(page);
+  await page.goto("/admin/artist-groups");
+  const student = page.locator("li", { has: page.getByLabel("student 이름") });
+  await student.getByLabel("student 이름").fill("재학 작가");
+  await student.getByRole("button", { name: "저장" }).click();
+  await expect(student.getByLabel("student 이름")).toHaveValue("재학 작가");
+  const graduate = page.locator("li", { has: page.getByLabel("graduate 이름") });
+  await graduate.getByLabel("필터에 보이기").uncheck();
+  await graduate.getByRole("button", { name: "저장" }).click();
+  await expect(graduate.getByLabel("필터에 보이기")).not.toBeChecked();
+  // 새 구분을 만들고, 아무도 안 쓰니 지울 수 있다
+  await page.getByLabel("코드").fill("master");
+  await page.getByLabel("이름", { exact: true }).fill("원로 작가");
+  await page.getByRole("button", { name: "구분 추가" }).click();
+  const master = page.locator("li", { has: page.getByLabel("master 이름") });
+  await expect(master).toBeVisible();
+  await master.getByRole("button", { name: "삭제" }).click();
+  await expect(page.getByLabel("master 이름")).toHaveCount(0);
+  // 작가가 쓰는 구분은 삭제 버튼이 없다
+  await expect(student.getByRole("button", { name: "삭제" })).toHaveCount(0);
+
+  await page.goto("/artists");
+  await expect(page.getByRole("button", { name: "재학 작가", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "졸업생", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "작고 작가", exact: true })).toBeVisible();
+});
+
+test("a late artist's work names the estate as seller, with provenance", async ({ page }) => {
+  await adminLogin(page);
+  await page.goto("/admin/artists/art-late-oh");
+  await expect(page.getByLabel("작고 연도")).toHaveValue("2011");
+  // 작고 연도가 출생보다 빠르면 저장되지 않는다
+  await page.getByLabel("출생 연도").fill("2020");
+  await page.getByRole("button", { name: "변경 저장" }).click();
+  await expect(page.getByText("작고 연도가 출생 연도보다 빨라요")).toBeVisible();
+
+  await page.goto("/artists/art-late-oh");
+  await expect(page.getByRole("heading", { name: /오명수/ })).toContainText("1938–2011");
+  await expect(page.getByText(/작가 유족 측에서 판매/)).toBeVisible();
+  await page.goto("/works/w-red-roofs");
+  await expect(page.getByText("작가 유족").first()).toBeVisible();
+  await expect(page.getByText(/1987–2011/)).toBeVisible();
+  await expect(page.getByText("MAYO 학교 인증")).toHaveCount(0);
+});
+
+test("a buyer requests a certificate, the operator issues and revokes it, anyone can verify", async ({ page }) => {
+  const code = await placeOrder(page, "w-red-roofs");
+  // 입금 전에는 요청할 수 없다
+  await expect(page.getByRole("button", { name: "작품 보증서 요청하기" })).toHaveCount(0);
+
+  await adminLogin(page);
+  await page.goto("/admin/orders");
+  await page.getByRole("link", { name: code }).click();
+  await page.waitForURL(/\/admin\/orders\/[^/]+$/);
+  const orderUrl = page.url();
+  await expect(page.getByText("판매자 작가 유족")).toBeVisible();
+  await page.getByRole("button", { name: "입금 확인" }).click();
+  await expect(page.getByRole("button", { name: "배송 준비 시작" })).toBeVisible();
+
+  await page.goto(`/orders/${code}`);
+  await page.getByRole("button", { name: "작품 보증서 요청하기" }).click();
+  await expect(page.getByText("작품 보증서를 요청하셨어요")).toBeVisible();
+
+  await page.goto(orderUrl);
+  await expect(page.getByText(/구매자 요청/)).toBeVisible();
+  await page.getByRole("button", { name: "작품 보증서 발급" }).click();
+  const badge = page.getByText(/^보증서 C-/);
+  await expect(badge).toBeVisible();
+  const certCode = (await badge.textContent())!.replace("보증서 ", "");
+
+  // 유통 내역에 2차 판매(위탁)와 보증서 번호가 남는다
+  const csv = await (await page.request.get("/admin/ledger.csv")).text();
+  expect(csv).toContain("2차 판매 (위탁)");
+  expect(csv).toContain(certCode);
+
+  await page.goto(`/orders/${code}`);
+  await page.getByRole("link", { name: /작품 보증서 보기/ }).click();
+  await expect(page.getByText("유효한 보증서")).toBeVisible();
+  await expect(page.getByText("「붉은 지붕」").first()).toBeVisible();
+  await expect(page.getByText("오명수 (1938–2011)")).toBeVisible();
+  await expect(page.getByText("구*자")).toBeVisible(); // 구매자 이름은 가린다
+  await expect(page.locator("meta[name=robots]")).toHaveAttribute("content", /noindex/);
+
+  await page.goto(orderUrl);
+  await page.getByLabel(`${certCode} 취소 사유`).fill("주문 취소");
+  await page.getByRole("button", { name: "보증서 취소" }).click();
+  await expect(page.getByRole("button", { name: "작품 보증서 발급" })).toBeVisible();
+  await page.goto(`/certificates/${certCode}`);
+  await expect(page.getByText("취소된 보증서예요")).toBeVisible();
+  await expect(page.getByText(/사유: 주문 취소/)).toBeVisible();
+});
+
+test("the compliance checklist is one click from the dashboard", async ({ page }) => {
+  await adminLogin(page);
+  await page.getByRole("link", { name: /미술서비스업 신고가 아직이에요/ }).click();
+  await expect(page.getByRole("heading", { name: "미술서비스업 신고" })).toBeVisible();
+  await expect(page.getByText(/강남구보건소 5층 문화도시과/).first()).toBeVisible();
 });

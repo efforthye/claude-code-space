@@ -17,6 +17,7 @@ export type LedgerRow = {
   image: string;
   type: string;
   orderStatus: string;
+  certificate: string; // 발급한 보증서 코드 (없으면 빈칸)
 };
 
 export function buildLedger(db: Database): LedgerRow[] {
@@ -31,11 +32,12 @@ export function buildLedger(db: Database): LedgerRow[] {
         title: i.title,
         edition: i.edition ?? "",
         price: i.price,
-        seller: i.artistName, // 1차 거래: 판매자 = 작가
+        seller: i.seller ?? i.artistName, // 판매자 표시가 없으면 작가 본인 (1차 거래)
         artist: i.artistName,
         image: (work && coverImage(work)) ?? "",
-        type: "1차 판매",
+        type: i.seller ? "2차 판매 (위탁)" : "1차 판매",
         orderStatus: o.status,
+        certificate: db.certificates.find((c) => c.orderId === o.id && c.workId === i.workId && !c.revokedAt)?.code ?? "",
       });
     }
   }

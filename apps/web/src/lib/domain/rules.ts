@@ -1,6 +1,8 @@
 import type {
+  Artist,
+  ArtistGroup,
   ArtistStatus,
-  Medium,
+  Category,
   Order,
   OrderStatus,
   ShippingMethod,
@@ -10,7 +12,55 @@ import type {
   WorkStatus,
 } from "./types";
 
-export const MEDIUM_LABEL: Record<Medium, string> = {
+/** 처음 시드되는 분류. 이후에는 관리자 화면에서 바꾼다. */
+export const DEFAULT_CATEGORIES: Category[] = [
+  { id: "painting", label: "회화", order: 1, visible: true, artShipping: false },
+  { id: "drawing", label: "드로잉", order: 2, visible: true, artShipping: false },
+  { id: "print", label: "판화", order: 3, visible: true, artShipping: false },
+  { id: "photo", label: "사진", order: 4, visible: true, artShipping: false },
+  { id: "sculpture", label: "조각", order: 5, visible: true, artShipping: true },
+  { id: "furniture", label: "가구", order: 6, visible: true, artShipping: true },
+  { id: "metal", label: "금속공예", order: 7, visible: true, artShipping: false },
+  { id: "ceramic", label: "도예", order: 8, visible: true, artShipping: false },
+  { id: "textile", label: "섬유", order: 9, visible: true, artShipping: false },
+  { id: "digital", label: "디지털", order: 10, visible: true, artShipping: false },
+  { id: "craft", label: "공예", order: 11, visible: true, artShipping: false },
+];
+
+export const DEFAULT_ARTIST_GROUPS: ArtistGroup[] = [
+  { id: "student", label: "재학생", order: 1, visible: true },
+  { id: "graduate", label: "졸업생", order: 2, visible: true },
+  { id: "aspiring", label: "미대 지망생", order: 3, visible: true },
+  { id: "general", label: "일반 작가", order: 4, visible: true },
+  { id: "late", label: "작고 작가", order: 5, visible: true },
+];
+
+export function groupLabel(groups: ArtistGroup[], id: string) {
+  return groups.find((g) => g.id === id)?.label ?? ARTIST_STATUS_LABEL[id as ArtistStatus] ?? id;
+}
+
+export function isDeceased(a: Pick<Artist, "deathYear">) {
+  return a.deathYear != null;
+}
+
+/** "1931–2004", 생년만 있으면 "1998–" 대신 "1998년생" */
+export function lifespan(a: Pick<Artist, "birthYear" | "deathYear">) {
+  if (a.deathYear != null) return `${a.birthYear ?? "?"}–${a.deathYear}`;
+  return a.birthYear != null ? `${a.birthYear}년생` : null;
+}
+
+export function categoryLabel(categories: Category[], id: string) {
+  return categories.find((c) => c.id === id)?.label ?? MEDIUM_LABEL[id] ?? id;
+}
+
+/** 전문 운송 대상 분류 코드 집합 */
+export function artShippingIds(categories: Category[]): ReadonlySet<string> {
+  return new Set(categories.filter((c) => c.artShipping).map((c) => c.id));
+}
+
+const DEFAULT_ART_SHIPPING = artShippingIds(DEFAULT_CATEGORIES);
+
+export const MEDIUM_LABEL: Record<string, string> = {
   painting: "회화",
   drawing: "드로잉",
   print: "판화",
@@ -67,7 +117,7 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   cancelled: "취소",
 };
 
-/** 일반 택배비 (가설값 — 운영하며 조정). */
+/** 일반 택배비 (가설값, 운영하며 조정). */
 export const PARCEL_FEE = 5_000;
 
 /** 주문 후 입금 기한. 경매 낙찰 결제 기한(48시간)과 맞춘다. */
@@ -77,15 +127,18 @@ export const PAYMENT_DUE_HOURS = 48;
  * 100cm 이상, 20kg 이상, 조소, 설치, 가구는 미술품 전문 운송이 기본 (가이드 21장 ⑦).
  * 견적을 받은 뒤 운송비를 따로 안내한다.
  */
-export function needsArtShipping(work: Pick<Work, "widthCm" | "heightCm" | "depthCm" | "weightKg" | "medium">) {
+export function needsArtShipping(
+  work: Pick<Work, "widthCm" | "heightCm" | "depthCm" | "weightKg" | "medium">,
+  artShipping: ReadonlySet<string> = DEFAULT_ART_SHIPPING,
+) {
   const longest = Math.max(work.widthCm, work.heightCm, work.depthCm ?? 0);
   if (longest >= 100) return true;
   if ((work.weightKg ?? 0) >= 20) return true;
-  return work.medium === "sculpture" || work.medium === "furniture";
+  return artShipping.has(work.medium);
 }
 
-export function shippingOptions(work: Work): ShippingMethod[] {
-  const options: ShippingMethod[] = [needsArtShipping(work) ? "art_shipping" : "parcel"];
+export function shippingOptions(work: Work, artShipping?: ReadonlySet<string>): ShippingMethod[] {
+  const options: ShippingMethod[] = [needsArtShipping(work, artShipping) ? "art_shipping" : "parcel"];
   if (work.allowsPickup) options.push("pickup");
   return options;
 }

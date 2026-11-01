@@ -11,9 +11,9 @@ export async function GET() {
     return new Response("Unauthorized", { status: 401 });
   }
   const rows = buildLedger(await store.read());
-  const header = ["거래일시", "주문번호", "작품명", "에디션", "금액", "판매자", "작가", "작품사진", "유형", "주문상태"];
+  const header = ["거래일시", "주문번호", "작품명", "에디션", "금액", "판매자", "작가", "작품사진", "유형", "주문상태", "보증서"];
   const lines = rows.map((r) =>
-    [r.paidAt, r.orderCode, r.title, r.edition, r.price, r.seller, r.artist, r.image.startsWith("/") ? siteConfig.url + r.image : r.image, r.type, r.orderStatus]
+    [r.paidAt, r.orderCode, r.title, r.edition, r.price, r.seller, r.artist, r.image.startsWith("/") ? siteConfig.url + r.image : r.image, r.type, r.orderStatus, r.certificate]
       .map(csvCell)
       .join(","),
   );

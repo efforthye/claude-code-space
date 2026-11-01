@@ -44,7 +44,7 @@ export function JoinForm() {
 
       {maybeMinor && (
         <fieldset className="flex flex-col gap-3 rounded-md border border-warn bg-warn-soft p-4 sm:col-span-2">
-          <legend className="px-1 text-sm font-bold text-warn">만 19세 미만 — 보호자 동의가 필요해요</legend>
+          <legend className="px-1 text-sm font-bold text-warn">만 19세 미만은 보호자 동의가 필요해요</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="보호자 이름" required error={errors.guardianName}><Input name="guardianName" /></Field>
             <Field label="보호자 연락처" required><Input name="guardianPhone" inputMode="tel" /></Field>

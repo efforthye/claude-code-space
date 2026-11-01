@@ -14,7 +14,7 @@ export default async function AdminExhibitions() {
         {[...db.exhibitions].sort((a, b) => b.startDate.localeCompare(a.startDate)).map((e) => (
           <tr key={e.id} className="hover:bg-mist/50">
             <Td><Link href={`/admin/exhibitions/${e.id}`} className="font-semibold underline underline-offset-2">{e.title}</Link></Td>
-            <Td>{e.schoolId ? school.get(e.schoolId) : "—"}</Td>
+            <Td>{e.schoolId ? school.get(e.schoolId) : "없음"}</Td>
             <Td className="text-ink-soft">{formatPeriod(e.startDate, e.endDate)}</Td>
             <Td className="text-ink-soft">{e.venue}</Td>
             <Td>{db.works.filter((w) => w.exhibitionId === e.id).length}</Td>

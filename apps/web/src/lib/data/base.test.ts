@@ -18,7 +18,7 @@ describe("real fall-2026 exhibition data", () => {
   it("every imported show credits its source", () => {
     for (const e of db.exhibitions) expect(e.source?.url).toMatch(/^https:\/\//);
   });
-  it("ships no works, artists or orders — those are never invented in production", () => {
+  it("ships no works, artists or orders, those are never invented in production", () => {
     expect(db.works).toEqual([]);
     expect(db.artists).toEqual([]);
     expect(db.orders).toEqual([]);

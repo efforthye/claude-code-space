@@ -7,7 +7,7 @@ export default async function NewArtist() {
   return (
     <>
       <AdminHeading title="작가 추가" />
-      <ArtistForm schools={db.schools} />
+      <ArtistForm schools={db.schools} groups={[...db.artistGroups].sort((a, b) => a.order - b.order)} />
     </>
   );
 }

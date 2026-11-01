@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import type { ShippingMethod } from "@/lib/domain/types";
 
-/** 비회원 장바구니 — 이 기기의 localStorage에만 저장된다. */
+/** 비회원 장바구니, 이 기기의 localStorage에만 저장된다. */
 export type CartLine = { workId: string; shipping: ShippingMethod };
 
 const KEY = "mayo.cart.v1";
@@ -26,7 +26,7 @@ function write(lines: CartLine[]) {
   try {
     localStorage.setItem(KEY, JSON.stringify(lines));
   } catch {
-    // private mode etc. — the cart still works for this tab
+    // private mode etc., the cart still works for this tab
   }
   listeners.forEach((l) => l());
 }

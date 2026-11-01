@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { AdminHeading, Table, Td } from "@/features/admin/ui";
 import { adminDb } from "@/features/admin/session";
-import { ARTIST_STATUS_LABEL, VERIFY_LABEL } from "@/lib/domain/rules";
+import { groupLabel, VERIFY_LABEL } from "@/lib/domain/rules";
 
 export default async function AdminArtists() {
   const db = await adminDb();
@@ -15,8 +15,8 @@ export default async function AdminArtists() {
         {db.artists.map((a) => (
           <tr key={a.id} className="hover:bg-mist/50">
             <Td><Link href={`/admin/artists/${a.id}`} className="font-semibold underline underline-offset-2">{a.name}</Link></Td>
-            <Td>{ARTIST_STATUS_LABEL[a.status]}</Td>
-            <Td className="text-ink-soft">{[a.schoolId && school.get(a.schoolId), a.department].filter(Boolean).join(", ") || "—"}</Td>
+            <Td>{groupLabel(db.artistGroups, a.status)}</Td>
+            <Td className="text-ink-soft">{[a.schoolId && school.get(a.schoolId), a.department].filter(Boolean).join(", ") || "소속 없음"}</Td>
             <Td>{a.verifiedBy ? <Badge tone="ok">{VERIFY_LABEL[a.verifiedBy]}</Badge> : <Badge tone="warn">미인증</Badge>}</Td>
             <Td>{db.works.filter((w) => w.artistId === a.id).length}</Td>
           </tr>

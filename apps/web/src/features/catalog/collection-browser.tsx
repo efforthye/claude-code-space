@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/container";
-import { KIND_LABEL, MEDIUM_LABEL } from "@/lib/domain/rules";
-import { MEDIA, WORK_KINDS, type Artist, type Medium, type School, type Work, type WorkKind } from "@/lib/domain/types";
+import { KIND_LABEL } from "@/lib/domain/rules";
+import { WORK_KINDS, type Artist, type Category, type School, type Work, type WorkKind } from "@/lib/domain/types";
 import { cn } from "@/lib/cn";
 import { WorkCard } from "./work-card";
 
@@ -16,18 +16,20 @@ const PRICE_BANDS = [
 ] as const;
 
 type Filters = {
-  medium: Medium | "all";
+  medium: string;
   school: string;
   kind: WorkKind | "all";
   price: (typeof PRICE_BANDS)[number]["id"];
   availableOnly: boolean;
 };
 
-export function CollectionBrowser({ works, artists, schools }: { works: Work[]; artists: Artist[]; schools: School[] }) {
+export function CollectionBrowser({ works, artists, schools, categories }: { works: Work[]; artists: Artist[]; schools: School[]; categories: Category[] }) {
   const [f, setF] = useState<Filters>({ medium: "all", school: "all", kind: "all", price: "all", availableOnly: false });
   const artistById = useMemo(() => new Map(artists.map((a) => [a.id, a])), [artists]);
   const schoolById = useMemo(() => new Map(schools.map((s) => [s.id, s])), [schools]);
-  const presentMedia = useMemo(() => MEDIA.filter((m) => works.some((w) => w.medium === m)), [works]);
+  // 관리자가 정한 순서·노출 그대로, 작품이 있는 분류만
+  const presentMedia = useMemo(() => categories.filter((c) => c.visible && works.some((w) => w.medium === c.id)), [categories, works]);
+  const labelOf = useMemo(() => new Map(categories.map((c) => [c.id, c.label])), [categories]);
 
   const shown = works.filter((w) => {
     const band = PRICE_BANDS.find((b) => b.id === f.price)!;
@@ -46,9 +48,9 @@ export function CollectionBrowser({ works, artists, schools }: { works: Work[]; 
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap gap-1.5">
         <Chip active={f.medium === "all"} onClick={() => setF({ ...f, medium: "all" })}>전체</Chip>
-        {presentMedia.map((m) => (
-          <Chip key={m} active={f.medium === m} onClick={() => setF({ ...f, medium: m })}>
-            {MEDIUM_LABEL[m]}
+        {presentMedia.map((c) => (
+          <Chip key={c.id} active={f.medium === c.id} onClick={() => setF({ ...f, medium: c.id })}>
+            {c.label}
           </Chip>
         ))}
       </div>
@@ -82,7 +84,7 @@ export function CollectionBrowser({ works, artists, schools }: { works: Work[]; 
         <div className="columns-2 gap-4 sm:gap-6 md:columns-3 lg:columns-4">
           {shown.map((w) => {
             const artist = artistById.get(w.artistId);
-            return <WorkCard key={w.id} work={w} artist={artist} school={artist?.schoolId ? schoolById.get(artist.schoolId) : undefined} />;
+            return <WorkCard key={w.id} work={w} artist={artist} school={artist?.schoolId ? schoolById.get(artist.schoolId) : undefined} mediumLabel={labelOf.get(w.medium) ?? w.medium} />;
           })}
         </div>
       )}

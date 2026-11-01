@@ -2,7 +2,7 @@ import "server-only";
 import { headers } from "next/headers";
 
 /**
- * 고정 창(fixed window) 요청 제한 — 프로세스 메모리 기준.
+ * 고정 창(fixed window) 요청 제한, 프로세스 메모리 기준.
  * 서버 한 대(개발, 홈서버)에선 그대로 막히고, 서버리스 여러 인스턴스에선 인스턴스마다
  * 따로 센다(완전한 방어가 아니라 남용 완화). 실서비스 규모가 되면 Redis 같은 공유 저장소로 옮긴다.
  */

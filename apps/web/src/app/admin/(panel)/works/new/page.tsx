@@ -7,7 +7,7 @@ export default async function NewWork() {
   return (
     <>
       <AdminHeading title="작품 등록" />
-      <WorkForm artists={db.artists} exhibitions={db.exhibitions} />
+      <WorkForm artists={db.artists} exhibitions={db.exhibitions} categories={[...db.categories].sort((a, b) => a.order - b.order)} />
     </>
   );
 }

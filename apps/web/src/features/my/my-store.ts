@@ -22,7 +22,7 @@ export function rememberMine(entry: MyEntry) {
     const rest = readMine().filter((e) => e.code !== entry.code);
     localStorage.setItem(KEY, JSON.stringify([entry, ...rest].slice(0, 50)));
   } catch {
-    // storage blocked — the code is still shown on screen
+    // storage blocked, the code is still shown on screen
   }
 }
 

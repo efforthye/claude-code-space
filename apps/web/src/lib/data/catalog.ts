@@ -1,7 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { isListed } from "@/lib/domain/rules";
-import type { Artist, Exhibition, School, Work } from "@/lib/domain/types";
+import type { Artist, ArtistGroup, Category, Exhibition, School, Work } from "@/lib/domain/types";
 import { store } from "./store";
 
 /** Cache tags. Mutations call `updateTag` with these (see features/admin/actions). */
@@ -10,6 +10,8 @@ export const TAG = {
 } as const;
 
 export type Catalog = {
+  categories: Category[];
+  artistGroups: ArtistGroup[];
   schools: School[];
   artists: Artist[];
   exhibitions: Exhibition[];
@@ -29,6 +31,8 @@ export async function getCatalog(): Promise<Catalog> {
   cacheTag(TAG.catalog);
   const db = await store.read();
   return {
+    categories: [...db.categories].sort((a, b) => a.order - b.order),
+    artistGroups: [...db.artistGroups].sort((a, b) => a.order - b.order),
     schools: db.schools,
     artists: db.artists,
     exhibitions: db.exhibitions,

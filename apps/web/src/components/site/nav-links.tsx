@@ -5,14 +5,14 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 const NAV = [
-  { href: "/", label: "작품", match: (p: string) => p === "/" || p.startsWith("/works") },
+  { href: "/works", label: "작품", match: (p: string) => p.startsWith("/works") },
   { href: "/exhibitions", label: "전시", match: (p: string) => p.startsWith("/exhibitions") },
   { href: "/artists", label: "작가", match: (p: string) => p.startsWith("/artists") },
   { href: "/schools", label: "학교", match: (p: string) => p.startsWith("/schools") },
   { href: "/join", label: "입점", match: (p: string) => p.startsWith("/join") },
 ];
 
-/** 유리 알약 내비게이션 — 지금 있는 곳이 채워진다. */
+/** 유리 알약 내비게이션, 지금 있는 곳이 채워진다. */
 export function NavLinks() {
   return <NavList path={usePathname()} />;
 }

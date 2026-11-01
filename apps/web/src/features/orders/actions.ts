@@ -5,7 +5,7 @@ import { z } from "zod";
 import { TAG } from "@/lib/data/catalog";
 import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
 import { allow, TOO_MANY } from "@/lib/security/rate-limit";
-import { PARCEL_FEE, PAYMENT_DUE_HOURS, shippingOptions } from "@/lib/domain/rules";
+import { artShippingIds, PARCEL_FEE, PAYMENT_DUE_HOURS, shippingOptions } from "@/lib/domain/rules";
 import type { Order, OrderItem } from "@/lib/domain/types";
 import { newId, newOrderCode } from "@/lib/ids";
 
@@ -66,11 +66,11 @@ export async function placeOrder(_prev: OrderFormState, form: FormData): Promise
         unavailable.push(work?.title ?? "삭제된 작품");
         continue;
       }
-      if (!shippingOptions(work).includes(line.shipping)) {
+      if (!shippingOptions(work, artShippingIds(db.categories)).includes(line.shipping)) {
         return { ok: false, errors: {}, message: `「${work.title}」은(는) 선택한 방법으로 받을 수 없어요. 장바구니에서 받는 방법을 다시 골라 주세요.` };
       }
       const artist = db.artists.find((a) => a.id === work.artistId);
-      items.push({ workId: work.id, title: work.title, artistName: artist?.name ?? "", edition: work.edition, price: work.price, shipping: line.shipping });
+      items.push({ workId: work.id, title: work.title, artistName: artist?.name ?? "", edition: work.edition, price: work.price, shipping: line.shipping, seller: work.consignor, certificateRequestedAt: null });
     }
     if (unavailable.length > 0) {
       return { ok: false, errors: {}, message: `이미 예약되었거나 판매된 작품이 있어요: ${unavailable.map((t) => `「${t}」`).join(", ")}. 장바구니에서 빼고 다시 신청해 주세요.` };

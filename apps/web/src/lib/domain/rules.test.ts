@@ -5,7 +5,7 @@ import type { Work } from "./types";
 const work = (over: Partial<Work> = {}): Work => ({
   id: "w", title: "t", artistId: "a", exhibitionId: null, medium: "painting", materials: "", widthCm: 50, heightCm: 40,
   depthCm: null, weightKg: null, year: 2026, edition: null, kind: "graduation", price: 100_000, status: "available",
-  media: [], description: "", allowsPickup: true, operatorOwned: false, featured: false, createdAt: "", updatedAt: "", ...over,
+  media: [], description: "", story: [], allowsPickup: true, operatorOwned: false, consignor: null, provenance: null, appraisal: null, featured: false, createdAt: "", updatedAt: "", ...over,
 });
 
 describe("needsArtShipping (가이드 21장 ⑦)", () => {
@@ -22,6 +22,13 @@ describe("needsArtShipping (가이드 21장 ⑦)", () => {
   it("sculpture and furniture always do, whatever the size", () => {
     expect(needsArtShipping(work({ medium: "sculpture", widthCm: 10, heightCm: 10 }))).toBe(true);
     expect(needsArtShipping(work({ medium: "furniture", widthCm: 30, heightCm: 40 }))).toBe(true);
+  });
+});
+
+describe("art shipping follows the admin-managed categories", () => {
+  it("a category flagged artShipping needs it, others don't", () => {
+    expect(needsArtShipping(work({ medium: "ceramic" }), new Set(["ceramic"]))).toBe(true);
+    expect(needsArtShipping(work({ medium: "sculpture", widthCm: 10, heightCm: 10 }), new Set())).toBe(false);
   });
 });
 
@@ -58,5 +65,24 @@ describe("order flow", () => {
     expect(isPaymentOverdue({ status: "pending_payment", paymentDueAt: past })).toBe(true);
     expect(isPaymentOverdue({ status: "pending_payment", paymentDueAt: future })).toBe(false);
     expect(isPaymentOverdue({ status: "paid", paymentDueAt: past })).toBe(false);
+  });
+});
+
+describe("artist groups and late artists", () => {
+  it("labels a group from the managed list, falling back to the built-in name", async () => {
+    const { groupLabel, DEFAULT_ARTIST_GROUPS } = await import("./rules");
+    expect(groupLabel([{ id: "student", label: "재학 작가", order: 1, visible: true }], "student")).toBe("재학 작가");
+    expect(groupLabel([], "graduate")).toBe("졸업생");
+    expect(groupLabel(DEFAULT_ARTIST_GROUPS, "late")).toBe("작고 작가");
+    expect(groupLabel([], "unknown")).toBe("unknown");
+  });
+  it("writes a lifespan only when there is something to say", async () => {
+    const { lifespan, isDeceased } = await import("./rules");
+    expect(lifespan({ birthYear: 1938, deathYear: 2011 })).toBe("1938–2011");
+    expect(lifespan({ birthYear: null, deathYear: 2011 })).toBe("?–2011");
+    expect(lifespan({ birthYear: 2001, deathYear: null })).toBe("2001년생");
+    expect(lifespan({ birthYear: null, deathYear: null })).toBeNull();
+    expect(isDeceased({ deathYear: 2011 })).toBe(true);
+    expect(isDeceased({ deathYear: null })).toBe(false);
   });
 });

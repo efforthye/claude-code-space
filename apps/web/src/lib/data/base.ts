@@ -1,3 +1,4 @@
+import { DEFAULT_ARTIST_GROUPS, DEFAULT_CATEGORIES } from "@/lib/domain/rules";
 import type { Database } from "@/lib/domain/types";
 import fall2026 from "./seed/fall-2026-exhibitions.json";
 
@@ -7,6 +8,9 @@ import fall2026 from "./seed/fall-2026-exhibitions.json";
  */
 export function buildBaseDatabase(): Database {
   return {
+    categories: structuredClone(DEFAULT_CATEGORIES),
+    artistGroups: structuredClone(DEFAULT_ARTIST_GROUPS),
+    certificates: [],
     schools: structuredClone(fall2026.schools),
     exhibitions: structuredClone(fall2026.exhibitions),
     artists: [],

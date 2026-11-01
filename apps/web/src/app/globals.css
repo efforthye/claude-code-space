@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * MAYO design tokens — "Aurora".
+ * MAYO design tokens, "Aurora".
  * A warm ivory ground lit by soft colour fields (pink, periwinkle, peach, mint),
  * frosted-glass surfaces, an ink-plum type colour and one violet→pink→peach
  * gradient for the moments that matter. English display type in Instrument
@@ -77,7 +77,7 @@ body {
   }
 }
 
-/* Tailwind v4 resets buttons to cursor: default — interactive controls should say so. */
+/* Tailwind v4 resets buttons to cursor: default, interactive controls should say so. */
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
 summary,
@@ -129,4 +129,14 @@ input[type="file"] {
   0% { transform: scale(1); }
   40% { transform: scale(1.18); }
   100% { transform: scale(1); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(24px, -18px) scale(1.08); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }

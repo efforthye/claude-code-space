@@ -25,7 +25,7 @@ export function ExhibitionForm({ exhibition, schools }: { exhibition?: Exhibitio
       <Field label="종료일" required><Input name="endDate" type="date" defaultValue={exhibition?.endDate} /></Field>
       <div className="flex flex-col gap-1.5 md:col-span-2">
         <span className="text-sm font-semibold">장소</span>
-        {exhibition && !exhibition.place && exhibition.venue && <span className="text-xs text-ink-soft">현재: {exhibition.venue} — 검색해서 고르면 지도 링크가 붙어요</span>}
+        {exhibition && !exhibition.place && exhibition.venue && <span className="text-xs text-ink-soft">현재: {exhibition.venue}. 검색해서 고르면 지도 링크가 붙어요</span>}
         <PlacePicker
           name="venue"
           defaultPlace={exhibition?.place}

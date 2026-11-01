@@ -10,7 +10,7 @@ import { DATA_DIR } from "./store";
 /**
  * 미디어 저장 seam. 개발에서는 `.data/uploads`에 두고 /media/<name>으로 서빙한다.
  * 실서비스는 Vercel 파일시스템이 읽기 전용이라 오브젝트 스토리지(Vercel Blob, R2 등)로 바꿔야 한다
- * — 이 파일만 고치면 된다.
+ *, 이 파일만 고치면 된다.
  */
 const DIR = path.join(DATA_DIR, "uploads");
 const NAME = /^[0-9a-f-]{36}\.(jpg|png|webp|avif|mp4|webm|glb)$/;

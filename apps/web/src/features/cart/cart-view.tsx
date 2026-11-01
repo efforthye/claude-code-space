@@ -14,7 +14,8 @@ import type { Artist, ShippingMethod, Work } from "@/lib/domain/types";
 import { formatPrice, formatSize } from "@/lib/format";
 import { cart, useCart } from "./cart-store";
 
-export function CartView({ works, artists }: { works: Work[]; artists: Artist[] }) {
+export function CartView({ works, artists, artShipping }: { works: Work[]; artists: Artist[]; artShipping: string[] }) {
+  const artSet = new Set(artShipping);
   const lines = useCart();
   const router = useRouter();
   const [state, action, pending] = useActionState<OrderFormState, FormData>(placeOrder, null);
@@ -39,7 +40,7 @@ export function CartView({ works, artists }: { works: Work[]; artists: Artist[] 
   if (lines.length === 0 && !state?.ok)
     return (
       <EmptyState title="장바구니가 비어 있어요">
-        <Link href="/#collection" className="font-semibold text-ink underline underline-offset-4">작품 둘러보기</Link>
+        <Link href="/works" className="font-semibold text-ink underline underline-offset-4">작품 둘러보기</Link>
       </EmptyState>
     );
 
@@ -67,7 +68,7 @@ export function CartView({ works, artists }: { works: Work[]; artists: Artist[] 
                 </div>
                 <span className="text-ink-soft">{work.materials}, {formatSize(work.widthCm, work.heightCm, work.depthCm)}</span>
                 {unavailable ? (
-                  <span className="font-semibold text-dot">● 다른 컬렉터가 먼저 예약했어요 — 주문에서 제외됩니다</span>
+                  <span className="font-semibold text-dot">● 다른 컬렉터가 먼저 예약해서 주문에서 빠져요</span>
                 ) : (
                   <label className="mt-1 flex items-center gap-2">
                     <span className="text-ink-soft">받는 방법</span>
@@ -76,7 +77,7 @@ export function CartView({ works, artists }: { works: Work[]; artists: Artist[] 
                       onChange={(e) => cart.setShipping(work.id, e.target.value as ShippingMethod)}
                       className="h-8 rounded-sm border border-line bg-paper px-2"
                     >
-                      {shippingOptions(work).map((o) => <option key={o} value={o}>{SHIPPING_LABEL[o]}</option>)}
+                      {shippingOptions(work, artSet).map((o) => <option key={o} value={o}>{SHIPPING_LABEL[o]}</option>)}
                     </select>
                   </label>
                 )}
@@ -106,7 +107,7 @@ export function CartView({ works, artists }: { works: Work[]; artists: Artist[] 
           <Field label="배송 주소" required error={errors.address}><Input name="address" autoComplete="street-address" /></Field>
         )}
         {hasArtShipping && (
-          <Field label="운송 참고 사항" hint="층수, 엘리베이터 유무, 희망 시기, 진입로 등 — 운송 견적에 필요해요">
+          <Field label="운송 참고 사항" hint="층수, 엘리베이터 유무, 희망 시기, 진입로처럼 운송 견적에 필요한 정보">
             <Textarea name="deliveryNote" />
           </Field>
         )}

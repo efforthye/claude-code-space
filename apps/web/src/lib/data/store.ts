@@ -2,6 +2,7 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { Database } from "@/lib/domain/types";
+import { DEFAULT_ARTIST_GROUPS, DEFAULT_CATEGORIES } from "@/lib/domain/rules";
 import { buildBaseDatabase } from "./base";
 import { buildSampleDatabase } from "./sample";
 
@@ -17,6 +18,9 @@ export interface Store {
 }
 
 const EMPTY: Database = {
+  categories: [],
+  artistGroups: [],
+  certificates: [],
   schools: [],
   artists: [],
   exhibitions: [],
@@ -74,6 +78,25 @@ export class LocalJsonStore implements Store {
 
 /** 예전 형식 데이터 호환: works[].images(문자열 배열) → works[].media */
 export function migrate(db: Database): Database {
+  if (db.categories.length === 0) db.categories = structuredClone(DEFAULT_CATEGORIES);
+  if (db.artistGroups.length === 0) db.artistGroups = structuredClone(DEFAULT_ARTIST_GROUPS);
+  for (const a of db.artists) {
+    a.birthYear ??= null;
+    a.deathYear ??= null;
+    a.estate ??= null;
+  }
+  for (const o of db.orders) {
+    for (const i of o.items) {
+      i.seller ??= null;
+      i.certificateRequestedAt ??= null;
+    }
+  }
+  for (const w of db.works) {
+    w.story ??= [];
+    w.consignor ??= null;
+    w.provenance ??= null;
+    w.appraisal ??= null;
+  }
   for (const w of db.works as Array<Database["works"][number] & { images?: string[] }>) {
     if (!w.media) w.media = (w.images ?? []).map((src) => ({ kind: "image" as const, src }));
     delete w.images;
@@ -81,7 +104,7 @@ export function migrate(db: Database): Database {
   return db;
 }
 
-/** 예시 데이터는 개발 환경에서만 — 실서비스에 가짜 작품이 판매 중으로 뜨면 안 된다. */
+/** 예시 데이터는 개발 환경에서만, 실서비스에 가짜 작품이 판매 중으로 뜨면 안 된다. */
 function defaultSeed(): Database {
   if (process.env.MAYO_SAMPLE_DATA === "off" || process.env.NODE_ENV === "production") return buildBaseDatabase();
   return buildSampleDatabase();

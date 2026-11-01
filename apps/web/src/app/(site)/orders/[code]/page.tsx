@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -6,6 +7,8 @@ import { Container } from "@/components/ui/container";
 import { getBankAccount } from "@/features/orders/payment";
 import { OrderPlaced } from "@/features/orders/order-placed";
 import { findOrderByCode } from "@/features/orders/queries";
+import { requestCertificate } from "@/features/certificates/actions";
+import { certificatesForOrder } from "@/features/certificates/queries";
 import { ORDER_STATUS_LABEL, SHIPPING_LABEL } from "@/lib/domain/rules";
 import { formatDateTime, formatPrice } from "@/lib/format";
 
@@ -24,6 +27,9 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
   const justPlaced = (await searchParams).new === "1";
   const order = await findOrderByCode(decodeURIComponent(code));
   if (!order) notFound();
+  const certs = await certificatesForOrder(order.id);
+  const certOf = (workId: string) => certs.find((c) => c.workId === workId && !c.revokedAt);
+  const settled = order.paidAt != null && order.status !== "cancelled";
   const bank = getBankAccount();
   const amount = order.subtotal + order.parcelFee + (order.shippingQuote ?? 0);
   const awaitingQuote = order.items.some((i) => i.shipping === "art_shipping") && order.shippingQuote == null;
@@ -38,7 +44,7 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
         <h1 className="text-2xl font-bold">
           {order.status === "pending_payment" ? (justPlaced ? "첫 원화가 곧 당신의 벽으로 🎉" : "주문 신청이 접수됐어요") : "주문 상태"}
         </h1>
-        <p className="text-sm text-ink-soft">주문번호 <b className="text-ink">{order.code}</b>, {formatDateTime(order.createdAt)} — 주문 조회에 필요하니 보관해 주세요.</p>
+        <p className="text-sm text-ink-soft">주문번호 <b className="text-ink">{order.code}</b>, {formatDateTime(order.createdAt)}. 주문 조회에 필요하니 보관해 주세요.</p>
       </header>
 
       {order.status === "pending_payment" && (
@@ -69,9 +75,18 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
         <h2 className="font-bold">주문 작품</h2>
         <ul className="flex flex-col divide-y divide-line border-y border-line text-sm">
           {order.items.map((i) => (
-            <li key={i.workId} className="flex justify-between gap-3 py-3">
-              <span>「{i.title}」, {i.artistName}{i.edition && `, ed. ${i.edition}`} <span className="text-ink-soft">, {SHIPPING_LABEL[i.shipping]}</span></span>
-              <span className="font-semibold">{formatPrice(i.price)}</span>
+            <li key={i.workId} className="flex flex-col gap-2 py-3">
+              <div className="flex justify-between gap-3">
+                <span>「{i.title}」, {i.artistName}{i.edition && `, ed. ${i.edition}`} <span className="text-ink-soft">, {SHIPPING_LABEL[i.shipping]}</span></span>
+                <span className="font-semibold">{formatPrice(i.price)}</span>
+              </div>
+              {settled && (
+                <CertificateLine
+                  cert={certOf(i.workId)?.code ?? null}
+                  requested={i.certificateRequestedAt != null}
+                  request={requestCertificate.bind(null, order.code, i.workId)}
+                />
+              )}
             </li>
           ))}
         </ul>
@@ -82,5 +97,21 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
         </dl>
       </section>
     </Container>
+  );
+}
+
+function CertificateLine({ cert, requested, request }: { cert: string | null; requested: boolean; request: () => Promise<void> }) {
+  if (cert) {
+    return (
+      <Link href={`/certificates/${cert}`} className="link-sweep w-fit text-xs font-semibold text-violet">
+        작품 보증서 보기 ({cert}) →
+      </Link>
+    );
+  }
+  if (requested) return <p className="text-xs text-ink-soft">작품 보증서를 요청하셨어요. 작품 정보를 확인한 뒤 발급해 드려요.</p>;
+  return (
+    <form action={request}>
+      <button type="submit" className="link-sweep text-xs font-semibold text-violet">작품 보증서 요청하기</button>
+    </form>
   );
 }

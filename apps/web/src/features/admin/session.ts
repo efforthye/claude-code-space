@@ -10,7 +10,7 @@ const MAX_AGE_S = 60 * 60 * 12; // 12시간
 
 /**
  * 세션 서명 키. 실서비스에 ADMIN_SESSION_SECRET(32자 이상)과 ADMIN_PASSWORD가 없으면
- * 관리자 로그인은 "꺼짐" — 오류를 내지 않고 모든 확인이 실패한다.
+ * 관리자 로그인은 "꺼짐", 오류를 내지 않고 모든 확인이 실패한다.
  */
 function secret(): string | null {
   const s = process.env.ADMIN_SESSION_SECRET;

@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
+import { FreeBadge } from "@/components/ui/free-badge";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { WorkCard } from "@/features/catalog/work-card";
 import { exhibitionPhase, getCatalog, indexById, PHASE_LABEL } from "@/lib/data/catalog";
+import { categoryLabel } from "@/lib/domain/rules";
 import { formatPeriod } from "@/lib/format";
 
 export default function ExhibitionPage(props: PageProps<"/exhibitions/[id]">) {
@@ -17,7 +19,7 @@ export default function ExhibitionPage(props: PageProps<"/exhibitions/[id]">) {
 
 async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[id]">["params"] }) {
   const { id } = await params;
-  const { exhibitions, works, artists, schools, today } = await getCatalog();
+  const { exhibitions, works, artists, schools, today, categories } = await getCatalog();
   const e = exhibitions.find((x) => x.id === id);
   if (!e) notFound();
   const artistById = indexById(artists);
@@ -61,14 +63,14 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
       </header>
       {shown.length === 0 ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-3 rounded-md border border-line bg-paper p-5">
+          <div className="flex flex-col gap-3 glass rounded-lg p-5">
             <p className="font-bold">이 전시에 참여하는 작가인가요?</p>
             <p className="text-sm text-ink-soft">입점하면 작품을 무료로 촬영해 드리고, 전시가 끝난 뒤에도 작품을 소개해요. 판매는 원하는 작품만.</p>
             <ButtonLink href="/join" variant="secondary" className="w-fit">작가 입점 신청</ButtonLink>
           </div>
-          <div className="flex flex-col gap-3 rounded-md border border-line bg-paper p-5">
-            <p className="font-bold">졸업준비위원회, 학생회라면</p>
-            <p className="text-sm text-ink-soft">전시 전체를 온라인 전시 페이지로 만들고 QR 캡션 라벨을 드려요. 이번 시즌 무료예요.</p>
+          <div className="flex flex-col gap-3 glass rounded-lg p-5">
+            <p className="flex flex-wrap items-center gap-2 font-bold">졸업준비위원회, 학생회라면 <FreeBadge /></p>
+            <p className="text-sm text-ink-soft">전시 전체를 온라인 전시 페이지로 만들고 QR 캡션 라벨을 드려요.</p>
             <ButtonLink href="/exhibitions/apply" variant="secondary" className="w-fit">전시 등록 신청</ButtonLink>
           </div>
         </div>
@@ -76,7 +78,7 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
         <div className="columns-2 gap-6 md:columns-3 lg:columns-4">
           {shown.map((w) => {
             const a = artistById.get(w.artistId);
-            return <WorkCard key={w.id} work={w} artist={a} school={a?.schoolId ? schoolById.get(a.schoolId) : undefined} />;
+            return <WorkCard key={w.id} work={w} artist={a} school={a?.schoolId ? schoolById.get(a.schoolId) : undefined} mediumLabel={categoryLabel(categories, w.medium)} />;
           })}
         </div>
       )}

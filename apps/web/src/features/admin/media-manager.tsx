@@ -9,7 +9,7 @@ import type { MediaItem } from "@/lib/domain/types";
 type Uploading = { id: string; name: string; progress: number; error?: string };
 
 /** /api/admin/media 로 한 파일씩 올린다 (진행률 표시를 위해 XHR). */
-function upload(file: File, onProgress: (p: number) => void): Promise<MediaItem> {
+export function upload(file: File, onProgress: (p: number) => void): Promise<MediaItem> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/admin/media");

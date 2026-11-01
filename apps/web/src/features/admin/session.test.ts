@@ -8,7 +8,7 @@ const load = async () => {
 describe("admin session", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it("fails closed in production without a secret — no throw, no login", async () => {
+  it("fails closed in production without a secret, no throw, no login", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("ADMIN_SESSION_SECRET", "");
     vi.stubEnv("ADMIN_PASSWORD", "anything");

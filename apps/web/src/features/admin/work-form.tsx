@@ -4,12 +4,13 @@ import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
-import { KIND_LABEL, MEDIUM_LABEL, WORK_STATUS_LABEL, needsArtShipping } from "@/lib/domain/rules";
-import { MEDIA, WORK_KINDS, type Artist, type Exhibition, type Work } from "@/lib/domain/types";
+import { artShippingIds, KIND_LABEL, WORK_STATUS_LABEL, needsArtShipping } from "@/lib/domain/rules";
+import { WORK_KINDS, type Artist, type Category, type Exhibition, type Work } from "@/lib/domain/types";
 import { saveWork, type FormState } from "./actions";
+import { StoryEditor } from "./story-editor";
 import { MediaManager } from "./media-manager";
 
-export function WorkForm({ work, artists, exhibitions }: { work?: Work; artists: Artist[]; exhibitions: Exhibition[] }) {
+export function WorkForm({ work, artists, exhibitions, categories }: { work?: Work; artists: Artist[]; exhibitions: Exhibition[]; categories: Category[] }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveWork.bind(null, work?.id ?? null), null);
   return (
     <ActionForm action={action} className="grid max-w-4xl gap-5 md:grid-cols-2">
@@ -23,7 +24,7 @@ export function WorkForm({ work, artists, exhibitions }: { work?: Work; artists:
       </Field>
       <Field label="매체" required>
         <Select name="medium" defaultValue={work?.medium ?? "painting"}>
-          {MEDIA.map((m) => <option key={m} value={m}>{MEDIUM_LABEL[m]}</option>)}
+          {categories.map((c) => <option key={c.id} value={c.id}>{c.label}{c.visible ? "" : " (숨김)"}</option>)}
         </Select>
       </Field>
       <Field label="작품 구분" required>
@@ -55,13 +56,21 @@ export function WorkForm({ work, artists, exhibitions }: { work?: Work; artists:
       <Field label="작품 설명" className="md:col-span-2"><Textarea name="description" defaultValue={work?.description} /></Field>
 
       <MediaManager initial={work?.media ?? []} />
+      <StoryEditor initial={work?.story ?? []} />
+
+      <fieldset className="grid gap-4 rounded-lg border border-ink/10 p-4 md:col-span-2 md:grid-cols-2">
+        <legend className="px-1 text-sm font-semibold">작가가 아닌 사람이 파는 작품 (작고 작가, 2차 거래)</legend>
+        <Field label="판매자 표시" hint="비워 두면 작가 본인 판매. 예: 작가 유족, 개인 소장자"><Input name="consignor" defaultValue={work?.consignor ?? ""} /></Field>
+        <Field label="감정, 보증서" hint="감정 기관과 번호. 사본은 운영자가 확인"><Input name="appraisal" defaultValue={work?.appraisal ?? ""} /></Field>
+        <Field label="소장 이력" className="md:col-span-2" hint="누가 언제부터 가지고 있었는지"><Textarea name="provenance" defaultValue={work?.provenance ?? ""} /></Field>
+      </fieldset>
 
       <div className="flex flex-col gap-2 md:col-span-2">
         <Checkbox name="allowsPickup" defaultChecked={work?.allowsPickup ?? true} label="직거래(직접 수령) 허용" />
         <Checkbox name="featured" defaultChecked={work?.featured} label="홈 대표 작품으로 노출" />
         <Checkbox name="operatorOwned" defaultChecked={work?.operatorOwned} label="운영자 본인이나 친족 소유 작품 (작품 페이지에 고지 문구가 붙어요)" />
       </div>
-      {work && needsArtShipping(work) && <p className="text-xs text-warn md:col-span-2">이 작품은 현재 ‘미술품 전문 운송’ 대상으로 분류돼요.</p>}
+      {work && needsArtShipping(work, artShippingIds(categories)) && <p className="text-xs text-warn md:col-span-2">이 작품은 현재 ‘미술품 전문 운송’ 대상으로 분류돼요.</p>}
       <Button type="submit" size="lg" disabled={pending} className="md:col-span-2">{pending ? "저장하는 중…" : work ? "변경 저장" : "작품 등록"}</Button>
     </ActionForm>
   );

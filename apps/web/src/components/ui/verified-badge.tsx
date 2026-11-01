@@ -34,7 +34,7 @@ export function VerifiedBadge({
     >
       <SealIcon className="size-4" />
       {schoolName ? `${schoolName} 인증` : "학교 인증"}
-      {showMethod && <span className="font-medium text-ink-soft">, {VERIFY_LABEL[method]}</span>}
+      {showMethod && <span className="font-medium text-ink-soft">{VERIFY_LABEL[method]}</span>}
     </span>
   );
 }
@@ -61,15 +61,17 @@ export function VerificationCard({
     );
   }
   return (
-    <div className="flex items-start gap-3 rounded-md border border-ink/20 bg-mist p-3">
-      <SealIcon className="size-9" />
-      <div className="flex flex-col gap-0.5 text-sm">
-        <p className="font-bold">
-          {[schoolName, department].filter(Boolean).join(" ")} {statusLabel}, MAYO 인증
-        </p>
-        <p className="text-xs text-ink-soft">
-          {VERIFY_LABEL[method]}로 확인{verifiedAt && `, ${formatDate(verifiedAt)}`}, 확인에 쓴 서류는 보관하지 않고 바로 파기했어요
-        </p>
+    <div className="glass flex items-center gap-4 rounded-lg p-4">
+      <SealIcon className="size-10" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex flex-col">
+          <span className="text-xs font-semibold text-violet">MAYO 학교 인증</span>
+          <p className="font-bold">{[schoolName, department, statusLabel].filter(Boolean).join(" ")}</p>
+        </div>
+        <dl className="flex flex-wrap gap-x-5 gap-y-1 text-xs">
+          <div className="flex gap-1.5"><dt className="text-ink-soft">확인 방법</dt><dd className="font-medium">{VERIFY_LABEL[method]}</dd></div>
+          {verifiedAt && <div className="flex gap-1.5"><dt className="text-ink-soft">확인일</dt><dd className="font-medium tabular-nums">{formatDate(verifiedAt)}</dd></div>}
+        </dl>
       </div>
     </div>
   );

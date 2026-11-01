@@ -1,13 +1,16 @@
 "use server";
 
+import { buildCertificate } from "@/features/certificates/build";
+import { getBusinessInfo } from "@/lib/site";
+
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { TAG } from "@/lib/data/catalog";
 import { store } from "@/lib/data/store";
 import { ORDER_NEXT, ORDER_STATUS_LABEL } from "@/lib/domain/rules";
-import { MEDIA, MEDIA_KINDS, WORK_KINDS, type Database, type OrderStatus } from "@/lib/domain/types";
-import { newId } from "@/lib/ids";
+import { MEDIA_KINDS, WORK_KINDS, type Database, type OrderStatus } from "@/lib/domain/types";
+import { newCertificateCode, newId } from "@/lib/ids";
 import { readPlace } from "@/features/places/parse";
 import { requireAdmin } from "./session";
 
@@ -66,17 +69,26 @@ export async function updateOrderDetails(orderId: string, form: FormData) {
 
 /* ───────────────────────── 작품 ───────────────────────── */
 
-/** 우리 저장소(/media, 샘플)나 https 주소만 — javascript:, data: 같은 스킴은 거절 */
+/** 우리 저장소(/media, 샘플)나 https 주소만, javascript:, data: 같은 스킴은 거절 */
 const MediaSrc = z.string().max(500).refine((v) => /^\/(media|samples)\/[\w./-]+$/.test(v) || /^https:\/\/[^\s"'<>]+$/.test(v), "허용되지 않는 미디어 주소");
 const MediaList = z
   .array(z.object({ kind: z.enum(MEDIA_KINDS), src: MediaSrc, poster: MediaSrc.nullish(), alt: z.string().max(200).nullish() }))
   .max(30);
 
+const StoryList = z
+  .array(
+    z.discriminatedUnion("kind", [
+      z.object({ kind: z.literal("text"), text: z.string().trim().min(1).max(3000) }),
+      z.object({ kind: z.literal("image"), src: MediaSrc, caption: z.string().trim().max(200).nullable() }),
+    ]),
+  )
+  .max(40);
+
 const WorkInput = z.object({
   title: z.string().min(1, "작품명을 입력해 주세요"),
   artistId: z.string().min(1, "작가를 골라 주세요"),
   exhibitionId: z.string().nullable(),
-  medium: z.enum(MEDIA),
+  medium: z.string().regex(/^[a-z][a-z0-9-]{1,30}$/, "분류를 골라 주세요"),
   kind: z.enum(WORK_KINDS),
   materials: z.string().min(1, "재료를 입력해 주세요"),
   widthCm: z.number().positive("가로 크기를 입력해 주세요"),
@@ -90,6 +102,9 @@ const WorkInput = z.object({
   description: z.string(),
   allowsPickup: z.boolean(),
   operatorOwned: z.boolean(),
+  consignor: z.string().max(60, "판매자 표시는 60자까지예요").nullable(),
+  provenance: z.string().max(500, "소장 이력은 500자까지예요").nullable(),
+  appraisal: z.string().max(200, "감정 정보는 200자까지예요").nullable(),
   featured: z.boolean(),
 });
 
@@ -113,6 +128,9 @@ export async function saveWork(workId: string | null, _prev: FormState, form: Fo
     description: s(form, "description"),
     allowsPickup: form.get("allowsPickup") === "on",
     operatorOwned: form.get("operatorOwned") === "on",
+    consignor: optional(s(form, "consignor")),
+    provenance: optional(s(form, "provenance")),
+    appraisal: optional(s(form, "appraisal")),
     featured: form.get("featured") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -128,15 +146,24 @@ export async function saveWork(workId: string | null, _prev: FormState, form: Fo
   }
   if (!media.some((m) => m.kind === "image")) return { error: "대표 사진을 한 장 이상 올려 주세요" };
 
+  let story: z.infer<typeof StoryList>;
+  try {
+    const parsedStory = StoryList.safeParse(JSON.parse(s(form, "story") || "[]"));
+    if (!parsedStory.success) return { error: "작품 이야기는 글 3,000자, 사진 설명 200자, 40칸까지 넣을 수 있어요" };
+    story = parsedStory.data;
+  } catch {
+    return { error: "작품 이야기 형식이 올바르지 않아요" };
+  }
+
   const now = new Date().toISOString();
   const id = await store.update((db) => {
     if (workId) {
       const work = db.works.find((w) => w.id === workId);
       if (!work) return null;
-      Object.assign(work, parsed.data, { media, updatedAt: now });
+      Object.assign(work, parsed.data, { media, story, updatedAt: now });
       return work.id;
     }
-    const created = { id: newId("w"), ...parsed.data, media, createdAt: now, updatedAt: now };
+    const created = { id: newId("w"), ...parsed.data, media, story, createdAt: now, updatedAt: now };
     db.works.push(created);
     return created.id;
   });
@@ -157,20 +184,32 @@ export async function saveArtist(artistId: string | null, _prev: FormState, form
   } catch (e) {
     return { error: (e as Error).message };
   }
+  const birthYear = num(s(form, "birthYear"));
+  const deathYear = num(s(form, "deathYear"));
+  const thisYear = new Date().getFullYear();
+  for (const y of [birthYear, deathYear]) {
+    if (y != null && (!Number.isInteger(y) || y < 1800 || y > thisYear)) return { error: "연도는 1800년부터 올해까지 네 자리로 입력해 주세요" };
+  }
+  if (birthYear != null && deathYear != null && deathYear < birthYear) return { error: "작고 연도가 출생 연도보다 빨라요" };
   const fields = {
     name,
     schoolId: optional(s(form, "schoolId")),
     department: optional(s(form, "department")),
     gradYear: num(s(form, "gradYear")),
-    status: s(form, "status") as "student" | "graduate" | "aspiring" | "general",
+    status: s(form, "status"),
     verifiedBy: optional(s(form, "verifiedBy")) as "school_email" | "student_id" | "roster" | null,
     verifiedAt: null as string | null,
     bio: s(form, "bio"),
     instagram: optional(s(form, "instagram").replace(/^@/, "")),
     portfolioUrl,
-    acceptsCommission: form.get("acceptsCommission") === "on",
+    // 작고 작가는 주문제작을 받을 수 없다
+    acceptsCommission: deathYear == null && form.get("acceptsCommission") === "on",
+    birthYear,
+    deathYear,
+    estate: deathYear == null ? null : optional(s(form, "estate")),
   };
   const id = await store.update((db) => {
+    if (!db.artistGroups.some((g) => g.id === fields.status)) return "bad-group" as const;
     const prev = artistId ? db.artists.find((x) => x.id === artistId) : undefined;
     // 인증 방법이 새로 붙거나 바뀔 때만 확인 시각을 갱신한다.
     fields.verifiedAt = !fields.verifiedBy ? null : prev?.verifiedBy === fields.verifiedBy ? prev.verifiedAt : new Date().toISOString();
@@ -184,6 +223,7 @@ export async function saveArtist(artistId: string | null, _prev: FormState, form
     db.artists.push(created);
     return created.id;
   });
+  if (id === "bad-group") return { error: "작가 구분을 다시 골라 주세요" };
   if (!id) return { error: "작가를 찾을 수 없어요" };
   touchCatalog();
   redirect(`/admin/artists/${id}?saved=1`);
@@ -276,6 +316,9 @@ export async function reviewApplication(applicationId: string, decision: "approv
       instagram: app.instagram,
       portfolioUrl: app.portfolioUrl,
       acceptsCommission: false,
+      birthYear: app.birthYear,
+      deathYear: null,
+      estate: null,
       createdAt: new Date().toISOString(),
     };
     db.artists.push(artist);
@@ -333,6 +376,162 @@ export async function answerInquiry(inquiryId: string, form: FormData) {
       q.state = "answered";
     }
     if (close) q.state = "closed";
+  });
+  refresh();
+}
+
+/* ───────────────────────── 매체 분류 ───────────────────────── */
+
+const CategoryCode = z.string().trim().regex(/^[a-z][a-z0-9-]{1,30}$/, "코드는 영문 소문자로 시작하고 소문자·숫자·-만 써 주세요");
+const CategoryLabel = z.string().trim().min(1, "이름을 입력해 주세요").max(20, "이름은 20자까지예요");
+
+export async function updateCategory(id: string, form: FormData) {
+  await requireAdmin();
+  const label = CategoryLabel.safeParse(s(form, "label"));
+  if (!label.success) return;
+  await store.update((db) => {
+    const c = db.categories.find((x) => x.id === id);
+    if (!c) return;
+    c.label = label.data;
+    c.visible = form.get("visible") === "on";
+    c.artShipping = form.get("artShipping") === "on";
+  });
+  touchCatalog();
+  refresh();
+}
+
+/** 한 칸 위/아래로 옮기고 순서를 1..n으로 다시 매긴다. */
+function reorder(rows: { id: string; order: number }[], id: string, delta: -1 | 1) {
+  const list = [...rows].sort((a, b) => a.order - b.order);
+  const i = list.findIndex((c) => c.id === id);
+  const j = i + delta;
+  if (i < 0 || j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  list.forEach((c, k) => (c.order = k + 1));
+}
+
+export async function moveCategory(id: string, delta: -1 | 1) {
+  await requireAdmin();
+  await store.update((db) => reorder(db.categories, id, delta));
+  touchCatalog();
+  refresh();
+}
+
+export async function addCategory(_prev: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin();
+  const code = CategoryCode.safeParse(s(form, "id"));
+  if (!code.success) return { error: code.error.issues[0].message };
+  const label = CategoryLabel.safeParse(s(form, "label"));
+  if (!label.success) return { error: label.error.issues[0].message };
+  const dup = await store.update((db) => {
+    if (db.categories.some((c) => c.id === code.data)) return true;
+    const order = Math.max(0, ...db.categories.map((c) => c.order)) + 1;
+    db.categories.push({ id: code.data, label: label.data, order, visible: true, artShipping: form.get("artShipping") === "on" });
+    return false;
+  });
+  if (dup) return { error: "이미 있는 코드예요" };
+  touchCatalog();
+  refresh();
+  return null;
+}
+
+export async function deleteCategory(id: string) {
+  await requireAdmin();
+  await store.update((db) => {
+    // 작품이 쓰고 있는 분류는 지우지 않는다(숨기기를 쓰도록)
+    if (db.works.some((w) => w.medium === id)) return;
+    db.categories = db.categories.filter((c) => c.id !== id);
+  });
+  touchCatalog();
+  refresh();
+}
+
+/* ───────────────────────── 작가 구분 ───────────────────────── */
+
+export async function updateArtistGroup(id: string, form: FormData) {
+  await requireAdmin();
+  const label = CategoryLabel.safeParse(s(form, "label"));
+  if (!label.success) return;
+  await store.update((db) => {
+    const g = db.artistGroups.find((x) => x.id === id);
+    if (!g) return;
+    g.label = label.data;
+    g.visible = form.get("visible") === "on";
+  });
+  touchCatalog();
+  refresh();
+}
+
+export async function moveArtistGroup(id: string, delta: -1 | 1) {
+  await requireAdmin();
+  await store.update((db) => reorder(db.artistGroups, id, delta));
+  touchCatalog();
+  refresh();
+}
+
+export async function addArtistGroup(_prev: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin();
+  const code = CategoryCode.safeParse(s(form, "id"));
+  if (!code.success) return { error: code.error.issues[0].message };
+  const label = CategoryLabel.safeParse(s(form, "label"));
+  if (!label.success) return { error: label.error.issues[0].message };
+  const dup = await store.update((db) => {
+    if (db.artistGroups.some((g) => g.id === code.data)) return true;
+    const order = Math.max(0, ...db.artistGroups.map((g) => g.order)) + 1;
+    db.artistGroups.push({ id: code.data, label: label.data, order, visible: true });
+    return false;
+  });
+  if (dup) return { error: "이미 있는 코드예요" };
+  touchCatalog();
+  refresh();
+  return null;
+}
+
+export async function deleteArtistGroup(id: string) {
+  await requireAdmin();
+  await store.update((db) => {
+    // 작가가 쓰고 있는 구분은 지우지 않는다(숨기기를 쓰도록)
+    if (db.artists.some((a) => a.status === id)) return;
+    db.artistGroups = db.artistGroups.filter((g) => g.id !== id);
+  });
+  touchCatalog();
+  refresh();
+}
+
+/* ───────────────────────── 작품 보증서 ───────────────────────── */
+
+export async function issueCertificate(orderId: string, workId: string) {
+  await requireAdmin();
+  const biz = getBusinessInfo();
+  const result = await store.update((db) => {
+    const order = db.orders.find((o) => o.id === orderId);
+    if (!order) return { error: "주문을 찾을 수 없어요" };
+    const cert = buildCertificate(db, order, workId, {
+      id: newId("cert"),
+      code: newCertificateCode(),
+      now: new Date().toISOString(),
+      issuer: { companyName: biz.companyName, registrationNumber: biz.registrationNumber, artServiceNumber: biz.artServiceNumber },
+    });
+    if ("error" in cert) return cert;
+    db.certificates.push(cert);
+    order.history.push({ at: cert.issuedAt, status: order.status, note: `작품 보증서 발급 ${cert.code}「${cert.work.title}」` });
+    return cert;
+  });
+  // 버튼은 발급 가능한 줄에만 보이니, 여기서 막히는 건 동시에 두 번 누른 경우뿐이다
+  if ("error" in result) return;
+  refresh();
+}
+
+export async function revokeCertificate(certificateId: string, form: FormData) {
+  await requireAdmin();
+  const reason = s(form, "reason").slice(0, 200) || "사유 미기재";
+  await store.update((db) => {
+    const cert = db.certificates.find((c) => c.id === certificateId);
+    if (!cert || cert.revokedAt) return;
+    cert.revokedAt = new Date().toISOString();
+    cert.revokeReason = reason;
+    const order = db.orders.find((o) => o.id === cert.orderId);
+    order?.history.push({ at: cert.revokedAt, status: order.status, note: `작품 보증서 취소 ${cert.code}, ${reason}` });
   });
   refresh();
 }

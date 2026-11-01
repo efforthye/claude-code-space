@@ -22,14 +22,27 @@ export type Artist = {
   schoolId: ID | null;
   department: string | null;
   gradYear: number | null; // 졸업(예정) 연도
-  status: ArtistStatus;
+  status: string; // 작가 구분 코드 (artistGroups, 관리자에서 관리)
   verifiedBy: VerifyMethod | null; // null = 미인증
   verifiedAt: string | null; // 운영자가 확인한 시각
   bio: string;
   instagram: string | null; // handle without @
   portfolioUrl: string | null; // https only
   acceptsCommission: boolean; // 주문제작
+  birthYear: number | null;
+  /** 작고 연도. 값이 있으면 작고 작가, 작가 본인이 아니라 소장자나 유족이 판매한다. */
+  deathYear: number | null;
+  /** 작품, 저작권 관리 주체 (유족, 재단 등). 작고 작가에게만 의미가 있다. */
+  estate: string | null;
   createdAt: string;
+};
+
+/** 작가 구분 (재학생, 졸업생, 작고 작가 …). 관리자 화면에서 이름, 순서, 노출을 바꾼다. */
+export type ArtistGroup = {
+  id: string; // 영문 코드, 바뀌지 않는다 (작가가 이 값으로 연결됨)
+  label: string;
+  order: number;
+  visible: boolean; // 작가 목록 필터에 보일지
 };
 
 /** 장소 검색(카카오 로컬 / 우편번호 서비스)으로 고른 위치. */
@@ -60,7 +73,7 @@ export type Exhibition = {
   createdAt: string;
 };
 
-/** 매체 분류 — 그림만이 아니라 졸업작품 전 영역 (가이드 26장). */
+/** 매체 분류, 그림만이 아니라 졸업작품 전 영역 (가이드 26장). */
 export const MEDIA = [
   "painting",
   "drawing",
@@ -74,7 +87,17 @@ export const MEDIA = [
   "digital",
   "craft",
 ] as const;
-export type Medium = (typeof MEDIA)[number];
+/** 기본 매체 코드. 실제 분류 목록은 관리자가 바꾸는 db.categories가 기준이다. */
+export type Medium = string;
+
+/** 매체 분류(관리자 관리): 이름·순서·노출·전문 운송 여부 */
+export type Category = {
+  id: string; // 영문 코드, 바뀌지 않는다 (작품이 이 값으로 연결됨)
+  label: string;
+  order: number;
+  visible: boolean;
+  artShipping: boolean; // 크기와 상관없이 미술품 전문 운송 대상
+};
 
 /** 작품 구분 태그. */
 export const WORK_KINDS = ["graduation", "study", "coursework", "personal", "edition"] as const;
@@ -93,6 +116,11 @@ export type MediaItem = {
   alt?: string | null;
 };
 
+/** 작품 이야기: 상세 페이지 아래에 글과 사진을 번갈아 싣는다 (작업 과정, 영감, 설치 사진 …). */
+export type StoryBlock =
+  | { kind: "text"; text: string }
+  | { kind: "image"; src: string; caption: string | null };
+
 export type Work = {
   id: ID;
   title: string;
@@ -105,15 +133,20 @@ export type Work = {
   depthCm: number | null;
   weightKg: number | null;
   year: number;
-  edition: string | null; // "3/10" — 판화, 사진 에디션 번호
+  edition: string | null; // "3/10", 판화, 사진 에디션 번호
   kind: WorkKind;
   price: number; // KRW
   status: WorkStatus;
   media: MediaItem[];
   description: string;
+  story: StoryBlock[];
   allowsPickup: boolean; // 직거래(직접 수령)
-  /** 운영자 본인이나 친족 소유 작품 — 미술진흥법상 사전 고지 대상. */
+  /** 운영자 본인이나 친족 소유 작품, 미술진흥법상 사전 고지 대상. */
   operatorOwned: boolean;
+  /** 작가가 아닌 사람이 파는 경우의 판매자 표시 (소장자, 유족, 재단). null = 작가 본인 판매 */
+  consignor: string | null;
+  provenance: string | null; // 소장 이력
+  appraisal: string | null; // 감정, 보증서 정보 (기관, 번호)
   featured: boolean;
   createdAt: string;
   updatedAt: string;
@@ -136,6 +169,10 @@ export type OrderItem = {
   edition: string | null;
   price: number;
   shipping: ShippingMethod;
+  /** 주문 시점의 판매자. null = 작가 본인 (1차 거래) */
+  seller: string | null;
+  /** 구매자가 작품 보증서를 요청한 시각 */
+  certificateRequestedAt: string | null;
 };
 
 export type Buyer = {
@@ -143,7 +180,7 @@ export type Buyer = {
   phone: string;
   email: string;
   address: string;
-  /** 미술품 전문 운송용 — 층수, 엘리베이터, 진입로. */
+  /** 미술품 전문 운송용, 층수, 엘리베이터, 진입로. */
   deliveryNote: string;
 };
 
@@ -194,7 +231,7 @@ export type Application = {
 export type ExhibitionKind = "graduation" | "coursework" | "other";
 export type ExhibitionSupport = "archive" | "photo" | "qr";
 
-/** 졸업전시와 과제전 등록 신청 — 졸준위, 학생회, 학과, 작가가 전시를 MAYO에 올려 달라고 요청한다. */
+/** 졸업전시와 과제전 등록 신청, 졸준위, 학생회, 학과, 작가가 전시를 MAYO에 올려 달라고 요청한다. */
 export type ExhibitionRequest = {
   id: ID;
   code: string; // 신청 현황 조회용 (E-XXXXXXXX)
@@ -239,6 +276,9 @@ export type Inquiry = {
 };
 
 export type Database = {
+  categories: Category[];
+  artistGroups: ArtistGroup[];
+  certificates: Certificate[];
   schools: School[];
   artists: Artist[];
   exhibitions: Exhibition[];
@@ -247,4 +287,37 @@ export type Database = {
   applications: Application[];
   exhibitionRequests: ExhibitionRequest[];
   inquiries: Inquiry[];
+};
+
+/**
+ * 작품 보증서 (미술진흥법상 구매자가 요구하면 발급). 발급 시점의 작품 정보를 그대로 굳혀 둔다,
+ * 나중에 작품 정보가 바뀌어도 보증서 내용은 바뀌지 않는다. 취소는 지우지 않고 revokedAt으로 남긴다.
+ */
+export type Certificate = {
+  id: ID;
+  code: string; // 공개 확인용 (C-XXXXXXXX)
+  orderId: ID;
+  orderCode: string;
+  workId: ID;
+  work: {
+    title: string;
+    artistName: string;
+    artistLifespan: string | null;
+    year: number;
+    medium: string; // 분류 이름
+    materials: string;
+    size: string;
+    edition: string | null;
+    image: string | null;
+    provenance: string | null;
+    appraisal: string | null;
+  };
+  seller: string; // 작가 본인이면 작가명
+  buyerName: string; // 공개 화면에서는 가린다
+  price: number;
+  soldAt: string; // 입금 확인 시각
+  issuedAt: string;
+  issuer: { companyName: string; registrationNumber: string; artServiceNumber: string };
+  revokedAt: string | null;
+  revokeReason: string | null;
 };

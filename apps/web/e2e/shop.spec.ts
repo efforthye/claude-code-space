@@ -1,18 +1,18 @@
 import { expect, test } from "@playwright/test";
 import { fill, placeOrder } from "./helpers";
 
-test("browse the collection and filter by medium", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "The collection" })).toBeVisible();
+test("the works page filters by admin-managed category", async ({ page }) => {
+  await page.goto("/works");
+  await expect(page.getByRole("heading", { name: "작품", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "가구", exact: true }).click();
-  const cards = page.locator("#collection a[href^='/works/']");
+  const cards = page.locator("main a[href^='/works/']");
   await expect(cards.first()).toBeVisible();
   for (const text of await cards.allInnerTexts()) expect(text).toContain(", 가구");
 });
 
 test("work page shows verification and art-shipping notice", async ({ page }) => {
   await page.goto("/works/w-folding-chair");
-  await expect(page.getByText("MAYO 인증")).toBeVisible();
+  await expect(page.getByText("MAYO 학교 인증")).toBeVisible();
   await expect(page.getByText("미술품 전문 운송 대상")).toBeVisible();
 });
 
@@ -48,4 +48,33 @@ test("a work shows several photos, a process video and a 3D model", async ({ pag
   await page.goto("/works/w-blue-afternoon");
   await page.getByRole("button", { name: /번째 영상 보기/ }).click();
   await expect(page.locator("main video")).toHaveAttribute("poster", /painting-process\.jpg$/);
+});
+
+test("photos open full screen with a counter, arrows and zoom; the story follows", async ({ page }) => {
+  await page.goto("/works/w-blue-afternoon");
+  await expect(page.getByText("1 / 4", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: /크게 보기/ }).click();
+  const viewer = page.getByRole("dialog");
+  await expect(viewer.getByText("1 / 3")).toBeVisible(); // 사진만 넘긴다 (영상 제외)
+  await page.keyboard.press("ArrowRight");
+  await expect(viewer.getByText("2 / 3")).toBeVisible();
+  await viewer.locator("img").click();
+  await expect(viewer.getByText("움직여서 살펴보고, 다시 누르면 원래 크기")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(viewer).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "작품 이야기" })).toBeVisible();
+  await expect(page.getByText("작업실 이젤. 창가 쪽에서 매일 같은 각도로 그렸어요.")).toBeVisible();
+
+  // 사진이 한 장이어도 1 / 1
+  await page.goto("/works/w-white-body");
+  await expect(page.getByText("1 / 1", { exact: true })).toBeVisible();
+});
+
+test("schools are in Korean order with phase badges and a way in", async ({ page }) => {
+  await page.goto("/schools");
+  const names = await page.locator("main li h2").allTextContents();
+  expect(names).toEqual([...names].sort(new Intl.Collator("ko").compare));
+  await expect(page.locator("main").getByText(/^(예정|진행 중|종료)$/).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "입점하기 →" }).first()).toHaveAttribute("href", "/join");
+  await expect(page.getByRole("heading", { name: "우리 학교가 없나요?" })).toBeVisible();
 });

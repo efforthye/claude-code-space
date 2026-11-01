@@ -5,7 +5,7 @@ import { getBusinessInfo, siteConfig } from "@/lib/site";
 export function SiteFooter() {
   const biz = getBusinessInfo();
   return (
-    <footer className="mt-20 border-t border-white/80 bg-white/55 py-10 text-xs leading-relaxed text-ink-soft backdrop-blur">
+    <footer className="mt-20 print:hidden border-t border-white/80 bg-white/55 py-10 text-xs leading-relaxed text-ink-soft backdrop-blur">
       <Container className="flex flex-col gap-6">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <p className="font-display text-3xl leading-none text-ink">
@@ -29,7 +29,7 @@ export function SiteFooter() {
           <div><dt className="inline">통신판매업 신고 </dt><dd className="inline">{biz.mailOrderNumber}</dd></div>
           <div><dt className="inline">미술서비스업 신고 </dt><dd className="inline">{biz.artServiceNumber}</dd></div>
           <div><dt className="inline">주소 </dt><dd className="inline">{biz.address}</dd></div>
-          <div><dt className="inline">고객센터 </dt><dd className="inline">{biz.phone}, {biz.email}</dd></div>
+          <div><dt className="inline">고객센터 </dt><dd className="inline">{[biz.phone, biz.email].filter((v, i, a) => a.indexOf(v) === i).join(", ")}</dd></div>
           <div><dt className="inline">호스팅 </dt><dd className="inline">{biz.hosting}</dd></div>
         </dl>
       </Container>

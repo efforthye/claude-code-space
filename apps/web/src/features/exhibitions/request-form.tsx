@@ -1,5 +1,6 @@
 "use client";
 
+import { FreeBadge } from "@/components/ui/free-badge";
 import { ActionForm } from "@/components/ui/action-form";
 import Link from "next/link";
 import { useActionState } from "react";
@@ -55,7 +56,7 @@ export function ExhibitionRequestForm() {
       </div>
 
       <fieldset className="flex flex-col gap-2 rounded-md border border-line bg-paper p-4 sm:col-span-2">
-        <legend className="px-1 text-sm font-semibold">원하는 지원 (이번 시즌 무료)</legend>
+        <legend className="px-1 text-sm font-semibold"><span className="inline-flex items-center gap-2">원하는 지원 <FreeBadge /></span></legend>
         {Object.entries(SUPPORT_LABEL).map(([k, v]) => (
           <Checkbox key={k} name="support" value={k} defaultChecked label={v} />
         ))}

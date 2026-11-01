@@ -17,7 +17,7 @@ declare global {
 const POSTCODE_SRC = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
 
 /**
- * 장소 선택 — 검색해서 고른다(직접 타이핑하지 않음). 카카오 로컬 검색이 기본이고,
+ * 장소 선택, 검색해서 고른다(직접 타이핑하지 않음). 카카오 로컬 검색이 기본이고,
  * 서버에 키가 없으면 우편번호 서비스(키 불필요)로 건물을 찾는다.
  * 폼에는 hidden 필드로 `${name}`(장소 이름)과 `${name}Place`(JSON)가 실린다.
  */

@@ -65,4 +65,16 @@ describe("migrate", () => {
     ]);
     expect("images" in out.works[0]).toBe(false);
   });
+
+  it("fills artist groups and the new artist and work fields on old data", async () => {
+    const { migrate } = await import("./store");
+    const db = buildBaseDatabase();
+    db.artistGroups = [];
+    db.artists.push({ id: "a-old", status: "student" } as never);
+    db.works.push({ id: "w-old", media: [] } as never);
+    const out = migrate(db);
+    expect(out.artistGroups.map((g) => g.id)).toContain("late");
+    expect(out.artists.at(-1)).toMatchObject({ birthYear: null, deathYear: null, estate: null });
+    expect(out.works.at(-1)).toMatchObject({ story: [], consignor: null, provenance: null, appraisal: null });
+  });
 });
