@@ -165,6 +165,31 @@ export type Application = {
   createdAt: string;
 };
 
+export type ExhibitionKind = "graduation" | "coursework" | "other";
+export type ExhibitionSupport = "archive" | "photo" | "qr";
+
+/** 졸업·과제전시 등록 신청 — 졸준위·학생회·학과·작가가 전시를 MAYO에 올려 달라고 요청한다. */
+export type ExhibitionRequest = {
+  id: ID;
+  organizer: "committee" | "council" | "department" | "artist" | "other";
+  contactName: string;
+  email: string;
+  phone: string;
+  schoolName: string;
+  department: string;
+  title: string;
+  kind: ExhibitionKind;
+  startDate: string;
+  endDate: string;
+  venue: string;
+  artistCount: number | null;
+  support: ExhibitionSupport[];
+  message: string;
+  state: ApplicationState;
+  exhibitionId: ID | null;
+  createdAt: string;
+};
+
 export type Database = {
   schools: School[];
   artists: Artist[];
@@ -172,4 +197,5 @@ export type Database = {
   works: Work[];
   orders: Order[];
   applications: Application[];
+  exhibitionRequests: ExhibitionRequest[];
 };

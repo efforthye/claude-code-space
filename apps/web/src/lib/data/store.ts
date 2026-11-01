@@ -22,6 +22,7 @@ const EMPTY: Database = {
   works: [],
   orders: [],
   applications: [],
+  exhibitionRequests: [],
 };
 
 /** Local development store: one JSON file under `.data/` (git-ignored). */

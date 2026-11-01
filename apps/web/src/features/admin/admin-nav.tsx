@@ -11,6 +11,7 @@ const ITEMS = [
   { href: "/admin/artists", label: "작가" },
   { href: "/admin/applications", label: "입점 신청" },
   { href: "/admin/exhibitions", label: "전시" },
+  { href: "/admin/exhibition-requests", label: "전시 등록 신청" },
   { href: "/admin/schools", label: "학교" },
   { href: "/admin/qr", label: "QR 라벨" },
   { href: "/admin/ledger", label: "유통 내역" },

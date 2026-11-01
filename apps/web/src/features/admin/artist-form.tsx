@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -10,7 +11,7 @@ import { saveArtist, type FormState } from "./actions";
 export function ArtistForm({ artist, schools }: { artist?: Artist; schools: School[] }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveArtist.bind(null, artist?.id ?? null), null);
   return (
-    <form action={action} className="grid max-w-3xl gap-5 md:grid-cols-2">
+    <ActionForm action={action} className="grid max-w-3xl gap-5 md:grid-cols-2">
       {state?.error && <p className="rounded-sm bg-dot/10 p-3 text-sm text-dot md:col-span-2">{state.error}</p>}
       <Field label="작가명" required hint="예명 가능"><Input name="name" defaultValue={artist?.name} /></Field>
       <Field label="구분" required>
@@ -37,6 +38,6 @@ export function ArtistForm({ artist, schools }: { artist?: Artist; schools: Scho
       <Field label="작가 소개" className="md:col-span-2"><Textarea name="bio" defaultValue={artist?.bio} /></Field>
       <Checkbox name="acceptsCommission" defaultChecked={artist?.acceptsCommission} label="주문제작 가능" className="md:col-span-2" />
       <Button type="submit" size="lg" disabled={pending} className="md:col-span-2">{pending ? "저장하는 중…" : artist ? "변경 저장" : "작가 추가"}</Button>
-    </form>
+    </ActionForm>
   );
 }

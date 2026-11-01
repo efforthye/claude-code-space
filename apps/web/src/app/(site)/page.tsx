@@ -68,6 +68,10 @@ export default async function HomePage() {
                   <span className="text-xs text-ink-soft">{formatPeriod(e.startDate, e.endDate)} · {e.venue}</span>
                 </Link>
               ))}
+              <Link href="/exhibitions/apply" className="flex w-60 shrink-0 flex-col justify-center gap-1 rounded-md border border-dashed border-ink/40 p-4 hover:border-ink">
+                <span className="text-xs font-bold text-ink-soft">+ 전시 등록</span>
+                <span className="font-semibold">우리 학과 졸업·과제전시도 올려 보세요</span>
+              </Link>
             </div>
           </Container>
         </section>

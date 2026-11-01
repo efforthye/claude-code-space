@@ -141,5 +141,5 @@ export function buildSampleDatabase(): Database {
     { ...base, id: "w-small-stool", title: "작은 스툴", artistId: "art-hana", medium: "furniture", materials: "오크", widthCm: 32, heightCm: 40, depthCm: 32, weightKg: 4, price: 210_000, images: [img(14)], description: "과제전에 냈던 스툴.", kind: "coursework" },
   ];
 
-  return { schools, artists, exhibitions, works, orders: [], applications: [] };
+  return { schools, artists, exhibitions, works, orders: [], applications: [], exhibitionRequests: [] };
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ export function JoinForm() {
     );
 
   return (
-    <form action={action} className="grid gap-5 sm:grid-cols-2">
+    <ActionForm action={action} className="grid gap-5 sm:grid-cols-2">
       <Field label="이름 또는 작가명" required error={errors.name}><Input name="name" /></Field>
       <Field label="구분" required>
         <Select name="status" defaultValue="student">
@@ -68,6 +69,6 @@ export function JoinForm() {
         {(errors.agreePrivacy || errors.agreeImage) && <p className="text-xs font-medium text-dot">{errors.agreePrivacy ?? errors.agreeImage}</p>}
       </div>
       <Button type="submit" size="lg" disabled={pending} className="sm:col-span-2">{pending ? "보내는 중…" : "입점 신청하기"}</Button>
-    </form>
+    </ActionForm>
   );
 }

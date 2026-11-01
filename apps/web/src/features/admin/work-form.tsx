@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -11,7 +12,7 @@ import { saveWork, type FormState } from "./actions";
 export function WorkForm({ work, artists, exhibitions }: { work?: Work; artists: Artist[]; exhibitions: Exhibition[] }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveWork.bind(null, work?.id ?? null), null);
   return (
-    <form action={action} className="grid max-w-4xl gap-5 md:grid-cols-2">
+    <ActionForm action={action} className="grid max-w-4xl gap-5 md:grid-cols-2">
       {state?.error && <p className="rounded-sm bg-dot/10 p-3 text-sm text-dot md:col-span-2">{state.error}</p>}
       <Field label="작품명" required><Input name="title" defaultValue={work?.title} /></Field>
       <Field label="작가" required hint="없으면 작가 메뉴에서 먼저 만들어 주세요">
@@ -78,6 +79,6 @@ export function WorkForm({ work, artists, exhibitions }: { work?: Work; artists:
       </div>
       {work && needsArtShipping(work) && <p className="text-xs text-warn md:col-span-2">이 작품은 현재 ‘미술품 전문 운송’ 대상으로 분류돼요.</p>}
       <Button type="submit" size="lg" disabled={pending} className="md:col-span-2">{pending ? "저장하는 중…" : work ? "변경 저장" : "작품 등록"}</Button>
-    </form>
+    </ActionForm>
   );
 }

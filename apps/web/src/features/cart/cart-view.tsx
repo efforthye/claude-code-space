@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
@@ -88,7 +89,7 @@ export function CartView({ works, artists }: { works: Work[]; artists: Artist[] 
         })}
       </ul>
 
-      <form action={action} className="flex flex-col gap-5 rounded-md border border-line bg-paper p-5">
+      <ActionForm action={action} className="flex flex-col gap-5 rounded-md border border-line bg-paper p-5">
         <input type="hidden" name="lines" value={JSON.stringify(orderable.map((r) => r.line))} />
         <h2 className="text-lg font-bold">주문 신청</h2>
         <dl className="flex flex-col gap-1 border-b border-line pb-4 text-sm">
@@ -131,7 +132,7 @@ export function CartView({ works, artists }: { works: Work[]; artists: Artist[] 
           신청하면 작품이 바로 예약되고, 다음 화면에서 입금 계좌를 안내드려요. 48시간 안에 입금이 확인되지 않으면 예약이 풀릴
           수 있어요.
         </p>
-      </form>
+      </ActionForm>
     </div>
   );
 }

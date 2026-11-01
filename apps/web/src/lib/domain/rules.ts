@@ -125,3 +125,19 @@ export function isUnder14(birthYear: number, now = new Date()) {
 export function isPaymentOverdue(order: Pick<Order, "status" | "paymentDueAt">) {
   return order.status === "pending_payment" && Date.parse(order.paymentDueAt) < Date.now();
 }
+
+export const ORGANIZER_LABEL = {
+  committee: "졸업준비위원회",
+  council: "학생회",
+  department: "학과·교수",
+  artist: "참여 작가",
+  other: "기타",
+} as const;
+
+export const EXHIBITION_KIND_LABEL = { graduation: "졸업전시", coursework: "과제전", other: "기타 전시" } as const;
+
+export const SUPPORT_LABEL = {
+  archive: "온라인 전시 페이지(아카이브)",
+  photo: "작품 촬영",
+  qr: "QR 캡션 라벨",
+} as const;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { Container, EmptyState, PageHeading } from "@/components/ui/container";
 import { exhibitionPhase, getCatalog, indexById, PHASE_LABEL } from "@/lib/data/catalog";
 import { formatPeriod } from "@/lib/format";
@@ -18,6 +19,13 @@ export default async function ExhibitionsPage() {
   return (
     <Container className="flex flex-col gap-8 py-10">
       <PageHeading eyebrow="Exhibitions" title="졸업전시 · 과제전" />
+      <aside className="flex flex-col gap-3 rounded-md border-2 border-ink bg-paper p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="font-bold">우리 학과 졸업·과제전시도 MAYO에 올려 보세요</p>
+          <p className="text-sm text-ink-soft">온라인 전시 페이지, 작품 촬영, QR 캡션 라벨까지 — 이번 시즌 무료예요.</p>
+        </div>
+        <ButtonLink href="/exhibitions/apply" className="shrink-0">전시 등록 신청하기</ButtonLink>
+      </aside>
       {rows.length === 0 ? (
         <EmptyState title="등록된 전시가 없어요" />
       ) : (

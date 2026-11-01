@@ -279,3 +279,33 @@ export async function reviewApplication(applicationId: string, decision: "approv
   if (artistId) redirect(`/admin/artists/${artistId}`);
   refresh();
 }
+
+/* ───────────────────────── 전시 등록 신청 ───────────────────────── */
+
+export async function reviewExhibitionRequest(requestId: string, decision: "approved" | "rejected") {
+  await requireAdmin();
+  const exhibitionId = await store.update((db) => {
+    const req = db.exhibitionRequests.find((r) => r.id === requestId);
+    if (!req || req.state !== "new") return null;
+    req.state = decision;
+    if (decision === "rejected") return null;
+    const exhibition = {
+      id: newId("exh"),
+      title: req.title,
+      schoolId: findOrCreateSchool(db, req.schoolName),
+      department: req.department || null,
+      venue: req.venue,
+      startDate: req.startDate,
+      endDate: req.endDate,
+      description: "",
+      link: null,
+      createdAt: new Date().toISOString(),
+    };
+    db.exhibitions.push(exhibition);
+    req.exhibitionId = exhibition.id;
+    return exhibition.id;
+  });
+  touchCatalog();
+  if (exhibitionId) redirect(`/admin/exhibitions/${exhibitionId}`);
+  refresh();
+}

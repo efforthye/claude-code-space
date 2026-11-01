@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -9,7 +10,7 @@ import { saveExhibition, type FormState } from "./actions";
 export function ExhibitionForm({ exhibition, schools }: { exhibition?: Exhibition; schools: School[] }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveExhibition.bind(null, exhibition?.id ?? null), null);
   return (
-    <form action={action} className="grid max-w-3xl gap-5 md:grid-cols-2">
+    <ActionForm action={action} className="grid max-w-3xl gap-5 md:grid-cols-2">
       {state?.error && <p className="rounded-sm bg-dot/10 p-3 text-sm text-dot md:col-span-2">{state.error}</p>}
       <Field label="전시명" required className="md:col-span-2"><Input name="title" defaultValue={exhibition?.title} /></Field>
       <Field label="학교">
@@ -25,6 +26,6 @@ export function ExhibitionForm({ exhibition, schools }: { exhibition?: Exhibitio
       <Field label="외부 링크" className="md:col-span-2"><Input name="link" defaultValue={exhibition?.link ?? ""} placeholder="https://" /></Field>
       <Field label="소개" className="md:col-span-2"><Textarea name="description" defaultValue={exhibition?.description} /></Field>
       <Button type="submit" size="lg" disabled={pending} className="md:col-span-2">{pending ? "저장하는 중…" : exhibition ? "변경 저장" : "전시 추가"}</Button>
-    </form>
+    </ActionForm>
   );
 }
