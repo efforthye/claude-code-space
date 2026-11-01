@@ -29,6 +29,7 @@ export default async function AdminDashboard() {
         <Stat label="운송 견적 필요" value={quoteNeeded.length} href="/admin/orders" tone={quoteNeeded.length ? "warn" : undefined} />
         <Stat label="새 입점 신청" value={db.applications.filter((a) => a.state === "new").length} href="/admin/applications" />
         <Stat label="새 전시 등록 신청" value={db.exhibitionRequests.filter((r) => r.state === "new").length} href="/admin/exhibition-requests" />
+        <Stat label="답변 대기 문의" value={db.inquiries.filter((q) => q.state === "new").length} href="/admin/inquiries" tone={db.inquiries.some((q) => q.state === "new") ? "warn" : undefined} />
         <Stat label="판매 중 작품" value={db.works.filter((w) => w.status === "available").length} href="/admin/works" />
         <Stat label="미인증 작가" value={db.artists.filter((a) => !a.verifiedBy).length} href="/admin/artists" />
         <Stat label="이번 달 거래액(입금 확인)" value={formatPrice(monthSales)} href="/admin/ledger" />

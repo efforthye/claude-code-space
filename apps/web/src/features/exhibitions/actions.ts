@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { store } from "@/lib/data/store";
 import { readPlace } from "@/features/places/parse";
-import { newId } from "@/lib/ids";
+import { newId, newTrackingCode } from "@/lib/ids";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "날짜를 골라 주세요");
 
@@ -26,7 +26,7 @@ const RequestInput = z
   })
   .refine((v) => v.endDate >= v.startDate, { message: "종료일이 시작일보다 빨라요", path: ["endDate"] });
 
-export type RequestFormState = { ok: false; errors: Record<string, string> } | { ok: true } | null;
+export type RequestFormState = { ok: false; errors: Record<string, string> } | { ok: true; code: string; title: string } | null;
 
 export async function submitExhibitionRequest(_prev: RequestFormState, form: FormData): Promise<RequestFormState> {
   const get = (k: string) => String(form.get(k) ?? "");
@@ -54,9 +54,11 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
   const v = parsed.data;
   const { place, venue } = readPlace(form, "venue");
   if (!venue) return { ok: false, errors: { venue: "장소를 검색해서 골라 주세요" } };
+  const code = newTrackingCode("E");
   await store.update((db) => {
     db.exhibitionRequests.push({
       id: newId("exr"),
+      code,
       organizer: v.organizer,
       contactName: v.contactName,
       email: v.email,
@@ -77,5 +79,5 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
       createdAt: new Date().toISOString(),
     });
   });
-  return { ok: true };
+  return { ok: true, code, title: `전시 등록 신청 · ${v.title}` };
 }

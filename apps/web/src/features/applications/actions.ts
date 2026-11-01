@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { store } from "@/lib/data/store";
 import { isMinor, isUnder14 } from "@/lib/domain/rules";
-import { newId } from "@/lib/ids";
+import { newId, newTrackingCode } from "@/lib/ids";
 
 const httpsUrl = z
   .string()
@@ -29,7 +29,7 @@ const ApplicationInput = z.object({
   agreeImage: z.literal(true, { error: "작품 이미지 이용 허락에 동의해 주세요" }),
 });
 
-export type ApplicationFormState = { ok: false; errors: Record<string, string> } | { ok: true } | null;
+export type ApplicationFormState = { ok: false; errors: Record<string, string> } | { ok: true; code: string; title: string } | null;
 
 export async function submitApplication(_prev: ApplicationFormState, form: FormData): Promise<ApplicationFormState> {
   const get = (k: string) => String(form.get(k) ?? "");
@@ -68,9 +68,11 @@ export async function submitApplication(_prev: ApplicationFormState, form: FormD
     return { ok: false, errors: { schoolName: "학교 이름을 입력해 주세요" } };
   }
 
+  const code = newTrackingCode("J");
   await store.update((db) => {
     db.applications.push({
       id: newId("app"),
+      code,
       name: v.name,
       email: v.email,
       phone: v.phone,
@@ -88,5 +90,5 @@ export async function submitApplication(_prev: ApplicationFormState, form: FormD
       createdAt: new Date().toISOString(),
     });
   });
-  return { ok: true };
+  return { ok: true, code, title: `작가 입점 신청 · ${v.name}` };
 }

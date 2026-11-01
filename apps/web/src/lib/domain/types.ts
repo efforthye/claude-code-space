@@ -163,6 +163,7 @@ export type ApplicationState = "new" | "approved" | "rejected";
 /** 작가 입점 신청. */
 export type Application = {
   id: ID;
+  code: string; // 신청 현황 조회용 (J-XXXXXXXX)
   name: string;
   email: string;
   phone: string;
@@ -186,6 +187,7 @@ export type ExhibitionSupport = "archive" | "photo" | "qr";
 /** 졸업·과제전시 등록 신청 — 졸준위·학생회·학과·작가가 전시를 MAYO에 올려 달라고 요청한다. */
 export type ExhibitionRequest = {
   id: ID;
+  code: string; // 신청 현황 조회용 (E-XXXXXXXX)
   organizer: "committee" | "council" | "department" | "artist" | "other";
   contactName: string;
   email: string;
@@ -206,6 +208,26 @@ export type ExhibitionRequest = {
   createdAt: string;
 };
 
+export const INQUIRY_TOPICS = ["purchase", "artist", "exhibition", "partnership", "other"] as const;
+export type InquiryTopic = (typeof INQUIRY_TOPICS)[number];
+
+/** 문의하기. 운영자 답변은 신청 현황(/my)에서 본인이 확인한다. */
+export type Inquiry = {
+  id: ID;
+  code: string; // Q-XXXXXXXX
+  topic: InquiryTopic;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  message: string;
+  relatedCode: string | null; // 관련 주문·신청 번호
+  state: "new" | "answered" | "closed";
+  answer: string | null;
+  answeredAt: string | null;
+  createdAt: string;
+};
+
 export type Database = {
   schools: School[];
   artists: Artist[];
@@ -214,4 +236,5 @@ export type Database = {
   orders: Order[];
   applications: Application[];
   exhibitionRequests: ExhibitionRequest[];
+  inquiries: Inquiry[];
 };

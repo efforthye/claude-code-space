@@ -315,3 +315,22 @@ export async function reviewExhibitionRequest(requestId: string, decision: "appr
   if (exhibitionId) redirect(`/admin/exhibitions/${exhibitionId}`);
   refresh();
 }
+
+/* ───────────────────────── 문의 ───────────────────────── */
+
+export async function answerInquiry(inquiryId: string, form: FormData) {
+  await requireAdmin();
+  const answer = s(form, "answer");
+  const close = form.get("close") === "on";
+  await store.update((db) => {
+    const q = db.inquiries.find((x) => x.id === inquiryId);
+    if (!q) return;
+    if (answer) {
+      q.answer = answer;
+      q.answeredAt = new Date().toISOString();
+      q.state = "answered";
+    }
+    if (close) q.state = "closed";
+  });
+  refresh();
+}

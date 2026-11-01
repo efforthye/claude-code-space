@@ -59,8 +59,8 @@ export default async function HomePage() {
 
       {stories.length > 0 && (
         <section className="border-b border-line">
-          <Container className="py-6">
-            <div className="flex gap-3 overflow-x-auto pb-1">
+          <Container className="py-4">
+            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pt-2 pb-4 sm:-mx-6 sm:px-6">
               {stories.map(({ e, phase }) => (
                 <Link key={e.id} href={`/exhibitions/${e.id}`} className="flex w-60 shrink-0 flex-col gap-1 rounded-md border border-line bg-paper p-4 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-ink hover:shadow-md">
                   <span className={phase === "ongoing" ? "text-xs font-bold text-dot" : "text-xs font-bold text-ink-soft"}>

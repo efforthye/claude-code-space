@@ -14,7 +14,8 @@ export function SiteFooter() {
           <nav className="flex gap-4 font-semibold text-ink">
             <Link href="/legal/terms">이용약관</Link>
             <Link href="/legal/privacy">개인정보처리방침</Link>
-            <Link href="/orders">주문 조회</Link>
+            <Link href="/my">내 신청 현황</Link>
+            <Link href="/contact">문의하기</Link>
             <Link href="/join">작가 입점 신청</Link>
           </nav>
         </div>

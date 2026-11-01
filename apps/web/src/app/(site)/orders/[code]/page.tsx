@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { getBankAccount } from "@/features/orders/payment";
+import { OrderPlaced } from "@/features/orders/order-placed";
 import { findOrderByCode } from "@/features/orders/queries";
 import { ORDER_STATUS_LABEL, SHIPPING_LABEL } from "@/lib/domain/rules";
 import { formatDateTime, formatPrice } from "@/lib/format";
@@ -13,13 +14,14 @@ export const metadata: Metadata = { title: "주문 확인", robots: { index: fal
 export default function OrderPage(props: PageProps<"/orders/[code]">) {
   return (
     <Suspense fallback={<Container className="py-20 text-ink-soft">주문을 불러오는 중…</Container>}>
-      <OrderDetail params={props.params} />
+      <OrderDetail params={props.params} searchParams={props.searchParams} />
     </Suspense>
   );
 }
 
-async function OrderDetail({ params }: { params: PageProps<"/orders/[code]">["params"] }) {
+async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[code]">, "params" | "searchParams">) {
   const { code } = await params;
+  const justPlaced = (await searchParams).new === "1";
   const order = await findOrderByCode(decodeURIComponent(code));
   if (!order) notFound();
   const bank = getBankAccount();
@@ -28,12 +30,13 @@ async function OrderDetail({ params }: { params: PageProps<"/orders/[code]">["pa
 
   return (
     <Container className="flex max-w-2xl flex-col gap-8 py-12">
+      {justPlaced && <OrderPlaced code={order.code} title={`주문 · ${order.items.map((i) => `「${i.title}」`).join(", ")}`} />}
       <header className="flex flex-col gap-2 border-b border-ink pb-5">
         <Badge tone={order.status === "cancelled" ? "neutral" : order.status === "pending_payment" ? "warn" : "ok"} className="w-fit">
           {ORDER_STATUS_LABEL[order.status]}
         </Badge>
         <h1 className="text-2xl font-bold">
-          {order.status === "pending_payment" ? "주문 신청이 접수됐어요" : "주문 상태"}
+          {order.status === "pending_payment" ? (justPlaced ? "첫 원화가 곧 당신의 벽으로 🎉" : "주문 신청이 접수됐어요") : "주문 상태"}
         </h1>
         <p className="text-sm text-ink-soft">주문번호 <b className="text-ink">{order.code}</b> · {formatDateTime(order.createdAt)} — 주문 조회에 필요하니 보관해 주세요.</p>
       </header>

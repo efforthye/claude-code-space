@@ -13,6 +13,7 @@ const ITEMS = [
   { href: "/admin/exhibitions", label: "전시" },
   { href: "/admin/exhibition-requests", label: "전시 등록 신청" },
   { href: "/admin/schools", label: "학교" },
+  { href: "/admin/inquiries", label: "문의" },
   { href: "/admin/qr", label: "QR 라벨" },
   { href: "/admin/ledger", label: "유통 내역" },
 ];

@@ -14,5 +14,6 @@ export function buildBaseDatabase(): Database {
     orders: [],
     applications: [],
     exhibitionRequests: [],
+    inquiries: [],
   };
 }

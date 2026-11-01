@@ -81,3 +81,13 @@ input[type="file"] {
     animation-duration: 0.01ms !important;
   }
 }
+
+@keyframes seal-pop {
+  0% { transform: scale(0.2) rotate(-40deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@keyframes rise {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}

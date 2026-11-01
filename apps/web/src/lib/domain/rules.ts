@@ -136,6 +136,14 @@ export const ORGANIZER_LABEL = {
 
 export const EXHIBITION_KIND_LABEL = { graduation: "졸업전시", coursework: "과제전", other: "기타 전시" } as const;
 
+export const INQUIRY_TOPIC_LABEL = {
+  purchase: "작품 구매·주문",
+  artist: "작가 입점·정산",
+  exhibition: "전시 등록·촬영",
+  partnership: "제휴·협업 (학생회·기업)",
+  other: "기타",
+} as const;
+
 export const SUPPORT_LABEL = {
   archive: "온라인 전시 페이지(아카이브)",
   photo: "작품 촬영",

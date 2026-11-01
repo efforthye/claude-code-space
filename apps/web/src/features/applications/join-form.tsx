@@ -4,6 +4,7 @@ import { ActionForm } from "@/components/ui/action-form";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Celebrate } from "@/components/ui/celebrate";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { submitApplication, type ApplicationFormState } from "./actions";
 
@@ -16,14 +17,9 @@ export function JoinForm() {
 
   if (state?.ok)
     return (
-      <div className="flex flex-col gap-3 rounded-md border-2 border-ink bg-paper p-6">
-        <h2 className="text-lg font-bold">입점 신청이 접수됐어요</h2>
-        <p className="text-sm text-ink-soft">
-          운영자가 확인한 뒤 입력하신 이메일·연락처로 촬영 일정과 학교 인증 방법을 안내드려요. 학생증 등 인증 서류는 확인 후 바로
-          파기합니다.
-        </p>
-        <Link href="/" className="text-sm font-semibold underline underline-offset-4">홈으로</Link>
-      </div>
+      <Celebrate eyebrow="입점 신청 완료" title="MAYO 작가가 되는 첫 걸음!" code={state.code} codeTitle={state.title}>
+        운영자가 확인한 뒤 이메일·연락처로 촬영 일정과 학교 인증 방법을 안내드려요. 학생증 등 인증 서류는 확인 후 바로 파기합니다.
+      </Celebrate>
     );
 
   return (

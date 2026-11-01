@@ -2,13 +2,14 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { DATA_DIR } from "./store";
 
 /**
  * 이미지 저장 seam. 개발에서는 `.data/uploads`에 두고 /media/<name>으로 서빙한다.
  * 실서비스는 Vercel 파일시스템이 읽기 전용이라 오브젝트 스토리지(예: Vercel Blob,
  * 또는 mayo-api 미디어)로 바꿔야 한다 — 이 파일만 고치면 된다.
  */
-const DIR = path.join(process.cwd(), ".data", "uploads");
+const DIR = path.join(DATA_DIR, "uploads");
 const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif" };
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 

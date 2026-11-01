@@ -24,26 +24,26 @@ const EMPTY: Database = {
   orders: [],
   applications: [],
   exhibitionRequests: [],
+  inquiries: [],
 };
 
 /** Local development store: one JSON file under `.data/` (git-ignored). */
-class LocalJsonStore implements Store {
+export class LocalJsonStore implements Store {
   private queue: Promise<unknown> = Promise.resolve();
 
-  constructor(private file: string) {}
+  constructor(
+    private file: string,
+    private seed: () => Database = defaultSeed,
+  ) {}
 
   private async load(): Promise<Database> {
     try {
       return { ...EMPTY, ...JSON.parse(await fs.readFile(this.file, "utf8")) };
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
-      // 예시 데이터는 개발 환경에서만 — 실서비스에 가짜 작품이 판매 중으로 뜨면 안 된다.
-      // 빈 DB는 파일로 남기지 않는다(빌드가 만든 빈 파일이 개발 시딩을 막지 않도록).
-      if (process.env.MAYO_SAMPLE_DATA === "off" || process.env.NODE_ENV === "production") {
-        return buildBaseDatabase();
-      }
-      const db = buildSampleDatabase();
-      await this.save(db);
+      const db = this.seed();
+      // 실서비스 기본 데이터는 파일로 남기지 않는다(빌드가 만든 파일이 개발 시딩을 막지 않도록).
+      if (process.env.NODE_ENV !== "production") await this.save(db);
       return db;
     }
   }
@@ -72,6 +72,13 @@ class LocalJsonStore implements Store {
   }
 }
 
-export const store: Store = new LocalJsonStore(
-  path.join(process.cwd(), ".data", "db.json"),
-);
+/** 예시 데이터는 개발 환경에서만 — 실서비스에 가짜 작품이 판매 중으로 뜨면 안 된다. */
+function defaultSeed(): Database {
+  if (process.env.MAYO_SAMPLE_DATA === "off" || process.env.NODE_ENV === "production") return buildBaseDatabase();
+  return buildSampleDatabase();
+}
+
+/** 데이터 폴더. 테스트는 MAYO_DATA_DIR로 따로 쓴다. */
+export const DATA_DIR = path.resolve(process.cwd(), process.env.MAYO_DATA_DIR ?? ".data");
+
+export const store: Store = new LocalJsonStore(path.join(DATA_DIR, "db.json"));

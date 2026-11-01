@@ -24,7 +24,7 @@ export function CartView({ works, artists }: { works: Work[]; artists: Artist[] 
   useEffect(() => {
     if (state?.ok) {
       cart.clear();
-      router.push(`/orders/${state.code}`);
+      router.push(`/orders/${state.code}?new=1`);
     }
   }, [state, router]);
 

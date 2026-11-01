@@ -4,6 +4,7 @@ import { ActionForm } from "@/components/ui/action-form";
 import Link from "next/link";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
+import { Celebrate } from "@/components/ui/celebrate";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { EXHIBITION_KIND_LABEL, ORGANIZER_LABEL, SUPPORT_LABEL } from "@/lib/domain/rules";
 import { PlacePicker } from "@/features/places/place-picker";
@@ -15,11 +16,15 @@ export function ExhibitionRequestForm() {
 
   if (state?.ok)
     return (
-      <div className="flex flex-col gap-3 rounded-md border-2 border-ink bg-paper p-6">
-        <h2 className="text-lg font-bold">전시 등록 신청이 접수됐어요</h2>
-        <p className="text-sm text-ink-soft">확인 후 담당자 연락처로 전시 페이지 오픈 일정과 촬영·QR 라벨 준비를 안내드릴게요.</p>
-        <Link href="/exhibitions" className="text-sm font-semibold underline underline-offset-4">전시 목록으로</Link>
-      </div>
+      <Celebrate
+        eyebrow="전시 등록 신청 완료"
+        title="졸업 전시, 온라인에서도 오래 걸어 둘게요"
+        code={state.code}
+        codeTitle={state.title}
+        actions={<Link href="/exhibitions" className="inline-flex h-10 items-center rounded-sm border border-ink px-4 text-sm font-semibold transition hover:bg-ink hover:text-paper">전시 목록으로</Link>}
+      >
+        확인 후 담당자 연락처로 전시 페이지 오픈 일정과 촬영·QR 라벨 준비를 안내드릴게요.
+      </Celebrate>
     );
 
   return (
