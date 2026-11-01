@@ -13,7 +13,8 @@ const httpsUrl = z
   .refine((v) => v === "" || /^https:\/\//.test(v), "https:// 로 시작하는 주소만 받아요");
 
 const ApplicationInput = z.object({
-  name: z.string().trim().min(1, "이름(작가명)을 입력해 주세요").max(40),
+  name: z.string().trim().min(1, "본명을 입력해 주세요").max(40),
+  artistName: z.string().trim().max(40),
   email: z.string().trim().email("이메일을 확인해 주세요"),
   phone: z.string().trim().regex(/^0\d{1,2}-?\d{3,4}-?\d{4}$/, "휴대폰 번호를 확인해 주세요"),
   status: z.enum(["student", "graduate", "aspiring", "general"]),
@@ -39,6 +40,7 @@ export async function submitApplication(_prev: ApplicationFormState, form: FormD
   const get = (k: string) => String(form.get(k) ?? "");
   const parsed = ApplicationInput.safeParse({
     name: get("name"),
+    artistName: get("artistName"),
     email: get("email"),
     phone: get("phone"),
     status: get("status"),
@@ -80,6 +82,7 @@ export async function submitApplication(_prev: ApplicationFormState, form: FormD
       id: newId("app"),
       code,
       name: v.name,
+      artistName: v.artistName || null,
       email: v.email,
       phone: v.phone,
       status: v.status,

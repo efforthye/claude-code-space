@@ -204,6 +204,7 @@ export async function saveArtist(artistId: string | null, _prev: FormState, form
   if (avatar && !avatar.success) return { error: "프로필 사진 주소가 올바르지 않아요" };
   const fields = {
     name,
+    realName: optional(s(form, "realName")),
     avatar: avatar?.data ?? null,
     studio,
     schoolId: optional(s(form, "schoolId")),
@@ -318,7 +319,9 @@ export async function reviewApplication(applicationId: string, decision: "approv
     // 승인 = 작가 프로필 생성. 학교 인증은 서류 확인 후 작가 화면에서 따로 표시한다.
     const artist = {
       id: newId("art"),
-      name: app.name,
+      name: app.artistName || app.name,
+      realName: app.name,
+      userId: app.userId ?? null,
       schoolId: findOrCreateSchool(db, app.schoolName),
       department: app.department || null,
       gradYear: app.gradYear,

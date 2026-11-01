@@ -24,7 +24,8 @@ export function JoinForm() {
 
   return (
     <ActionForm action={action} className="grid gap-5 sm:grid-cols-2">
-      <Field label="이름 또는 작가명" required error={errors.name}><Input name="name" /></Field>
+      <Field label="본명" required error={errors.name} hint="정산과 학교 인증에만 쓰고 공개하지 않아요"><Input name="name" autoComplete="name" /></Field>
+      <Field label="작가명" error={errors.artistName} hint="사이트에 보이는 이름. 비우면 본명으로 보여요"><Input name="artistName" placeholder="활동명, 예명" /></Field>
       <Field label="구분" required>
         <Select name="status" defaultValue="student">
           <option value="student">재학생</option>

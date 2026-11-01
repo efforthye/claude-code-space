@@ -16,7 +16,8 @@ export function ArtistForm({ artist, schools, groups }: { artist?: Artist; schoo
     <ActionForm action={action} className="grid max-w-3xl gap-5 md:grid-cols-2">
       {state?.error && <p className="rounded-sm bg-dot/10 p-3 text-sm text-dot md:col-span-2">{state.error}</p>}
       <AvatarField initial={artist?.avatar ?? null} name={artist?.name ?? ""} />
-      <Field label="작가명" required hint="예명 가능"><Input name="name" defaultValue={artist?.name} /></Field>
+      <Field label="작가명" required hint="사이트에 보이는 이름, 예명 가능"><Input name="name" defaultValue={artist?.name} /></Field>
+      <Field label="본명" hint="관리자만 봐요. 정산, 인증용"><Input name="realName" defaultValue={artist?.realName ?? ""} /></Field>
       <Field label="구분" required hint="목록은 '작가 구분' 메뉴에서 관리">
         <Select name="status" defaultValue={artist?.status ?? "student"}>
           {groups.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}

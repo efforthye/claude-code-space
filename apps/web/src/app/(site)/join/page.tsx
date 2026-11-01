@@ -16,12 +16,12 @@ export default function JoinPage() {
     <Container className="flex max-w-3xl flex-col gap-10 py-10">
       <PageHeading
         eyebrow="For artists"
-        title="졸업작품, 전시 끝나고 창고 말고 새 주인에게"
-        description="회화부터 가구, 의상, 조각, 금속공예까지. 재학생, 졸업생, 미대 지망생, 일반 작가 누구나 신청할 수 있어요."
+        title="작가 입점 신청"
+        description="회화, 드로잉, 가구, 의상, 조각, 금속공예 등 매체 제한 없이 신청할 수 있어요. 재학생, 졸업생, 미대 지망생, 일반 작가 모두 가능해요."
       />
       <ul className="grid gap-3 sm:grid-cols-2">
         {PERKS.map((p) => (
-          <li key={p.t} className="rounded-md border border-line bg-paper p-4">
+          <li key={p.t} className="glass rounded-lg p-4">
             <p className="font-bold">{p.t}</p>
             <p className="text-sm text-ink-soft">{p.d}</p>
           </li>

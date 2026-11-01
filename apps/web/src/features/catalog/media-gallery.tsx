@@ -37,7 +37,7 @@ export function MediaGallery({
 
   return (
     <div
-      className="flex flex-col gap-3 lg:sticky lg:top-24 lg:self-start"
+      className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-24 lg:self-start"
       onKeyDown={(e) =>
         e.key === "ArrowRight" ? go(1) : e.key === "ArrowLeft" ? go(-1) : null
       }

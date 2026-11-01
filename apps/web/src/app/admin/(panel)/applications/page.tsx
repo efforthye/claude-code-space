@@ -20,7 +20,7 @@ export default async function AdminApplications() {
           <li key={a.id} className="flex flex-col gap-3 rounded-md border border-line bg-paper p-4 text-sm">
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={a.state === "new" ? "warn" : a.state === "approved" ? "ok" : "neutral"}>{STATE[a.state]}</Badge>
-              <b className="text-base">{a.name}</b>
+              <b className="text-base">{a.artistName || a.name}</b>{a.artistName && <span className="text-ink-soft">본명 {a.name}</span>}
               <span className="text-ink-soft">{ARTIST_STATUS_LABEL[a.status]}, {[a.schoolName, a.department, a.gradYear && `${a.gradYear} 졸업(예정)`].filter(Boolean).join(", ")}</span>
               <span className="ml-auto text-xs text-ink-soft">{formatDateTime(a.createdAt)}</span>
             </div>

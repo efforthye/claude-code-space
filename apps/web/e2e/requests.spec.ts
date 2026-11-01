@@ -13,7 +13,7 @@ test("artist application: age rules, celebration, status, approval", async ({ pa
   await page.getByRole("button", { name: "입점 신청하기" }).click();
   await expect(page.getByText("만 19세 미만은 보호자 정보와 동의가 필요해요")).toBeVisible();
 
-  await fill(page, { name: "새작가", birthYear: "2000", schoolName: "서울대학교", department: "조소과" });
+  await fill(page, { name: "김본명", artistName: "조각하는새", birthYear: "2000", schoolName: "서울대학교", department: "조소과" });
   await page.getByRole("button", { name: "입점 신청하기" }).click();
   await expect(page.getByText("입점 신청이 접수됐어요")).toBeVisible();
   const code = (await page.locator("button", { hasText: /^J-/ }).innerText()).split("\n")[0].replace(/복사.*/, "").trim();
@@ -26,8 +26,17 @@ test("artist application: age rules, celebration, status, approval", async ({ pa
   await page.getByRole("button", { name: "승인하고 작가 만들기" }).first().click();
   await expect(page).toHaveURL(/\/admin\/artists\//);
 
+  await expect(page.getByLabel("작가명")).toHaveValue("조각하는새");
+  await expect(page.getByLabel("본명")).toHaveValue("김본명");
+
   await page.goto("/my");
   await expect(page.locator("li", { hasText: code })).toContainText("승인됨");
+
+  // 공개 화면에는 작가명만, 본명은 HTML 어디에도 없다
+  const res = await page.request.get("/artists");
+  const html = await res.text();
+  expect(html).toContain("조각하는새");
+  expect(html).not.toContain("김본명");
 });
 
 test("exhibition request picks the venue from place search and becomes an exhibition", async ({ page }) => {

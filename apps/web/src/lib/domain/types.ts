@@ -18,7 +18,9 @@ export type VerifyMethod = "school_email" | "student_id" | "roster";
 
 export type Artist = {
   id: ID;
-  name: string; // 작가명(예명 허용)
+  name: string; // 사이트에 보이는 작가명 (활동명, 예명 허용)
+  /** 본명. 정산, 인증용으로 관리자만 본다. 공개 카탈로그에서는 빠진다(catalog.ts). */
+  realName?: string | null;
   schoolId: ID | null;
   department: string | null;
   gradYear: number | null; // 졸업(예정) 연도
@@ -220,7 +222,8 @@ export type Application = {
   /** 로그인한 상태로 넣었거나 번호로 연결한 회원. 비회원이면 없음 */
   userId?: ID | null;
   code: string; // 신청 현황 조회용 (J-XXXXXXXX)
-  name: string;
+  name: string; // 본명
+  artistName?: string | null; // 활동명 (비우면 본명으로 보인다)
   email: string;
   phone: string;
   status: ArtistStatus;

@@ -72,6 +72,12 @@ body {
   color: transparent;
 }
 
+/* 장식용 오로라 원이 화면 밖으로 나가도 가로 스크롤이 생기지 않게. clip은 sticky 헤더를 깨지 않는다. */
+html,
+body {
+  overflow-x: clip;
+}
+
 @media print {
   body {
     background: white;

@@ -32,6 +32,7 @@ export function buildSampleDatabase(): Database {
   const artists: Artist[] = [
     artist({
       id: "art-jieun",
+      avatar: "/samples/avatars/jieun.jpg",
       name: "김지은",
       department: "회화과",
       bio: "빛이 오래 머무는 오후의 실내를 그립니다. 같은 창가를 여섯 달 동안 매일 같은 시간에 관찰했습니다.",
@@ -44,6 +45,7 @@ export function buildSampleDatabase(): Database {
     }),
     artist({
       id: "art-hana",
+      avatar: "/samples/avatars/hana.jpg",
       name: "정하나",
       department: "목조형가구학과",
       bio: "몸에 닿는 곡선을 나무로 옮깁니다. 앉는 사람의 자세가 바뀌는 가구를 만듭니다.",
@@ -51,6 +53,7 @@ export function buildSampleDatabase(): Database {
     }),
     artist({
       id: "art-minseo",
+      avatar: "/samples/avatars/minseo.jpg",
       name: "이민서",
       schoolId: "sch-kookmin",
       department: "금속공예학과",
@@ -59,6 +62,7 @@ export function buildSampleDatabase(): Database {
     }),
     artist({
       id: "art-yuna",
+      avatar: "/samples/avatars/yuna.jpg",
       name: "박유나",
       schoolId: "sch-ewha",
       department: "조형예술학부",
@@ -69,6 +73,7 @@ export function buildSampleDatabase(): Database {
     }),
     artist({
       id: "art-doyun",
+      avatar: "/samples/avatars/doyun.jpg",
       name: "한도윤",
       schoolId: "sch-kookmin",
       department: "도자공예학과",
@@ -77,6 +82,7 @@ export function buildSampleDatabase(): Database {
     }),
     artist({
       id: "art-seojun",
+      avatar: "/samples/avatars/seojun.jpg",
       name: "최서준",
       department: "조소과",
       verifiedBy: null,
@@ -85,6 +91,7 @@ export function buildSampleDatabase(): Database {
     }),
     artist({
       id: "art-late-oh",
+      avatar: "/samples/avatars/late-oh.jpg",
       name: "오명수",
       schoolId: null,
       gradYear: null,

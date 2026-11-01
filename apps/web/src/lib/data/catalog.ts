@@ -42,7 +42,13 @@ export async function getCatalog(): Promise<Catalog> {
     categories: [...db.categories].sort((a, b) => a.order - b.order),
     artistGroups: [...db.artistGroups].sort((a, b) => a.order - b.order),
     schools: db.schools,
-    artists: db.artists,
+    // 본명과 회원 연결은 공개 화면(클라이언트로 가는 데이터)에 싣지 않는다
+    artists: db.artists.map((a) => {
+      const pub = { ...a };
+      delete pub.realName;
+      delete pub.userId;
+      return pub;
+    }),
     exhibitions: db.exhibitions,
     works: db.works.filter(isListed).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     today: new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10),

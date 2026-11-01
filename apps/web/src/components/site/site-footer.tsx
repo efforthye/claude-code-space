@@ -16,7 +16,7 @@ export async function SiteFooter() {
             <Logo mark={logoMark} className="text-[30px]" />
             <i className="font-display text-lg text-ink-soft">{siteConfig.tagline}</i>
           </p>
-          <nav className="flex gap-4 font-semibold text-ink">
+          <nav className="flex flex-wrap gap-x-4 gap-y-2 font-semibold whitespace-nowrap text-ink">
             <Link href="/legal/terms">이용약관</Link>
             <Link href="/legal/privacy">개인정보처리방침</Link>
             <Link href="/account">마이페이지</Link>
