@@ -1,6 +1,7 @@
 import type {
   ArtistStatus,
   Medium,
+  Order,
   OrderStatus,
   ShippingMethod,
   VerifyMethod,
@@ -118,4 +119,9 @@ export function isMinor(birthYear: number, now = new Date()) {
 
 export function isUnder14(birthYear: number, now = new Date()) {
   return minAge(birthYear, now) < 14;
+}
+
+/** 입금 기한이 지난 입금 대기 주문인가. */
+export function isPaymentOverdue(order: Pick<Order, "status" | "paymentDueAt">) {
+  return order.status === "pending_payment" && Date.parse(order.paymentDueAt) < Date.now();
 }
