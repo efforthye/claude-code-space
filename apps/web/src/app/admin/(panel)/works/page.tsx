@@ -4,7 +4,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { WorkImage } from "@/features/catalog/work-image";
 import { AdminHeading, Table, Td } from "@/features/admin/ui";
 import { adminDb } from "@/features/admin/session";
-import { KIND_LABEL, MEDIUM_LABEL, WORK_STATUS_LABEL } from "@/lib/domain/rules";
+import { coverImage, KIND_LABEL, MEDIUM_LABEL, WORK_STATUS_LABEL } from "@/lib/domain/rules";
 import { formatPrice, formatSize } from "@/lib/format";
 
 export default async function AdminWorks() {
@@ -17,7 +17,7 @@ export default async function AdminWorks() {
       <Table head={["", "작품", "작가", "매체 · 구분", "크기", "가격", "상태"]}>
         {works.map((w) => (
           <tr key={w.id} className="hover:bg-mist/50">
-            <Td><WorkImage src={w.images[0]} alt="" className="size-12" /></Td>
+            <Td><WorkImage src={coverImage(w)} alt="" className="size-12 rounded-sm" /></Td>
             <Td><Link href={`/admin/works/${w.id}`} className="font-semibold underline underline-offset-2">{w.title}</Link>{w.edition && <span className="text-ink-soft"> · {w.edition}</span>}</Td>
             <Td>{artistName.get(w.artistId)}</Td>
             <Td className="text-ink-soft">{MEDIUM_LABEL[w.medium]} · {KIND_LABEL[w.kind]}</Td>

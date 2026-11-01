@@ -4,7 +4,6 @@ import { Container, EmptyState } from "@/components/ui/container";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { CollectionBrowser } from "@/features/catalog/collection-browser";
 import { HeroCollage } from "@/features/catalog/hero-collage";
-import { EventBanner } from "@/features/events/event-banner";
 import { exhibitionPhase, getCatalog } from "@/lib/data/catalog";
 import { formatPeriod } from "@/lib/format";
 
@@ -38,10 +37,6 @@ export default async function HomePage() {
         </div>
 
         <HeroCollage works={heroWorks} artists={artists} schools={schools} />
-      </Container>
-
-      <Container className="pb-16">
-        <EventBanner />
       </Container>
 
       {shows.length > 0 && (

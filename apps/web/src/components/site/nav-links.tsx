@@ -8,7 +8,7 @@ const NAV = [
   { href: "/", label: "작품", match: (p: string) => p === "/" || p.startsWith("/works") },
   { href: "/exhibitions", label: "전시", match: (p: string) => p.startsWith("/exhibitions") },
   { href: "/artists", label: "작가", match: (p: string) => p.startsWith("/artists") },
-  { href: "/events/first-collection", label: "이벤트", match: (p: string) => p.startsWith("/events") },
+  { href: "/schools", label: "학교", match: (p: string) => p.startsWith("/schools") },
   { href: "/join", label: "입점", match: (p: string) => p.startsWith("/join") },
 ];
 

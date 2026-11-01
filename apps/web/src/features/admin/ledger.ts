@@ -1,4 +1,5 @@
 import "server-only";
+import { coverImage } from "@/lib/domain/rules";
 import type { Database } from "@/lib/domain/types";
 
 /**
@@ -32,7 +33,7 @@ export function buildLedger(db: Database): LedgerRow[] {
         price: i.price,
         seller: i.artistName, // 1차 거래: 판매자 = 작가
         artist: i.artistName,
-        image: work?.images[0] ?? "",
+        image: (work && coverImage(work)) ?? "",
         type: "1차 판매",
         orderStatus: o.status,
       });

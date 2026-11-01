@@ -6,7 +6,7 @@ import { NavLinks, NavList } from "./nav-links";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 pt-3">
+    <header className="sticky top-0 z-30 border-b border-white/60 bg-wall/70 py-1.5 backdrop-blur-xl backdrop-saturate-150">
       <Container className="flex h-14 items-center justify-between gap-3">
         <Link href="/" className="font-display text-[32px] leading-none tracking-tight transition-opacity hover:opacity-70">
           mayo

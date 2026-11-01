@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/container";
 import { Checkbox, Field, Input, Textarea } from "@/components/ui/field";
 import { placeOrder, type OrderFormState } from "@/features/orders/actions";
 import { WorkImage } from "@/features/catalog/work-image";
-import { PARCEL_FEE, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
+import { coverImage, PARCEL_FEE, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
 import type { Artist, ShippingMethod, Work } from "@/lib/domain/types";
 import { formatPrice, formatSize } from "@/lib/format";
 import { cart, useCart } from "./cart-store";
@@ -58,7 +58,7 @@ export function CartView({ works, artists }: { works: Work[]; artists: Artist[] 
           return (
             <li key={line.workId} className="flex gap-4 py-4">
               <Link href={`/works/${work.id}`} className="size-24 shrink-0 bg-paper p-1.5">
-                <WorkImage src={work.images[0]} alt={work.title} className="size-full" />
+                <WorkImage src={coverImage(work)} alt={work.title} className="size-full" />
               </Link>
               <div className="flex flex-1 flex-col gap-1 text-sm">
                 <div className="flex justify-between gap-2">

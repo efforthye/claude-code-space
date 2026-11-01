@@ -100,6 +100,11 @@ export const ORDER_NEXT: Record<OrderStatus, OrderStatus[]> = {
   cancelled: [],
 };
 
+/** 대표 이미지: 첫 사진, 없으면 첫 영상·3D의 미리보기. */
+export function coverImage(work: Pick<Work, "media">): string | undefined {
+  return work.media.find((m) => m.kind === "image")?.src ?? work.media.find((m) => m.poster)?.poster ?? undefined;
+}
+
 /** 작품이 공개 목록에 보이는가. */
 export function isListed(work: Work) {
   return work.status !== "hidden";

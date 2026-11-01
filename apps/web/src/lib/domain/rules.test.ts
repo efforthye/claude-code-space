@@ -5,7 +5,7 @@ import type { Work } from "./types";
 const work = (over: Partial<Work> = {}): Work => ({
   id: "w", title: "t", artistId: "a", exhibitionId: null, medium: "painting", materials: "", widthCm: 50, heightCm: 40,
   depthCm: null, weightKg: null, year: 2026, edition: null, kind: "graduation", price: 100_000, status: "available",
-  images: [], description: "", allowsPickup: true, operatorOwned: false, featured: false, createdAt: "", updatedAt: "", ...over,
+  media: [], description: "", allowsPickup: true, operatorOwned: false, featured: false, createdAt: "", updatedAt: "", ...over,
 });
 
 describe("needsArtShipping (가이드 21장 ⑦)", () => {

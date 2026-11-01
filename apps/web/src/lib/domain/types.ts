@@ -83,6 +83,16 @@ export type WorkKind = (typeof WORK_KINDS)[number];
 /** available → reserved(주문 접수, 입금 대기) → sold. hidden = 비공개. */
 export type WorkStatus = "available" | "reserved" | "sold" | "hidden";
 
+/** 작품 미디어: 사진, 영상(작업 과정·회전), 3D 모델(GLB). 첫 번째 사진이 대표 이미지. */
+export const MEDIA_KINDS = ["image", "video", "model"] as const;
+export type MediaKind = (typeof MEDIA_KINDS)[number];
+export type MediaItem = {
+  kind: MediaKind;
+  src: string;
+  poster?: string | null; // 영상·3D의 미리보기 이미지
+  alt?: string | null;
+};
+
 export type Work = {
   id: ID;
   title: string;
@@ -99,7 +109,7 @@ export type Work = {
   kind: WorkKind;
   price: number; // KRW
   status: WorkStatus;
-  images: string[]; // first = 대표 이미지
+  media: MediaItem[];
   description: string;
   allowsPickup: boolean; // 직거래(직접 수령)
   /** 운영자 본인·친족 소유 작품 — 미술진흥법상 사전 고지 대상. */

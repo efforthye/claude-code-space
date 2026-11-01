@@ -52,3 +52,17 @@ describe("LocalJsonStore", () => {
     await expect(store.update(() => "ok")).resolves.toBe("ok");
   });
 });
+
+describe("migrate", () => {
+  it("turns legacy image lists into media items", async () => {
+    const { migrate } = await import("./store");
+    const db = buildBaseDatabase();
+    db.works.push({ id: "old", images: ["/a.jpg", "/b.jpg"] } as never);
+    const out = migrate(db);
+    expect(out.works[0].media).toEqual([
+      { kind: "image", src: "/a.jpg" },
+      { kind: "image", src: "/b.jpg" },
+    ]);
+    expect("images" in out.works[0]).toBe(false);
+  });
+});

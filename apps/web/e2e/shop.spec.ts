@@ -36,3 +36,16 @@ test("placing an order reserves the work, celebrates and lands in 내 신청 현
   await expect(page.getByText(code)).toBeVisible();
   await expect(page.getByText("입금 대기")).toBeVisible();
 });
+
+test("a work shows several photos, a process video and a 3D model", async ({ page }) => {
+  await page.goto("/works/w-folding-chair");
+  const thumbs = page.getByRole("button", { name: /번째 (사진|영상|3D 모델) 보기/ });
+  await expect(thumbs).toHaveCount(4);
+  await page.getByRole("button", { name: "다음" }).click();
+  await expect(page.locator("main model-viewer")).toBeVisible();
+  await expect(page.getByText("드래그해서 돌려 보세요")).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await page.goto("/works/w-blue-afternoon");
+  await page.getByRole("button", { name: /번째 영상 보기/ }).click();
+  await expect(page.locator("main video")).toHaveAttribute("poster", /painting-process\.jpg$/);
+});

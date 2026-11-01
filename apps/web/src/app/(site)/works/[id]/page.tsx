@@ -7,7 +7,7 @@ import { RedDot } from "@/components/ui/red-dot";
 import { VerificationCard } from "@/components/ui/verified-badge";
 import { AddToCart } from "@/features/cart/add-to-cart";
 import { WorkCard } from "@/features/catalog/work-card";
-import { WorkGallery } from "@/features/catalog/work-gallery";
+import { MediaGallery } from "@/features/catalog/media-gallery";
 import { getCatalog, indexById } from "@/lib/data/catalog";
 import { ARTIST_STATUS_LABEL, KIND_LABEL, MEDIUM_LABEL, needsArtShipping, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
 import { formatPrice, formatSize } from "@/lib/format";
@@ -35,7 +35,7 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
   return (
     <Container className="flex flex-col gap-16 py-10">
       <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
-        <WorkGallery images={work.images} title={work.title} />
+        <MediaGallery media={work.media} title={work.title} />
 
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2 border-l-4 border-ink pl-4">

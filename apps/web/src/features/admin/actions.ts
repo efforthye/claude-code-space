@@ -5,9 +5,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { TAG } from "@/lib/data/catalog";
 import { store } from "@/lib/data/store";
-import { saveImage } from "@/lib/data/uploads";
 import { ORDER_NEXT, ORDER_STATUS_LABEL } from "@/lib/domain/rules";
-import { MEDIA, WORK_KINDS, type Database, type OrderStatus } from "@/lib/domain/types";
+import { MEDIA, MEDIA_KINDS, WORK_KINDS, type Database, type OrderStatus } from "@/lib/domain/types";
 import { newId } from "@/lib/ids";
 import { readPlace } from "@/features/places/parse";
 import { requireAdmin } from "./session";
@@ -67,6 +66,12 @@ export async function updateOrderDetails(orderId: string, form: FormData) {
 
 /* ───────────────────────── 작품 ───────────────────────── */
 
+/** 우리 저장소(/media, 샘플)나 https 주소만 — javascript:, data: 같은 스킴은 거절 */
+const MediaSrc = z.string().max(500).refine((v) => /^\/(media|samples)\/[\w./-]+$/.test(v) || /^https:\/\/[^\s"'<>]+$/.test(v), "허용되지 않는 미디어 주소");
+const MediaList = z
+  .array(z.object({ kind: z.enum(MEDIA_KINDS), src: MediaSrc, poster: MediaSrc.nullish(), alt: z.string().max(200).nullish() }))
+  .max(30);
+
 const WorkInput = z.object({
   title: z.string().min(1, "작품명을 입력해 주세요"),
   artistId: z.string().min(1, "작가를 골라 주세요"),
@@ -112,29 +117,26 @@ export async function saveWork(workId: string | null, _prev: FormState, form: Fo
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  // 기존 이미지(순서 유지, 체크 해제된 것은 제외) + 새로 올린 이미지
-  const kept = form.getAll("keepImage").map(String);
-  const uploads = form.getAll("newImages").filter((f): f is File => f instanceof File && f.size > 0);
-  const urlImage = s(form, "imageUrl");
-  let added: string[];
+  // 미디어 목록은 업로드 API(/api/admin/media)로 먼저 올린 뒤 순서대로 JSON으로 넘어온다
+  let media: z.infer<typeof MediaList>;
   try {
-    added = await Promise.all(uploads.map(saveImage));
-    if (urlImage) added.push(httpsOrNull(urlImage)!);
-  } catch (e) {
-    return { error: (e as Error).message };
+    const parsedMedia = MediaList.safeParse(JSON.parse(s(form, "media") || "[]"));
+    if (!parsedMedia.success) return { error: "미디어 목록이 올바르지 않아요" };
+    media = parsedMedia.data;
+  } catch {
+    return { error: "미디어 목록이 올바르지 않아요" };
   }
-  const images = [...kept, ...added];
-  if (images.length === 0) return { error: "대표 이미지를 한 장 이상 올려 주세요" };
+  if (!media.some((m) => m.kind === "image")) return { error: "대표 사진을 한 장 이상 올려 주세요" };
 
   const now = new Date().toISOString();
   const id = await store.update((db) => {
     if (workId) {
       const work = db.works.find((w) => w.id === workId);
       if (!work) return null;
-      Object.assign(work, parsed.data, { images, updatedAt: now });
+      Object.assign(work, parsed.data, { media, updatedAt: now });
       return work.id;
     }
-    const created = { id: newId("w"), ...parsed.data, images, createdAt: now, updatedAt: now };
+    const created = { id: newId("w"), ...parsed.data, media, createdAt: now, updatedAt: now };
     db.works.push(created);
     return created.id;
   });

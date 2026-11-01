@@ -34,14 +34,15 @@ test("confirming payment marks the work sold and lands in the ledger", async ({ 
   expect(await csv.text()).toContain(code);
 });
 
-test("admin registers a work with an uploaded photo", async ({ page }) => {
+test("admin registers a work with a photo, a video and a 3D model", async ({ page }) => {
   await adminLogin(page);
   await page.goto("/admin/works/new");
   await page.locator('[name="title"]').fill("E2E 조각");
   await page.locator('[name="artistId"]').selectOption({ label: "최서준" });
   await page.locator('[name="medium"]').selectOption("sculpture");
   for (const [n, v] of [["materials", "청동"], ["widthCm", "30"], ["heightCm", "50"], ["price", "500000"]]) await page.locator(`[name="${n}"]`).fill(v);
-  await page.locator('[name="newImages"]').setInputFiles("e2e/fixtures/artwork.png");
+  await page.getByLabel("미디어 파일").setInputFiles(["e2e/fixtures/artwork.png", "e2e/fixtures/clip.mp4", "e2e/fixtures/model.glb"]);
+  await expect(page.getByRole("list", { name: "미디어 순서" }).locator("li")).toHaveCount(3);
   await page.getByRole("button", { name: "작품 등록" }).click();
   await expect(page.getByText("저장했어요")).toBeVisible();
   const workId = new URL(page.url()).pathname.split("/").pop();
@@ -50,6 +51,16 @@ test("admin registers a work with an uploaded photo", async ({ page }) => {
   const src = await page.locator("main img").first().getAttribute("src");
   const img = await page.request.get(src!);
   expect(img.headers()["content-type"]).toBe("image/png");
+  // 영상: 썸네일로 넘기면 플레이어가 뜨고, Range 요청에 206으로 답한다
+  await page.getByRole("button", { name: /번째 영상 보기/ }).click();
+  const videoSrc = await page.locator("main video").getAttribute("src");
+  const part = await page.request.get(videoSrc!, { headers: { Range: "bytes=0-99" } });
+  expect(part.status()).toBe(206);
+  expect(part.headers()["content-range"]).toMatch(/^bytes 0-99\//);
+  // 3D: model-viewer 로 표시
+  await page.getByRole("button", { name: /번째 3D 모델 보기/ }).click();
+  // React 19는 커스텀 엘리먼트에 속성(property)으로 넘긴다 — 실제 값을 확인
+  await expect.poll(() => page.locator("main model-viewer").evaluate((el) => (el as HTMLElement & { src: string }).src)).toMatch(/\.glb$/);
 });
 
 test("repeated wrong passwords get locked out", async ({ browser }) => {
@@ -75,9 +86,10 @@ test("uploads that are not really images are refused", async ({ page }) => {
   await page.locator('[name="title"]').fill("가짜 이미지");
   await page.locator('[name="artistId"]').selectOption({ label: "최서준" });
   for (const [n, v] of [["materials", "x"], ["widthCm", "10"], ["heightCm", "10"], ["price", "1000"]]) await page.locator(`[name="${n}"]`).fill(v);
-  await page.locator('[name="newImages"]').setInputFiles({ name: "evil.png", mimeType: "image/png", buffer: Buffer.from("<svg onload=alert(1)></svg>") });
+  await page.getByLabel("미디어 파일").setInputFiles({ name: "evil.png", mimeType: "image/png", buffer: Buffer.from("<svg onload=alert(1)></svg>") });
+  await expect(page.getByText(/사진\(JPG·PNG·WEBP·AVIF\), 영상\(MP4·WebM\), 3D\(GLB\)만/)).toBeVisible();
   await page.getByRole("button", { name: "작품 등록" }).click();
-  await expect(page.getByText("JPG·PNG·WEBP·AVIF 이미지만 올릴 수 있어요")).toBeVisible();
+  await expect(page.getByText("대표 사진을 한 장 이상 올려 주세요")).toBeVisible();
 });
 
 test("ledger CSV neutralises formula injection", async ({ page }) => {
@@ -88,7 +100,8 @@ test("ledger CSV neutralises formula injection", async ({ page }) => {
   await page.locator('[name="title"]').fill('=HYPERLINK("http://evil","x")');
   await page.locator('[name="artistId"]').selectOption({ label: "최서준" });
   for (const [n, v] of [["materials", "x"], ["widthCm", "10"], ["heightCm", "10"], ["price", "1000"]]) await page.locator(`[name="${n}"]`).fill(v);
-  await page.locator('[name="newImages"]').setInputFiles("e2e/fixtures/artwork.png");
+  await page.getByLabel("미디어 파일").setInputFiles("e2e/fixtures/artwork.png");
+  await expect(page.getByRole("list", { name: "미디어 순서" }).locator("li")).toHaveCount(1);
   await page.getByRole("button", { name: "작품 등록" }).click();
   await expect(page.getByText("저장했어요")).toBeVisible();
   const workId = new URL(page.url()).pathname.split("/").pop()!;
@@ -99,4 +112,11 @@ test("ledger CSV neutralises formula injection", async ({ page }) => {
   await expect(page.getByRole("button", { name: "배송 준비 시작" })).toBeVisible();
   const csv = await (await page.request.get("/admin/ledger.csv")).text();
   expect(csv).toContain(`"'=HYPERLINK(""http://evil"",""x"")"`);
+});
+
+test("media upload API refuses anonymous and forged sessions", async ({ request }) => {
+  const multipart = { file: { name: "a.png", mimeType: "image/png", buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]) } };
+  expect((await request.post("/api/admin/media", { multipart })).status()).toBe(401);
+  const forged = await request.post("/api/admin/media", { multipart, headers: { Cookie: "mayo_admin=9999999999.forged" } });
+  expect(forged.status()).toBe(401);
 });

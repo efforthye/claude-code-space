@@ -4,10 +4,10 @@ import { ActionForm } from "@/components/ui/action-form";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
-import { WorkImage } from "@/features/catalog/work-image";
 import { KIND_LABEL, MEDIUM_LABEL, WORK_STATUS_LABEL, needsArtShipping } from "@/lib/domain/rules";
 import { MEDIA, WORK_KINDS, type Artist, type Exhibition, type Work } from "@/lib/domain/types";
 import { saveWork, type FormState } from "./actions";
+import { MediaManager } from "./media-manager";
 
 export function WorkForm({ work, artists, exhibitions }: { work?: Work; artists: Artist[]; exhibitions: Exhibition[] }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveWork.bind(null, work?.id ?? null), null);
@@ -54,23 +54,7 @@ export function WorkForm({ work, artists, exhibitions }: { work?: Work; artists:
       </Field>
       <Field label="작품 설명" className="md:col-span-2"><Textarea name="description" defaultValue={work?.description} /></Field>
 
-      <fieldset className="flex flex-col gap-3 rounded-md border border-line bg-paper p-4 md:col-span-2">
-        <legend className="px-1 text-sm font-semibold">사진 (첫 장이 대표 사진)</legend>
-        {work && work.images.length > 0 && (
-          <div className="flex flex-wrap gap-3">
-            {work.images.map((src, i) => (
-              <label key={src + i} className="flex w-24 flex-col items-center gap-1 text-xs">
-                <WorkImage src={src} alt="" className="size-24 border border-line" />
-                <span className="flex items-center gap-1"><input type="checkbox" name="keepImage" value={src} defaultChecked className="accent-violet" /> 유지</span>
-              </label>
-            ))}
-          </div>
-        )}
-        <Field label="사진 올리기" hint="JPG·PNG·WEBP, 장당 10MB 이하 · 실물 색에 맞춰 보정한 사진을 올려 주세요">
-          <Input name="newImages" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple className="pt-2" />
-        </Field>
-        <Field label="또는 이미지 주소" hint="https:// 로 시작"><Input name="imageUrl" placeholder="https://" /></Field>
-      </fieldset>
+      <MediaManager initial={work?.media ?? []} />
 
       <div className="flex flex-col gap-2 md:col-span-2">
         <Checkbox name="allowsPickup" defaultChecked={work?.allowsPickup ?? true} label="직거래(직접 수령) 허용" />

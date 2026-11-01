@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SealIcon } from "@/components/ui/verified-badge";
-import { MEDIUM_LABEL } from "@/lib/domain/rules";
+import { coverImage, MEDIUM_LABEL } from "@/lib/domain/rules";
 import type { Artist, School, Work } from "@/lib/domain/types";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -43,7 +43,7 @@ export function HeroCollage({ works, artists, schools }: { works: Work[]; artist
             SLOTS[i],
           )}
         >
-          <WorkImage src={w.images[0]} alt={w.title} className="block h-auto max-h-[300px] w-full rounded-[14px]" />
+          <WorkImage src={coverImage(w)} alt={w.title} className="block h-auto max-h-[300px] w-full rounded-[14px]" />
           <span className="glass absolute right-3 bottom-3 rounded-full px-2.5 py-0.5 text-[11px] font-semibold opacity-0 transition-opacity group-hover:opacity-100">
             {MEDIUM_LABEL[w.medium]}
           </span>

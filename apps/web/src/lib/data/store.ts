@@ -38,7 +38,7 @@ export class LocalJsonStore implements Store {
 
   private async load(): Promise<Database> {
     try {
-      return { ...EMPTY, ...JSON.parse(await fs.readFile(this.file, "utf8")) };
+      return migrate({ ...EMPTY, ...JSON.parse(await fs.readFile(this.file, "utf8")) });
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
       const db = this.seed();
@@ -70,6 +70,15 @@ export class LocalJsonStore implements Store {
     this.queue = run.catch(() => undefined);
     return run;
   }
+}
+
+/** 예전 형식 데이터 호환: works[].images(문자열 배열) → works[].media */
+export function migrate(db: Database): Database {
+  for (const w of db.works as Array<Database["works"][number] & { images?: string[] }>) {
+    if (!w.media) w.media = (w.images ?? []).map((src) => ({ kind: "image" as const, src }));
+    delete w.images;
+  }
+  return db;
 }
 
 /** 예시 데이터는 개발 환경에서만 — 실서비스에 가짜 작품이 판매 중으로 뜨면 안 된다. */
