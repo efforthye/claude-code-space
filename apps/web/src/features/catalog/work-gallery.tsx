@@ -20,7 +20,7 @@ export function WorkGallery({ images, title }: { images: string[]; title: string
               type="button"
               onClick={() => setActive(i)}
               aria-label={`${i + 1}번째 사진 보기`}
-              className={cn("size-16 overflow-hidden border-2 bg-paper", i === active ? "border-ink" : "border-transparent opacity-70")}
+              className={cn("size-16 overflow-hidden border-2 bg-paper transition-[opacity,border-color]", i === active ? "border-ink" : "border-transparent opacity-60 hover:border-line hover:opacity-100")}
             >
               <WorkImage src={src} alt="" className="size-full" />
             </button>

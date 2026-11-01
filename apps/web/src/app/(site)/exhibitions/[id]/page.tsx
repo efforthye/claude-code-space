@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Container, EmptyState } from "@/components/ui/container";
+import { ButtonLink } from "@/components/ui/button";
+import { Container } from "@/components/ui/container";
 import { WorkCard } from "@/features/catalog/work-card";
 import { exhibitionPhase, getCatalog, indexById, PHASE_LABEL } from "@/lib/data/catalog";
 import { formatPeriod } from "@/lib/format";
@@ -30,13 +31,35 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
       <header className="flex flex-col gap-3 border-b border-ink pb-6">
         <Badge tone={phase === "ongoing" ? "dot" : "neutral"} className="w-fit">{PHASE_LABEL[phase]}</Badge>
         <h1 className="text-3xl font-black">{e.title}</h1>
-        <p className="text-sm text-ink-soft">{formatPeriod(e.startDate, e.endDate)} · {e.venue}</p>
-        {e.description && <p className="max-w-2xl leading-relaxed">{e.description}</p>}
+        <dl className="grid max-w-2xl grid-cols-[5rem_1fr] gap-y-1.5 text-sm">
+          <dt className="text-ink-soft">기간</dt><dd>{formatPeriod(e.startDate, e.endDate)}</dd>
+          <dt className="text-ink-soft">장소</dt><dd>{[e.schoolId && schoolById.get(e.schoolId)?.name, e.venue].filter(Boolean).join(" ")}</dd>
+          {e.hours && (<><dt className="text-ink-soft">관람 시간</dt><dd>{e.hours}</dd></>)}
+          {e.opening && (<><dt className="text-ink-soft">오프닝</dt><dd>{e.opening}</dd></>)}
+        </dl>
+        {e.description && <p className="max-w-2xl leading-relaxed whitespace-pre-line">{e.description}</p>}
+        {e.note && <p className="max-w-2xl rounded-sm bg-warn-soft p-3 text-xs text-warn">{e.note}</p>}
+        {e.source && (
+          <p className="text-xs text-ink-soft">
+            일정 출처: <a href={e.source.url} target="_blank" rel="noopener noreferrer" className="underline">{e.source.label}</a> · MAYO는 이 전시의 주최자가 아니며, 방문 전 학과 공식 계정에서 확인하세요.
+          </p>
+        )}
         {participants.length > 0 && <p className="text-sm text-ink-soft">참여 작가: {participants.join(", ")}</p>}
         {e.link && <a href={e.link} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold underline underline-offset-4">전시 안내 페이지</a>}
       </header>
       {shown.length === 0 ? (
-        <EmptyState title="아직 등록된 출품작이 없어요" />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-3 rounded-md border border-line bg-paper p-5">
+            <p className="font-bold">이 전시에 참여하는 작가인가요?</p>
+            <p className="text-sm text-ink-soft">입점하면 작품을 무료로 촬영해 드리고, 전시가 끝난 뒤에도 작품을 소개해요. 판매는 원하는 작품만.</p>
+            <ButtonLink href="/join" variant="secondary" className="w-fit">작가 입점 신청</ButtonLink>
+          </div>
+          <div className="flex flex-col gap-3 rounded-md border border-line bg-paper p-5">
+            <p className="font-bold">졸업준비위원회·학생회라면</p>
+            <p className="text-sm text-ink-soft">전시 전체를 온라인 전시 페이지로 만들고 QR 캡션 라벨을 드려요. 이번 시즌 무료예요.</p>
+            <ButtonLink href="/exhibitions/apply" variant="secondary" className="w-fit">전시 등록 신청</ButtonLink>
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
           {shown.map((w) => {

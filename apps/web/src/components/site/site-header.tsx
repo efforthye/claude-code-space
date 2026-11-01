@@ -13,18 +13,18 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-wall/95 backdrop-blur">
       <Container className="flex h-14 items-center justify-between gap-4">
-        <Link href="/" className="text-xl font-black tracking-tight">
+        <Link href="/" className="text-xl font-black tracking-tight transition-opacity hover:opacity-70">
           MAYO
         </Link>
         <nav className="hidden items-center gap-1 sm:flex">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="rounded-sm px-3 py-2 text-sm font-medium text-ink-soft hover:bg-mist hover:text-ink">
-              {n.label}
+            <Link key={n.href} href={n.href} className="px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-ink">
+              <span className="link-sweep pb-0.5">{n.label}</span>
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-1">
-          <Link href="/join" className="hidden rounded-sm px-2 py-2 text-sm font-medium text-ink-soft hover:text-ink sm:inline">
+          <Link href="/join" className="link-sweep hidden px-2 py-0.5 text-sm font-medium text-ink-soft transition-colors hover:text-ink sm:inline">
             작가 입점
           </Link>
           <CartLink />

@@ -16,7 +16,8 @@ export default async function HomePage() {
   const stories = exhibitions
     .map((e) => ({ e, phase: exhibitionPhase(e, today) }))
     .filter((x) => x.phase !== "ended")
-    .sort((a, b) => a.e.startDate.localeCompare(b.e.startDate));
+    .sort((a, b) => a.e.startDate.localeCompare(b.e.startDate))
+    .slice(0, 12);
 
   return (
     <>
@@ -40,12 +41,14 @@ export default async function HomePage() {
           </div>
           {hero && (
             <Link href={`/works/${hero.id}`} className="group flex flex-col gap-3">
-              <div className="border-[10px] border-ink bg-paper p-4 shadow-sm">
-                <WorkImage src={hero.images[0]} alt={hero.title} className="aspect-[5/4] w-full" />
+              <div className="border-[10px] border-ink bg-paper p-4 shadow-sm transition-shadow duration-300 group-hover:shadow-[0_20px_40px_-16px_rgb(27_42_85/0.45)]">
+                <div className="overflow-hidden">
+                  <WorkImage src={hero.images[0]} alt={hero.title} className="aspect-[5/4] w-full transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
+                </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span>
-                  <b>{heroArtist?.name}</b> 「{hero.title}」 · {formatPrice(hero.price)}
+                  <b>{heroArtist?.name}</b> <span className="link-sweep">「{hero.title}」</span> · {formatPrice(hero.price)}
                 </span>
                 <VerifiedBadge method={heroArtist?.verifiedBy ?? null} schoolName={heroArtist?.schoolId ? schoolById.get(heroArtist.schoolId)?.shortName : null} />
               </div>
@@ -59,7 +62,7 @@ export default async function HomePage() {
           <Container className="py-6">
             <div className="flex gap-3 overflow-x-auto pb-1">
               {stories.map(({ e, phase }) => (
-                <Link key={e.id} href={`/exhibitions/${e.id}`} className="flex w-60 shrink-0 flex-col gap-1 rounded-md border border-line bg-paper p-4 hover:border-ink">
+                <Link key={e.id} href={`/exhibitions/${e.id}`} className="flex w-60 shrink-0 flex-col gap-1 rounded-md border border-line bg-paper p-4 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-ink hover:shadow-md">
                   <span className={phase === "ongoing" ? "text-xs font-bold text-dot" : "text-xs font-bold text-ink-soft"}>
                     {phase === "ongoing" ? "● " : ""}
                     {PHASE_LABEL[phase]}
@@ -68,6 +71,9 @@ export default async function HomePage() {
                   <span className="text-xs text-ink-soft">{formatPeriod(e.startDate, e.endDate)} · {e.venue}</span>
                 </Link>
               ))}
+              <Link href="/exhibitions" className="flex w-40 shrink-0 items-center justify-center rounded-md border border-line bg-paper p-4 text-sm font-semibold hover:border-ink">
+                전체 전시 일정 →
+              </Link>
               <Link href="/exhibitions/apply" className="flex w-60 shrink-0 flex-col justify-center gap-1 rounded-md border border-dashed border-ink/40 p-4 hover:border-ink">
                 <span className="text-xs font-bold text-ink-soft">+ 전시 등록</span>
                 <span className="font-semibold">우리 학과 졸업·과제전시도 올려 보세요</span>

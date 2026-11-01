@@ -208,6 +208,8 @@ export async function saveExhibition(exhibitionId: string | null, _prev: FormSta
     endDate,
     description: s(form, "description"),
     link,
+    hours: optional(s(form, "hours")),
+    opening: optional(s(form, "opening")),
   };
   await store.update((db) => {
     if (exhibitionId) {

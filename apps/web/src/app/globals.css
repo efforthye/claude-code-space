@@ -43,3 +43,41 @@ body {
     background: white;
   }
 }
+
+/* Tailwind v4 resets buttons to cursor: default — interactive controls should say so. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary,
+select,
+input[type="checkbox"],
+input[type="file"] {
+  cursor: pointer;
+}
+
+/* 밑줄이 왼쪽에서 그어지는 링크 (내비게이션·본문 링크) */
+@utility link-sweep {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 220ms ease;
+  &:hover,
+  &:focus-visible {
+    background-size: 100% 1px;
+  }
+}
+
+/* 카드 전체(group)에 올려도 제목 밑줄이 그어지게 */
+.group:hover .link-sweep,
+.group:focus-visible .link-sweep {
+  background-size: 100% 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

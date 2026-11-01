@@ -1,0 +1,1860 @@
+{
+ "_comment": "2026 가을 미대 졸업전시 일정 (공개 정보). 출처: @cultureart4u 인스타그램에 소개된 각 학과 포스터와 홍익대 미술대학 졸업전시 일정표를 정리한 '전시 사이 · 미대 졸업전시 캘린더 2026' (2026.10.24 업데이트, github.com/entjs-whale/art-grad-calendar). 포스터 이미지는 가져오지 않았다. 방문 전 학과 공식 계정 확인 필요.",
+ "schools": [
+  {
+   "id": "sch-hongik",
+   "name": "홍익대학교",
+   "shortName": "홍익대"
+  },
+  {
+   "id": "sch-ewha",
+   "name": "이화여자대학교",
+   "shortName": "이화여대"
+  },
+  {
+   "id": "sch-kookmin",
+   "name": "국민대학교",
+   "shortName": "국민대"
+  },
+  {
+   "id": "sch-kyunghee",
+   "name": "경희대학교",
+   "shortName": "경희대"
+  },
+  {
+   "id": "sch-dongguk",
+   "name": "동국대학교",
+   "shortName": "동국대"
+  },
+  {
+   "id": "sch-konkuk",
+   "name": "건국대학교",
+   "shortName": "건국대"
+  },
+  {
+   "id": "sch-kyonggi",
+   "name": "경기대학교",
+   "shortName": "경기대"
+  },
+  {
+   "id": "sch-suwon",
+   "name": "수원대학교",
+   "shortName": "수원대"
+  },
+  {
+   "id": "sch-chugye",
+   "name": "추계예술대학교",
+   "shortName": "추계예대"
+  },
+  {
+   "id": "sch-hannam",
+   "name": "한남대학교",
+   "shortName": "한남대"
+  },
+  {
+   "id": "sch-hywu",
+   "name": "한양여자대학교",
+   "shortName": "한양여대"
+  },
+  {
+   "id": "sch-gachon",
+   "name": "가천대학교",
+   "shortName": "가천대"
+  },
+  {
+   "id": "sch-uos",
+   "name": "서울시립대학교",
+   "shortName": "서울시립대"
+  },
+  {
+   "id": "sch-mju",
+   "name": "명지대학교",
+   "shortName": "명지대"
+  },
+  {
+   "id": "sch-pknu",
+   "name": "국립부경대학교",
+   "shortName": "부경대"
+  },
+  {
+   "id": "sch-cnu",
+   "name": "충남대학교",
+   "shortName": "충남대"
+  },
+  {
+   "id": "sch-dongduk",
+   "name": "동덕여자대학교",
+   "shortName": "동덕여대"
+  },
+  {
+   "id": "sch-kongju",
+   "name": "공주대학교",
+   "shortName": "공주대"
+  },
+  {
+   "id": "sch-hanseo",
+   "name": "한서대학교",
+   "shortName": "한서대"
+  },
+  {
+   "id": "sch-yu",
+   "name": "영남대학교",
+   "shortName": "영남대"
+  },
+  {
+   "id": "sch-skuniv",
+   "name": "서경대학교",
+   "shortName": "서경대"
+  },
+  {
+   "id": "sch-pnu",
+   "name": "부산대학교",
+   "shortName": "부산대"
+  },
+  {
+   "id": "sch-smu",
+   "name": "상명대학교",
+   "shortName": "상명대"
+  },
+  {
+   "id": "sch-duksung",
+   "name": "덕성여자대학교",
+   "shortName": "덕성여대"
+  },
+  {
+   "id": "sch-daegu",
+   "name": "대구대학교",
+   "shortName": "대구대"
+  },
+  {
+   "id": "sch-hyerica",
+   "name": "한양대학교 ERICA",
+   "shortName": "한양대 ERICA"
+  },
+  {
+   "id": "sch-snu",
+   "name": "서울대학교",
+   "shortName": "서울대"
+  },
+  {
+   "id": "sch-cau",
+   "name": "중앙대학교",
+   "shortName": "중앙대"
+  },
+  {
+   "id": "sch-sookmyung",
+   "name": "숙명여자대학교",
+   "shortName": "숙명여대"
+  },
+  {
+   "id": "sch-keimyung",
+   "name": "계명대학교",
+   "shortName": "계명대"
+  },
+  {
+   "id": "sch-skku",
+   "name": "성균관대학교",
+   "shortName": "성균관대"
+  },
+  {
+   "id": "sch-sungshin",
+   "name": "성신여자대학교",
+   "shortName": "성신여대"
+  },
+  {
+   "id": "sch-seoultech",
+   "name": "서울과학기술대학교",
+   "shortName": "서울과기대"
+  },
+  {
+   "id": "sch-swu",
+   "name": "서울여자대학교",
+   "shortName": "서울여대"
+  },
+  {
+   "id": "sch-kangwon",
+   "name": "강원대학교",
+   "shortName": "강원대"
+  },
+  {
+   "id": "sch-hknu",
+   "name": "한경국립대학교",
+   "shortName": "한경대"
+  },
+  {
+   "id": "sch-knuh",
+   "name": "한국전통문화대학교",
+   "shortName": "전통문화대"
+  },
+  {
+   "id": "sch-yewon",
+   "name": "예원예술대학교",
+   "shortName": "예원예대"
+  },
+  {
+   "id": "sch-kdu",
+   "name": "경동대학교",
+   "shortName": "경동대"
+  },
+  {
+   "id": "sch-dankook",
+   "name": "단국대학교",
+   "shortName": "단국대"
+  }
+ ],
+ "exhibitions": [
+  {
+   "id": "exh-26f-konkuk-fa1",
+   "title": "건국대 조형예술학과 졸업전시회 1부 《0°, 영점을 조정하라》",
+   "schoolId": "sch-konkuk",
+   "department": "조형예술학과",
+   "venue": "글로컬이음관(U11) 2층 상허갤러리 1·2전시실 (글로컬캠퍼스)",
+   "startDate": "2026-10-13",
+   "endDate": "2026-10-16",
+   "description": "",
+   "link": null,
+   "hours": "화–목 09:00–18:00 · 금 09:00–17:00",
+   "opening": null,
+   "note": "제45회 졸업전시 Part 1. 포스터 하단에 적힌 일정입니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-konkuk-cart",
+   "title": "건국대 현대미술학과 졸업전시 《Avant》",
+   "schoolId": "sch-konkuk",
+   "department": "현대미술학과",
+   "venue": "갤러리 인사1010 (서울캠퍼스)",
+   "startDate": "2026-10-14",
+   "endDate": "2026-10-20",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": null,
+   "note": "2026 B.F.A Show. 전시명은 포스터의 장식 글자를 읽은 것이라 정확하지 않을 수 있습니다. 관람 시간은 포스터에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-smu-textile1",
+   "title": "상명대 텍스타일디자인전공 졸업전시회 1부 《VOID TO FORM : 공백에서 형상으로》",
+   "schoolId": "sch-smu",
+   "department": "텍스타일디자인전공",
+   "venue": "디자인대학 갤러리 1F (천안캠퍼스)",
+   "startDate": "2026-10-18",
+   "endDate": "2026-10-23",
+   "description": "",
+   "link": null,
+   "hours": "매일 09:00–19:00",
+   "opening": null,
+   "note": "제36회 졸업전시회 1부(천안).",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-gachon-sculpture",
+   "title": "가천대 조소과 졸업전시 《번지지 않은 채로》",
+   "schoolId": "sch-gachon",
+   "department": "조소과",
+   "venue": "비전타워 B1 갤러리",
+   "startDate": "2026-10-19",
+   "endDate": "2026-11-01",
+   "description": "",
+   "link": null,
+   "hours": "10.19–10.31 10:00–20:00 · 11.01 (일) 10:00–18:00",
+   "opening": "10.19 (월) 17:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-fiber",
+   "title": "홍익대 섬유미술패션디자인과 졸업전시",
+   "schoolId": "sch-hongik",
+   "department": "섬유미술패션디자인과",
+   "venue": "문헌관 4층 현대미술관",
+   "startDate": "2026-10-19",
+   "endDate": "2026-10-24",
+   "description": "졸업패션쇼: 10.23 (금) 19:00 · 홍익대학교 체육관",
+   "link": null,
+   "hours": "월 17:00–20:00 · 화–금 10:00–20:00 · 토 10:00–12:00",
+   "opening": "10.19 (월) 17:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-grad-vcd",
+   "title": "홍익대 대학원 디자인학부 시각디자인전공 (대학원) 석사학위청구전 《CONDITIONS》",
+   "schoolId": "sch-hongik",
+   "department": "시각디자인전공 (대학원)",
+   "venue": "홍문관 1층 104호",
+   "startDate": "2026-10-19",
+   "endDate": "2026-10-24",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–20:00",
+   "opening": null,
+   "note": "학부 졸업전시가 아닌 대학원 석사학위청구전입니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-daegu-id",
+   "title": "대구대 산업디자인학과 졸업전시 《EPOQUE》",
+   "schoolId": "sch-daegu",
+   "department": "산업디자인학과",
+   "venue": "대구섬유박물관 2층 기획전시실",
+   "startDate": "2026-10-20",
+   "endDate": "2026-10-27",
+   "description": "",
+   "link": null,
+   "hours": "매일 09:00–18:00",
+   "opening": "10.21 (수) 18:00–20:00",
+   "note": "제42회 졸업전시.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-dongguk-korean",
+   "title": "동국대 미술학부 한국화전공 졸업전시 《풀+-어+디-다》",
+   "schoolId": "sch-dongguk",
+   "department": "한국화전공",
+   "venue": "문화관 지하 1층 동국갤러리",
+   "startDate": "2026-10-21",
+   "endDate": "2026-10-26",
+   "description": "",
+   "link": null,
+   "hours": "10.21–10.25 10:00–18:00 · 10.26 (월) 10:00–14:00",
+   "opening": null,
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kyonggi-jewel",
+   "title": "경기대 장신구·금속디자인전공 졸업전시 《LOOK UP》",
+   "schoolId": "sch-kyonggi",
+   "department": "장신구·금속디자인전공",
+   "venue": "예술대학 호연갤러리",
+   "startDate": "2026-10-21",
+   "endDate": "2026-10-25",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–20:00",
+   "opening": "10.21 (수) 17:30",
+   "note": "제35회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-ewha-space",
+   "title": "이화여대 디자인학부 공간디자인전공 졸업전시 《OFFSTAGE》",
+   "schoolId": "sch-ewha",
+   "department": "공간디자인전공",
+   "venue": "조형예술관 A동 1층 로비 · 2층 이화아트센터",
+   "startDate": "2026-10-27",
+   "endDate": "2026-11-01",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": "10.27 (화) 17:00 (전체 오프닝)",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-id",
+   "title": "홍익대 디자인학부 산업디자인전공 졸업전시 《COEXIST》",
+   "schoolId": "sch-hongik",
+   "department": "산업디자인전공",
+   "venue": "문헌관 4층 현대미술관",
+   "startDate": "2026-10-27",
+   "endDate": "2026-10-31",
+   "description": "",
+   "link": null,
+   "hours": "화 12:00–20:00 · 수–목 10:00–20:00 · 금 10:00–18:00 · 토 10:00–14:00",
+   "opening": "10.27 (화) 12:00",
+   "note": "출처마다 시간이 다릅니다. 위 시간은 홍익대 미술대학 졸업전시 일정표 기준이고, 학과 전시 안내에는 화 14:00–20:00(오프닝), 수–금 10:00–20:00으로 적혀 있습니다. 방문 전 학과 계정에서 확인하세요.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-dongguk-western",
+   "title": "동국대 미술학부 서양화전공 졸업전시 《담아내는 것, 닮아가는 것》",
+   "schoolId": "sch-dongguk",
+   "department": "서양화전공",
+   "venue": "갤러리동국 (문화관 지하 1층)",
+   "startDate": "2026-10-28",
+   "endDate": "2026-11-02",
+   "description": "",
+   "link": null,
+   "hours": "수–일 10:00–18:00 · 월 (마지막 날) 10:00–14:00",
+   "opening": null,
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hyerica-cd",
+   "title": "한양대 ERICA 커뮤니케이션디자인학과 졸업전시 《우리들은 양을 센다》",
+   "schoolId": "sch-hyerica",
+   "department": "커뮤니케이션디자인학과",
+   "venue": "홍익대학교 대학로 아트센터 B1 전시장",
+   "startDate": "2026-10-28",
+   "endDate": "2026-11-01",
+   "description": "",
+   "link": null,
+   "hours": "10.28 (수) 13:00–18:00 · 10.29–11.01 10:00–18:00",
+   "opening": null,
+   "note": "제40회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-knuh-ceramic",
+   "title": "전통문화대 전통미술공예학과 도자전공 졸업작품전 《전통을 전하다》",
+   "schoolId": "sch-knuh",
+   "department": "도자전공",
+   "venue": "마루아트센터 2·3관",
+   "startDate": "2026-10-28",
+   "endDate": "2026-11-02",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:30–18:30",
+   "opening": null,
+   "note": "제23회 졸업작품전. 전공별로 기간과 장소가 다릅니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-knuh-painting",
+   "title": "전통문화대 전통미술공예학과 회화전공 졸업작품전 《전통을 전하다》",
+   "schoolId": "sch-knuh",
+   "department": "회화전공",
+   "venue": "충무아트센터 갤러리 G1",
+   "startDate": "2026-10-28",
+   "endDate": "2026-11-04",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": null,
+   "note": "제23회 졸업작품전. 전공별로 기간과 장소가 다릅니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kookmin-ceramic",
+   "title": "국민대 도자공예학과 졸업전시 《16P1》",
+   "schoolId": "sch-kookmin",
+   "department": "도자공예학과",
+   "venue": "마루아트센터 그랜드관 (신관 3F)",
+   "startDate": "2026-10-28",
+   "endDate": "2026-11-02",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:30–18:30",
+   "opening": "10.28 (수) 18:00 · 관계자 대상",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-skuniv-vd",
+   "title": "서경대 디자인학부 비주얼디자인전공 졸업전시 《쐐기를 박다》",
+   "schoolId": "sch-skuniv",
+   "department": "비주얼디자인전공",
+   "venue": "NOL 서경스퀘어 B1 스콘갤러리",
+   "startDate": "2026-10-28",
+   "endDate": "2026-11-01",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": "10.28 (수) 17:00",
+   "note": "제32회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-dongduk-vcd",
+   "title": "동덕여대 디자인이노베이션대학 시각디자인전공 졸업작품전시회 《(0)수증 : 零數》",
+   "schoolId": "sch-dongduk",
+   "department": "시각디자인전공",
+   "venue": "디자인연구센터 (Design Hub)",
+   "startDate": "2026-10-29",
+   "endDate": "2026-11-02",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": null,
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-duksung-interior",
+   "title": "덕성여대 실내디자인전공 졸업전시 《사이는 공간(: 비어있는 곳)이 아니다》",
+   "schoolId": "sch-duksung",
+   "department": "실내디자인전공",
+   "venue": "스페이스 소포라 갤러리 B1",
+   "startDate": "2026-10-30",
+   "endDate": "2026-11-04",
+   "description": "",
+   "link": null,
+   "hours": "11.04 (수) 10:00–14:00 · 매일 10:00–18:00",
+   "opening": null,
+   "note": "제61회 졸업전시회. 시간은 포스터 기준입니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kdu-design",
+   "title": "경동대 디자인학과 졸업전시 《CHECK-OUT》",
+   "schoolId": "sch-kdu",
+   "department": "디자인학과",
+   "venue": "갤러리 루미나리에 1층",
+   "startDate": "2026-10-30",
+   "endDate": "2026-11-03",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": "10.31 (토) 11:00",
+   "note": "제22회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-konkuk-vcd",
+   "title": "건국대 시각영상디자인학과 졸업전시 《HELLO WORLD》",
+   "schoolId": "sch-konkuk",
+   "department": "시각영상디자인학과",
+   "venue": "홍익대학교 대학로 아트센터 B2 제3전시장 (글로컬캠퍼스)",
+   "startDate": "2026-10-30",
+   "endDate": "2026-11-02",
+   "description": "",
+   "link": null,
+   "hours": "금–일 10:00–18:00 · 월 10:00–17:00",
+   "opening": "10.30 (금) 16:00",
+   "note": "포스터 표기는 “2027 건국대학교 디자인대학 시각영상디자인학과 시각트랙 졸업전시회”입니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-pknu-vcd",
+   "title": "부경대 시각디자인전공 졸업전시 《손뼉치기》",
+   "schoolId": "sch-pknu",
+   "department": "시각디자인전공",
+   "venue": "핵심역량도서관 1F 갤러리 라운지",
+   "startDate": "2026-10-30",
+   "endDate": "2026-11-03",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": "10.30 (금) 16:00–17:00",
+   "note": "제38회 졸업전시. 관람 시간은 이미지에 적혀 있지 않습니다. 지역은 부경대 대연캠퍼스(학교 대표 주소) 기준으로 표시했습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-oriental",
+   "title": "홍익대 동양화과 졸업전시 《truehood》",
+   "schoolId": "sch-hongik",
+   "department": "동양화과",
+   "venue": "문헌관 4층 현대미술관 (HoMA)",
+   "startDate": "2026-11-02",
+   "endDate": "2026-11-07",
+   "description": "",
+   "link": null,
+   "hours": "월–금 10:00–20:00 · 토 10:00–16:00",
+   "opening": "11.03 (화) 13:00",
+   "note": "출처마다 토요일 마감 시간이 다릅니다. 위 시간은 전시 포스터 기준(16:00)이고, 홍익대 미술대학 졸업전시 일정표에는 14:00으로 적혀 있습니다. 토요일 오후에 가신다면 미리 확인하세요.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kookmin-sculpture",
+   "title": "국민대 예술대학 입체미술전공 졸업전시 《토큰이 없어 내일 제목을 생성하기로 했다.》",
+   "schoolId": "sch-kookmin",
+   "department": "입체미술전공",
+   "venue": "예술관 2층 국민 아트스페이스",
+   "startDate": "2026-11-02",
+   "endDate": "2026-11-16",
+   "description": "",
+   "link": null,
+   "hours": "매일 09:00–17:00",
+   "opening": "11.02 (월) 16:30",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-ewha-ind",
+   "title": "이화여대 디자인학부 산업디자인전공 졸업전시 《OFFSTAGE》",
+   "schoolId": "sch-ewha",
+   "department": "산업디자인전공",
+   "venue": "조형예술관 A동 1층 로비 · 2층 이화아트센터",
+   "startDate": "2026-11-03",
+   "endDate": "2026-11-08",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": "10.27 (화) 17:00 (전체 오프닝)",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kookmin-space",
+   "title": "국민대 공간디자인학과 졸업전시 《0,0,0 : ORIGIN》",
+   "schoolId": "sch-kookmin",
+   "department": "공간디자인학과",
+   "venue": "아라아트센터 3·4층",
+   "startDate": "2026-11-03",
+   "endDate": "2026-11-09",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": null,
+   "note": "제26회 졸업전시회. 관람 시간은 포스터에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kyonggi-western",
+   "title": "경기대 서양화전공 졸업전시 《당기세요 당기세요 당기세요》",
+   "schoolId": "sch-kyonggi",
+   "department": "서양화전공",
+   "venue": "동덕아트갤러리",
+   "startDate": "2026-11-03",
+   "endDate": "2026-11-09",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": null,
+   "note": "제39회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-skku-surface",
+   "title": "성균관대 디자인학과 써피스디자인전공 졸업전시 《LAYER TO HIGHER》",
+   "schoolId": "sch-skku",
+   "department": "써피스디자인전공",
+   "venue": "경영관 1층 성균갤러리 (인문사회과학캠퍼스)",
+   "startDate": "2026-11-03",
+   "endDate": "2026-11-08",
+   "description": "",
+   "link": null,
+   "hours": "월–금 10:00–20:00 · 토–일 10:00–18:00",
+   "opening": "11.03 (화) 18:00",
+   "note": "제34회 학부 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-sungshin-design",
+   "title": "성신여대 디자인과 졸업전시 《구겨질수록》",
+   "schoolId": "sch-sungshin",
+   "department": "디자인과",
+   "venue": "수정관 1F 가온전시실 · 난향관 4F 파이룸",
+   "startDate": "2026-11-03",
+   "endDate": "2026-11-08",
+   "description": "",
+   "link": null,
+   "hours": "화 14:00–20:00 · 수–토 10:00–20:00 · 일 10:00–18:00",
+   "opening": null,
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-yu-product",
+   "title": "영남대 생활제품디자인학과 졸업전시 《35,040》",
+   "schoolId": "sch-yu",
+   "department": "생활제품디자인학과",
+   "venue": "천마아트센터 B1 갤러리관",
+   "startDate": "2026-11-03",
+   "endDate": "2026-11-08",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–19:00",
+   "opening": "11.03 (화) 18:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-dku-ceramic",
+   "title": "단국대 음악·예술대학 도예과 졸업전시 《앗뜨》",
+   "schoolId": "sch-dankook",
+   "department": "도예과",
+   "venue": "갤러리 인사1010",
+   "startDate": "2026-11-04",
+   "endDate": "2026-11-09",
+   "description": "",
+   "link": null,
+   "hours": "11.04 (수) 17:00–19:00 (오프닝) · 11.05–11.09 11:00–19:00",
+   "opening": "11.04 (수) 17:00–19:00",
+   "note": "제52회 졸업전시.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-konkuk-fa2",
+   "title": "건국대 조형예술학과 졸업전시회 2부 《0°, 영점을 조정하라》",
+   "schoolId": "sch-konkuk",
+   "department": "조형예술학과",
+   "venue": "마루아트센터 B1 특별관 (글로컬캠퍼스)",
+   "startDate": "2026-11-04",
+   "endDate": "2026-11-09",
+   "description": "",
+   "link": null,
+   "hours": "수–월 10:30–18:00",
+   "opening": null,
+   "note": "출처마다 마감 시간이 다릅니다. 전시 안내에는 18:00, 포스터에는 18:30(6:30 pm)으로 적혀 있습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kyunghee-vcd",
+   "title": "경희대 시각디자인학과 졸업전시 《깊이를 만들고 단단해지는 것들》",
+   "schoolId": "sch-kyunghee",
+   "department": "시각디자인학과",
+   "venue": "예술디자인대학 2층 A&D홀 (국제캠퍼스)",
+   "startDate": "2026-11-04",
+   "endDate": "2026-11-08",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–20:00",
+   "opening": "11.04 (수) 17:30",
+   "note": "제35회 졸업전시.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-seoultech-id",
+   "title": "서울과기대 조형대학 산업디자인학과 졸업전시 《shoot》",
+   "schoolId": "sch-seoultech",
+   "department": "산업디자인학과",
+   "venue": "백주년기념관 목산갤러리 1–3층",
+   "startDate": "2026-11-04",
+   "endDate": "2026-11-10",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–20:00",
+   "opening": null,
+   "note": "제44회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-suwon-craft",
+   "title": "수원대 공예디자인과 졸업전시 《ASSEMBLE》",
+   "schoolId": "sch-suwon",
+   "department": "공예디자인과",
+   "venue": "라메르 갤러리 3관·4관",
+   "startDate": "2026-11-04",
+   "endDate": "2026-11-09",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:30–18:00",
+   "opening": "11.04 (수) 17:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-konkuk-id1",
+   "title": "건국대 산업디자인학과 졸업전시 1부 《UNLISTED PLACE™》",
+   "schoolId": "sch-konkuk",
+   "department": "산업디자인학과",
+   "venue": "홍익대학교 대학로 아트센터 갤러리 B1 (글로컬캠퍼스)",
+   "startDate": "2026-11-05",
+   "endDate": "2026-11-08",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": null,
+   "note": "제39회 졸업전시 1부. 포스터 표기는 ‘2027 건국대학교 글로컬캠퍼스 산업디자인학과’입니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kookmin-id",
+   "title": "국민대 공업디자인학과 졸업전시 《PUNCTUATE》",
+   "schoolId": "sch-kookmin",
+   "department": "공업디자인학과",
+   "venue": "조형관 조형갤러리 1층 전체",
+   "startDate": "2026-11-05",
+   "endDate": "2026-11-10",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": "11.05 (목) 13:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-mju-anim",
+   "title": "명지대 영상애니메이션디자인전공 졸업전시 《PUZZLE》",
+   "schoolId": "sch-mju",
+   "department": "영상애니메이션디자인전공",
+   "venue": "모나코스페이스 1관 메인홀 (부띠크모나코 B1)",
+   "startDate": "2026-11-05",
+   "endDate": "2026-11-09",
+   "description": "",
+   "link": null,
+   "hours": "매일 11:00–20:00",
+   "opening": "11.05 (목) 18:00 · 오프닝 파티",
+   "note": "제25회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hanseo-space",
+   "title": "한서대 공간디자인학과 졸업전시 《자아탐닉 (自我耽溺)》",
+   "schoolId": "sch-hanseo",
+   "department": "공간디자인학과",
+   "venue": "언더스탠드에비뉴 아트센터",
+   "startDate": "2026-11-06",
+   "endDate": "2026-11-09",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–21:00",
+   "opening": "11.06 (금) 17:00",
+   "note": "출처마다 시작일이 다릅니다. 포스터에는 11.06(금)–11.09(월), 전시 안내에는 11.07–11.09로 적혀 있어 오프닝이 있는 포스터 기준으로 표시했습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-pnu-dt",
+   "title": "부산대 디자인학과 디자인앤테크놀로지전공 졸업전시 《잔향》",
+   "schoolId": "sch-pnu",
+   "department": "디자인앤테크놀로지전공",
+   "venue": "부산디자인진흥원 1층 전시실",
+   "startDate": "2026-11-06",
+   "endDate": "2026-11-08",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": "11.06 (금) 17:00",
+   "note": "제17회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-cnu-craft",
+   "title": "충남대 디자인창의학과 도자·섬유디자인전공 졸업전시 《connection》",
+   "schoolId": "sch-cnu",
+   "department": "도자·섬유디자인전공",
+   "venue": "예술대학 미술관 B1 백마아트홀",
+   "startDate": "2026-11-09",
+   "endDate": "2026-11-14",
+   "description": "",
+   "link": null,
+   "hours": "매일 09:00–18:00",
+   "opening": "11.09 (월) 17:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-arts",
+   "title": "홍익대 예술학과 학술제",
+   "schoolId": "sch-hongik",
+   "department": "예술학과",
+   "venue": "조형관(E동) 103호",
+   "startDate": "2026-11-09",
+   "endDate": "2026-11-11",
+   "description": "",
+   "link": null,
+   "hours": "월–수 18:00–20:00",
+   "opening": null,
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-metal",
+   "title": "홍익대 금속조형디자인과 졸업전시 《After Taste》",
+   "schoolId": "sch-hongik",
+   "department": "금속조형디자인과",
+   "venue": "문헌관 4층 현대미술관",
+   "startDate": "2026-11-09",
+   "endDate": "2026-11-14",
+   "description": "",
+   "link": null,
+   "hours": "11.09 (월) 18:00–20:00 · 11.10–11.13 10:00–20:00 · 11.14 (토) 10:00–14:00",
+   "opening": "11.09 (월) 18:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-ewha-vis",
+   "title": "이화여대 디자인학부 시각디자인전공 졸업전시 《OFFSTAGE》",
+   "schoolId": "sch-ewha",
+   "department": "시각디자인전공",
+   "venue": "조형예술관 A동 1층 로비 · 2층 이화아트센터",
+   "startDate": "2026-11-10",
+   "endDate": "2026-11-15",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": "10.27 (화) 17:00 (전체 오프닝)",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-knuh-sculpture",
+   "title": "전통문화대 전통미술공예학과 조각전공 졸업작품전 《전통을 전하다》",
+   "schoolId": "sch-knuh",
+   "department": "조각전공",
+   "venue": "조각실습동 1층 전시관",
+   "startDate": "2026-11-10",
+   "endDate": "2026-11-16",
+   "description": "",
+   "link": null,
+   "hours": "매일 09:00–18:00",
+   "opening": null,
+   "note": "제23회 졸업작품전. 전공별로 기간과 장소가 다릅니다. 지역은 한국전통문화대학교 캠퍼스(충남 부여) 기준입니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-knuh-textile",
+   "title": "전통문화대 전통미술공예학과 전통섬유전공 졸업작품전 《전통을 전하다》",
+   "schoolId": "sch-knuh",
+   "department": "전통섬유전공",
+   "venue": "한국전통문화대학교 안국동 별궁",
+   "startDate": "2026-11-10",
+   "endDate": "2026-11-16",
+   "description": "",
+   "link": null,
+   "hours": "매일 09:00–18:00",
+   "opening": null,
+   "note": "제23회 졸업작품전. 전공별로 기간과 장소가 다릅니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-konkuk-id2",
+   "title": "건국대 산업디자인학과 졸업전시 2부 《UNLISTED PLACE™》",
+   "schoolId": "sch-konkuk",
+   "department": "산업디자인학과",
+   "venue": "글로컬 이음관 상허 제1·2전시관 (글로컬캠퍼스)",
+   "startDate": "2026-11-10",
+   "endDate": "2026-11-13",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–17:30",
+   "opening": null,
+   "note": "제39회 졸업전시 2부.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-smu-craft1",
+   "title": "상명대 생활예술전공 졸업전 1부 《SYNCHRONICITY》",
+   "schoolId": "sch-smu",
+   "department": "생활예술전공",
+   "venue": "미래백년관 B1 월해갤러리 (서울캠퍼스)",
+   "startDate": "2026-11-10",
+   "endDate": "2026-11-17",
+   "description": "",
+   "link": null,
+   "hours": "11.17 (화) 10:00–12:00 (클로징) · 매일 10:00–20:00",
+   "opening": null,
+   "note": "제54회 졸업전 1부.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-sungshin-sculpture",
+   "title": "성신여대 조소과 졸업전시 《SP[✱]CE》",
+   "schoolId": "sch-sungshin",
+   "department": "조소과",
+   "venue": "수정관 1F 가온갤러리 · 난향관 4F 파이룸 · 조형1관 S101 (돈암수정캠퍼스)",
+   "startDate": "2026-11-10",
+   "endDate": "2026-11-15",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": "11.10 (화) 14:00",
+   "note": "관람 시간은 포스터에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hannam-painting",
+   "title": "한남대 회화과 졸업전시 《아무도 우리와 같지 않다》",
+   "schoolId": "sch-hannam",
+   "department": "회화과",
+   "venue": "한남대학교 아트센터 엑시스 한남",
+   "startDate": "2026-11-11",
+   "endDate": "2026-11-24",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": "11.11 (수) 17:00",
+   "note": "제39회 졸업전시. 영문 제목 NO ONE LIKE US. 전시장 ‘아트센터 엑시스 한남’의 정확한 위치는 확인하지 못해 한남대학교 캠퍼스(대전 대덕구 한남로 70) 기준으로 지역을 표시했습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-konkuk-media",
+   "title": "건국대 디자인대학 미디어콘텐츠학과 졸업전시 《꼬두라미 : 다다른 곳》",
+   "schoolId": "sch-konkuk",
+   "department": "미디어콘텐츠학과",
+   "venue": "홍익대학교 대학로 아트센터 갤러리 1관 (B1)",
+   "startDate": "2026-11-11",
+   "endDate": "2026-11-15",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–17:30",
+   "opening": "11.14 (토) 16:30 · 오프닝 세리머니",
+   "note": "제11회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kyunghee-id",
+   "title": "경희대 산업디자인학과 졸업전시 《THIS IS NOT GRADUATION : THIS IS A NEW PATHWAY》",
+   "schoolId": "sch-kyunghee",
+   "department": "산업디자인학과",
+   "venue": "예술디자인대학 2층 A&D HALL (국제캠퍼스)",
+   "startDate": "2026-11-11",
+   "endDate": "2026-11-16",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–20:00",
+   "opening": "11.11 (수) 17:30",
+   "note": "제35회 졸업전시회. 부제 ‘하나의 끝, 새로운 길’.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-konkuk-film",
+   "title": "건국대 예술디자인대학 영상학과 졸업전시 《겹의 순간》",
+   "schoolId": "sch-konkuk",
+   "department": "영상학과",
+   "venue": "예술디자인대학 9층 (F9) (서울캠퍼스)",
+   "startDate": "2026-11-12",
+   "endDate": "2026-11-18",
+   "description": "상영: 11.13–11.15 · 예술디자인대학 B1 KU시네마",
+   "link": null,
+   "hours": null,
+   "opening": null,
+   "note": "제11회 졸업전시. 관람 시간은 이미지에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-smu-textile2",
+   "title": "상명대 텍스타일디자인전공 졸업전시회 2부 《VOID TO FORM : 공백에서 형상으로》",
+   "schoolId": "sch-smu",
+   "department": "텍스타일디자인전공",
+   "venue": "인사아트프라자 2F",
+   "startDate": "2026-11-12",
+   "endDate": "2026-11-16",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": null,
+   "note": "제36회 졸업전시회 2부(서울 인사동).",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-uos-vcd",
+   "title": "서울시립대 시각디자인전공 졸업전시",
+   "schoolId": "sch-uos",
+   "department": "시각디자인전공",
+   "venue": "빨간벽돌갤러리",
+   "startDate": "2026-11-12",
+   "endDate": "2026-11-16",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": null,
+   "note": "별도 전시명 없이 열리는 졸업전시회입니다. 관람 시간은 포스터에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-yewon-vcd",
+   "title": "예원예대 시각영상디자인학과 졸업전시 《THE MISSING PIECE》",
+   "schoolId": "sch-yewon",
+   "department": "시각영상디자인학과",
+   "venue": "유나이티드 갤러리 1층",
+   "startDate": "2026-11-12",
+   "endDate": "2026-11-16",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–19:00",
+   "opening": null,
+   "note": "제9회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kookmin-ai",
+   "title": "국민대 AI디자인학과 졸업전시 《REALIZE》",
+   "schoolId": "sch-kookmin",
+   "department": "AI디자인학과",
+   "venue": "조형관 1층 조형갤러리",
+   "startDate": "2026-11-13",
+   "endDate": "2026-11-18",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": null,
+   "note": "관람 시간은 포스터에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-wood",
+   "title": "홍익대 목조형가구학과 졸업전시",
+   "schoolId": "sch-hongik",
+   "department": "목조형가구학과",
+   "venue": "문헌관 4층 현대미술관",
+   "startDate": "2026-11-16",
+   "endDate": "2026-11-21",
+   "description": "",
+   "link": null,
+   "hours": "월 14:00–20:00 · 화–금 10:00–20:00 · 토 10:00–14:00",
+   "opening": "11.16 (월) 14:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kyunghee-fa-painting",
+   "title": "경희대 미술대학 회화전공 졸업전시 《굳은 땅을 밀어내고》",
+   "schoolId": "sch-kyunghee",
+   "department": "회화전공",
+   "venue": "미술대학 KUMA (서울캠퍼스)",
+   "startDate": "2026-11-16",
+   "endDate": "2026-11-22",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": "11.16 (월) 18:00",
+   "note": "제58회 미술대학 졸업전시회. 전공별로 기간이 다릅니다. 관람 시간은 포스터에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-ewha-media",
+   "title": "이화여대 디자인학부 영상디자인전공 졸업전시 《OFFSTAGE》",
+   "schoolId": "sch-ewha",
+   "department": "영상디자인전공",
+   "venue": "조형예술관 A동 1층 로비 · 2층 이화아트센터",
+   "startDate": "2026-11-17",
+   "endDate": "2026-11-22",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": "10.27 (화) 17:00 (전체 오프닝)",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-swu-art",
+   "title": "서울여대 현대미술전공 졸업전시 《유영 지대 (Footloose)》",
+   "schoolId": "sch-swu",
+   "department": "현대미술전공",
+   "venue": "조형예술관 1F·4F",
+   "startDate": "2026-11-17",
+   "endDate": "2026-11-28",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–20:00",
+   "opening": null,
+   "note": "제40회 졸업전시.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kongju-jewel",
+   "title": "공주대 주얼리금속디자인학과 졸업전시 《LOADING...》",
+   "schoolId": "sch-kongju",
+   "department": "주얼리금속디자인학과",
+   "venue": "로즈앤라임 B1",
+   "startDate": "2026-11-18",
+   "endDate": "2026-11-22",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": null,
+   "note": "제23회 졸업전시회. 관람 시간은 이미지에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kookmin-film",
+   "title": "국민대 영상디자인학과 졸업전시 《OFF-LINE》",
+   "schoolId": "sch-kookmin",
+   "department": "영상디자인학과",
+   "venue": "MIJINFLOOR (미진플로어)",
+   "startDate": "2026-11-18",
+   "endDate": "2026-11-22",
+   "description": "상영: 11.15 (일) · 아리랑 인디웨이브(일반 관람) / 아리랑시네센터 2관(초청)",
+   "link": null,
+   "hours": "매일 10:00–20:00",
+   "opening": "11.18 (수) 18:00",
+   "note": "안내 이미지에는 전시명이 ‘해:지고도 선명한’으로 적혀 있지만 계명대 전시명과 같아 잘못 옮긴 것으로 보고, 포스터에 적힌 ‘OFF-LINE’으로 표시했습니다. 전시장 MIJINFLOOR의 위치를 확인하지 못해 지역은 국민대(성북구) 기준으로 표시했습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-seoultech-ceramic",
+   "title": "서울과기대 도예학과 졸업전시 《땅을 딛고 오롯이》",
+   "schoolId": "sch-seoultech",
+   "department": "도예학과",
+   "venue": "갤러리 인사1010",
+   "startDate": "2026-11-18",
+   "endDate": "2026-11-23",
+   "description": "",
+   "link": null,
+   "hours": "매일 11:00–19:00",
+   "opening": null,
+   "note": "제43회 졸업전시.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-uos-id",
+   "title": "서울시립대 디자인학과 산업디자인전공 졸업작품전시회 《°C 〈CELSIUS〉》",
+   "schoolId": "sch-uos",
+   "department": "산업디자인전공",
+   "venue": "빨간벽돌갤러리",
+   "startDate": "2026-11-18",
+   "endDate": "2026-11-25",
+   "description": "",
+   "link": null,
+   "hours": "11.25 (수) 11:00–13:00 · 월–금 11:00–20:00 · 토–일 11:00–19:00",
+   "opening": "11.18 (수) 17:00",
+   "note": "제41회 졸업작품전시회. 마지막 날(25일)은 13시까지 운영합니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-chugye-oriental",
+   "title": "추계예대 미술창작학부 동양화전공 졸업작품전 《교집합》",
+   "schoolId": "sch-chugye",
+   "department": "동양화전공",
+   "venue": "창조관 C21 3·4층",
+   "startDate": "2026-11-19",
+   "endDate": "2026-11-25",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–19:00",
+   "opening": "11.19 (목) 16:00 · 창조관 3층 C21",
+   "note": "제50회 졸업작품전.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hknu-psd",
+   "title": "한경대 제품공간디자인전공 졸업전시 《_core : Find Your Own _core》",
+   "schoolId": "sch-hknu",
+   "department": "제품공간디자인전공",
+   "venue": "아트숨비센터 2F",
+   "startDate": "2026-11-19",
+   "endDate": "2026-11-21",
+   "description": "",
+   "link": null,
+   "hours": "11.19 (목) 13:00–18:00 · 11.20 (금) 10:00–18:00 · 11.21 (토) 10:00–16:00",
+   "opening": "11.19 (목) 13:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-smu-craft2",
+   "title": "상명대 생활예술전공 졸업전 2부 《SYNCHRONICITY》",
+   "schoolId": "sch-smu",
+   "department": "생활예술전공",
+   "venue": "더서울라이티움 제1관 (B2) (서울캠퍼스)",
+   "startDate": "2026-11-19",
+   "endDate": "2026-11-23",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–20:00",
+   "opening": "11.19 (목) 17:00",
+   "note": "제54회 졸업전 2부.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-sookmyung-painting",
+   "title": "숙명여대 회화과 졸업전시 《튕겨져 나가 아무 데나 꽂히곤 하지》",
+   "schoolId": "sch-sookmyung",
+   "department": "회화과",
+   "venue": "청파갤러리 1·2관 · 무지개갤러리 · 문갤러리 · 미술대학 605·607호 오픈스튜디오",
+   "startDate": "2026-11-19",
+   "endDate": "2026-11-25",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–19:00",
+   "opening": "11.19 (목) 17:00",
+   "note": "제41회 졸업전시.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-cau-korean",
+   "title": "중앙대 한국화전공 졸업작품전 《언어의 재정의》",
+   "schoolId": "sch-cau",
+   "department": "한국화전공",
+   "venue": "301관 아트센터 제1·2전시실 (서울캠퍼스)",
+   "startDate": "2026-11-20",
+   "endDate": "2026-11-26",
+   "description": "",
+   "link": null,
+   "hours": "매일 09:00–19:00",
+   "opening": "11.20 (금) 18:00",
+   "note": "제78회 졸업작품전.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-painting",
+   "title": "홍익대 회화과 졸업전시",
+   "schoolId": "sch-hongik",
+   "department": "회화과",
+   "venue": "문헌관 4층 현대미술관 · 미술학관(F동) 3층 실기실",
+   "startDate": "2026-11-23",
+   "endDate": "2026-11-28",
+   "description": "",
+   "link": null,
+   "hours": "월 17:00–20:00 · 화–금 10:00–20:00 · 토 10:00–14:00",
+   "opening": "11.23 (월) 17:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kangwon-ceramic",
+   "title": "강원대 조형예술디자인학과 도자디자인전공 졸업전시 《반향 (Resonance)》",
+   "schoolId": "sch-kangwon",
+   "department": "도자디자인전공",
+   "venue": "해람문화관 2층 아트스페이스 해람 (강릉캠퍼스)",
+   "startDate": "2026-11-23",
+   "endDate": "2026-11-29",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": "11.23 (월) 17:00",
+   "note": "관람 시간은 이미지에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-ewha-oriental",
+   "title": "이화여대 동양화과 졸업전시 《Bazaar》",
+   "schoolId": "sch-ewha",
+   "department": "동양화과",
+   "venue": "조형예술대학 A동",
+   "startDate": "2026-11-24",
+   "endDate": "2026-11-29",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": null,
+   "note": "관람 시간은 포스터에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kangwon-art",
+   "title": "강원대 미술학과 졸업작품전 《異音 (이음)》",
+   "schoolId": "sch-kangwon",
+   "department": "미술학과",
+   "venue": "미술관 제1·2전시실 (백령스포츠센터 2층) (춘천캠퍼스)",
+   "startDate": "2026-11-24",
+   "endDate": "2026-11-29",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": "11.24 (화) 13:30",
+   "note": "제50회 졸업작품전.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-cau-craft",
+   "title": "중앙대 디자인학부 공예학과 졸업전시 《이러한, 만듦새들》",
+   "schoolId": "sch-cau",
+   "department": "공예학과",
+   "venue": "구띠갤러리",
+   "startDate": "2026-11-25",
+   "endDate": "2026-11-30",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": null,
+   "note": "제67회 졸업전시회. 부제 ‘형태 속의 태도’.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kyunghee-ceramic",
+   "title": "경희대 도예학과 졸업전시 《imprint ; traces of touch》",
+   "schoolId": "sch-kyunghee",
+   "department": "도예학과",
+   "venue": "예술디자인대학관 2F A&D 갤러리 (국제캠퍼스)",
+   "startDate": "2026-11-25",
+   "endDate": "2026-11-30",
+   "description": "",
+   "link": null,
+   "hours": "매일 09:00–19:30",
+   "opening": "11.25 (수) 17:30",
+   "note": "제56회 졸업전시.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-duksung-textile",
+   "title": "덕성여대 텍스타일디자인전공 졸업전시 《말쑥하게 그대로 : 편지를 부칠까요?》",
+   "schoolId": "sch-duksung",
+   "department": "텍스타일디자인전공",
+   "venue": "나무 모던 앤 컨템포러리 아트 갤러리",
+   "startDate": "2026-11-26",
+   "endDate": "2026-12-01",
+   "description": "",
+   "link": null,
+   "hours": "12.01 (화) 11:00–17:00 · 매일 11:00–19:00",
+   "opening": "11.26 (목) 18:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kyunghee-fa-sculpture",
+   "title": "경희대 미술대학 조소·한국화전공 졸업전시 《굳은 땅을 밀어내고》",
+   "schoolId": "sch-kyunghee",
+   "department": "조소·한국화전공",
+   "venue": "미술대학 KUMA (서울캠퍼스)",
+   "startDate": "2026-11-26",
+   "endDate": "2026-12-02",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": "11.26 (목) 18:00",
+   "note": "제58회 미술대학 졸업전시회. 전공별로 기간이 다릅니다. 관람 시간은 포스터에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-snu-metal",
+   "title": "서울대 미술대학 금속공예전공 졸업전시 《Where Things Live》",
+   "schoolId": "sch-snu",
+   "department": "금속공예전공",
+   "venue": "74동 1층 전시홀",
+   "startDate": "2026-11-26",
+   "endDate": "2026-11-29",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": "11.26 (목) 17:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hywu-knit",
+   "title": "한양여대 니트패션디자인과 졸업패션쇼 《編(편)》",
+   "schoolId": "sch-hywu",
+   "department": "니트패션디자인과",
+   "venue": "DDP 패션몰 5F 패션창작스튜디오",
+   "startDate": "2026-11-27",
+   "endDate": "2026-11-27",
+   "description": "",
+   "link": null,
+   "hours": "11.27 (금) 19:00 (하루 공연)",
+   "opening": null,
+   "note": "제50회 졸업 패션쇼. 하루만 열립니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-print",
+   "title": "홍익대 판화과 졸업전시 《Being Go!》",
+   "schoolId": "sch-hongik",
+   "department": "판화과",
+   "venue": "문헌관 4층 현대미술관",
+   "startDate": "2026-11-30",
+   "endDate": "2026-12-05",
+   "description": "",
+   "link": null,
+   "hours": "월–금 10:00–20:00 · 토 10:00–14:00",
+   "opening": "12.01 (화) 14:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-keimyung-painting",
+   "title": "계명대 회화과 졸업전시 《해:지고도 선명한》",
+   "schoolId": "sch-keimyung",
+   "department": "회화과",
+   "venue": "극재미술관 (대명캠퍼스)",
+   "startDate": "2026-11-30",
+   "endDate": "2026-12-06",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:00–18:00",
+   "opening": "12.03 (목) 14:00",
+   "note": "제59회 졸업전시회.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-kookmin-painting",
+   "title": "국민대 미술학부 회화전공 졸업전시 《때로는 ( )을 믿는 마음으로》",
+   "schoolId": "sch-kookmin",
+   "department": "회화전공",
+   "venue": "예술관 2F K-art Gallery · 1F 중앙로비 · 110호 전시실",
+   "startDate": "2026-12-01",
+   "endDate": "2026-12-19",
+   "description": "",
+   "link": null,
+   "hours": null,
+   "opening": "12.01 (화) 17:00",
+   "note": "제26회 졸업전시. 관람 시간은 이미지에 적혀 있지 않습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-ceramic",
+   "title": "홍익대 도예유리과 졸업전시",
+   "schoolId": "sch-hongik",
+   "department": "도예유리과",
+   "venue": "문헌관 4층 현대미술관",
+   "startDate": "2026-12-07",
+   "endDate": "2026-12-12",
+   "description": "",
+   "link": null,
+   "hours": "월 13:00–20:00 · 화–금 10:00–20:00 · 토 10:00–14:00",
+   "opening": "12.07 (월) 13:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-vcd",
+   "title": "홍익대 디자인학부 시각디자인전공 졸업전시",
+   "schoolId": "sch-hongik",
+   "department": "시각디자인전공",
+   "venue": "홍문관 7층 일대 · 홍문관 1층 다목적실(R104)",
+   "startDate": "2026-12-07",
+   "endDate": "2026-12-12",
+   "description": "",
+   "link": null,
+   "hours": "월–금 10:00–20:00 · 토 10:00–18:00",
+   "opening": "12.07 (월) 18:00",
+   "note": "홍문관 1층 R104는 월요일 15:00에 연다고 적혀 있습니다. 원본 이미지에서 이 부분이 일부 가려져 있어 정확하지 않을 수 있습니다.",
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-duksung-oriental",
+   "title": "덕성여대 동양화전공 졸업작품전시회 《Loading...[ ]》",
+   "schoolId": "sch-duksung",
+   "department": "동양화전공",
+   "venue": "마루아트센터 3층 제2·3·4전시실",
+   "startDate": "2026-12-09",
+   "endDate": "2026-12-14",
+   "description": "",
+   "link": null,
+   "hours": "매일 10:30–18:30",
+   "opening": "12.09 (수) 17:00",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  },
+  {
+   "id": "exh-26f-hongik-sculpture",
+   "title": "홍익대 조소과 졸업전시",
+   "schoolId": "sch-hongik",
+   "department": "조소과",
+   "venue": "문헌관 4층 현대미술관",
+   "startDate": "2026-12-15",
+   "endDate": "2026-12-19",
+   "description": "",
+   "link": null,
+   "hours": "화–금 10:00–20:00 · 토 10:00–14:00",
+   "opening": "12.15 (화) 17:30",
+   "note": null,
+   "source": {
+    "label": "학과 졸업전시 포스터·홍익대 미술대학 일정표 정리 (@cultureart4u, 전시 사이 캘린더)",
+    "url": "https://entjs-whale.github.io/art-grad-calendar/"
+   },
+   "createdAt": "2026-11-01T00:00:00.000Z"
+  }
+ ]
+}

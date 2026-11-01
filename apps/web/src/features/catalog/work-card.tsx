@@ -10,13 +10,15 @@ import { WorkImage } from "./work-image";
 export function WorkCard({ work, artist, school }: { work: Work; artist?: Artist; school?: School }) {
   return (
     <Link href={`/works/${work.id}`} className="group flex flex-col gap-3">
-      <div className="aspect-[4/5] overflow-hidden bg-paper p-3 shadow-[0_1px_0_var(--color-line)] transition group-hover:shadow-md">
-        <WorkImage src={work.images[0]} alt={work.title} className="size-full" />
+      <div className="aspect-[4/5] overflow-hidden bg-paper p-3 shadow-[0_1px_0_var(--color-line)] transition-[transform,box-shadow] duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_14px_30px_-12px_rgb(27_42_85/0.35)]">
+        <div className="size-full overflow-hidden">
+          <WorkImage src={work.images[0]} alt={work.title} className="size-full transition-transform duration-500 ease-out group-hover:scale-[1.04]" />
+        </div>
       </div>
       <div className="flex flex-col gap-0.5 border-l-2 border-ink pl-3 text-sm">
         <p className="font-semibold">{artist?.name ?? "작가 미상"}</p>
         <p className="italic">
-          「{work.title}」, {work.year}
+          <span className="link-sweep">「{work.title}」</span>, {work.year}
         </p>
         <p className="text-ink-soft">{work.materials}</p>
         <p className="text-ink-soft">

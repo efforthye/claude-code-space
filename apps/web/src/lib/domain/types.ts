@@ -42,6 +42,11 @@ export type Exhibition = {
   endDate: string;
   description: string;
   link: string | null;
+  hours?: string | null; // 관람 시간
+  opening?: string | null; // 오프닝
+  note?: string | null; // 출처끼리 다른 점 등 안내
+  /** 공개 일정에서 가져온 전시의 출처. 신청·직접 등록한 전시는 null. */
+  source?: { label: string; url: string } | null;
   createdAt: string;
 };
 

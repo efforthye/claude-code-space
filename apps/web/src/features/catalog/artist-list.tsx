@@ -45,7 +45,7 @@ export function ArtistList({ artists, schools, workCounts }: { artists: Artist[]
           const school = a.schoolId ? schoolById.get(a.schoolId) : undefined;
           return (
             <li key={a.id}>
-              <Link href={`/artists/${a.id}`} className="flex h-full flex-col gap-2 rounded-md border border-line bg-paper p-4 hover:border-ink">
+              <Link href={`/artists/${a.id}`} className="flex h-full flex-col gap-2 rounded-md border border-line bg-paper p-4 transition-[border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-ink hover:shadow-md">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-lg font-bold">{a.name}</span>
                   <span className="text-xs text-ink-soft">작품 {workCounts[a.id] ?? 0}점</span>

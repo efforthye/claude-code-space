@@ -23,6 +23,8 @@ export function ExhibitionForm({ exhibition, schools }: { exhibition?: Exhibitio
       <Field label="시작일" required><Input name="startDate" type="date" defaultValue={exhibition?.startDate} /></Field>
       <Field label="종료일" required><Input name="endDate" type="date" defaultValue={exhibition?.endDate} /></Field>
       <Field label="장소" className="md:col-span-2"><Input name="venue" defaultValue={exhibition?.venue} /></Field>
+      <Field label="관람 시간" hint="예: 월–금 10:00–20:00 · 토 10:00–14:00"><Input name="hours" defaultValue={exhibition?.hours ?? ""} /></Field>
+      <Field label="오프닝"><Input name="opening" defaultValue={exhibition?.opening ?? ""} placeholder="11.16 (월) 14:00" /></Field>
       <Field label="외부 링크" className="md:col-span-2"><Input name="link" defaultValue={exhibition?.link ?? ""} placeholder="https://" /></Field>
       <Field label="소개" className="md:col-span-2"><Textarea name="description" defaultValue={exhibition?.description} /></Field>
       <Button type="submit" size="lg" disabled={pending} className="md:col-span-2">{pending ? "저장하는 중…" : exhibition ? "변경 저장" : "전시 추가"}</Button>

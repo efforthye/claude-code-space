@@ -97,7 +97,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "h-8 rounded-sm border px-3 text-sm font-medium transition-colors",
+        "h-8 rounded-sm border px-3 text-sm font-medium transition-colors active:scale-[0.97]",
         active ? "border-ink bg-ink text-paper" : "border-line bg-paper text-ink-soft hover:border-ink hover:text-ink",
       )}
     >
