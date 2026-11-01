@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { store } from "@/lib/data/store";
+import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
+import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { readPlace } from "@/features/places/parse";
 import { newId, newTrackingCode } from "@/lib/ids";
 
@@ -29,6 +30,8 @@ const RequestInput = z
 export type RequestFormState = { ok: false; errors: Record<string, string> } | { ok: true; code: string; title: string } | null;
 
 export async function submitExhibitionRequest(_prev: RequestFormState, form: FormData): Promise<RequestFormState> {
+  if (STORE_READONLY) return { ok: false, errors: { form: READONLY_MESSAGE } };
+  if (!(await allow("exhibition-request", 5, 10 * 60_000))) return { ok: false, errors: { form: TOO_MANY } };
   const get = (k: string) => String(form.get(k) ?? "");
   const parsed = RequestInput.safeParse({
     organizer: get("organizer"),

@@ -64,6 +64,7 @@ export function JoinForm() {
         <Checkbox name="agreeImage" label="판매·홍보와 컬렉터의 소장 인증샷 공유를 위해 MAYO가 작품 이미지를 이용하는 데 동의해요. 저작권은 작가에게 남아요 (필수)" />
         {(errors.agreePrivacy || errors.agreeImage) && <p className="text-xs font-medium text-dot">{errors.agreePrivacy ?? errors.agreeImage}</p>}
       </div>
+      {errors.form && <p className="rounded-sm bg-dot/10 p-3 text-sm text-dot sm:col-span-2">{errors.form}</p>}
       <Button type="submit" size="lg" disabled={pending} className="sm:col-span-2">{pending ? "보내는 중…" : "입점 신청하기"}</Button>
     </ActionForm>
   );

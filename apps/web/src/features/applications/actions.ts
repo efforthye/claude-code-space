@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { store } from "@/lib/data/store";
+import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
+import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { isMinor, isUnder14 } from "@/lib/domain/rules";
 import { newId, newTrackingCode } from "@/lib/ids";
 
@@ -32,6 +33,8 @@ const ApplicationInput = z.object({
 export type ApplicationFormState = { ok: false; errors: Record<string, string> } | { ok: true; code: string; title: string } | null;
 
 export async function submitApplication(_prev: ApplicationFormState, form: FormData): Promise<ApplicationFormState> {
+  if (STORE_READONLY) return { ok: false, errors: { form: READONLY_MESSAGE } };
+  if (!(await allow("application", 5, 10 * 60_000))) return { ok: false, errors: { form: TOO_MANY } };
   const get = (k: string) => String(form.get(k) ?? "");
   const parsed = ApplicationInput.safeParse({
     name: get("name"),

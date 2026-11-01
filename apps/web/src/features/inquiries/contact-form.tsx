@@ -37,6 +37,7 @@ export function ContactForm() {
         <Checkbox name="agreePrivacy" label={<>답변을 위한 <Link href="/legal/privacy" target="_blank" className="underline">개인정보 수집·이용</Link>에 동의해요 (필수)</>} />
         {errors.agreePrivacy && <p className="mt-1 text-xs font-medium text-dot">{errors.agreePrivacy}</p>}
       </div>
+      {errors.form && <p className="rounded-sm bg-dot/10 p-3 text-sm text-dot sm:col-span-2">{errors.form}</p>}
       <Button type="submit" size="lg" disabled={pending} className="sm:col-span-2">{pending ? "보내는 중…" : "문의 보내기"}</Button>
     </ActionForm>
   );

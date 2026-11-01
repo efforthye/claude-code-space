@@ -25,7 +25,7 @@ export function SiteFooter() {
         </p>
         <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
           <div><dt className="inline">상호 </dt><dd className="inline">{biz.companyName}</dd> · <dt className="inline">대표 </dt><dd className="inline">{biz.representative}</dd></div>
-          <div><dt className="inline">사업자등록번호 </dt><dd className="inline">{biz.registrationNumber}</dd></div>
+          <div><dt className="inline">사업자등록번호 </dt><dd className="inline">{biz.registrationNumber}</dd>{biz.ftcUrl && <> · <a href={biz.ftcUrl} target="_blank" rel="noopener noreferrer" className="underline">사업자정보 확인</a></>}</div>
           <div><dt className="inline">통신판매업 신고 </dt><dd className="inline">{biz.mailOrderNumber}</dd></div>
           <div><dt className="inline">미술서비스업 신고 </dt><dd className="inline">{biz.artServiceNumber}</dd></div>
           <div><dt className="inline">주소 </dt><dd className="inline">{biz.address}</dd></div>

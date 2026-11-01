@@ -2,6 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { sniffImage } from "@/lib/security/image-sniff";
 import { DATA_DIR } from "./store";
 
 /**
@@ -14,12 +15,14 @@ const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png",
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 export async function saveImage(file: File): Promise<string> {
-  const ext = TYPES[file.type];
-  if (!ext) throw new Error("JPG·PNG·WEBP·AVIF 이미지만 올릴 수 있어요");
   if (file.size > MAX_UPLOAD_BYTES) throw new Error("이미지는 10MB 이하로 올려 주세요");
+  const data = new Uint8Array(await file.arrayBuffer());
+  // 확장자·Content-Type이 아니라 실제 바이트로 판별 — 이미지로 위장한 HTML/SVG를 막는다
+  const ext = sniffImage(data);
+  if (!ext) throw new Error("JPG·PNG·WEBP·AVIF 이미지만 올릴 수 있어요");
   await fs.mkdir(DIR, { recursive: true });
   const name = `${randomUUID()}.${ext}`;
-  await fs.writeFile(path.join(DIR, name), Buffer.from(await file.arrayBuffer()));
+  await fs.writeFile(path.join(DIR, name), data, { flag: "wx" });
   return `/media/${name}`;
 }
 

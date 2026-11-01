@@ -1,6 +1,7 @@
 "use server";
 
 import { store } from "@/lib/data/store";
+import { allow } from "@/lib/security/rate-limit";
 import { ORDER_STATUS_LABEL } from "@/lib/domain/rules";
 
 export type TrackedStatus = {
@@ -20,6 +21,8 @@ const CODE = /^(MAYO|J|E|Q)-[2-9A-HJ-NP-Z]{8}$/;
 export async function lookupStatuses(codes: string[]): Promise<TrackedStatus[]> {
   const wanted = [...new Set(codes.map((c) => c.trim().toUpperCase()))].filter((c) => CODE.test(c)).slice(0, 50);
   if (wanted.length === 0) return [];
+  // 번호 대입으로 남의 신청을 찾는 시도를 늦춘다
+  if (!(await allow("track", 60, 60_000))) return [];
   const db = await store.read();
   const out: TrackedStatus[] = [];
   for (const code of wanted) {

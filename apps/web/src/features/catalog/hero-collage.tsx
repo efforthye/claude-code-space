@@ -14,7 +14,21 @@ const SLOTS = [
   "left-[14%] bottom-0 w-[36%] rotate-2 z-20",
 ];
 
+/** 등록 작품이 아직 없을 때(실서비스 오픈 전): 매체를 보여 주는 장식용 사진. 클릭되지 않는다. */
+const DECOR = ["painting-red-blue", "chair-floor", "sculpture-bust", "bowl-brass"];
+
 export function HeroCollage({ works, artists, schools }: { works: Work[]; artists: Artist[]; schools: School[] }) {
+  if (works.length === 0) {
+    return (
+      <div aria-hidden className="relative h-[440px] sm:h-[560px]">
+        {DECOR.map((name, i) => (
+          <div key={name} className={cn("glass absolute rounded-[22px] p-2.5", SLOTS[i])}>
+            <WorkImage src={`/samples/photos/${name}.jpg`} alt="" className="block h-auto max-h-[300px] w-full rounded-[14px]" />
+          </div>
+        ))}
+      </div>
+    );
+  }
   const lead = works[0];
   const leadArtist = artists.find((a) => a.id === lead?.artistId);
   const leadSchool = schools.find((s) => s.id === leadArtist?.schoolId);

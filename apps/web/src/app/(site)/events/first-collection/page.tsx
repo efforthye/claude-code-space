@@ -14,9 +14,10 @@ const TRACKS = [
 export default function FirstCollectionPage() {
   return (
     <>
-      <section className="relative overflow-hidden" style={{ background: "linear-gradient(110deg, #1d1530 0%, #3a1f7a 45%, #ff5fa2 85%, #ff9d4d 100%)" }}>
+      <Container className="pt-6">
+      <section className="relative overflow-hidden rounded-lg" style={{ background: "linear-gradient(110deg, #1d1530 0%, #3a1f7a 45%, #ff5fa2 85%, #ff9d4d 100%)" }}>
         <span aria-hidden className="absolute -top-24 -right-20 size-96 rounded-full bg-white/10" />
-        <Container className="relative flex flex-col gap-5 py-20 text-white">
+        <div className="relative flex flex-col gap-5 px-7 py-16 text-white sm:px-12 sm:py-20">
           <Eyebrow tone="dark">Event · Graduation season 2026</Eyebrow>
           <h1 className="font-display text-6xl leading-[0.95] sm:text-8xl">
             The First
@@ -27,8 +28,9 @@ export default function FirstCollectionPage() {
           <div className="flex flex-wrap gap-3">
             <ButtonLink href="/join" size="lg" variant="secondary">작가로 응모하기</ButtonLink>
           </div>
-        </Container>
+        </div>
       </section>
+      </Container>
 
       <Container className="flex flex-col gap-10 py-16">
         <div className="grid gap-4 md:grid-cols-3">

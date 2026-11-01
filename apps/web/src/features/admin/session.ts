@@ -8,15 +8,22 @@ import { store } from "@/lib/data/store";
 export const ADMIN_COOKIE = "mayo_admin";
 const MAX_AGE_S = 60 * 60 * 12; // 12시간
 
-function secret() {
+/**
+ * 세션 서명 키. 실서비스에 ADMIN_SESSION_SECRET(32자 이상)과 ADMIN_PASSWORD가 없으면
+ * 관리자 로그인은 "꺼짐" — 오류를 내지 않고 모든 확인이 실패한다.
+ */
+function secret(): string | null {
   const s = process.env.ADMIN_SESSION_SECRET;
   if (s && s.length >= 32) return s;
-  if (process.env.NODE_ENV !== "production") return "dev-only-admin-secret-change-me-0000000000";
-  throw new Error("ADMIN_SESSION_SECRET (32자 이상)이 설정되지 않았습니다");
+  return process.env.NODE_ENV !== "production" ? "dev-only-admin-secret-change-me-0000000000" : null;
 }
 
+export const ADMIN_ENABLED = secret() !== null;
+
 function sign(payload: string) {
-  return createHmac("sha256", secret()).update(payload).digest("base64url");
+  const key = secret();
+  if (!key) throw new Error("admin disabled");
+  return createHmac("sha256", key).update(payload).digest("base64url");
 }
 
 function safeEqual(a: string, b: string) {
@@ -27,7 +34,8 @@ function safeEqual(a: string, b: string) {
 
 export function checkPassword(input: string) {
   const expected = process.env.ADMIN_PASSWORD ?? (process.env.NODE_ENV !== "production" ? "mayo-dev" : "");
-  return expected.length > 0 && safeEqual(sign(input), sign(expected));
+  if (!ADMIN_ENABLED || expected.length === 0) return false;
+  return safeEqual(sign(input), sign(expected));
 }
 
 export function issueSessionValue() {
@@ -36,7 +44,7 @@ export function issueSessionValue() {
 }
 
 export function isValidSession(value: string | undefined) {
-  if (!value) return false;
+  if (!value || !ADMIN_ENABLED) return false;
   const [exp, mac] = value.split(".");
   if (!exp || !mac || !safeEqual(mac, sign(exp))) return false;
   return Number(exp) > Date.now() / 1000;

@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Container } from "@/components/ui/container";
 import { CartLink } from "./cart-link";
-import { NavLinks } from "./nav-links";
+import { NavLinks, NavList } from "./nav-links";
 
 export function SiteHeader() {
   return (
@@ -10,7 +11,9 @@ export function SiteHeader() {
         <Link href="/" className="font-display text-[32px] leading-none tracking-tight transition-opacity hover:opacity-70">
           mayo
         </Link>
-        <NavLinks />
+        <Suspense fallback={<NavList path={null} />}>
+          <NavLinks />
+        </Suspense>
         <div className="flex items-center gap-1.5">
           <Link href="/my" className="hidden rounded-full px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-white/70 hover:text-ink sm:inline">
             내 신청

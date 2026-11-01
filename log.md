@@ -507,3 +507,19 @@ Root Directory를 apps/mayo → apps/web, Framework → Next.js로 API 변경 �
 프로덕션 브랜치(claude/claude-md-docs-adlc4w)로 푸시. 프로덕션 배포 READY, mayo.im·www.mayo.im 모두
 "준비 중" 페이지 확인. 설정 변경 전 작업 브랜치 미리보기 빌드 1건 ERROR(apps/mayo 부재, 예상된 실패).
 남은 일: 미니의 com.efforthye.mayo.expo 에이전트 정리, Jira 티켓 소급 등록 + Refs 보정.
+
+## [2026-11-01] service | web(MAYO 아트 마켓) — 사업계획서·실전 가이드 기반 졸전 시즌 MVP + 관리자 + Aurora 디자인
+apps/web(Next.js 16, TS, Tailwind 4)에 학생 인증 아트 마켓을 구현. 공개: 홈(혼합 매체 콜라주 히어로, 퍼스트 컬렉션
+이벤트 배너, 진행 중 전시, masonry 컬렉션), 작품 상세(인증 카드·전문 운송·청약철회), 작가·전시·학교, 비회원 장바구니 →
+주문 신청(작품 즉시 예약, 무통장 입금 48h), 주문 조회, 작가 입점 신청(만14세 미만 거절·19세 미만 보호자), 전시 등록 신청
+(카카오 장소 검색/우편번호), 문의하기, 내 신청 현황(조회 코드), 이벤트 페이지. 관리자: 대시보드, 주문·입금 확인, 작품·작가·
+전시·학교, 입점·전시 신청 승인, 문의 답변, QR 캡션 라벨, 미술품 유통 내역 CSV. 실제 2026 가을 졸업전시 87개(40개교) 공개
+일정 수록. 디자인은 오너가 시안 캔버스에서 고른 Aurora(그라데이션 글래스). 테스트: Vitest 43, Playwright 26.
+## [2026-11-01] setup | web 보안·의존성. 보안 헤더(CSP·HSTS·frame 차단·nosniff), 요청 제한(관리자 로그인은 실패만 IP당
+10분 5회, 공개 폼·장소 검색·현황 조회), 업로드는 실제 바이트로 이미지 판별, 미디어 응답 sandbox CSP, CSV 수식 주입 차단,
+관리자 쿠키 SameSite=Strict·비밀값 없으면 로그인 꺼짐(fail closed), 위조 쿠키로 개인정보 미노출(adminDb). 패키지 최신화:
+React 19.3.1, Vitest 5, Playwright 1.64, ESLint 10, TypeScript 6.0.3(TS 7은 typescript-eslint 미지원). 남은 npm audit 15건은
+eslint-config-next 하위의 minimatch(개발 도구 전용, 런타임 미포함) — 상위 패키지 업데이트 대기.
+## [2026-11-01] deploy | web 실서비스 주의: Vercel은 파일 저장 불가라 실서비스에서는 신청·주문 폼이 "오픈 준비 중"으로 막힘
+(STORE_READONLY). 실서비스 저장소(mayo-api 또는 DB) 연결 전까지 유지. 사업자 표시 정보는 Vercel env(BUSINESS_*)로 설정.
+ADMIN_SESSION_SECRET·ADMIN_PASSWORD는 오너가 Vercel에 직접 넣어야 관리자 로그인이 켜짐(비밀 저장소 쓰기는 자동화하지 않음).

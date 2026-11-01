@@ -3,7 +3,8 @@
 import { updateTag } from "next/cache";
 import { z } from "zod";
 import { TAG } from "@/lib/data/catalog";
-import { store } from "@/lib/data/store";
+import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
+import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { PARCEL_FEE, PAYMENT_DUE_HOURS, shippingOptions } from "@/lib/domain/rules";
 import type { Order, OrderItem } from "@/lib/domain/types";
 import { newId, newOrderCode } from "@/lib/ids";
@@ -32,6 +33,8 @@ export type OrderFormState =
   | null;
 
 export async function placeOrder(_prev: OrderFormState, form: FormData): Promise<OrderFormState> {
+  if (STORE_READONLY) return { ok: false, errors: {}, message: READONLY_MESSAGE };
+  if (!(await allow("order", 10, 10 * 60_000))) return { ok: false, errors: {}, message: TOO_MANY };
   const parsed = OrderInput.safeParse({
     lines: JSON.parse(String(form.get("lines") ?? "[]")),
     name: form.get("name"),

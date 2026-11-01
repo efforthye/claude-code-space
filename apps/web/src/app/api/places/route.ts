@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { allow } from "@/lib/security/rate-limit";
 
 /**
  * 장소 검색 프록시 (카카오 로컬 키워드 검색). REST 키는 서버에만 둔다.
@@ -18,6 +19,8 @@ type KakaoDoc = {
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
   if (q.length < 2 || q.length > 60) return Response.json({ places: [] });
+  // 남이 우리 키로 검색 할당량을 태우지 못하게
+  if (!(await allow("places", 60, 60_000))) return Response.json({ places: [], error: "rate_limited" }, { status: 429 });
   const key = process.env.KAKAO_REST_API_KEY;
   if (!key) return Response.json({ places: [], fallback: true }, { status: 501 });
 

@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { store } from "@/lib/data/store";
+import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
+import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { INQUIRY_TOPICS } from "@/lib/domain/types";
 import { newId, newTrackingCode } from "@/lib/ids";
 
@@ -19,6 +20,8 @@ const InquiryInput = z.object({
 export type InquiryFormState = { ok: false; errors: Record<string, string> } | { ok: true; code: string; title: string } | null;
 
 export async function submitInquiry(_prev: InquiryFormState, form: FormData): Promise<InquiryFormState> {
+  if (STORE_READONLY) return { ok: false, errors: { form: READONLY_MESSAGE } };
+  if (!(await allow("inquiry", 5, 10 * 60_000))) return { ok: false, errors: { form: TOO_MANY } };
   const get = (k: string) => String(form.get(k) ?? "");
   const parsed = InquiryInput.safeParse({
     topic: get("topic"),

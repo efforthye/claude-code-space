@@ -22,5 +22,9 @@ export function getBusinessInfo() {
     phone: process.env.BUSINESS_PHONE ?? pending,
     email: process.env.BUSINESS_EMAIL ?? pending,
     hosting: "Vercel Inc.",
+    /** 공정위 사업자정보 공개 페이지 (전자상거래법상 첫 화면에서 연결) */
+    ftcUrl: process.env.BUSINESS_REG_NO
+      ? `https://www.ftc.go.kr/bizCommPop.do?wrkr_no=${process.env.BUSINESS_REG_NO.replace(/\D/g, "")}`
+      : null,
   };
 }

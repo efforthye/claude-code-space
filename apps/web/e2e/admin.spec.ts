@@ -51,3 +51,52 @@ test("admin registers a work with an uploaded photo", async ({ page }) => {
   const img = await page.request.get(src!);
   expect(img.headers()["content-type"]).toBe("image/png");
 });
+
+test("repeated wrong passwords get locked out", async ({ browser }) => {
+  // 잠금은 IP 단위라, 다른 테스트를 막지 않도록 이 테스트만 다른 IP로 보낸다
+  const ctx = await browser.newContext({ extraHTTPHeaders: { "x-real-ip": "203.0.113.77" } });
+  const page = await ctx.newPage();
+  await page.goto("/admin/login");
+  for (let i = 0; i < 5; i++) {
+    await page.getByLabel("관리자 비밀번호").fill(`wrong-${i}`);
+    await page.getByRole("button", { name: "로그인" }).click();
+    await expect(page.getByText("비밀번호가 맞지 않아요")).toBeVisible();
+  }
+  await page.getByLabel("관리자 비밀번호").fill("e2e-admin-password");
+  await page.getByRole("button", { name: "로그인" }).click();
+  await expect(page.getByText("요청이 너무 많아요")).toBeVisible();
+  await ctx.close();
+});
+
+test("uploads that are not really images are refused", async ({ page }) => {
+  const { adminLogin } = await import("./helpers");
+  await adminLogin(page);
+  await page.goto("/admin/works/new");
+  await page.locator('[name="title"]').fill("가짜 이미지");
+  await page.locator('[name="artistId"]').selectOption({ label: "최서준" });
+  for (const [n, v] of [["materials", "x"], ["widthCm", "10"], ["heightCm", "10"], ["price", "1000"]]) await page.locator(`[name="${n}"]`).fill(v);
+  await page.locator('[name="newImages"]').setInputFiles({ name: "evil.png", mimeType: "image/png", buffer: Buffer.from("<svg onload=alert(1)></svg>") });
+  await page.getByRole("button", { name: "작품 등록" }).click();
+  await expect(page.getByText("JPG·PNG·WEBP·AVIF 이미지만 올릴 수 있어요")).toBeVisible();
+});
+
+test("ledger CSV neutralises formula injection", async ({ page }) => {
+  const { adminLogin, placeOrder } = await import("./helpers");
+  // 작품명에 수식을 넣은 작품을 만들어 판매까지 진행
+  await adminLogin(page);
+  await page.goto("/admin/works/new");
+  await page.locator('[name="title"]').fill('=HYPERLINK("http://evil","x")');
+  await page.locator('[name="artistId"]').selectOption({ label: "최서준" });
+  for (const [n, v] of [["materials", "x"], ["widthCm", "10"], ["heightCm", "10"], ["price", "1000"]]) await page.locator(`[name="${n}"]`).fill(v);
+  await page.locator('[name="newImages"]').setInputFiles("e2e/fixtures/artwork.png");
+  await page.getByRole("button", { name: "작품 등록" }).click();
+  await expect(page.getByText("저장했어요")).toBeVisible();
+  const workId = new URL(page.url()).pathname.split("/").pop()!;
+  const code = await placeOrder(page, workId);
+  await page.goto("/admin/orders");
+  await page.getByRole("link", { name: code }).click();
+  await page.getByRole("button", { name: "입금 확인" }).click();
+  await expect(page.getByRole("button", { name: "배송 준비 시작" })).toBeVisible();
+  const csv = await (await page.request.get("/admin/ledger.csv")).text();
+  expect(csv).toContain(`"'=HYPERLINK(""http://evil"",""x"")"`);
+});
