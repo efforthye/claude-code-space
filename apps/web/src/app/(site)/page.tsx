@@ -189,7 +189,7 @@ export default async function HomePage() {
             {seasonSchools.slice(0, 18).map(({ s, n }) => (
               <Link
                 key={s.id}
-                href="/schools"
+                href={`/schools/${s.id}`}
                 className="glass flex items-center gap-2 rounded-full py-1.5 pr-1.5 pl-4 text-sm font-semibold transition-colors duration-200 hover:bg-white"
               >
                 {s.name}

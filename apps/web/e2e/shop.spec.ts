@@ -78,3 +78,17 @@ test("schools are in Korean order with phase badges and a way in", async ({ page
   await expect(page.getByRole("link", { name: "입점하기 →" }).first()).toHaveAttribute("href", "/join");
   await expect(page.getByRole("heading", { name: "우리 학교가 없나요?" })).toBeVisible();
 });
+
+test("a school chip on the home opens that school's works, shows and artists", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: /^홍익대학교/ }).first().click();
+  await expect(page).toHaveURL(/\/schools\/sch-hongik$/);
+  await expect(page.getByRole("heading", { name: "홍익대학교", level: 1 })).toBeVisible();
+  // 홍익대 작가의 작품만
+  const cards = page.locator("main a[href^='/works/']:visible");
+  await expect(cards.first()).toBeVisible();
+  // 다른 학교 작가(국민대 이민서, 한도윤, 이화여대 박유나)의 작품은 없다
+  for (const text of await cards.allInnerTexts()) expect(text).not.toMatch(/이민서|한도윤|박유나/);
+  await expect(page.getByRole("heading", { name: "Exhibitions" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "김지은 회화과" })).toBeVisible();
+});

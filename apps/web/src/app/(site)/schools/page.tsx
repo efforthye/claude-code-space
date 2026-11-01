@@ -44,7 +44,7 @@ export default async function SchoolsPage() {
           {rows.map((r) => (
             <li key={r.s.id} className="glass flex min-w-0 flex-col gap-3 rounded-lg p-5">
               <div className="flex items-baseline justify-between gap-2">
-                <h2 className="text-lg font-bold">{r.s.name}</h2>
+                <h2 className="text-lg font-bold"><Link href={`/schools/${r.s.id}`} className="link-sweep">{r.s.name}</Link></h2>
                 {r.live > 0 && <span className="rounded-full bg-pink px-2.5 py-0.5 text-[11px] font-semibold text-white">전시 {r.live}</span>}
               </div>
               {r.artists > 0 ? (
