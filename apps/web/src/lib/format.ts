@@ -9,14 +9,30 @@ export function formatSize(w: number, h: number, d?: number | null) {
   return d ? `${n(w)} × ${n(h)} × ${n(d)} cm` : `${n(w)} × ${n(h)} cm`;
 }
 
+// 서버(Vercel)는 UTC라서 시각은 항상 한국 시간으로 고정해 보여준다.
+const KST = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+function kstParts(iso: string) {
+  const p = Object.fromEntries(KST.formatToParts(new Date(iso)).map((x) => [x.type, x.value]));
+  return p as Record<"year" | "month" | "day" | "hour" | "minute", string>;
+}
+
 export function formatDate(iso: string) {
-  const d = new Date(iso);
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+  const p = kstParts(iso);
+  return `${p.year}.${p.month}.${p.day}`;
 }
 
 export function formatDateTime(iso: string) {
-  const d = new Date(iso);
-  return `${formatDate(iso)} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const p = kstParts(iso);
+  return `${p.year}.${p.month}.${p.day} ${p.hour}:${p.minute}`;
 }
 
 export function formatPeriod(start: string, end: string) {
