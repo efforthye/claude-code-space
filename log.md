@@ -498,3 +498,7 @@ Jira: Atlassian MCP 커넥터 미인증 상태라 이슈 생성 못 함 — 세�
 ## [2026-11-01] setup | Jira 갭: Atlassian 커넥터 미인증 세션 → 이번 작업(mayo 보관, 새 웹 스캐폴드)과
 오너 작업 2건(Vercel Root Directory 변경, 미니 expo 에이전트 정리)의 MAYO 이슈 미생성. 커밋은
 `Refs: pending`으로 남김 — 커넥터 복구 시 티켓 생성 후 Refs 보정 필요.
+## [2026-11-01] service | web — created. mayo.im의 새 웹사이트용 Next.js 16.4.3 (App Router, TS,
+Tailwind 4, src/) 스캐폴드를 `apps/web/`에 생성. 홈은 "준비 중" 자리표시자, lang=ko, mayo-api 호출
+헬퍼 `src/lib/api.ts`(NEXT_PUBLIC_API_BASE), `.env.example`. `next build`·`eslint` 통과. 기획 내용과
+프로젝트 이름은 미정이라 slug는 임시 `web`. 배포는 Vercel Root Directory를 apps/web으로 바꾼 뒤.
