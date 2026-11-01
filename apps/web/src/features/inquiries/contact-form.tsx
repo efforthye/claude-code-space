@@ -15,7 +15,7 @@ export function ContactForm() {
 
   if (state?.ok)
     return (
-      <Celebrate eyebrow="문의 접수 완료" title="문의를 잘 받았어요" code={state.code} codeTitle={state.title}>
+      <Celebrate eyebrow="문의 접수 완료" title="문의가 접수됐어요" code={state.code} codeTitle={state.title}>
         보통 하루 안에 답변드려요. 답변은 ‘내 신청 현황’과 이메일로 확인할 수 있어요.
       </Celebrate>
     );

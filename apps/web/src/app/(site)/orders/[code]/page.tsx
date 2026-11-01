@@ -42,7 +42,7 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
           {ORDER_STATUS_LABEL[order.status]}
         </Badge>
         <h1 className="text-2xl font-bold">
-          {order.status === "pending_payment" ? (justPlaced ? "첫 원화가 곧 당신의 벽으로 🎉" : "주문 신청이 접수됐어요") : "주문 상태"}
+          {order.status === "pending_payment" ? "주문이 접수됐어요" : "주문 상태"}
         </h1>
         <p className="text-sm text-ink-soft">주문번호 <b className="text-ink">{order.code}</b>, {formatDateTime(order.createdAt)}. 주문 조회에 필요하니 보관해 주세요.</p>
       </header>

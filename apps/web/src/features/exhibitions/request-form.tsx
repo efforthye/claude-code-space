@@ -19,7 +19,7 @@ export function ExhibitionRequestForm() {
     return (
       <Celebrate
         eyebrow="전시 등록 신청 완료"
-        title="졸업 전시, 온라인에서도 오래 걸어 둘게요"
+        title="전시 등록 신청이 접수됐어요"
         code={state.code}
         codeTitle={state.title}
         actions={<Link href="/exhibitions" className="inline-flex h-10 items-center rounded-sm border border-ink px-4 text-sm font-semibold transition hover:bg-ink hover:text-paper">전시 목록으로</Link>}

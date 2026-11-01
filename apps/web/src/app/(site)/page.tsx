@@ -48,7 +48,7 @@ export default async function HomePage() {
             <br />
             <i className="text-aurora pr-2">your object.</i>
           </h1>
-          <p className="text-lg text-ink-soft">졸업전시장에서 본 그 작품을, 첫 원화로.</p>
+          <p className="text-lg text-ink-soft">졸업전시와 과제전 작품을 작가에게 직접 사는 곳이에요.</p>
           <div className="flex flex-wrap gap-3">
             <ButtonLink href="/works" size="lg">Explore works</ButtonLink>
             <ButtonLink href="/join" size="lg" variant="secondary">For artists</ButtonLink>
@@ -140,7 +140,7 @@ export default async function HomePage() {
                 )}
                 <span aria-hidden className={cover ? "absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" : "bg-aurora absolute inset-0 opacity-15"} />
                 <span className={`relative text-lg font-bold ${cover ? "text-white" : ""}`}>{c.label}</span>
-                <span className={`relative text-xs ${cover ? "text-white/85" : "text-ink-soft"}`}>{count > 0 ? `작품 ${count}점` : "곧 만나요"}</span>
+                <span className={`relative text-xs ${cover ? "text-white/85" : "text-ink-soft"}`}>{count > 0 ? `작품 ${count}점` : "준비 중"}</span>
               </Link>
             ))}
           </div>
@@ -151,9 +151,9 @@ export default async function HomePage() {
         <SectionTitle title={<>How it <i>works</i></>} />
         <ol className="grid gap-3 md:grid-cols-3">
           {[
-            { n: "01", t: "졸업전시에서 만나요", d: "전시장 캡션의 QR이나 MAYO 전시 페이지에서 그 작품을 바로 찾아요." },
-            { n: "02", t: "인증된 작가에게서", d: "학교 이메일, 학생증, 졸업전시 명단으로 운영자가 직접 확인한 작가예요." },
-            { n: "03", t: "첫 원화를 집으로", d: "입금이 확인되면 작가와 일정을 맞춰 택배, 전문 운송, 직접 수령으로 받아요." },
+            { n: "01", t: "전시에서 작품 찾기", d: "전시장 캡션의 QR이나 MAYO 전시 페이지에서 그 작품을 바로 찾아요." },
+            { n: "02", t: "학교 인증 확인", d: "학교 이메일, 학생증, 졸업전시 명단으로 운영자가 직접 확인한 작가예요." },
+            { n: "03", t: "주문하고 받기", d: "입금이 확인되면 작가와 일정을 맞춰 택배, 전문 운송, 직접 수령으로 받아요." },
           ].map((step) => (
             <li key={step.n} className="glass flex flex-col gap-2 rounded-[22px] p-6">
               <span className="font-display text-aurora text-4xl italic">{step.n}</span>
@@ -211,8 +211,8 @@ export default async function HomePage() {
           <span aria-hidden className="absolute -bottom-24 left-10 -z-10 size-64 rounded-full bg-violet/50 blur-3xl" />
           <div className="flex max-w-xl flex-col gap-3">
             <span className="font-display text-xl text-white/80 italic">For artists</span>
-            <h2 className="text-3xl leading-tight font-bold sm:text-4xl">전시가 끝나도, 작품은 계속 걸려 있도록.</h2>
-            <p className="text-white/80">작품 촬영과 온라인 전시 페이지를 지원하고, 판매는 원하는 작품만. 재학생, 졸업생, 미대 지망생 누구나 신청할 수 있어요.</p>
+            <h2 className="text-3xl leading-tight font-bold sm:text-4xl">작품을 MAYO에 올려 보세요</h2>
+            <p className="text-white/80">졸업작품, 과제작, 개인 작업 모두 올릴 수 있어요. 작품 촬영과 전시 페이지 제작을 도와드리고, 판매할 작품은 작가가 직접 고릅니다. 재학생, 졸업생, 미대 지망생 누구나 신청할 수 있어요.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <ButtonLink href="/join" size="lg">작가 입점 신청</ButtonLink>

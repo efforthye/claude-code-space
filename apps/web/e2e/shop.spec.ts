@@ -28,7 +28,7 @@ test("order form keeps what you typed when validation fails", async ({ page }) =
 
 test("placing an order reserves the work, celebrates and lands in 내 신청 현황", async ({ page }) => {
   const code = await placeOrder(page, "w-hammered-bowl");
-  await expect(page.getByRole("heading", { name: /첫 원화가 곧 당신의 벽으로/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "주문이 접수됐어요" })).toBeVisible();
   await expect(page.getByText("000-0000-0000")).toBeVisible(); // bank account from env
   await page.goto("/works/w-hammered-bowl");
   await expect(page.getByRole("button", { name: "다른 컬렉터가 예약 중입니다" })).toBeVisible();

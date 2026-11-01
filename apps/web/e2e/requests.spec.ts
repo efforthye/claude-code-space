@@ -15,7 +15,7 @@ test("artist application: age rules, celebration, status, approval", async ({ pa
 
   await fill(page, { name: "새작가", birthYear: "2000", schoolName: "서울대학교", department: "조소과" });
   await page.getByRole("button", { name: "입점 신청하기" }).click();
-  await expect(page.getByText("MAYO 작가가 되는 첫 걸음!")).toBeVisible();
+  await expect(page.getByText("입점 신청이 접수됐어요")).toBeVisible();
   const code = (await page.locator("button", { hasText: /^J-/ }).innerText()).split("\n")[0].replace(/복사.*/, "").trim();
 
   await page.goto("/my");
@@ -43,7 +43,7 @@ test("exhibition request picks the venue from place search and becomes an exhibi
   await page.getByPlaceholder(/상세 위치/).fill("7층");
   await page.locator('[name="agreePrivacy"]').check();
   await page.getByRole("button", { name: "전시 등록 신청하기" }).click();
-  await expect(page.getByText("졸업 전시, 온라인에서도 오래 걸어 둘게요")).toBeVisible();
+  await expect(page.getByText("전시 등록 신청이 접수됐어요")).toBeVisible();
 
   await adminLogin(page);
   await page.goto("/admin/exhibition-requests");
@@ -68,7 +68,7 @@ test("inquiry gets an admin answer that shows up in 내 신청 현황", async ({
   await fill(page, { name: "문의자", email: "q@example.com", subject: "배송 문의", message: "가구 작품도 지방으로 배송되나요?" });
   await page.locator('[name="agreePrivacy"]').check();
   await page.getByRole("button", { name: "문의 보내기" }).click();
-  await expect(page.getByText("문의를 잘 받았어요")).toBeVisible();
+  await expect(page.getByText("문의가 접수됐어요")).toBeVisible();
 
   await adminLogin(page);
   await page.goto("/admin/inquiries");

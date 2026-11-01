@@ -17,7 +17,7 @@ export function JoinForm() {
 
   if (state?.ok)
     return (
-      <Celebrate eyebrow="입점 신청 완료" title="MAYO 작가가 되는 첫 걸음!" code={state.code} codeTitle={state.title}>
+      <Celebrate eyebrow="입점 신청 완료" title="입점 신청이 접수됐어요" code={state.code} codeTitle={state.title}>
         운영자가 확인한 뒤 이메일, 연락처로 촬영 일정과 학교 인증 방법을 안내드려요. 학생증 등 인증 서류는 확인 후 바로 파기합니다.
       </Celebrate>
     );

@@ -2,7 +2,7 @@ export const siteConfig = {
   name: "MAYO",
   tagline: "My Art, Your Object",
   description:
-    "졸업전시장의 작품을 믿고 살 수 있는 첫 원화로. 학생 인증 작가의 회화부터 가구, 의상, 조각, 금속공예까지.",
+    "졸업전시와 과제전 작품을 학교 인증 작가에게 직접 사는 미술 마켓. 회화, 드로잉, 가구, 의상, 조각, 금속공예까지.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://mayo.im",
 };
 

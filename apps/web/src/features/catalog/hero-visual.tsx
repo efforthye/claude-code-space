@@ -1,6 +1,6 @@
 /**
  * 히어로 그래픽: 작품 사진 대신 오로라 빛과 비어 있는 유리 액자.
- * "다음 작품이 걸릴 자리", 숫자 카드는 실제 데이터에서 온다.
+ * 빈 액자, 숫자 카드는 실제 데이터에서 온다.
  */
 export function HeroVisual({ shows, schools, artists }: { shows: number; schools: number; artists: number }) {
   return (
@@ -14,7 +14,7 @@ export function HeroVisual({ shows, schools, artists }: { shows: number; schools
       <div className="absolute top-1/2 left-1/2 aspect-[4/5] w-[58%] max-w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-[30px] border border-white/90 bg-white/35 p-4 shadow-[0_40px_80px_-40px_rgb(60_30_120/0.45)] backdrop-blur-xl">
         <div className="flex size-full flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-ink/15">
           <span className="font-display text-4xl italic text-ink/70 sm:text-5xl">your object</span>
-          <span className="text-xs font-semibold tracking-wide text-ink-soft">다음 작품이 걸릴 자리</span>
+          <span className="text-xs font-semibold tracking-wide text-ink-soft">작품이 곧 올라와요</span>
         </div>
       </div>
 

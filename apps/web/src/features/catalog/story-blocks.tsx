@@ -16,7 +16,7 @@ export function StoryBlocks({ blocks, eyebrow, title, alt }: { blocks: StoryBloc
         ) : (
           <figure key={i} className="flex flex-col gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={b.src} alt={b.caption ?? `${alt} 사진 ${i + 1}`} loading="lazy" className="w-full rounded-lg" />
+            <img src={b.src} alt={b.caption ?? `${alt} 사진 ${i + 1}`} loading="lazy" className="w-full" />
             {b.caption && <figcaption className="text-sm text-ink-soft">{b.caption}</figcaption>}
           </figure>
         ),
