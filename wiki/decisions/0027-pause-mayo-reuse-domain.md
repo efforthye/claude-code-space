@@ -35,7 +35,7 @@ project on the **same domain (`mayo.im`)**. The orchestration API ([[mayo-api]],
   replaces.
 
 ## Consequences
-- **Owner action — Vercel:** project `mayo-landing-page` has Root Directory = `apps/mayo`. It
+- **Vercel (done 2026-11-01):** project `mayo-landing-page` has Root Directory = `apps/mayo`. It
   must be changed to `apps/web` (Framework preset: Next.js) before the production branch gets
   this change, or the production build fails. The old SPA rewrites (`/reel/:id` OG proxy) went
   with `archive/mayo/vercel.json`. Recreate them in `apps/web` only if the new site needs them.

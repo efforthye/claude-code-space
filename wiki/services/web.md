@@ -15,8 +15,8 @@ purpose and features when the plan is shared. The slug `web` is a placeholder; r
 folder and this page once the project has a name.
 
 ## Status
-**Building: scaffold only (2026-11-01).** Placeholder "준비 중" home page; `next build` and
-`eslint` pass.
+**Building — placeholder live on mayo.im (2026-11-01).** The "준비 중" home page is the production
+deploy at `mayo.im` / `www.mayo.im` (commit `f49bff6`). The product itself is not built yet.
 
 ## Code & stack
 - **Code:** `apps/web/` (workspace app in this repo).
@@ -30,8 +30,11 @@ folder and this page once the project has a name.
 - **Vercel**, project `mayo-landing-page` (the same project that served the mayo Expo web),
   domain `www.mayo.im`. It auto-deploys on push to the production branch
   (`claude/claude-md-docs-adlc4w`).
-- **⚠️ Pending owner step:** Vercel Root Directory is still `apps/mayo`. Change it to
-  **`apps/web`** with Framework preset **Next.js** before this work reaches the production branch.
+- Project settings (2026-11-01): Root Directory **`apps/web`**, Framework **Next.js**, Node 22.x.
+  Changed from `apps/mayo` through the Vercel REST API (`PATCH /v9/projects`) under team
+  `efforthyes-projects` (CLI login as `efforthye`; the `hrim-1354` account does not own it).
+- Leftover env var `EXPO_PUBLIC_GOOGLE_CLIENT_ID` from mayo is unused by this app. Remove it once
+  nothing needs it.
 - No `vercel.json` needed; Next.js is auto-detected.
 
 ## Config & secrets (pointers only)
@@ -46,3 +49,4 @@ cd apps/web && npm install && npm run dev   # http://localhost:3000
 
 ## Changelog
 - 2026-11-01: scaffolded (Next.js 16.4.3 + TS + Tailwind), placeholder page, API helper.
+- 2026-11-01: first production deploy to mayo.im (`f49bff6`, deployment `dpl_3nRh8f7D…`, READY).

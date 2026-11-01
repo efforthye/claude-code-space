@@ -502,3 +502,8 @@ Jira: Atlassian MCP 커넥터 미인증 상태라 이슈 생성 못 함 — 세�
 Tailwind 4, src/) 스캐폴드를 `apps/web/`에 생성. 홈은 "준비 중" 자리표시자, lang=ko, mayo-api 호출
 헬퍼 `src/lib/api.ts`(NEXT_PUBLIC_API_BASE), `.env.example`. `next build`·`eslint` 통과. 기획 내용과
 프로젝트 이름은 미정이라 slug는 임시 `web`. 배포는 Vercel Root Directory를 apps/web으로 바꾼 뒤.
+## [2026-11-01] deploy | web → mayo.im (f49bff6). Vercel `mayo-landing-page`(팀 efforthyes-projects)의
+Root Directory를 apps/mayo → apps/web, Framework → Next.js로 API 변경 후, 오너가 작업 브랜치를
+프로덕션 브랜치(claude/claude-md-docs-adlc4w)로 푸시. 프로덕션 배포 READY, mayo.im·www.mayo.im 모두
+"준비 중" 페이지 확인. 설정 변경 전 작업 브랜치 미리보기 빌드 1건 ERROR(apps/mayo 부재, 예상된 실패).
+남은 일: 미니의 com.efforthye.mayo.expo 에이전트 정리, Jira 티켓 소급 등록 + Refs 보정.
