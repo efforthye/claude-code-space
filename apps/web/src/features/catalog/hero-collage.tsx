@@ -16,12 +16,10 @@ export type HeroWork = {
   price: string;
 };
 
-/** 앞에서부터 뒤로: 가운데(앞) → 오른쪽 → 왼쪽 → 맨 뒤 */
-const POSES = [
-  { transform: "translateX(0) rotate(0deg) scale(1)", zIndex: 40, opacity: 1 },
-  { transform: "translateX(34%) rotate(7deg) scale(0.84)", zIndex: 30, opacity: 0.95 },
-  { transform: "translateX(-34%) rotate(-7deg) scale(0.84)", zIndex: 20, opacity: 0.95 },
-  { transform: "translateX(0) rotate(0deg) scale(0.72)", zIndex: 10, opacity: 0 },
+/** 두 열 에디토리얼 배치: [열][카드] 비율. 열은 위아래로 엇갈린다. */
+const LAYOUT = [
+  ["aspect-[4/5]", "aspect-square"],
+  ["aspect-square", "aspect-[4/5]"],
 ];
 
 /** 등록 작품이 아직 없을 때(실서비스 오픈 전) 보여 줄 장식용 사진 */
@@ -68,82 +66,69 @@ export function HeroCollage({ works }: { works: HeroWork[] }) {
     return () => clearInterval(t);
   }, [paused, n]);
 
-  const lead = items[front];
+  const lead = items[front] ?? items[0];
+  const columns = [items.filter((_, i) => i % 2 === 0), items.filter((_, i) => i % 2 === 1)];
 
   return (
     <div
       className={cn(
-        "relative isolate flex h-[460px] flex-col items-center justify-center transition-opacity duration-700 sm:h-[580px]",
+        "relative isolate transition-opacity duration-700",
         !decorative && !picked ? "opacity-0" : "opacity-100",
       )}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-hidden={decorative || undefined}
     >
-      <div className="relative aspect-[4/5] w-[62%] max-w-[360px]">
-        {items.map((w, i) => {
-          const pos = (i - front + n) % n;
-          const pose = POSES[pos] ?? POSES[3];
-          const card = (
-            <div className="glass size-full rounded-[26px] p-2.5">
-              <WorkImage src={w.cover} alt={w.title} className="size-full rounded-[18px]" />
-            </div>
-          );
-          return (
-            <div
-              key={w.id}
-              className="absolute inset-0 transition-[transform,opacity] duration-[900ms] ease-[cubic-bezier(.22,1,.36,1)]"
-              style={{ transform: pose.transform, zIndex: pose.zIndex, opacity: pose.opacity }}
-            >
-              {decorative ? (
-                card
-              ) : pos === 0 ? (
-                <Link href={`/works/${w.id}`} aria-label={`${w.title} 보기`} className="block size-full transition-[scale] duration-500 hover:scale-[1.02]">
-                  {card}
-                </Link>
+      <div className="grid grid-cols-2 gap-4 sm:gap-5">
+        {columns.map((col, c) => (
+          <div key={c} className={cn("flex flex-col gap-4 sm:gap-5", c === 0 ? "pt-10 sm:pt-16" : "pb-10 sm:pb-16")}>
+            {col.map((w, r) => {
+              const i = c + r * 2;
+              const active = !decorative && i === front;
+              const tile = (
+                <div
+                  className={cn(
+                    "glass overflow-hidden rounded-[24px] p-2 transition-[translate,box-shadow] duration-500 ease-[cubic-bezier(.22,1,.36,1)]",
+                    active && "-translate-y-1.5 shadow-[0_28px_50px_-22px_rgb(60_30_120/0.55)]",
+                  )}
+                >
+                  <WorkImage src={w.cover} alt={w.title} className={cn("w-full rounded-[18px]", LAYOUT[c][r] ?? "aspect-square")} />
+                </div>
+              );
+              return decorative ? (
+                <div key={w.id}>{tile}</div>
               ) : (
-                <button type="button" onClick={() => setFront(i)} aria-label={`${w.title} 앞으로`} tabIndex={pos < 3 ? 0 : -1} className="block size-full">
-                  {card}
-                </button>
-              )}
-            </div>
-          );
-        })}
-
-        {!decorative && lead && (
-          <div className="glass absolute -bottom-6 left-1/2 z-50 w-[118%] -translate-x-1/2 rounded-[20px] px-5 py-4" aria-live="polite">
-            <div key={lead.id} className="flex animate-[rise_450ms_cubic-bezier(.22,1,.36,1)] items-end justify-between gap-3">
-              <div className="flex min-w-0 flex-col gap-1">
-                {lead.verifiedSchool && (
-                  <span className="flex items-center gap-1.5 text-xs font-semibold text-violet">
-                    <SealIcon className="size-4" />
-                    {lead.verifiedSchool} 학교 인증
-                  </span>
-                )}
-                <span className="truncate font-semibold">{lead.title}</span>
-                <span className="text-[13px] text-ink-soft">
-                  {lead.artist}, {lead.medium}
-                </span>
-              </div>
-              <span className="shrink-0 font-semibold">{lead.price}</span>
-            </div>
+                <Link
+                  key={w.id}
+                  href={`/works/${w.id}`}
+                  onMouseEnter={() => setFront(i)}
+                  onFocus={() => setFront(i)}
+                  aria-label={`${w.title} 보기`}
+                  className="block"
+                >
+                  {tile}
+                </Link>
+              );
+            })}
           </div>
-        )}
+        ))}
       </div>
 
-      {n > 1 && !decorative && (
-        <div className="mt-14 flex gap-2" role="tablist" aria-label="대표 작품">
-          {items.map((w, i) => (
-            <button
-              key={w.id}
-              type="button"
-              role="tab"
-              aria-selected={i === front}
-              aria-label={`${i + 1}번째 작품`}
-              onClick={() => setFront(i)}
-              className={cn("h-2 rounded-full transition-[width,background-color] duration-500", i === front ? "bg-aurora w-6" : "w-2 bg-ink/20 hover:bg-ink/40")}
-            />
-          ))}
+      {!decorative && lead && (
+        <div className="glass absolute bottom-0 left-1/2 z-10 w-[min(92%,380px)] -translate-x-1/2 translate-y-1/3 rounded-[20px] px-5 py-4" aria-live="polite">
+          <div key={lead.id} className="flex animate-[rise_450ms_cubic-bezier(.22,1,.36,1)] items-end justify-between gap-3">
+            <div className="flex min-w-0 flex-col gap-1">
+              {lead.verifiedSchool && (
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-violet">
+                  <SealIcon className="size-4" />
+                  {lead.verifiedSchool} 학교 인증
+                </span>
+              )}
+              <span className="truncate font-semibold">{lead.title}</span>
+              <span className="text-[13px] text-ink-soft">{lead.artist}</span>
+            </div>
+            <span className="shrink-0 font-semibold">{lead.price}</span>
+          </div>
         </div>
       )}
     </div>
