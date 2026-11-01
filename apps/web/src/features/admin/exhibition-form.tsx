@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import type { Exhibition, School } from "@/lib/domain/types";
+import { PlacePicker } from "@/features/places/place-picker";
 import { saveExhibition, type FormState } from "./actions";
 
 export function ExhibitionForm({ exhibition, schools }: { exhibition?: Exhibition; schools: School[] }) {
@@ -22,7 +23,15 @@ export function ExhibitionForm({ exhibition, schools }: { exhibition?: Exhibitio
       <Field label="학과"><Input name="department" defaultValue={exhibition?.department ?? ""} /></Field>
       <Field label="시작일" required><Input name="startDate" type="date" defaultValue={exhibition?.startDate} /></Field>
       <Field label="종료일" required><Input name="endDate" type="date" defaultValue={exhibition?.endDate} /></Field>
-      <Field label="장소" className="md:col-span-2"><Input name="venue" defaultValue={exhibition?.venue} /></Field>
+      <div className="flex flex-col gap-1.5 md:col-span-2">
+        <span className="text-sm font-semibold">장소</span>
+        {exhibition && !exhibition.place && exhibition.venue && <span className="text-xs text-ink-soft">현재: {exhibition.venue} — 검색해서 고르면 지도 링크가 붙어요</span>}
+        <PlacePicker
+          name="venue"
+          defaultPlace={exhibition?.place}
+          defaultDetail={exhibition?.place ? exhibition.venue.replace(exhibition.place.name, "").trim() : exhibition?.venue}
+        />
+      </div>
       <Field label="관람 시간" hint="예: 월–금 10:00–20:00 · 토 10:00–14:00"><Input name="hours" defaultValue={exhibition?.hours ?? ""} /></Field>
       <Field label="오프닝"><Input name="opening" defaultValue={exhibition?.opening ?? ""} placeholder="11.16 (월) 14:00" /></Field>
       <Field label="외부 링크" className="md:col-span-2"><Input name="link" defaultValue={exhibition?.link ?? ""} placeholder="https://" /></Field>

@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { EXHIBITION_KIND_LABEL, ORGANIZER_LABEL, SUPPORT_LABEL } from "@/lib/domain/rules";
+import { PlacePicker } from "@/features/places/place-picker";
 import { submitExhibitionRequest, type RequestFormState } from "./actions";
 
 export function ExhibitionRequestForm() {
@@ -42,7 +43,11 @@ export function ExhibitionRequestForm() {
       <Field label="참여 작가 수"><Input name="artistCount" inputMode="numeric" placeholder="25" /></Field>
       <Field label="시작일" required error={errors.startDate}><Input name="startDate" type="date" /></Field>
       <Field label="종료일" required error={errors.endDate}><Input name="endDate" type="date" /></Field>
-      <Field label="장소" required error={errors.venue} className="sm:col-span-2"><Input name="venue" placeholder="○○관 ○층" /></Field>
+      <div className="flex flex-col gap-1.5 sm:col-span-2">
+        <span className="text-sm font-semibold">장소<span className="ml-0.5 text-dot">*</span></span>
+        <PlacePicker name="venue" error={errors.venue} />
+        {errors.venue && <span className="text-xs font-medium text-dot">{errors.venue}</span>}
+      </div>
 
       <fieldset className="flex flex-col gap-2 rounded-md border border-line bg-paper p-4 sm:col-span-2">
         <legend className="px-1 text-sm font-semibold">원하는 지원 (이번 시즌 무료)</legend>

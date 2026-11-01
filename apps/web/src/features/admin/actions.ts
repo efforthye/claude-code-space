@@ -9,6 +9,7 @@ import { saveImage } from "@/lib/data/uploads";
 import { ORDER_NEXT, ORDER_STATUS_LABEL } from "@/lib/domain/rules";
 import { MEDIA, WORK_KINDS, type Database, type OrderStatus } from "@/lib/domain/types";
 import { newId } from "@/lib/ids";
+import { readPlace } from "@/features/places/parse";
 import { requireAdmin } from "./session";
 
 export type FormState = { error: string } | null;
@@ -193,6 +194,7 @@ export async function saveExhibition(exhibitionId: string | null, _prev: FormSta
   const endDate = s(form, "endDate");
   if (!title || !startDate || !endDate) return { error: "전시명과 기간을 입력해 주세요" };
   if (endDate < startDate) return { error: "종료일이 시작일보다 빨라요" };
+  const { place, venue } = readPlace(form, "venue");
   let link: string | null;
   try {
     link = httpsOrNull(s(form, "link"));
@@ -203,7 +205,8 @@ export async function saveExhibition(exhibitionId: string | null, _prev: FormSta
     title,
     schoolId: optional(s(form, "schoolId")),
     department: optional(s(form, "department")),
-    venue: s(form, "venue"),
+    venue,
+    place,
     startDate,
     endDate,
     description: s(form, "description"),
@@ -297,6 +300,7 @@ export async function reviewExhibitionRequest(requestId: string, decision: "appr
       schoolId: findOrCreateSchool(db, req.schoolName),
       department: req.department || null,
       venue: req.venue,
+      place: req.place,
       startDate: req.startDate,
       endDate: req.endDate,
       description: "",

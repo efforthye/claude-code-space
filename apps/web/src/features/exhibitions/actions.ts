@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { store } from "@/lib/data/store";
+import { readPlace } from "@/features/places/parse";
 import { newId } from "@/lib/ids";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "날짜를 골라 주세요");
@@ -18,7 +19,6 @@ const RequestInput = z
     kind: z.enum(["graduation", "coursework", "other"]),
     startDate: date,
     endDate: date,
-    venue: z.string().trim().min(1, "장소를 입력해 주세요").max(100),
     artistCount: z.string().trim(),
     support: z.array(z.enum(["archive", "photo", "qr"])),
     message: z.string().trim().max(1000),
@@ -41,7 +41,6 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
     kind: get("kind"),
     startDate: get("startDate"),
     endDate: get("endDate"),
-    venue: get("venue"),
     artistCount: get("artistCount"),
     support: form.getAll("support").map(String),
     message: get("message"),
@@ -53,6 +52,8 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
     return { ok: false, errors };
   }
   const v = parsed.data;
+  const { place, venue } = readPlace(form, "venue");
+  if (!venue) return { ok: false, errors: { venue: "장소를 검색해서 골라 주세요" } };
   await store.update((db) => {
     db.exhibitionRequests.push({
       id: newId("exr"),
@@ -66,7 +67,8 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
       kind: v.kind,
       startDate: v.startDate,
       endDate: v.endDate,
-      venue: v.venue,
+      venue,
+      place,
       artistCount: /^\d+$/.test(v.artistCount) ? Number(v.artistCount) : null,
       support: v.support,
       message: v.message,

@@ -32,12 +32,22 @@ export type Artist = {
   createdAt: string;
 };
 
+/** 장소 검색(카카오 로컬 / 우편번호 서비스)으로 고른 위치. */
+export type Place = {
+  name: string; // 건물·장소 이름
+  address: string | null; // 도로명 주소
+  lat: number | null;
+  lng: number | null;
+  url: string | null; // 지도 링크
+};
+
 export type Exhibition = {
   id: ID;
   title: string;
   schoolId: ID | null;
   department: string | null;
-  venue: string;
+  venue: string; // 표시용: 장소 이름 + 상세 위치
+  place?: Place | null; // 검색으로 고른 위치 (공개 일정에서 가져온 전시는 없음)
   startDate: string; // YYYY-MM-DD
   endDate: string;
   description: string;
@@ -187,6 +197,7 @@ export type ExhibitionRequest = {
   startDate: string;
   endDate: string;
   venue: string;
+  place: Place | null;
   artistCount: number | null;
   support: ExhibitionSupport[];
   message: string;

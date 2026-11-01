@@ -33,7 +33,19 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
         <h1 className="text-3xl font-black">{e.title}</h1>
         <dl className="grid max-w-2xl grid-cols-[5rem_1fr] gap-y-1.5 text-sm">
           <dt className="text-ink-soft">기간</dt><dd>{formatPeriod(e.startDate, e.endDate)}</dd>
-          <dt className="text-ink-soft">장소</dt><dd>{[e.schoolId && schoolById.get(e.schoolId)?.name, e.venue].filter(Boolean).join(" ")}</dd>
+          <dt className="text-ink-soft">장소</dt>
+          <dd className="flex flex-col">
+            <span>{e.place ? e.venue : [e.schoolId && schoolById.get(e.schoolId)?.name, e.venue].filter(Boolean).join(" ")}</span>
+            {e.place?.address && <span className="text-xs text-ink-soft">{e.place.address}</span>}
+            <a
+              href={e.place?.url ?? `https://map.kakao.com/link/search/${encodeURIComponent([e.schoolId && schoolById.get(e.schoolId)?.name, e.place?.name ?? e.venue].filter(Boolean).join(" "))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link-sweep mt-0.5 w-fit text-xs font-semibold"
+            >
+              지도에서 보기 ↗
+            </a>
+          </dd>
           {e.hours && (<><dt className="text-ink-soft">관람 시간</dt><dd>{e.hours}</dd></>)}
           {e.opening && (<><dt className="text-ink-soft">오프닝</dt><dd>{e.opening}</dd></>)}
         </dl>
