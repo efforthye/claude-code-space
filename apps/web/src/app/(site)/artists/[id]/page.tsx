@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +7,7 @@ import { VerificationCard } from "@/components/ui/verified-badge";
 import { WorkCard } from "@/features/catalog/work-card";
 import { getCatalog, indexById } from "@/lib/data/catalog";
 import { categoryLabel, groupLabel, isDeceased, lifespan } from "@/lib/domain/rules";
+import { MetaLine } from "@/components/ui/meta-line";
 
 export default function ArtistPage(props: PageProps<"/artists/[id]">) {
   return (
@@ -38,7 +40,11 @@ async function ArtistDetail({ params }: { params: PageProps<"/artists/[id]">["pa
           {lifespan(artist) && <span className="ml-3 align-middle text-base font-medium text-ink-soft">{lifespan(artist)}</span>}
         </h1>
         <p className="text-sm text-ink-soft">
-          {[school?.name, artist.department, artist.gradYear && `${artist.gradYear}년 졸업${artist.status === "student" ? " 예정" : ""}`].filter(Boolean).join(", ")}
+          <MetaLine>
+            {school?.name}
+            {artist.department}
+            {artist.gradYear && `${artist.gradYear}년 졸업${artist.status === "student" ? " 예정" : ""}`}
+          </MetaLine>
         </p>
         {late && (
           <p className="glass max-w-xl rounded-md p-4 text-sm leading-relaxed">
@@ -53,7 +59,14 @@ async function ArtistDetail({ params }: { params: PageProps<"/artists/[id]">["pa
           {artist.instagram && <a href={`https://instagram.com/${artist.instagram}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Instagram</a>}
           {artist.portfolioUrl && <a href={artist.portfolioUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">포트폴리오</a>}
         </div>
-        {shownIn.length > 0 && <p className="text-sm text-ink-soft">참여 전시: {shownIn.map((e) => e.title).join(", ")}</p>}
+        {shownIn.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-ink-soft">참여 전시</span>
+            {shownIn.map((e) => (
+              <Link key={e.id} href={`/exhibitions/${e.id}`} className="glass rounded-full px-3 py-1 text-xs font-semibold transition-colors hover:bg-white">{e.title}</Link>
+            ))}
+          </div>
+        )}
       </header>
       {own.length === 0 ? (
         <EmptyState title="아직 등록된 작품이 없어요" />

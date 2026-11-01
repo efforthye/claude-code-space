@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/container";
 import { KIND_LABEL } from "@/lib/domain/rules";
@@ -24,7 +25,15 @@ type Filters = {
 };
 
 export function CollectionBrowser({ works, artists, schools, categories }: { works: Work[]; artists: Artist[]; schools: School[]; categories: Category[] }) {
-  const [f, setF] = useState<Filters>({ medium: "all", school: "all", kind: "all", price: "all", availableOnly: false });
+  // 홈의 매체 타일에서 /works?medium=painting 처럼 들어오면 그 분류로 시작한다
+  const fromLink = useSearchParams().get("medium");
+  const [f, setF] = useState<Filters>({
+    medium: fromLink && categories.some((c) => c.id === fromLink) ? fromLink : "all",
+    school: "all",
+    kind: "all",
+    price: "all",
+    availableOnly: false,
+  });
   const artistById = useMemo(() => new Map(artists.map((a) => [a.id, a])), [artists]);
   const schoolById = useMemo(() => new Map(schools.map((s) => [s.id, s])), [schools]);
   // 관리자가 정한 순서·노출 그대로, 작품이 있는 분류만

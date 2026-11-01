@@ -4,9 +4,12 @@ import { Container } from "@/components/ui/container";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { WorkTile } from "@/features/catalog/work-card";
 import { HeroVisual } from "@/features/catalog/hero-visual";
-import { categoryLabel } from "@/lib/domain/rules";
+import { categoryLabel, coverImage } from "@/lib/domain/rules";
 import { exhibitionPhase, getCatalog, indexById } from "@/lib/data/catalog";
 import { formatPeriod } from "@/lib/format";
+import { MetaLine } from "@/components/ui/meta-line";
+import { SealIcon } from "@/components/ui/verified-badge";
+import { WorkImage } from "@/features/catalog/work-image";
 
 export default async function HomePage() {
   const { works, artists, schools, exhibitions, categories, today } = await getCatalog();
@@ -23,6 +26,17 @@ export default async function HomePage() {
   const newest = available.slice(0, 4);
   const schoolsWithShows = new Set(exhibitions.filter((e) => exhibitionPhase(e, today) !== "ended").map((e) => e.schoolId)).size;
   const upcomingCount = exhibitions.filter((e) => exhibitionPhase(e, today) !== "ended").length;
+  // 매체별 바로가기: 관리자가 보이게 둔 분류, 작품이 있는 것 먼저
+  const media = categories
+    .filter((c) => c.visible)
+    .map((c) => ({ c, count: works.filter((w) => w.medium === c.id).length, cover: works.find((w) => w.medium === c.id && coverImage(w)) }))
+    .sort((a, b) => Number(b.count > 0) - Number(a.count > 0))
+    .slice(0, 8);
+  // 이번 시즌 전시가 있는 학교, 전시 많은 순
+  const seasonSchools = schools
+    .map((s) => ({ s, n: exhibitions.filter((e) => e.schoolId === s.id && exhibitionPhase(e, today) !== "ended").length }))
+    .filter((x) => x.n > 0)
+    .sort((a, b) => b.n - a.n || a.s.name.localeCompare(b.s.name, "ko"));
 
   return (
     <>
@@ -66,7 +80,7 @@ export default async function HomePage() {
                 </span>
                 <span className="text-[17px] leading-snug font-semibold">{e.title}</span>
                 <span className="text-[13px] text-ink-soft">
-                  {formatPeriod(e.startDate, e.endDate)}, {e.venue}
+                  <MetaLine>{formatPeriod(e.startDate, e.endDate)}{e.venue}</MetaLine>
                 </span>
               </Link>
             ))}
@@ -107,6 +121,120 @@ export default async function HomePage() {
           </div>
         </Container>
       )}
+      {media.length > 0 && (
+        <Container className="flex flex-col gap-5 pb-16">
+          <SectionTitle title={<>Shop by <i>medium</i></>} href="/works" link="모든 매체 →" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {media.map(({ c, count, cover }) => (
+              <Link
+                key={c.id}
+                href={`/works?medium=${c.id}`}
+                className="group glass relative flex aspect-[5/4] flex-col justify-end overflow-hidden rounded-[22px] p-4 transition-[translate,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                {cover && (
+                  <WorkImage
+                    src={coverImage(cover)}
+                    alt=""
+                    className="absolute inset-0 size-full transition-[scale] duration-500 group-hover:scale-105"
+                  />
+                )}
+                <span aria-hidden className={cover ? "absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" : "bg-aurora absolute inset-0 opacity-15"} />
+                <span className={`relative text-lg font-bold ${cover ? "text-white" : ""}`}>{c.label}</span>
+                <span className={`relative text-xs ${cover ? "text-white/85" : "text-ink-soft"}`}>{count > 0 ? `작품 ${count}점` : "곧 만나요"}</span>
+              </Link>
+            ))}
+          </div>
+        </Container>
+      )}
+
+      <Container className="flex flex-col gap-5 pb-16">
+        <SectionTitle title={<>How it <i>works</i></>} />
+        <ol className="grid gap-3 md:grid-cols-3">
+          {[
+            { n: "01", t: "졸업전시에서 만나요", d: "전시장 캡션의 QR이나 MAYO 전시 페이지에서 그 작품을 바로 찾아요." },
+            { n: "02", t: "인증된 작가에게서", d: "학교 이메일, 학생증, 졸업전시 명단으로 운영자가 직접 확인한 작가예요." },
+            { n: "03", t: "첫 원화를 집으로", d: "입금이 확인되면 작가와 일정을 맞춰 택배, 전문 운송, 직접 수령으로 받아요." },
+          ].map((step) => (
+            <li key={step.n} className="glass flex flex-col gap-2 rounded-[22px] p-6">
+              <span className="font-display text-aurora text-4xl italic">{step.n}</span>
+              <span className="text-lg font-bold">{step.t}</span>
+              <span className="text-sm leading-relaxed text-ink-soft">{step.d}</span>
+            </li>
+          ))}
+        </ol>
+      </Container>
+
+      <Container className="flex flex-col gap-5 pb-16">
+        <SectionTitle title={<>Why <i>MAYO</i></>} />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { t: "학교 인증 딱지", d: "소속을 서류로 확인한 작가에게만 붙어요." },
+            { t: "작품 보증서", d: "구매 후 요청하면 QR로 진위를 확인할 수 있는 보증서를 드려요." },
+            { t: "미술품 전문 운송", d: "조각, 가구처럼 큰 작품은 견적을 먼저 보여 드리고 옮겨요." },
+            { t: "입금 확인 후 진행", d: "입금이 확인된 뒤에 배송이 시작되고, 받은 날부터 7일 안에 철회할 수 있어요." },
+          ].map((x) => (
+            <div key={x.t} className="glass flex flex-col gap-2 rounded-[22px] p-5">
+              <SealIcon className="size-7" />
+              <span className="font-bold">{x.t}</span>
+              <span className="text-sm leading-relaxed text-ink-soft">{x.d}</span>
+            </div>
+          ))}
+        </div>
+      </Container>
+
+      {seasonSchools.length > 0 && (
+        <Container className="flex flex-col gap-5 pb-16">
+          <SectionTitle title={<>Schools this <i>season</i></>} href="/schools" link={`${seasonSchools.length}개 학교 →`} />
+          <div className="flex flex-wrap gap-2">
+            {seasonSchools.slice(0, 18).map(({ s, n }) => (
+              <Link
+                key={s.id}
+                href="/schools"
+                className="glass flex items-center gap-2 rounded-full py-1.5 pr-1.5 pl-4 text-sm font-semibold transition-colors duration-200 hover:bg-white"
+              >
+                {s.name}
+                <span className="bg-aurora rounded-full px-2 py-0.5 text-[11px] text-white">{n}</span>
+              </Link>
+            ))}
+            {seasonSchools.length > 18 && (
+              <Link href="/schools" className="flex items-center rounded-full px-4 py-1.5 text-sm font-semibold text-violet">
+                외 {seasonSchools.length - 18}곳
+              </Link>
+            )}
+          </div>
+        </Container>
+      )}
+
+      <Container className="pb-8">
+        <section className="relative isolate flex flex-col gap-6 overflow-hidden rounded-[28px] bg-ink p-8 text-white sm:p-12 md:flex-row md:items-end md:justify-between">
+          <span aria-hidden className="bg-aurora absolute -top-24 -right-16 -z-10 size-80 rounded-full opacity-60 blur-3xl" />
+          <span aria-hidden className="absolute -bottom-24 left-10 -z-10 size-64 rounded-full bg-violet/50 blur-3xl" />
+          <div className="flex max-w-xl flex-col gap-3">
+            <span className="font-display text-xl text-white/80 italic">For artists</span>
+            <h2 className="text-3xl leading-tight font-bold sm:text-4xl">전시가 끝나도, 작품은 계속 걸려 있도록.</h2>
+            <p className="text-white/80">작품 촬영과 온라인 전시 페이지를 지원하고, 판매는 원하는 작품만. 재학생, 졸업생, 미대 지망생 누구나 신청할 수 있어요.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink href="/join" size="lg">작가 입점 신청</ButtonLink>
+            <Link href="/exhibitions/apply" className="flex h-12 items-center rounded-full border border-white/30 px-5 font-semibold transition-colors hover:bg-white/10">
+              전시 등록 신청
+            </Link>
+          </div>
+        </section>
+      </Container>
     </>
+  );
+}
+
+function SectionTitle({ title, href, link }: { title: React.ReactNode; href?: string; link?: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <h2 className="font-display text-[40px] leading-none">{title}</h2>
+      {href && (
+        <Link href={href} className="link-sweep text-sm font-medium">
+          {link}
+        </Link>
+      )}
+    </div>
   );
 }

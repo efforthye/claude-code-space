@@ -53,7 +53,8 @@ test("exhibition request picks the venue from place search and becomes an exhibi
   await page.goto(`/exhibitions/${id}`);
   await expect(page.getByText("홍익대학교 홍문관 7층")).toBeVisible();
   await expect(page.getByText("서울 마포구 와우산로 94")).toBeVisible();
-  await expect(page.getByRole("link", { name: /지도에서 보기/ })).toHaveAttribute("href", "https://place.map.kakao.com/1");
+  await expect(page.getByRole("link", { name: /카카오맵/ })).toHaveAttribute("href", "https://place.map.kakao.com/1");
+  await expect(page.getByRole("link", { name: /네이버 지도/ })).toHaveAttribute("href", /map\.naver\.com\/p\/search\//);
 });
 
 test("without a Kakao key the venue picker offers the postcode finder", async ({ page }) => {

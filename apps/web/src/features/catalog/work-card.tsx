@@ -5,6 +5,7 @@ import type { Artist, School, Work } from "@/lib/domain/types";
 import { formatPrice } from "@/lib/format";
 import { coverImage } from "@/lib/domain/rules";
 import { WorkImage } from "./work-image";
+import { MetaLine } from "@/components/ui/meta-line";
 
 export function WorkCard({ work, artist, school, mediumLabel }: { work: Work; artist?: Artist; school?: School; mediumLabel: string }) {
   return (
@@ -24,7 +25,7 @@ export function WorkCard({ work, artist, school, mediumLabel }: { work: Work; ar
           <span className="shrink-0 text-sm font-semibold">{formatPrice(work.price)}</span>
         </div>
         <span className="text-[13px] text-ink-soft">
-          {artist?.name ?? "작가 미상"}, {mediumLabel}
+          <MetaLine>{artist?.name ?? "작가 미상"}{mediumLabel}</MetaLine>
           {work.edition && `, ed. ${work.edition}`}
         </span>
         {artist?.verifiedBy && (

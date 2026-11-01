@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Container, EmptyState, PageHeading } from "@/components/ui/container";
 import { CollectionBrowser } from "@/features/catalog/collection-browser";
 import { getCatalog } from "@/lib/data/catalog";
@@ -13,7 +14,9 @@ export default async function WorksPage() {
       {works.length === 0 ? (
         <EmptyState title="첫 작품을 준비하고 있어요">졸업전시 시즌에 맞춰 작품이 올라옵니다.</EmptyState>
       ) : (
-        <CollectionBrowser works={works} artists={artists} schools={schools} categories={categories} />
+        <Suspense fallback={<div className="h-96" />}>
+          <CollectionBrowser works={works} artists={artists} schools={schools} categories={categories} />
+        </Suspense>
       )}
     </Container>
   );

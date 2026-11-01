@@ -11,6 +11,7 @@ import { MediaGallery } from "@/features/catalog/media-gallery";
 import { getCatalog, indexById } from "@/lib/data/catalog";
 import { artShippingIds, groupLabel, isDeceased, lifespan, categoryLabel, coverImage, KIND_LABEL, needsArtShipping, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
 import { formatPrice, formatSize } from "@/lib/format";
+import { MetaLine } from "@/components/ui/meta-line";
 
 export default function WorkPage(props: PageProps<"/works/[id]">) {
   return (
@@ -49,7 +50,12 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
               <Link href={`/artists/${artist.id}`} className="font-semibold underline-offset-4 hover:underline">
                 {artist.name}
                 <span className="ml-2 text-sm font-normal text-ink-soft">
-                  {[lifespan(artist), school?.name, artist.department, groupLabel(artistGroups, artist.status)].filter(Boolean).join(", ")}
+                  <MetaLine>
+                    {lifespan(artist)}
+                    {school?.name}
+                    {artist.department}
+                    {groupLabel(artistGroups, artist.status)}
+                  </MetaLine>
                 </span>
               </Link>
             )}

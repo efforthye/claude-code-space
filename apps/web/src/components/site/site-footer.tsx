@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { getBusinessInfo, siteConfig } from "@/lib/site";
+import { LabeledValue, MetaLine } from "@/components/ui/meta-line";
 
 export function SiteFooter() {
   const biz = getBusinessInfo();
@@ -23,15 +24,26 @@ export function SiteFooter() {
           MAYO는 통신판매중개자로서 작가가 직접 판매하는 거래의 당사자가 아닙니다. 작품 정보와 거래에 대한 1차 책임은 각
           판매자(작가)에게 있습니다.
         </p>
-        <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
-          <div><dt className="inline">상호 </dt><dd className="inline">{biz.companyName}</dd>, <dt className="inline">대표 </dt><dd className="inline">{biz.representative}</dd></div>
-          <div><dt className="inline">사업자등록번호 </dt><dd className="inline">{biz.registrationNumber}</dd>{biz.ftcUrl && <>, <a href={biz.ftcUrl} target="_blank" rel="noopener noreferrer" className="underline">사업자정보 확인</a></>}</div>
-          <div><dt className="inline">통신판매업 신고 </dt><dd className="inline">{biz.mailOrderNumber}</dd></div>
-          <div><dt className="inline">미술서비스업 신고 </dt><dd className="inline">{biz.artServiceNumber}</dd></div>
-          <div><dt className="inline">주소 </dt><dd className="inline">{biz.address}</dd></div>
-          <div><dt className="inline">고객센터 </dt><dd className="inline">{[biz.phone, biz.email].filter((v, i, a) => a.indexOf(v) === i).join(", ")}</dd></div>
-          <div><dt className="inline">호스팅 </dt><dd className="inline">{biz.hosting}</dd></div>
-        </dl>
+        <div className="flex flex-col gap-1.5">
+          <MetaLine>
+            <LabeledValue label="상호">{biz.companyName}</LabeledValue>
+            <LabeledValue label="대표">{biz.representative}</LabeledValue>
+            <LabeledValue label="사업자등록번호">{biz.registrationNumber}</LabeledValue>
+            {biz.ftcUrl && <a href={biz.ftcUrl} target="_blank" rel="noopener noreferrer" className="link-sweep font-semibold text-ink">사업자정보 확인</a>}
+          </MetaLine>
+          <MetaLine>
+            <LabeledValue label="통신판매업 신고">{biz.mailOrderNumber}</LabeledValue>
+            <LabeledValue label="미술서비스업 신고">{biz.artServiceNumber}</LabeledValue>
+            <LabeledValue label="호스팅">{biz.hosting}</LabeledValue>
+          </MetaLine>
+          <MetaLine>
+            <LabeledValue label="주소">{biz.address}</LabeledValue>
+          </MetaLine>
+          <MetaLine>
+            <LabeledValue label="고객센터">{biz.phone}</LabeledValue>
+            {biz.email !== biz.phone && <LabeledValue label="이메일">{biz.email}</LabeledValue>}
+          </MetaLine>
+        </div>
       </Container>
     </footer>
   );

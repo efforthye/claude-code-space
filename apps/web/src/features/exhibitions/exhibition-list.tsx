@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/container";
 import { cn } from "@/lib/cn";
 import type { ExhibitionPhase } from "@/lib/data/catalog";
 import { formatPeriod } from "@/lib/format";
+import { MetaLine } from "@/components/ui/meta-line";
 
 export type ExhibitionRow = {
   id: string;
@@ -78,7 +79,7 @@ export function ExhibitionList({ rows, schools }: { rows: ExhibitionRow[]; schoo
                 </Badge>
                 <span className="flex-1 font-semibold"><span className="link-sweep">{r.title}</span></span>
                 <span className="text-sm text-ink-soft sm:text-right">
-                  {formatPeriod(r.startDate, r.endDate)}, {r.venue}
+                  <MetaLine>{formatPeriod(r.startDate, r.endDate)}{r.venue}</MetaLine>
                   {r.works > 0 && <b className="ml-1 text-ink">, 작품 {r.works}점</b>}
                 </span>
                 <span aria-hidden className="hidden text-ink opacity-0 transition-[opacity,translate] duration-200 group-hover:translate-x-1 group-hover:opacity-100 sm:inline">→</span>

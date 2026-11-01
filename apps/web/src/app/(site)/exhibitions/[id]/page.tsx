@@ -8,6 +8,7 @@ import { WorkCard } from "@/features/catalog/work-card";
 import { exhibitionPhase, getCatalog, indexById, PHASE_LABEL } from "@/lib/data/catalog";
 import { categoryLabel } from "@/lib/domain/rules";
 import { formatPeriod } from "@/lib/format";
+import { mapLinks } from "@/features/places/map-links";
 
 export default function ExhibitionPage(props: PageProps<"/exhibitions/[id]">) {
   return (
@@ -39,14 +40,19 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
           <dd className="flex flex-col">
             <span>{e.place ? e.venue : [e.schoolId && schoolById.get(e.schoolId)?.name, e.venue].filter(Boolean).join(" ")}</span>
             {e.place?.address && <span className="text-xs text-ink-soft">{e.place.address}</span>}
-            <a
-              href={e.place?.url ?? `https://map.kakao.com/link/search/${encodeURIComponent([e.schoolId && schoolById.get(e.schoolId)?.name, e.place?.name ?? e.venue].filter(Boolean).join(" "))}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-sweep mt-0.5 w-fit text-xs font-semibold"
-            >
-              지도에서 보기 ↗
-            </a>
+            <div className="mt-1.5 flex flex-wrap gap-1.5" aria-label="지도에서 보기">
+              {mapLinks(e.venue, e.place ?? null, e.schoolId ? schoolById.get(e.schoolId)?.name : null).map((m) => (
+                <a
+                  key={m.id}
+                  href={m.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="glass rounded-full px-3 py-1 text-xs font-semibold transition-colors duration-200 hover:bg-white"
+                >
+                  {m.label} ↗
+                </a>
+              ))}
+            </div>
           </dd>
           {e.hours && (<><dt className="text-ink-soft">관람 시간</dt><dd>{e.hours}</dd></>)}
           {e.opening && (<><dt className="text-ink-soft">오프닝</dt><dd>{e.opening}</dd></>)}
@@ -58,7 +64,12 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
             일정 출처: <a href={e.source.url} target="_blank" rel="noopener noreferrer" className="underline">{e.source.label}</a>. MAYO는 이 전시의 주최자가 아니며, 방문 전 학과 공식 계정에서 확인하세요.
           </p>
         )}
-        {participants.length > 0 && <p className="text-sm text-ink-soft">참여 작가: {participants.join(", ")}</p>}
+        {participants.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-ink-soft">참여 작가</span>
+            {participants.map((name) => <span key={name} className="glass rounded-full px-3 py-1 text-xs font-semibold">{name}</span>)}
+          </div>
+        )}
         {e.link && <a href={e.link} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold underline underline-offset-4">전시 안내 페이지</a>}
       </header>
       {shown.length === 0 ? (

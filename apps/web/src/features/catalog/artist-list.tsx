@@ -7,6 +7,7 @@ import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/cn";
 import { groupLabel, lifespan } from "@/lib/domain/rules";
 import type { Artist, ArtistGroup, School } from "@/lib/domain/types";
+import { MetaLine } from "@/components/ui/meta-line";
 
 /** "all", "verified", "commission" 또는 작가 구분 코드 (관리자에서 관리) */
 type Filter = string;
@@ -53,7 +54,7 @@ export function ArtistList({ artists, schools, groups, workCounts }: { artists: 
                   </span>
                   <span className="text-xs text-ink-soft">작품 {workCounts[a.id] ?? 0}점</span>
                 </div>
-                <span className="text-sm text-ink-soft">{[school?.name, a.department].filter(Boolean).join(", ") || "소속 없음"}</span>
+                <span className="text-sm text-ink-soft">{school || a.department ? <MetaLine>{school?.name}{a.department}</MetaLine> : "소속 없음"}</span>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge>{groupLabel(groups, a.status)}</Badge>
                   {a.acceptsCommission && <Badge tone="clay">주문제작</Badge>}
