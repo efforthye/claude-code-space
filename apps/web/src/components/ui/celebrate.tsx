@@ -50,7 +50,7 @@ export function Celebrate({
       <p className="-mt-2 text-xs text-ink-soft">이 번호로 진행 상황을 볼 수 있어요. 이 기기에도 저장해 두었어요.</p>
       <div className="flex animate-[rise_500ms_600ms_ease-out_both] flex-wrap justify-center gap-2">
         <Link href="/my" className="inline-flex h-10 items-center rounded-sm bg-ink px-4 text-sm font-semibold text-paper shadow-sm transition hover:bg-ink/88 hover:shadow-md active:scale-[0.98]">
-          내 신청 현황 보기
+          진행 상황 보기
         </Link>
         {actions}
       </div>

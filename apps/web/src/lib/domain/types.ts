@@ -29,6 +29,9 @@ export type Artist = {
   instagram: string | null; // handle without @
   portfolioUrl: string | null; // https only
   acceptsCommission: boolean; // 주문제작
+  avatar: string | null; // 프로필 사진 (/media/… 또는 /samples/…)
+  /** 작업실, 작업 환경 소개 (선택). 작품 이야기와 같은 글, 사진 칸 */
+  studio: StoryBlock[];
   birthYear: number | null;
   /** 작고 연도. 값이 있으면 작고 작가, 작가 본인이 아니라 소장자나 유족이 판매한다. */
   deathYear: number | null;
@@ -188,6 +191,8 @@ export type OrderEvent = { at: string; status: OrderStatus; note: string };
 
 export type Order = {
   id: ID;
+  /** 로그인한 상태로 넣었거나 번호로 연결한 회원. 비회원이면 없음 */
+  userId?: ID | null;
   code: string; // 고객에게 보여주는 주문번호
   items: OrderItem[];
   buyer: Buyer;
@@ -210,6 +215,8 @@ export type ApplicationState = "new" | "approved" | "rejected";
 /** 작가 입점 신청. */
 export type Application = {
   id: ID;
+  /** 로그인한 상태로 넣었거나 번호로 연결한 회원. 비회원이면 없음 */
+  userId?: ID | null;
   code: string; // 신청 현황 조회용 (J-XXXXXXXX)
   name: string;
   email: string;
@@ -234,6 +241,8 @@ export type ExhibitionSupport = "archive" | "photo" | "qr";
 /** 졸업전시와 과제전 등록 신청, 졸준위, 학생회, 학과, 작가가 전시를 MAYO에 올려 달라고 요청한다. */
 export type ExhibitionRequest = {
   id: ID;
+  /** 로그인한 상태로 넣었거나 번호로 연결한 회원. 비회원이면 없음 */
+  userId?: ID | null;
   code: string; // 신청 현황 조회용 (E-XXXXXXXX)
   organizer: "committee" | "council" | "department" | "artist" | "other";
   contactName: string;
@@ -261,6 +270,8 @@ export type InquiryTopic = (typeof INQUIRY_TOPICS)[number];
 /** 문의하기. 운영자 답변은 신청 현황(/my)에서 본인이 확인한다. */
 export type Inquiry = {
   id: ID;
+  /** 로그인한 상태로 넣었거나 번호로 연결한 회원. 비회원이면 없음 */
+  userId?: ID | null;
   code: string; // Q-XXXXXXXX
   topic: InquiryTopic;
   name: string;
@@ -279,6 +290,8 @@ export type Database = {
   categories: Category[];
   artistGroups: ArtistGroup[];
   certificates: Certificate[];
+  users: User[];
+  sessions: Session[];
   schools: School[];
   artists: Artist[];
   exhibitions: Exhibition[];
@@ -320,4 +333,28 @@ export type Certificate = {
   issuer: { companyName: string; registrationNumber: string; artServiceNumber: string };
   revokedAt: string | null;
   revokeReason: string | null;
+};
+
+/** 회원. 비밀번호는 scrypt 해시로만 저장한다 (features/account/password.ts). */
+export type User = {
+  id: ID;
+  email: string; // 소문자로 정규화
+  name: string;
+  phone: string | null;
+  birthYear: number;
+  passwordHash: string;
+  createdAt: string;
+  agreedAt: string; // 약관, 개인정보 동의 시각
+};
+
+/**
+ * 로그인 세션. 쿠키에는 무작위 토큰을, 여기에는 그 SHA-256만 둔다
+ * (저장소가 새어도 세션을 가로챌 수 없도록).
+ */
+export type Session = {
+  tokenHash: string;
+  userId: ID;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string; // 절대 만료
 };

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Container } from "@/components/ui/container";
+import { AccountLink, AccountLinkFallback } from "./account-link";
 import { CartLink } from "./cart-link";
 import { NavLinks, NavList } from "./nav-links";
 
@@ -15,9 +16,9 @@ export function SiteHeader() {
           <NavLinks />
         </Suspense>
         <div className="flex items-center gap-1.5">
-          <Link href="/my" className="hidden rounded-full px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-white/70 hover:text-ink sm:inline">
-            내 신청
-          </Link>
+          <Suspense fallback={<AccountLinkFallback />}>
+            <AccountLink />
+          </Suspense>
           <CartLink />
         </div>
       </Container>

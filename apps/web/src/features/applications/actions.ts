@@ -5,6 +5,7 @@ import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
 import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { isMinor, isUnder14 } from "@/lib/domain/rules";
 import { newId, newTrackingCode } from "@/lib/ids";
+import { currentUser } from "@/features/account/session";
 
 const httpsUrl = z
   .string()
@@ -72,8 +73,10 @@ export async function submitApplication(_prev: ApplicationFormState, form: FormD
   }
 
   const code = newTrackingCode("J");
+  const me = await currentUser(); // 로그인 중이면 마이페이지에 바로 보이도록
   await store.update((db) => {
     db.applications.push({
+      userId: me?.id ?? null,
       id: newId("app"),
       code,
       name: v.name,

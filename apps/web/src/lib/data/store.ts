@@ -21,6 +21,8 @@ const EMPTY: Database = {
   categories: [],
   artistGroups: [],
   certificates: [],
+  users: [],
+  sessions: [],
   schools: [],
   artists: [],
   exhibitions: [],
@@ -81,6 +83,8 @@ export function migrate(db: Database): Database {
   if (db.categories.length === 0) db.categories = structuredClone(DEFAULT_CATEGORIES);
   if (db.artistGroups.length === 0) db.artistGroups = structuredClone(DEFAULT_ARTIST_GROUPS);
   for (const a of db.artists) {
+    a.avatar ??= null;
+    a.studio ??= [];
     a.birthYear ??= null;
     a.deathYear ??= null;
     a.estate ??= null;

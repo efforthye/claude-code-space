@@ -11,6 +11,8 @@ export function buildBaseDatabase(): Database {
     categories: structuredClone(DEFAULT_CATEGORIES),
     artistGroups: structuredClone(DEFAULT_ARTIST_GROUPS),
     certificates: [],
+    users: [],
+    sessions: [],
     schools: structuredClone(fall2026.schools),
     exhibitions: structuredClone(fall2026.exhibitions),
     artists: [],

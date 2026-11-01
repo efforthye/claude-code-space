@@ -8,6 +8,7 @@ import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { artShippingIds, PARCEL_FEE, PAYMENT_DUE_HOURS, shippingOptions } from "@/lib/domain/rules";
 import type { Order, OrderItem } from "@/lib/domain/types";
 import { newId, newOrderCode } from "@/lib/ids";
+import { currentUser } from "@/features/account/session";
 
 const phone = z.string().trim().regex(/^0\d{1,2}-?\d{3,4}-?\d{4}$/, "휴대폰 번호를 확인해 주세요");
 
@@ -57,6 +58,7 @@ export async function placeOrder(_prev: OrderFormState, form: FormData): Promise
     return { ok: false, errors: { address: "배송받을 주소를 입력해 주세요" } };
   }
 
+  const me = await currentUser(); // 로그인 중이면 마이페이지에 바로 보이도록
   const result = await store.update((db): OrderFormState => {
     const items: OrderItem[] = [];
     const unavailable: string[] = [];
@@ -100,7 +102,7 @@ export async function placeOrder(_prev: OrderFormState, form: FormData): Promise
       work.status = "reserved";
       work.updatedAt = now.toISOString();
     }
-    db.orders.push(order);
+    db.orders.push({ ...order, userId: me?.id ?? null });
     return { ok: true, code: order.code };
   });
 

@@ -20,6 +20,8 @@ export function buildSampleDatabase(): Database {
     instagram: null,
     portfolioUrl: null,
     acceptsCommission: false,
+    avatar: null,
+    studio: [],
     birthYear: null,
     deathYear: null,
     estate: null,
@@ -35,6 +37,10 @@ export function buildSampleDatabase(): Database {
       bio: "빛이 오래 머무는 오후의 실내를 그립니다. 같은 창가를 여섯 달 동안 매일 같은 시간에 관찰했습니다.",
       instagram: "sample.jieun",
       acceptsCommission: true,
+      studio: [
+        { kind: "image", src: "/samples/photos/studio-easel.jpg", caption: "서향 창이 있는 자취방 한쪽이 작업실이에요." },
+        { kind: "text", text: "오후 네 시가 되면 창으로 들어온 빛이 벽까지 올라와요. 그 시간에 맞춰 이젤을 창가로 옮기고, 해가 지면 다시 방 안쪽으로 들여요.\n\n물감은 아크릴을 주로 쓰고, 마르는 동안 다음 캔버스의 밑칠을 해 두는 식으로 두세 점을 같이 진행해요." },
+      ],
     }),
     artist({
       id: "art-hana",

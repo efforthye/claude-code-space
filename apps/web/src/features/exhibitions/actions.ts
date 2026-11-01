@@ -5,6 +5,7 @@ import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
 import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { readPlace } from "@/features/places/parse";
 import { newId, newTrackingCode } from "@/lib/ids";
+import { currentUser } from "@/features/account/session";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "날짜를 골라 주세요");
 
@@ -58,8 +59,10 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
   const { place, venue } = readPlace(form, "venue");
   if (!venue) return { ok: false, errors: { venue: "장소를 검색해서 골라 주세요" } };
   const code = newTrackingCode("E");
+  const me = await currentUser(); // 로그인 중이면 마이페이지에 바로 보이도록
   await store.update((db) => {
     db.exhibitionRequests.push({
+      userId: me?.id ?? null,
       id: newId("exr"),
       code,
       organizer: v.organizer,

@@ -11,7 +11,17 @@ import { upload } from "./media-manager";
  * 작품 이야기 편집: 글 칸과 사진 칸을 원하는 순서로 쌓는다.
  * 폼에는 hidden `story`(JSON)로 실리고, 서버에서 다시 검증한다.
  */
-export function StoryEditor({ initial }: { initial: StoryBlock[] }) {
+export function StoryEditor({
+  initial,
+  name = "story",
+  legend = "작품 이야기 (작품 페이지 아래, 글과 사진을 순서대로)",
+  empty = "작업 과정, 영감, 설치 모습처럼 더 들려주고 싶은 이야기를 넣어 보세요.",
+}: {
+  initial: StoryBlock[];
+  name?: string;
+  legend?: string;
+  empty?: string;
+}) {
   const [blocks, setBlocks] = useState<StoryBlock[]>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,9 +56,9 @@ export function StoryEditor({ initial }: { initial: StoryBlock[] }) {
 
   return (
     <fieldset className="glass flex flex-col gap-4 rounded-lg p-4 md:col-span-2">
-      <legend className="px-1 text-sm font-semibold">작품 이야기 (작품 페이지 아래, 글과 사진을 순서대로)</legend>
-      <input type="hidden" name="story" value={JSON.stringify(clean)} />
-      {blocks.length === 0 && <p className="text-sm text-ink-soft">작업 과정, 영감, 설치 모습처럼 더 들려주고 싶은 이야기를 넣어 보세요.</p>}
+      <legend className="px-1 text-sm font-semibold">{legend}</legend>
+      <input type="hidden" name={name} value={JSON.stringify(clean)} />
+      {blocks.length === 0 && <p className="text-sm text-ink-soft">{empty}</p>}
       <ol className="flex flex-col gap-3">
         {blocks.map((b, i) => (
           <li key={i} className="flex gap-3 rounded-md bg-white/70 p-3">

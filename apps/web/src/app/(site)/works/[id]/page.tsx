@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { RedDot } from "@/components/ui/red-dot";
@@ -12,6 +13,7 @@ import { getCatalog, indexById } from "@/lib/data/catalog";
 import { artShippingIds, groupLabel, isDeceased, lifespan, categoryLabel, coverImage, KIND_LABEL, needsArtShipping, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
 import { formatPrice, formatSize } from "@/lib/format";
 import { MetaLine } from "@/components/ui/meta-line";
+import { StoryBlocks } from "@/features/catalog/story-blocks";
 
 export default function WorkPage(props: PageProps<"/works/[id]">) {
   return (
@@ -47,7 +49,8 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
             </div>
             <h1 className="text-2xl font-bold">「{work.title}」</h1>
             {artist && (
-              <Link href={`/artists/${artist.id}`} className="font-semibold underline-offset-4 hover:underline">
+              <Link href={`/artists/${artist.id}`} className="flex items-center gap-2.5 font-semibold underline-offset-4 hover:underline">
+                <Avatar src={artist.avatar} name={artist.name} className="size-9 text-[20px]" />
                 {artist.name}
                 <span className="ml-2 text-sm font-normal text-ink-soft">
                   <MetaLine>
@@ -127,25 +130,7 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
         </div>
       </div>
 
-      {work.story.length > 0 && (
-        <section className="mx-auto flex w-full max-w-2xl flex-col gap-8" aria-labelledby="story-heading">
-          <div className="flex flex-col gap-1">
-            <span className="font-display text-sm text-violet italic">The story</span>
-            <h2 id="story-heading" className="text-2xl font-bold">작품 이야기</h2>
-          </div>
-          {work.story.map((b, i) =>
-            b.kind === "text" ? (
-              <p key={i} className="text-[17px] leading-[1.85] whitespace-pre-line">{b.text}</p>
-            ) : (
-              <figure key={i} className="flex flex-col gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={b.src} alt={b.caption ?? `${work.title} 이야기 사진 ${i + 1}`} loading="lazy" className="w-full rounded-lg" />
-                {b.caption && <figcaption className="text-sm text-ink-soft">{b.caption}</figcaption>}
-              </figure>
-            ),
-          )}
-        </section>
-      )}
+      <StoryBlocks blocks={work.story} eyebrow="The story" title="작품 이야기" alt={`${work.title} 이야기`} />
 
       {more.length > 0 && (
         <section className="flex flex-col gap-6">

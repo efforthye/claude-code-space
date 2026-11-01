@@ -5,6 +5,7 @@ import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
 import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { INQUIRY_TOPICS } from "@/lib/domain/types";
 import { newId, newTrackingCode } from "@/lib/ids";
+import { currentUser } from "@/features/account/session";
 
 const InquiryInput = z.object({
   topic: z.enum(INQUIRY_TOPICS),
@@ -40,8 +41,10 @@ export async function submitInquiry(_prev: InquiryFormState, form: FormData): Pr
   }
   const v = parsed.data;
   const code = newTrackingCode("Q");
+  const me = await currentUser(); // 로그인 중이면 마이페이지에 바로 보이도록
   await store.update((db) => {
     db.inquiries.push({
+      userId: me?.id ?? null,
       id: newId("inq"),
       code,
       topic: v.topic,

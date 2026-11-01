@@ -7,12 +7,15 @@ import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field"
 import { VERIFY_LABEL } from "@/lib/domain/rules";
 import type { Artist, ArtistGroup, School, VerifyMethod } from "@/lib/domain/types";
 import { saveArtist, type FormState } from "./actions";
+import { AvatarField } from "./avatar-field";
+import { StoryEditor } from "./story-editor";
 
 export function ArtistForm({ artist, schools, groups }: { artist?: Artist; schools: School[]; groups: ArtistGroup[] }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveArtist.bind(null, artist?.id ?? null), null);
   return (
     <ActionForm action={action} className="grid max-w-3xl gap-5 md:grid-cols-2">
       {state?.error && <p className="rounded-sm bg-dot/10 p-3 text-sm text-dot md:col-span-2">{state.error}</p>}
+      <AvatarField initial={artist?.avatar ?? null} name={artist?.name ?? ""} />
       <Field label="작가명" required hint="예명 가능"><Input name="name" defaultValue={artist?.name} /></Field>
       <Field label="구분" required hint="목록은 '작가 구분' 메뉴에서 관리">
         <Select name="status" defaultValue={artist?.status ?? "student"}>
@@ -39,6 +42,12 @@ export function ArtistForm({ artist, schools, groups }: { artist?: Artist; schoo
       <Field label="작고 연도" hint="넣으면 작고 작가로 표시되고, 주문제작은 꺼져요"><Input name="deathYear" inputMode="numeric" defaultValue={artist?.deathYear ?? ""} /></Field>
       <Field label="작품, 저작권 관리" hint="작고 작가만. 예: 작가 유족, OO재단" className="md:col-span-2"><Input name="estate" defaultValue={artist?.estate ?? ""} /></Field>
       <Field label="작가 소개" className="md:col-span-2"><Textarea name="bio" defaultValue={artist?.bio} /></Field>
+      <StoryEditor
+        initial={artist?.studio ?? []}
+        name="studio"
+        legend="작업실 소개 (선택, 작가 페이지에 보여요)"
+        empty="작업실 사진, 쓰는 도구, 하루 작업 루틴처럼 작업 환경을 소개해 보세요."
+      />
       <Checkbox name="acceptsCommission" defaultChecked={artist?.acceptsCommission} label="주문제작 가능" className="md:col-span-2" />
       <Button type="submit" size="lg" disabled={pending} className="md:col-span-2">{pending ? "저장하는 중…" : artist ? "변경 저장" : "작가 추가"}</Button>
     </ActionForm>

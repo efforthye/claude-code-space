@@ -191,8 +191,21 @@ export async function saveArtist(artistId: string | null, _prev: FormState, form
     if (y != null && (!Number.isInteger(y) || y < 1800 || y > thisYear)) return { error: "연도는 1800년부터 올해까지 네 자리로 입력해 주세요" };
   }
   if (birthYear != null && deathYear != null && deathYear < birthYear) return { error: "작고 연도가 출생 연도보다 빨라요" };
+  let studio: z.infer<typeof StoryList>;
+  try {
+    const parsedStudio = StoryList.safeParse(JSON.parse(s(form, "studio") || "[]"));
+    if (!parsedStudio.success) return { error: "작업실 소개는 글 3,000자, 사진 설명 200자, 40칸까지 넣을 수 있어요" };
+    studio = parsedStudio.data;
+  } catch {
+    return { error: "작업실 소개 형식이 올바르지 않아요" };
+  }
+  const avatarRaw = s(form, "avatar");
+  const avatar = avatarRaw ? MediaSrc.safeParse(avatarRaw) : null;
+  if (avatar && !avatar.success) return { error: "프로필 사진 주소가 올바르지 않아요" };
   const fields = {
     name,
+    avatar: avatar?.data ?? null,
+    studio,
     schoolId: optional(s(form, "schoolId")),
     department: optional(s(form, "department")),
     gradYear: num(s(form, "gradYear")),
@@ -316,6 +329,8 @@ export async function reviewApplication(applicationId: string, decision: "approv
       instagram: app.instagram,
       portfolioUrl: app.portfolioUrl,
       acceptsCommission: false,
+      avatar: null,
+      studio: [],
       birthYear: app.birthYear,
       deathYear: null,
       estate: null,

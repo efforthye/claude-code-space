@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Container, EmptyState } from "@/components/ui/container";
 import { VerificationCard } from "@/components/ui/verified-badge";
@@ -8,6 +9,7 @@ import { WorkCard } from "@/features/catalog/work-card";
 import { getCatalog, indexById } from "@/lib/data/catalog";
 import { categoryLabel, groupLabel, isDeceased, lifespan } from "@/lib/domain/rules";
 import { MetaLine } from "@/components/ui/meta-line";
+import { StoryBlocks } from "@/features/catalog/story-blocks";
 
 export default function ArtistPage(props: PageProps<"/artists/[id]">) {
   return (
@@ -35,6 +37,7 @@ async function ArtistDetail({ params }: { params: PageProps<"/artists/[id]">["pa
           <Badge>{statusLabel}</Badge>
           {artist.acceptsCommission && <Badge tone="clay">주문제작 가능</Badge>}
         </div>
+        <Avatar src={artist.avatar} name={artist.name} className="size-24 text-[56px] shadow-lg" />
         <h1 className="text-3xl font-black">
           {artist.name}
           {lifespan(artist) && <span className="ml-3 align-middle text-base font-medium text-ink-soft">{lifespan(artist)}</span>}
@@ -68,6 +71,7 @@ async function ArtistDetail({ params }: { params: PageProps<"/artists/[id]">["pa
           </div>
         )}
       </header>
+      <StoryBlocks blocks={artist.studio} eyebrow="The studio" title="작업실" alt={`${artist.name}의 작업실`} />
       {own.length === 0 ? (
         <EmptyState title="아직 등록된 작품이 없어요" />
       ) : (

@@ -14,7 +14,7 @@ const FAQ = [
 export default function ContactPage() {
   return (
     <Container className="flex max-w-3xl flex-col gap-10 py-10">
-      <PageHeading title="문의하기" description={<>진행 중인 신청은 <Link href="/my" className="underline">내 신청 현황</Link>에서 먼저 확인해 보세요.</>} />
+      <PageHeading title="문의하기" description={<>진행 중인 신청은 <Link href="/account" className="underline">마이페이지</Link>나 <Link href="/my" className="underline">비회원 주문 조회</Link>에서 먼저 확인해 보세요.</>} />
       <section className="flex flex-col divide-y divide-line rounded-md border border-line bg-paper">
         {FAQ.map((f) => (
           <details key={f.q} className="group p-4">
