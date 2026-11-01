@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { Database } from "@/lib/domain/types";
 import { DEFAULT_ARTIST_GROUPS, DEFAULT_CATEGORIES } from "@/lib/domain/rules";
+import { LOGO_MARKS } from "@/lib/domain/types";
 import { buildBaseDatabase } from "./base";
 import { buildSampleDatabase } from "./sample";
 
@@ -23,6 +24,8 @@ const EMPTY: Database = {
   certificates: [],
   users: [],
   sessions: [],
+  verifications: [],
+  settings: { logoMark: "glass" },
   schools: [],
   artists: [],
   exhibitions: [],
@@ -81,6 +84,8 @@ export class LocalJsonStore implements Store {
 /** 예전 형식 데이터 호환: works[].images(문자열 배열) → works[].media */
 export function migrate(db: Database): Database {
   if (db.categories.length === 0) db.categories = structuredClone(DEFAULT_CATEGORIES);
+  db.settings ??= { logoMark: "glass" };
+  if (!LOGO_MARKS.includes(db.settings.logoMark)) db.settings.logoMark = "glass";
   if (db.artistGroups.length === 0) db.artistGroups = structuredClone(DEFAULT_ARTIST_GROUPS);
   for (const a of db.artists) {
     a.avatar ??= null;

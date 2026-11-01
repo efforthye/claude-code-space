@@ -240,3 +240,25 @@ test("the compliance checklist is one click from the dashboard", async ({ page }
   await expect(page.getByRole("heading", { name: "미술서비스업 신고" })).toBeVisible();
   await expect(page.getByText(/강남구보건소 5층 문화도시과/).first()).toBeVisible();
 });
+
+test("the logo mark is chosen in admin and the header, tab icon and manifest follow", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "MAYO 홈" }).locator("[data-logo-mark]")).toHaveAttribute("data-logo-mark", "glass");
+  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute("href", "/brand/glass/icon.svg");
+
+  await adminLogin(page);
+  await page.goto("/admin/settings");
+  await page.getByRole("button", { name: /액자 속 그림/ }).click();
+  await expect(page.getByRole("button", { name: /액자 속 그림/ })).toHaveAttribute("aria-pressed", "true");
+
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "MAYO 홈" }).locator("[data-logo-mark]")).toHaveAttribute("data-logo-mark", "painting");
+  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute("href", "/brand/painting/icon.svg");
+  const manifest = await (await page.request.get("/manifest.webmanifest")).json();
+  expect(manifest.icons[0].src).toBe("/brand/painting/icon-192.png");
+
+  // 기본값(스테인드글라스)으로 되돌린다
+  await page.goto("/admin/settings");
+  await page.getByRole("button", { name: /스테인드글라스/ }).click();
+  await expect(page.getByRole("button", { name: /스테인드글라스/ })).toHaveAttribute("aria-pressed", "true");
+});

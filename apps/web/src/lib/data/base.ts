@@ -13,6 +13,8 @@ export function buildBaseDatabase(): Database {
     certificates: [],
     users: [],
     sessions: [],
+    verifications: [],
+    settings: { logoMark: "glass" },
     schools: structuredClone(fall2026.schools),
     exhibitions: structuredClone(fall2026.exhibitions),
     artists: [],

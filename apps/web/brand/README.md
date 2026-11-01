@@ -1,17 +1,33 @@
-# MAYO mark
+# MAYO logo
 
-Two arches drawn as a lowercase "m" (a gallery doorway, a frame) and the period from "your object." on the aurora gradient (#6b3cff → #ff5fa2 → #ff9d4d). Pure vector, no font, so it holds at 16px.
+The logo is a mark that stands in for the "m", followed by "ayo" in DM Serif Display (ink, or ivory on dark).
+Two marks, chosen in admin (사이트 설정); stained glass is the default:
 
-- `mark-rounded.svg`: app icon with rounded corners (source of `src/app/icon.svg`, favicon, manifest 192/512)
-- `mark-square.svg`: full-bleed square for iOS (`src/app/apple-icon.png`) and the maskable manifest icon; the OS rounds it
+- `mark-glass.svg`: stained-glass m in a gold rim
+- `mark-painting.svg`: a night landscape inside a gold-framed m
 
-Regenerate after editing (needs `rsvg-convert` and ImageMagick):
+Both share one geometry (viewBox `2 13 104 77`, arches r=20, stroke 18), so they swap without layout shifts.
+Next to text the mark has no background; only app icons sit on a tile.
+
+Generated files (commit them; regenerate after editing a mark, needs `rsvg-convert` and ImageMagick):
+
+- `icon-<mark>.svg`: square, transparent, for browser tabs → `public/brand/<mark>/icon.svg`
+- `tile-<mark>.svg`, `tile-square-<mark>.svg`: ivory tile for app icons
+- `public/brand/<mark>/{mark.svg, icon.svg, apple-icon.png, icon-192.png, icon-512.png, icon-maskable-512.png}`
+- `src/app/favicon.ico` (16/32/48, stained glass) for browsers without SVG favicons
 
 ```sh
-cp brand/mark-rounded.svg src/app/icon.svg
-rsvg-convert -w 180 -h 180 brand/mark-square.svg -o src/app/apple-icon.png
-for s in 192 512; do rsvg-convert -w $s -h $s brand/mark-rounded.svg -o public/icons/icon-$s.png; done
-rsvg-convert -w 512 -h 512 brand/mark-square.svg -o public/icons/icon-maskable-512.png
-for s in 16 32 48; do rsvg-convert -w $s -h $s brand/mark-rounded.svg -o /tmp/fav-$s.png; done
+for v in glass painting; do
+  cp brand/mark-$v.svg public/brand/$v/mark.svg
+  cp brand/icon-$v.svg public/brand/$v/icon.svg
+  rsvg-convert -w 180 -h 180 brand/tile-square-$v.svg -o public/brand/$v/apple-icon.png
+  rsvg-convert -w 192 -h 192 brand/tile-$v.svg -o public/brand/$v/icon-192.png
+  rsvg-convert -w 512 -h 512 brand/tile-$v.svg -o public/brand/$v/icon-512.png
+  rsvg-convert -w 512 -h 512 brand/tile-square-$v.svg -o public/brand/$v/icon-maskable-512.png
+done
+for s in 16 32 48; do rsvg-convert -w $s -h $s brand/icon-glass.svg -o /tmp/fav-$s.png; done
 magick /tmp/fav-16.png /tmp/fav-32.png /tmp/fav-48.png src/app/favicon.ico
 ```
+
+The icon and tile SVGs are built from the marks by wrapping them in a 512 frame (8px padding for tabs,
+72px on a 116-radius tile for app icons, 80px full-bleed for iOS and maskable).

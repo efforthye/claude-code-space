@@ -1,7 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { isListed } from "@/lib/domain/rules";
-import type { Artist, ArtistGroup, Category, Exhibition, School, Work } from "@/lib/domain/types";
+import type { Artist, ArtistGroup, Category, Exhibition, School, SiteSettings, Work } from "@/lib/domain/types";
 import { store } from "./store";
 
 /** Cache tags. Mutations call `updateTag` with these (see features/admin/actions). */
@@ -25,6 +25,14 @@ export type Catalog = {
  * (hundreds of works per season), so one tag invalidated on every admin edit
  * is simpler than per-entity tags and still cheap.
  */
+/** 사이트 설정 (로고 마크 등). 헤더, 아이콘, 매니페스트가 읽는다. */
+export async function getSiteSettings(): Promise<SiteSettings> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(TAG.catalog);
+  return (await store.read()).settings;
+}
+
 export async function getCatalog(): Promise<Catalog> {
   "use cache";
   cacheLife("hours");

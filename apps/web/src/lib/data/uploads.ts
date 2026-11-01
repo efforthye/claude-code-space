@@ -42,6 +42,47 @@ export async function saveImage(file: File): Promise<string> {
 
 export const MAX_UPLOAD_BYTES = MAX_BYTES.image;
 
+/**
+ * 비공개 사진 (학교 인증 서류). /media로 서빙하지 않는 별도 폴더에 두고,
+ * 관리자 전용 라우트로만 읽는다. 결정이 나면 deletePrivate로 바로 지운다.
+ */
+const PRIVATE_DIR = path.join(DATA_DIR, "private");
+
+export async function savePrivateImage(file: File): Promise<string> {
+  if (file.size > MAX_BYTES.image) throw new UploadError("사진은 10MB 이하로 올려 주세요");
+  const data = new Uint8Array(await file.arrayBuffer());
+  const sniffed = sniffMedia(data);
+  if (!sniffed || sniffed.kind !== "image") throw new UploadError("JPG, PNG, WEBP, AVIF 사진만 올릴 수 있어요");
+  await fs.mkdir(PRIVATE_DIR, { recursive: true, mode: 0o700 });
+  const name = `${randomUUID()}.${sniffed.ext}`;
+  await fs.writeFile(path.join(PRIVATE_DIR, name), data, { flag: "wx", mode: 0o600 });
+  return name;
+}
+
+export async function readPrivate(name: string): Promise<Response> {
+  if (!NAME.test(name)) return new Response("Not found", { status: 404 });
+  try {
+    const data = await fs.readFile(path.join(PRIVATE_DIR, name));
+    const ext = name.split(".").pop() as SniffedMedia["ext"];
+    return new Response(data, {
+      headers: {
+        "Content-Type": EXT_TYPE[ext],
+        "Cache-Control": "no-store, private",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'none'; sandbox",
+        "Referrer-Policy": "no-referrer",
+      },
+    });
+  } catch {
+    return new Response("Not found", { status: 404 });
+  }
+}
+
+export async function deletePrivate(name: string | null) {
+  if (!name || !NAME.test(name)) return;
+  await fs.rm(path.join(PRIVATE_DIR, name), { force: true });
+}
+
 /** /media 응답: 영상 탐색(iOS Safari 필수)을 위해 Range 요청을 지원한다. */
 export async function serveMedia(name: string, rangeHeader: string | null): Promise<Response> {
   if (!NAME.test(name)) return new Response("Not found", { status: 404 });

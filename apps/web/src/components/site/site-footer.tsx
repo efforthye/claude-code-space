@@ -1,16 +1,20 @@
 import Link from "next/link";
+import { Logo } from "@/components/brand/logo";
 import { Container } from "@/components/ui/container";
+import { getSiteSettings } from "@/lib/data/catalog";
 import { getBusinessInfo, siteConfig } from "@/lib/site";
 import { LabeledValue, MetaLine } from "@/components/ui/meta-line";
 
-export function SiteFooter() {
+export async function SiteFooter() {
   const biz = getBusinessInfo();
+  const { logoMark } = await getSiteSettings();
   return (
     <footer className="mt-20 print:hidden border-t border-white/80 bg-white/55 py-10 text-xs leading-relaxed text-ink-soft backdrop-blur">
       <Container className="flex flex-col gap-6">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <p className="font-display text-3xl leading-none text-ink">
-            mayo <i className="text-lg text-ink-soft">{siteConfig.tagline}</i>
+          <p className="flex items-baseline gap-3 leading-none">
+            <Logo mark={logoMark} className="text-[30px]" />
+            <i className="font-display text-lg text-ink-soft">{siteConfig.tagline}</i>
           </p>
           <nav className="flex gap-4 font-semibold text-ink">
             <Link href="/legal/terms">이용약관</Link>

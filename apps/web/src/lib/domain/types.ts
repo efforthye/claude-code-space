@@ -29,6 +29,8 @@ export type Artist = {
   instagram: string | null; // handle without @
   portfolioUrl: string | null; // https only
   acceptsCommission: boolean; // 주문제작
+  /** 이 작가 페이지를 가진 회원 (입점 신청을 로그인한 채로 했거나 운영자가 연결) */
+  userId?: ID | null;
   avatar: string | null; // 프로필 사진 (/media/… 또는 /samples/…)
   /** 작업실, 작업 환경 소개 (선택). 작품 이야기와 같은 글, 사진 칸 */
   studio: StoryBlock[];
@@ -292,6 +294,8 @@ export type Database = {
   certificates: Certificate[];
   users: User[];
   sessions: Session[];
+  verifications: SchoolVerification[];
+  settings: SiteSettings;
   schools: School[];
   artists: Artist[];
   exhibitions: Exhibition[];
@@ -343,6 +347,11 @@ export type User = {
   phone: string | null;
   birthYear: number;
   passwordHash: string;
+  avatar?: string | null; // 프로필 사진
+  cover?: string | null; // 프로필 배경 이미지
+  bio?: string | null; // 한 줄 소개
+  /** 운영자가 확인한 학교 소속 (학교 인증). 없으면 미인증 */
+  verification?: { schoolId: ID; department: string | null; status: "student" | "graduate"; method: VerifyMethod; verifiedAt: string } | null;
   createdAt: string;
   agreedAt: string; // 약관, 개인정보 동의 시각
 };
@@ -357,4 +366,33 @@ export type Session = {
   createdAt: string;
   lastSeenAt: string;
   expiresAt: string; // 절대 만료
+};
+
+/**
+ * 회원의 학교 인증 요청. 학생증 사진은 공개 폴더가 아닌 비공개 저장소에 두고(document),
+ * 운영자가 승인하거나 반려하는 즉시 지운다.
+ */
+export type SchoolVerification = {
+  id: ID;
+  userId: ID;
+  schoolName: string;
+  department: string;
+  status: "student" | "graduate";
+  method: VerifyMethod;
+  schoolEmail: string | null; // 학교 이메일로 확인할 때
+  document: string | null; // 비공개 파일 이름 (학생증, 증명서)
+  rosterNote: string | null; // 졸업전시 명단으로 확인할 때: 전시 이름 등
+  state: "new" | "approved" | "rejected";
+  reason: string | null; // 반려 사유
+  createdAt: string;
+  decidedAt: string | null;
+};
+
+/** 로고 마크: 스테인드글라스 m 또는 액자 속 그림 m. 관리자 설정에서 고른다. */
+export const LOGO_MARKS = ["glass", "painting"] as const;
+export type LogoMark = (typeof LOGO_MARKS)[number];
+
+/** 운영자가 관리자 화면에서 바꾸는 사이트 설정 */
+export type SiteSettings = {
+  logoMark: LogoMark;
 };

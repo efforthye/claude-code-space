@@ -9,7 +9,7 @@ import { z } from "zod";
 import { TAG } from "@/lib/data/catalog";
 import { store } from "@/lib/data/store";
 import { ORDER_NEXT, ORDER_STATUS_LABEL } from "@/lib/domain/rules";
-import { MEDIA_KINDS, WORK_KINDS, type Database, type OrderStatus } from "@/lib/domain/types";
+import { LOGO_MARKS, MEDIA_KINDS, WORK_KINDS, type Database, type OrderStatus } from "@/lib/domain/types";
 import { newCertificateCode, newId } from "@/lib/ids";
 import { readPlace } from "@/features/places/parse";
 import { requireAdmin } from "./session";
@@ -548,5 +548,17 @@ export async function revokeCertificate(certificateId: string, form: FormData) {
     const order = db.orders.find((o) => o.id === cert.orderId);
     order?.history.push({ at: cert.revokedAt, status: order.status, note: `작품 보증서 취소 ${cert.code}, ${reason}` });
   });
+  refresh();
+}
+
+/* ───────────────────────── 사이트 설정 ───────────────────────── */
+
+export async function setLogoMark(mark: string) {
+  await requireAdmin();
+  if (!(LOGO_MARKS as readonly string[]).includes(mark)) return;
+  await store.update((db) => {
+    db.settings.logoMark = mark as (typeof LOGO_MARKS)[number];
+  });
+  touchCatalog(); // 헤더, 아이콘, 매니페스트가 같은 캐시 태그를 쓴다
   refresh();
 }

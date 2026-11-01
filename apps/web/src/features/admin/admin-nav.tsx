@@ -11,6 +11,7 @@ const ITEMS = [
   { href: "/admin/categories", label: "매체 분류" },
   { href: "/admin/artist-groups", label: "작가 구분" },
   { href: "/admin/compliance", label: "신고, 법무" },
+  { href: "/admin/settings", label: "사이트 설정" },
   { href: "/admin/artists", label: "작가" },
   { href: "/admin/applications", label: "입점 신청" },
   { href: "/admin/exhibitions", label: "전시" },

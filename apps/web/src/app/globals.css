@@ -10,6 +10,7 @@
 @theme {
   --font-sans: var(--font-inter), var(--font-pretendard), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-logo: var(--font-dm-serif), ui-serif, Georgia, serif;
 
   --color-ink: #1d1530;
   --color-ink-soft: #3f3560;
