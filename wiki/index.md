@@ -3,7 +3,7 @@ title: Index
 type: index
 tags: [meta]
 created: 2026-07-15
-updated: 2026-08-19
+updated: 2026-11-01
 ---
 
 # Index — Service Registry & Catalog
@@ -17,8 +17,9 @@ Updated whenever pages are added/renamed or a service's status changes.
 |---------|--------|-----------|------|
 | RichClub (api + front) | live | `home.efforthye.com:8000` (api) / `:3000` (front) | [[richclub]] |
 | Jenkins (CI) | live | `home.efforthye.com:9090` | [[jenkins]] |
-| Mayo (AI video platform) | live | Expo Go 앱 + **mayo.im** (Vercel) | [[mayo]] |
-| mayo-api (orchestration API) | live | mini `:8001` → `mayo-api.efforthye.dev` (tunnel) | [[mayo]] |
+| Web (new site on mayo.im) | building | **mayo.im** (Vercel, `apps/web`) | [[web]] |
+| mayo-api (orchestration API) | live | mini `:8001` → `mayo-api.efforthye.dev` (tunnel) | [[mayo-api]] |
+| Mayo (AI video platform) | paused | `archive/mayo/` (tag `archive/mayo-2026-11-01`) | [[mayo]] |
 
 ## Infra
 - [[home-server]] — Apple M1 Mac mini (8-core, 16 GB, 1 TB, macOS 15.4.1, `arm64`; `m1mini` /
@@ -83,6 +84,9 @@ Updated whenever pages are added/renamed or a service's status changes.
   One container, one tool.
 - [[0019-centralised-logging-elk]] — Elasticsearch + Kibana + Filebeat (no Logstash), sized to
   fit the mini's Docker VM because ComfyUI needs the host RAM; loopback-only + SSH tunnel.
+
+- [[0027-pause-mayo-reuse-domain]] — mayo 보류: 앱은 `archive/mayo/`로(태그 `archive/mayo-2026-11-01`), mayo.im은
+  새 Next.js 사이트 [[web]]이 사용, [[mayo-api]]는 그대로 가동하며 재사용.
 
 ## Incidents
 - [[2026-07-22-restart-erased-active-render]] — deploy restart wiped an actively rendering job; jobs now persist + resume.

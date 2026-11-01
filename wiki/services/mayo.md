@@ -1,13 +1,19 @@
 ---
 title: Mayo
 type: service
-status: live
+status: paused
 tags: [service, mayo, ai-video, expo, web, platform]
 created: 2026-07-15
-updated: 2026-07-16
+updated: 2026-11-01
 ---
 
 # Mayo
+
+> **⏸ Paused (2026-11-01)** — [[0027-pause-mayo-reuse-domain]]. The Expo app moved to
+> **`archive/mayo/`** (snapshot tag `archive/mayo-2026-11-01`). The **mayo.im** domain now serves
+> the new website [[web]] (`apps/web/`). The backend keeps running as [[mayo-api]] and is reused by
+> the new site. Everything below is the historical record as of the pause. Read `apps/mayo/` as
+> `archive/mayo/`.
 
 A premium **AI long-form video generation platform**. App-first (Expo, iOS + Android) with an
 identical web experience at **mayo.im**. Decision on the client stack: [[0003-expo-react-native-for-mobile-app]].

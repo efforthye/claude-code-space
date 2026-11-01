@@ -15,9 +15,9 @@ cd "$(git rev-parse --show-toplevel)"
 
 EXPO_LABEL="com.efforthye.mayo.expo"
 EXPO_PLIST="$HOME/Library/LaunchAgents/$EXPO_LABEL.plist"
-PKG_STAMP="apps/mayo/node_modules/.pkg-sha"
+PKG_STAMP="archive/mayo/node_modules/.pkg-sha"
 
-pkg_sha() { shasum apps/mayo/package-lock.json 2>/dev/null | awk '{print $1}'; }
+pkg_sha() { shasum archive/mayo/package-lock.json 2>/dev/null | awk '{print $1}'; }
 
 # Stop -> install -> start. Restarting expo while npm is mutating node_modules
 # crash-loops Metro (and drops the ngrok tunnel, ERR_NGROK_3200), so take the
@@ -25,7 +25,7 @@ pkg_sha() { shasum apps/mayo/package-lock.json 2>/dev/null | awk '{print $1}'; }
 sync_app_deps() {
   echo "  syncing app deps (expo stopped during install)"
   launchctl bootout "gui/$(id -u)/$EXPO_LABEL" 2>/dev/null || true
-  (cd apps/mayo && npm install --no-audit --no-fund) || true
+  (cd archive/mayo && npm install --no-audit --no-fund) || true
   pkg_sha > "$PKG_STAMP" 2>/dev/null || true
   if [ -f "$EXPO_PLIST" ]; then
     launchctl bootstrap "gui/$(id -u)" "$EXPO_PLIST" 2>/dev/null \
@@ -54,7 +54,7 @@ while true; do
       # Reinstall app deps when the manifest changed (expo is stopped during the
       # install — restarting it mid-install crash-loops Metro and kills the
       # tunnel). JS-only edits skip this and just Fast-Refresh.
-      if echo "$changed" | grep -q '^apps/mayo/package'; then
+      if echo "$changed" | grep -q '^archive/mayo/package'; then
         echo "  package manifest changed -> syncing deps"
         sync_app_deps
       fi

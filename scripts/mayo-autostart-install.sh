@@ -20,7 +20,7 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-APP="$REPO/apps/mayo"
+APP="$REPO/archive/mayo"
 AGENTS="$HOME/Library/LaunchAgents"
 LOGS="$HOME/Library/Logs"
 UID_NUM="$(id -u)"

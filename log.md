@@ -483,3 +483,18 @@ Jira: Atlassian MCP 커넥터 미인증 상태라 이슈 생성 못 함 — 세�
 시뮬레이터 스크린샷이 테스트가 못 잡은 크래시 두 건을 잡음: 카메라 우선순위 문제로
 모달이 월드를 못 덮던 것, `OpacityEffect`가 `OpacityProvider`를 요구해 첫 젤리 수집에서
 터지던 것. 커밋: 9a07d15, 2967ded, 그리고 이 배치.
+
+## [2026-11-01] decision | 0027 mayo 보류 — 앱은 archive/로, mayo.im과 mayo-api는 새 웹사이트가 재사용
+오너 지시: mayo는 일단 보류하고, 같은 도메인(mayo.im)에서 새로 기획한 웹사이트를 개발·배포.
+- 스냅샷 태그 `archive/mayo-2026-11-01` (2dd884c 시점 apps/mayo + apps/mayo-api + 위키).
+- `apps/mayo/` → `archive/mayo/` (코드 변경 없음). `scripts/dev-autopull.sh`,
+  `scripts/mayo-autostart-install.sh` 경로를 archive/mayo로 수정.
+- `apps/mayo-api/`는 제자리 유지·가동 지속 — 새 사이트의 백엔드로 재사용. 독립 서비스 페이지
+  [[mayo-api]] 신설. [[mayo]] status → paused.
+- 오너 작업 2건: (1) Vercel `mayo-landing-page` Root Directory `apps/mayo` → `apps/web`
+  (프로덕션 브랜치에 이 변경이 들어가기 전에), (2) 미니의 `com.efforthye.mayo.expo` 에이전트
+  bootout (apps/mayo 경로가 사라지면 크래시 루프).
+
+## [2026-11-01] setup | Jira 갭: Atlassian 커넥터 미인증 세션 → 이번 작업(mayo 보관, 새 웹 스캐폴드)과
+오너 작업 2건(Vercel Root Directory 변경, 미니 expo 에이전트 정리)의 MAYO 이슈 미생성. 커밋은
+`Refs: pending`으로 남김 — 커넥터 복구 시 티켓 생성 후 Refs 보정 필요.

@@ -3,7 +3,7 @@ title: Overview
 type: overview
 tags: [meta]
 created: 2026-07-15
-updated: 2026-07-15
+updated: 2026-11-01
 ---
 
 # Overview — The System at a Glance
@@ -17,12 +17,17 @@ On the [[home-server]] via Docker (observed 2026-07-15):
 - **[[richclub]]** — web app: `richclub-api` (FastAPI, `:8000`) + `richclub-front` (nginx, `:3000`).
 - **[[jenkins]]** — CI server (`:9090` web, `:50000` agent).
 
+Also live on the mini:
+- **[[mayo-api]]**: FastAPI orchestration API (`apps/mayo-api/`, `:8001` →
+  `mayo-api.efforthye.dev`). It outlived [[mayo]] and is the backend for the new site.
+
 Building:
-- **[[mayo]]** — premium AI long-form video generation platform; Expo app (iOS + Android) + web
-  (mayo.im). Client stack [[0003-expo-react-native-for-mobile-app]], dev loop [[expo-dev-loop]].
-  App shell is a complete UI-only product (`apps/mayo/`); the **orchestration API**
-  (`apps/mayo-api/`, FastAPI — [[0005-mayo-backend-fastapi]]) is Phase-1 scaffolded with a
-  mock generation pipeline ([[0006-mayo-job-queue-inprocess-then-redis]]).
+- **[[web]]**: the new website on **mayo.im**. Next.js + TypeScript at `apps/web/`, deployed by
+  Vercel ([[0027-pause-mayo-reuse-domain]]).
+
+Paused:
+- **[[mayo]]**: AI long-form video platform (Expo app + web). Code in `archive/mayo/`, snapshot
+  tag `archive/mayo-2026-11-01`.
 
 ## Infrastructure
 - **[[home-server]]** — Apple **M1 Mac mini** (8-core, **16 GB**, **1 TB SSD ~771 GB free**,

@@ -10,4 +10,8 @@ In-house applications built with Claude Code in this workspace. One folder per a
 
 | App | Slug | Wiki page | Status |
 |-----|------|-----------|--------|
-| Mayo (AI video platform) | `mayo` | [[mayo]] | building (app shell) |
+| New website (mayo.im) | `web` | [[web]] | building |
+| mayo-api (FastAPI backend) | `mayo-api` | [[mayo-api]] | live |
+| 말랑말랑팡팡 (Flutter + Flame) | `flame_game` | [[flame-game-template]] | building |
+
+Paused projects live in [`archive/`](../archive/README.md) (e.g. the mayo Expo app).
