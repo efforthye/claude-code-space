@@ -1,30 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
+import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const pretendard = localFont({
+  src: "../../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
+  variable: "--font-pretendard",
+  weight: "45 920",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  // TODO: 기획 확정 후 사이트 이름·설명으로 교체
-  title: "mayo.im",
-  description: "준비 중입니다.",
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: `${siteConfig.name} — ${siteConfig.tagline}`,
+    template: `%s · ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="ko"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="ko" className={`${pretendard.variable} h-full`}>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }
