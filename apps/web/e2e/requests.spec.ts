@@ -50,7 +50,15 @@ test("exhibition request picks the venue from place search and becomes an exhibi
   await page.getByPlaceholder(/장소 이름으로 검색/).fill("홍문관");
   await page.getByRole("button", { name: /홍익대학교 홍문관/ }).click();
   await page.getByPlaceholder(/상세 위치/).fill("7층");
+  await page.locator('textarea[name="description"]').fill("네 개의 전공이 함께 여는 졸업전시입니다.");
+  await fill(page, { instagram: "@e2e_gradshow", artistCount: "31" });
+  await page.locator('[name="poster"]').setInputFiles("e2e/fixtures/artwork.png");
   await page.locator('[name="agreePrivacy"]').check();
+  // 포스터를 올렸으면 게시 동의가 있어야 받는다
+  await page.getByRole("button", { name: "전시 등록 신청하기" }).click();
+  await expect(page.getByText("포스터 게시 동의에 체크해 주세요")).toBeVisible();
+  await page.locator('[name="poster"]').setInputFiles("e2e/fixtures/artwork.png"); // React가 폼을 다시 그리며 비운 경우 대비
+  await page.locator('[name="agreePoster"]').check();
   await page.getByRole("button", { name: "전시 등록 신청하기" }).click();
   await expect(page.getByText("전시 등록 신청이 접수됐어요")).toBeVisible();
 
@@ -60,6 +68,10 @@ test("exhibition request picks the venue from place search and becomes an exhibi
   await expect(page).toHaveURL(/\/admin\/exhibitions\/exh-/);
   const id = new URL(page.url()).pathname.split("/").pop();
   await page.goto(`/exhibitions/${id}`);
+  await expect(page.getByRole("img", { name: "E2E 졸업전시 포스터" })).toBeVisible();
+  await expect(page.getByText("네 개의 전공이 함께 여는 졸업전시입니다.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "@e2e_gradshow" })).toBeVisible();
+  await expect(page.getByText("31명 참여")).toBeVisible();
   await expect(page.getByText("홍익대학교 홍문관 7층")).toBeVisible();
   await expect(page.getByText("서울 마포구 와우산로 94")).toBeVisible();
   await expect(page.getByRole("link", { name: /카카오맵/ })).toHaveAttribute("href", "https://place.map.kakao.com/1");

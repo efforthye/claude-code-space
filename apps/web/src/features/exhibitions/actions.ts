@@ -6,6 +6,7 @@ import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { readPlace } from "@/features/places/parse";
 import { newId, newTrackingCode } from "@/lib/ids";
 import { currentUser } from "@/features/account/session";
+import { saveImage, UploadError } from "@/lib/data/uploads";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "날짜를 골라 주세요");
 
@@ -24,6 +25,8 @@ const RequestInput = z
     artistCount: z.string().trim(),
     support: z.array(z.enum(["archive", "photo", "qr"])),
     message: z.string().trim().max(1000),
+    description: z.string().trim().max(600, "전시 소개는 600자까지예요"),
+    instagram: z.string().trim().max(80).regex(/^$|^@?[\w.]{1,30}$|^https?:\/\/(www\.)?instagram\.com\/[\w.]{1,30}\/?$/, "인스타그램은 계정 이름이나 주소로 입력해 주세요"),
     agreePrivacy: z.literal(true, { error: "개인정보 수집 및 이용에 동의해 주세요" }),
   })
   .refine((v) => v.endDate >= v.startDate, { message: "종료일이 시작일보다 빨라요", path: ["endDate"] });
@@ -48,6 +51,8 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
     artistCount: get("artistCount"),
     support: form.getAll("support").map(String),
     message: get("message"),
+    description: get("description"),
+    instagram: get("instagram"),
     agreePrivacy: form.get("agreePrivacy") === "on",
   });
   if (!parsed.success) {
@@ -58,6 +63,20 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
   const v = parsed.data;
   const { place, venue } = readPlace(form, "venue");
   if (!venue) return { ok: false, errors: { venue: "장소를 검색해서 골라 주세요" } };
+
+  // 포스터: 신청서와 함께 온 파일을 바이트로 확인해 저장한다. 게시 동의가 있어야 받는다.
+  let poster: string | null = null;
+  const file = form.get("poster");
+  if (file instanceof File && file.size > 0) {
+    if (form.get("agreePoster") !== "on") return { ok: false, errors: { poster: "포스터 게시 동의에 체크해 주세요" } };
+    try {
+      poster = await saveImage(file);
+    } catch (e) {
+      if (e instanceof UploadError) return { ok: false, errors: { poster: e.message } };
+      throw e;
+    }
+  }
+  const instagram = v.instagram.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/.*$/, "") || null;
   const code = newTrackingCode("E");
   const me = await currentUser(); // 로그인 중이면 마이페이지에 바로 보이도록
   await store.update((db) => {
@@ -80,6 +99,9 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
       artistCount: /^\d+$/.test(v.artistCount) ? Number(v.artistCount) : null,
       support: v.support,
       message: v.message,
+      description: v.description || null,
+      instagram,
+      poster,
       state: "new",
       exhibitionId: null,
       createdAt: new Date().toISOString(),

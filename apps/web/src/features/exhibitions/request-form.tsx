@@ -63,6 +63,17 @@ export function ExhibitionRequestForm() {
         <p className="text-xs text-ink-soft">판매는 원하는 작가만 선택해요. 온라인 전시 페이지는 판매 없이 기록으로만 둘 수도 있어요.</p>
       </fieldset>
 
+      <Field label="전시 소개" error={errors.description} className="sm:col-span-2" hint="전시 페이지에 그대로 실려요. 600자까지"><Textarea name="description" maxLength={600} placeholder="전시 주제, 참여 전공, 볼거리" /></Field>
+      <Field label="공식 인스타그램" error={errors.instagram} hint="계정 이름이나 주소"><Input name="instagram" placeholder="@" /></Field>
+      <div className="flex flex-col gap-1.5">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold">포스터</span>
+          <input type="file" name="poster" accept="image/jpeg,image/png,image/webp,image/avif" className="text-sm file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white" />
+        </label>
+        <span className="text-xs text-ink-soft">JPG, PNG, WEBP, 10MB까지</span>
+        <Checkbox name="agreePoster" label="이 포스터를 MAYO 전시 페이지에 싣는 데 동의하고, 게시할 권리가 있어요" />
+        {errors.poster && <span className="text-xs font-medium text-dot">{errors.poster}</span>}
+      </div>
       <Field label="하고 싶은 말" className="sm:col-span-2"><Textarea name="message" placeholder="전시 소개, 촬영 희망 일정, 작품 철수일 등" /></Field>
       <div className="sm:col-span-2">
         <Checkbox name="agreePrivacy" label={<>전시 등록 연락을 위한 <Link href="/legal/privacy" target="_blank" className="underline">개인정보 수집 및 이용</Link>에 동의해요 (필수)</>} />

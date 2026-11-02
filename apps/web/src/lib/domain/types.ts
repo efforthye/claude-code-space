@@ -267,6 +267,10 @@ export type ExhibitionRequest = {
   venue: string;
   place: Place | null;
   artistCount: number | null;
+  description?: string | null; // 전시 소개
+  instagram?: string | null; // 공식 계정 (@ 없이)
+  /** 신청자가 올리고 게시에 동의한 포스터 (/media/…) */
+  poster?: string | null;
   support: ExhibitionSupport[];
   message: string;
   state: ApplicationState;

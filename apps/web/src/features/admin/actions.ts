@@ -375,8 +375,11 @@ export async function reviewExhibitionRequest(requestId: string, decision: "appr
       place: req.place,
       startDate: req.startDate,
       endDate: req.endDate,
-      description: "",
+      description: req.description ?? "",
       link: null,
+      instagram: req.instagram ?? null,
+      poster: req.poster ?? null,
+      participantCount: req.artistCount,
       createdAt: new Date().toISOString(),
     };
     db.exhibitions.push(exhibition);

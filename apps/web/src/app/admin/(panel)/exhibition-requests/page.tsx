@@ -36,6 +36,12 @@ export default async function AdminExhibitionRequests() {
               <div><dt className="inline text-ink-soft">연락처 </dt><dd className="inline">{r.phone}, {r.email}</dd></div>
               <div className="sm:col-span-2"><dt className="inline text-ink-soft">원하는 지원 </dt><dd className="inline">{r.support.map((x) => SUPPORT_LABEL[x]).join(", ") || "없음"}</dd></div>
             </dl>
+            {r.description && <p className="whitespace-pre-line"><b>소개</b> {r.description}</p>}
+            {r.instagram && <p><b>인스타그램</b> <a href={`https://instagram.com/${r.instagram}`} target="_blank" rel="noopener noreferrer" className="underline">@{r.instagram}</a></p>}
+            {r.poster && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={r.poster} alt={`${r.title} 포스터`} className="h-48 w-auto self-start rounded-sm" />
+            )}
             {r.message && <p className="rounded-sm bg-mist p-3 whitespace-pre-line">{r.message}</p>}
             {r.state === "new" ? (
               <div className="flex gap-2">
