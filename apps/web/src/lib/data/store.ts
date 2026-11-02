@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { Database } from "@/lib/domain/types";
@@ -39,6 +40,8 @@ const EMPTY: Database = {
 /** Local development store: one JSON file under `.data/` (git-ignored). */
 export class LocalJsonStore implements Store {
   private queue: Promise<unknown> = Promise.resolve();
+  /** 파일이 없을 때 여러 요청이 동시에 처음 읽어도 시딩은 한 번만 */
+  private seeding: Promise<Database> | null = null;
 
   constructor(
     private file: string,
@@ -50,16 +53,24 @@ export class LocalJsonStore implements Store {
       return migrate({ ...EMPTY, ...JSON.parse(await fs.readFile(this.file, "utf8")) });
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
-      const db = this.seed();
-      // 실서비스 기본 데이터는 파일로 남기지 않는다(빌드가 만든 파일이 개발 시딩을 막지 않도록).
-      if (process.env.NODE_ENV !== "production") await this.save(db);
-      return db;
+      this.seeding ??= (async () => {
+        const db = this.seed();
+        // 실서비스 기본 데이터는 파일로 남기지 않는다(빌드가 만든 파일이 개발 시딩을 막지 않도록).
+        if (process.env.NODE_ENV !== "production") await this.save(db);
+        return db;
+      })().finally(() => {
+        this.seeding = null;
+      });
+      // 같은 객체를 여러 호출자가 고치지 않도록 각자 복사본을 받는다
+      return structuredClone(await this.seeding);
     }
   }
 
   private async save(db: Database) {
     await fs.mkdir(path.dirname(this.file), { recursive: true });
-    const tmp = `${this.file}.tmp`;
+    // 쓰기마다 다른 임시 파일 (같은 이름을 쓰면 동시에 쓸 때 한쪽 rename이 ENOENT로 실패했다.
+    // Next 개발 서버는 여러 작업 프로세스가 같은 파일을 쓸 수 있어서 프로세스 안 큐만으로는 못 막는다)
+    const tmp = `${this.file}.${process.pid}.${randomUUID()}.tmp`;
     await fs.writeFile(tmp, JSON.stringify(db, null, 2));
     await fs.rename(tmp, this.file);
   }

@@ -134,5 +134,5 @@ test("artists can be searched, filtered by school and sorted; profiles show a st
   await page.goto("/artists/art-jieun");
   await expect(page.getByRole("heading", { name: "작업실" })).toBeVisible();
   await expect(page.getByText("서향 창이 있는 자취방 한쪽이 작업실이에요.")).toBeVisible();
-  await expect(page.locator("header").getByText("김", { exact: true })).toBeVisible(); // 사진이 없으면 첫 글자
+  await expect(page.getByRole("img", { name: "김지은 프로필 사진" })).toBeVisible();
 });

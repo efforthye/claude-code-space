@@ -1,4 +1,4 @@
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -19,6 +19,23 @@ describe("LocalJsonStore", () => {
     await store.update((d) => d.schools.push({ id: "sch-x", name: "테스트대학교", shortName: "테스트대" }));
     const onDisk = JSON.parse(await readFile(file, "utf8"));
     expect(onDisk.schools.some((s: { id: string }) => s.id === "sch-x")).toBe(true);
+  });
+
+  it("survives many requests reading a missing file at once (seeds once, no rename race)", async () => {
+    const { file, store } = await tempStore();
+    const all = await Promise.all(Array.from({ length: 10 }, () => store.read()));
+    expect(all.every((db) => db.exhibitions.length > 50)).toBe(true);
+    all[0].schools.push({ id: "mut", name: "x", shortName: "x" });
+    expect(all[1].schools.some((s) => s.id === "mut")).toBe(false); // 각자 복사본
+    const left = await readdir(path.dirname(file));
+    expect(left).toEqual(["db.json"]); // 임시 파일이 남지 않는다
+  });
+
+  it("two stores (like two dev workers) writing the same file at once both succeed", async () => {
+    const { file } = await tempStore();
+    const a = new LocalJsonStore(file, buildBaseDatabase);
+    const b = new LocalJsonStore(file, buildBaseDatabase);
+    await expect(Promise.all([a.read(), b.read(), a.update(() => 1), b.update(() => 2)])).resolves.toBeTruthy();
   });
 
   it("serialises concurrent writes so nothing is lost", async () => {
