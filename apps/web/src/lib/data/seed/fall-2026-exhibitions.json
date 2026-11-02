@@ -1,5 +1,5 @@
 {
- "_comment": "2026 가을 미대 졸업전시 일정 (공개 정보). 출처: @cultureart4u 인스타그램에 소개된 각 학과 포스터와 홍익대 미술대학 졸업전시 일정표를 정리한 '전시 사이 · 미대 졸업전시 캘린더 2026' (2026.10.24 업데이트, github.com/entjs-whale/art-grad-calendar). 포스터 이미지는 가져오지 않았다. 방문 전 학과 공식 계정 확인 필요.",
+ "_comment": "2026 가을 미대 졸업전시 일정 (공개 정보). 출처: @cultureart4u 인스타그램에 소개된 각 학과 포스터와 홍익대 미술대학 졸업전시 일정표를 정리한 '전시 사이 · 미대 졸업전시 캘린더 2026' (2026.10.24 업데이트, github.com/entjs-whale/art-grad-calendar). 포스터 이미지는 가져오지 않았다. 방문 전 학과 공식 계정 확인 필요. 소개, 공식 계정, 참여 인원은 2026-11-02에 공개 웹페이지(뉴스, 학과 사이트, 디자인 매체)로 확인한 것만 채웠고 출처는 각 전시 factSources에 있다.",
  "schools": [
   {
    "id": "sch-hongik",
@@ -249,7 +249,7 @@
    "venue": "디자인대학 갤러리 1F (천안캠퍼스)",
    "startDate": "2026-10-18",
    "endDate": "2026-10-23",
-   "description": "",
+   "description": "빈 공백에서 출발해 탐색과 실험을 거쳐 구체적인 형상에 이르는 과정을 주제로 한 제36회 졸업전시로, 텍스타일 제품, 리빙 오브제, 아트워크 100여 점과 생성형 AI 활용 참여형 부스를 선보입니다.",
    "link": null,
    "hours": "매일 09:00–19:00",
    "opening": null,
@@ -258,7 +258,17 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "factSources": [
+    {
+     "label": "중도일보 - 상명대 텍스타일디자인전공 제36회 졸업전시 'VOID TO FORM' 개최",
+     "url": "https://www.joongdo.co.kr/web/view.php?key=20261019010005009"
+    },
+    {
+     "label": "현대경제 - 상명대, AI, 디지털 기술 접목한 텍스타일 졸업전시",
+     "url": "https://www.hdnews.co.kr/news/articleView.html?idxno=359931"
+    }
+   ]
   },
   {
    "id": "exh-26f-gachon-sculpture",
@@ -458,7 +468,7 @@
    "venue": "마루아트센터 2, 3관",
    "startDate": "2026-10-28",
    "endDate": "2026-11-02",
-   "description": "",
+   "description": "한국전통문화대 전통미술공예학과 제23회 졸업작품전 '전통을 전하다' 중 전통도자전공 전시로, 국가유산 도자를 재현한 작품과 생활 속 쓰임을 제안하는 창작 도자를 선보입니다.",
    "link": null,
    "hours": "매일 10:30–18:30",
    "opening": null,
@@ -467,7 +477,13 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "factSources": [
+    {
+     "label": "한국경제TV - 한국전통문화대, 전통미술공예학과 졸업전 '전통을 전하다' 개최 (2026.10.30)",
+     "url": "https://www.wowtv.co.kr/NewsCenter/News/Read?articleId=A202610300133"
+    }
+   ]
   },
   {
    "id": "exh-26f-knuh-painting",
@@ -477,7 +493,7 @@
    "venue": "충무아트센터 갤러리 G1",
    "startDate": "2026-10-28",
    "endDate": "2026-11-04",
-   "description": "",
+   "description": "한국전통문화대 전통미술공예학과 제23회 졸업작품전 '전통을 전하다' 중 전통회화전공 전시로, 불화와 전통 채색화의 재현작, 현대적 창작 회화를 선보입니다.",
    "link": null,
    "hours": "매일 10:00–18:00",
    "opening": null,
@@ -486,7 +502,13 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "factSources": [
+    {
+     "label": "한국경제TV - 한국전통문화대, 전통미술공예학과 졸업전 '전통을 전하다' 개최 (2026.10.30)",
+     "url": "https://www.wowtv.co.kr/NewsCenter/News/Read?articleId=A202610300133"
+    }
+   ]
   },
   {
    "id": "exh-26f-kookmin-ceramic",
@@ -515,7 +537,7 @@
    "venue": "NOL 서경스퀘어 B1 스콘갤러리",
    "startDate": "2026-10-28",
    "endDate": "2026-11-01",
-   "description": "",
+   "description": "졸업을 자신을 세상에 처음 새기는 순간으로 보고 '각인'을 핵심 개념으로 삼은 제32회 졸업작품전입니다. 브랜드, UX/UI, 게임, 영상 네 분야의 작품을 선보입니다.",
    "link": null,
    "hours": "매일 10:00–18:00",
    "opening": "10.28 (수) 17:00",
@@ -524,7 +546,18 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "participantCount": 27,
+   "factSources": [
+    {
+     "label": "대학저널 - 서경대 비주얼디자인전공, 제32회 졸업작품전 '쐐기를 박다' 개최",
+     "url": "https://www.dhnews.co.kr/news/view/1065575796878762"
+    },
+    {
+     "label": "베리타스알파 - 서경대 비주얼디자인전공 제32회 졸업작품전 '쐐기를 박다' 개최",
+     "url": "https://www.veritas-a.com/news/articleView.html?idxno=633410"
+    }
+   ]
   },
   {
    "id": "exh-26f-dongduk-vcd",
@@ -534,7 +567,7 @@
    "venue": "디자인연구센터 (Design Hub)",
    "startDate": "2026-10-29",
    "endDate": "2026-11-02",
-   "description": "",
+   "description": "결과를 기록하는 영수증에 빗대어, 수치 하나로 환원되지 않는 디자인 과정의 시도와 축적을 다룬 졸업전시입니다. 그래픽, 패키지, 브랜딩, 편집, 타이포그래피 작업 100점 이상이 출품됩니다.",
    "link": null,
    "hours": "매일 10:00–18:00",
    "opening": null,
@@ -543,7 +576,13 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "factSources": [
+    {
+     "label": "디자인프레스(design.co.kr) - 0수증:零數 동덕여자대학교 시각디자인전공 2026",
+     "url": "https://design.co.kr/exhibition/0%ec%88%98%ec%a6%9d%e9%9b%b6%e6%95%b8/"
+    }
+   ]
   },
   {
    "id": "exh-26f-duksung-interior",
@@ -686,7 +725,7 @@
    "venue": "아라아트센터 3, 4층",
    "startDate": "2026-11-03",
    "endDate": "2026-11-09",
-   "description": "",
+   "description": "3차원 좌표계의 원점을 제목으로 삼아, 4학년생들이 각자의 질문에서 출발해 1년간 발전시킨 졸업 프로젝트를 선보이는 전시입니다. 학업의 마무리이자 다음 단계의 출발점이라는 의미를 담았습니다.",
    "link": null,
    "hours": null,
    "opening": null,
@@ -695,7 +734,14 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "participantCount": 52,
+   "factSources": [
+    {
+     "label": "디자인프레스(design.co.kr) - 국민대학교 공간디자인학과 2026 졸업전시 《0, 0, 0 : ORIGIN》",
+     "url": "https://design.co.kr/exhibition/0-0-0-origin/"
+    }
+   ]
   },
   {
    "id": "exh-26f-kyonggi-western",
@@ -838,7 +884,7 @@
    "venue": "백주년기념관 목산갤러리 1–3층",
    "startDate": "2026-11-04",
    "endDate": "2026-11-10",
-   "description": "",
+   "description": "서울과기대 산업디자인학과 제44회 졸업전시로, 학교에서 쌓아 온 아이디어를 세상으로 쏘아 보내는 화살에 빗대어 제품, 가구, 조명, UX/UI, 모빌리티 등 48개의 결과물을 소개합니다.",
    "link": null,
    "hours": "매일 10:00–20:00",
    "opening": null,
@@ -847,7 +893,13 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "factSources": [
+    {
+     "label": "디자인프레스 Design+ 졸업전시 - shoot (서울과학기술대학교 산업디자인학과)",
+     "url": "https://design.co.kr/exhibition/shoot/"
+    }
+   ]
   },
   {
    "id": "exh-26f-suwon-craft",
@@ -1028,7 +1080,7 @@
    "venue": "조형예술관 A동 1층 로비, 2층 이화아트센터",
    "startDate": "2026-11-10",
    "endDate": "2026-11-15",
-   "description": "",
+   "description": "이화여대 디자인학부 2026 졸업전시 《OFFSTAGE》의 시각디자인 주간 전시로, 완성된 무대 뒤에서 4년간 쌓인 시행착오와 준비 과정을 개미의 움직임에 빗대어 조명합니다.",
    "link": null,
    "hours": null,
    "opening": "10.27 (화) 17:00 (전체 오프닝)",
@@ -1037,7 +1089,13 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "factSources": [
+    {
+     "label": "EWHA DESIGN 2026 - OFFSTAGE 공식 사이트 (About: 전공별 기간, 시각디자인 11.10–11.15)",
+     "url": "https://ewhadesign.com/2026"
+    }
+   ]
   },
   {
    "id": "exh-26f-knuh-sculpture",
@@ -1047,7 +1105,7 @@
    "venue": "조각실습동 1층 전시관",
    "startDate": "2026-11-10",
    "endDate": "2026-11-16",
-   "description": "",
+   "description": "한국전통문화대 전통미술공예학과 제23회 졸업작품전 중 전통조각 전공 전시로, 소조불상과 금속, 칠보 함과 장신구, 입사 오브제, 짜임 문갑, 옻칠 작품 등을 선보입니다.",
    "link": null,
    "hours": "매일 09:00–18:00",
    "opening": null,
@@ -1056,7 +1114,17 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "factSources": [
+    {
+     "label": "한국경제TV - 한국전통문화대, 전통미술공예학과 졸업전 '전통을 전하다' 개최 (2026.10.30)",
+     "url": "https://www.wowtv.co.kr/NewsCenter/News/Read?articleId=A202610300133"
+    },
+    {
+     "label": "네이트 뉴스 - 한국전통문화대, 전통미술공예학과 졸업전 '전통을 전하다' 개최",
+     "url": "https://m.news.nate.com/view/20261030n24659"
+    }
+   ]
   },
   {
    "id": "exh-26f-knuh-textile",
@@ -1066,7 +1134,7 @@
    "venue": "한국전통문화대학교 안국동 별궁",
    "startDate": "2026-11-10",
    "endDate": "2026-11-16",
-   "description": "",
+   "description": "한국전통문화대 전통미술공예학과 제23회 졸업작품전 중 전통섬유 전공 전시로, 직조부터 복식 완성까지 전통복식 재현 과정을 연구한 결과물을 소개합니다.",
    "link": null,
    "hours": "매일 09:00–18:00",
    "opening": null,
@@ -1075,7 +1143,17 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "factSources": [
+    {
+     "label": "잡포스트 - 한국전통문화대, 전통미술공예학과 졸업전 '전통을 전하다'",
+     "url": "https://www.job-post.co.kr/news/articleView.html?idxno=235683"
+    },
+    {
+     "label": "한국경제TV - 한국전통문화대, 전통미술공예학과 졸업전 '전통을 전하다' 개최",
+     "url": "https://www.wowtv.co.kr/NewsCenter/News/Read?articleId=A202610300133"
+    }
+   ]
   },
   {
    "id": "exh-26f-konkuk-id2",
@@ -1142,7 +1220,7 @@
    "venue": "한남대학교 아트센터 엑시스 한남",
    "startDate": "2026-11-11",
    "endDate": "2026-11-24",
-   "description": "",
+   "description": "한남대 회화과의 제39회 졸업작품전으로, 졸업생들이 4년간의 학업 과정에서 만든 작품을 아트센터 엑시스 한남에서 선보입니다.",
    "link": null,
    "hours": "매일 10:00–18:00",
    "opening": "11.11 (수) 17:00",
@@ -1151,7 +1229,13 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "factSources": [
+    {
+     "label": "한남대학교 회화과 - [학과 행사] 제39회 졸업작품 전시회 : 아무도 우리와 같지 않다",
+     "url": "http://fine-arts.hannam.ac.kr/gallery/?uid=353&mod=document"
+    }
+   ]
   },
   {
    "id": "exh-26f-konkuk-media",
@@ -1218,7 +1302,7 @@
    "venue": "인사아트프라자 2F",
    "startDate": "2026-11-12",
    "endDate": "2026-11-16",
-   "description": "",
+   "description": "상명대 텍스타일디자인전공 제36회 졸업전시로, 빈 출발점에서 실험을 거쳐 형태를 만들어 가는 과정을 다루며 전통 기법과 AI 협업 작업 등 약 100점을 선보입니다.",
    "link": null,
    "hours": "매일 10:00–18:00",
    "opening": null,
@@ -1227,7 +1311,22 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "instagram": "smtd_36th",
+   "factSources": [
+    {
+     "label": "로컬투데이 - 상명대 텍스타일디자인전공, 제36회 졸업전시 'VOID TO FORM' 개막",
+     "url": "https://www.localtoday.co.kr/news/articleView.html?idxno=416342"
+    },
+    {
+     "label": "교수신문 - 상명대 텍스타일디자인전공, 졸업전시에 AI 협업 작품 등 100점 선보여",
+     "url": "https://www.kyosu.net/news/articleView.html?idxno=211402"
+    },
+    {
+     "label": "중도일보 - 상명대 텍스타일디자인전공 제36회 졸업전시 'VOID TO FORM' 개최",
+     "url": "https://www.joongdo.co.kr/web/view.php?key=20261019010005009"
+    }
+   ]
   },
   {
    "id": "exh-26f-uos-vcd",
@@ -1535,13 +1634,13 @@
   },
   {
    "id": "exh-26f-hongik-painting",
-   "title": "홍익대 회화과 졸업전시",
+   "title": "홍익대 회화과 졸업전시 《Pli-over-Pli》",
    "schoolId": "sch-hongik",
    "department": "회화과",
    "venue": "문헌관 4층 현대미술관, 미술학관(F동) 3층 실기실",
    "startDate": "2026-11-23",
    "endDate": "2026-11-28",
-   "description": "",
+   "description": "접힘(pli)이라는 개념을 출발점으로, 작업 위에 쌓이고 겹치는 흔적과 잠정적인 완성을 다루는 제77회 회화과 졸업전시입니다.",
    "link": null,
    "hours": "월 17:00–20:00, 화–금 10:00–20:00, 토 10:00–14:00",
    "opening": "11.23 (월) 17:00",
@@ -1550,7 +1649,14 @@
     "label": "각 학과 졸업전시 포스터와 홍익대 미술대학 일정표 (정리: @cultureart4u, 전시 사이 캘린더)",
     "url": "https://entjs-whale.github.io/art-grad-calendar/"
    },
-   "createdAt": "2026-11-01T00:00:00.000Z"
+   "createdAt": "2026-11-01T00:00:00.000Z",
+   "participantCount": 53,
+   "factSources": [
+    {
+     "label": "디자인플러스(design.co.kr) - 제77회 홍익대학교 회화과 졸업전시 Pli-over-Pli",
+     "url": "https://design.co.kr/exhibition/pli-over-pli/"
+    }
+   ]
   },
   {
    "id": "exh-26f-kangwon-ceramic",

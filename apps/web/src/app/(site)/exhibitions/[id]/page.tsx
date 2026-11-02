@@ -98,6 +98,14 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
             일정 출처: <a href={e.source.url} target="_blank" rel="noopener noreferrer" className="underline">{e.source.label}</a>. MAYO는 이 전시의 주최자가 아니며, 방문 전 학과 공식 계정에서 확인하세요.
           </p>
         )}
+        {e.factSources && e.factSources.length > 0 && (
+          <p className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-ink-soft">
+            <span>전시 정보 출처:</span>
+            {e.factSources.map((src) => (
+              <a key={src.url} href={src.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{src.label}</a>
+            ))}
+          </p>
+        )}
         {participants.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-ink-soft">참여 작가</span>
@@ -110,7 +118,7 @@ async function ExhibitionDetail({ params }: { params: PageProps<"/exhibitions/[i
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-3 glass rounded-lg p-5">
             <p className="font-bold">이 전시에 참여하는 작가인가요?</p>
-            <p className="text-sm text-ink-soft">입점하면 작품을 무료로 촬영해 드리고, 전시가 끝난 뒤에도 작품을 소개해요. 판매는 원하는 작품만.</p>
+            <p className="text-sm text-ink-soft">입점하면 작품을 무료로 촬영해 드리고, 전시가 끝난 뒤에도 작품을 소개해요. 판매할 작품은 직접 고를 수 있어요.</p>
             <ButtonLink href="/join" variant="secondary" className="w-fit">작가 입점 신청</ButtonLink>
           </div>
           <div className="flex flex-col gap-3 glass rounded-lg p-5">

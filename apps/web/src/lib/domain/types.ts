@@ -78,6 +78,8 @@ export type Exhibition = {
   instagram?: string | null; // 학과, 졸업준비위원회 공식 계정 (@ 없이)
   poster?: string | null; // 포스터 이미지
   participantCount?: number | null; // 참여 인원
+  /** 소개, 계정, 인원을 확인한 공개 페이지들 (조사해서 채운 경우) */
+  factSources?: { label: string; url: string }[];
   /** 공개 일정에서 가져온 전시의 출처. 신청, 직접 등록한 전시는 null. */
   source?: { label: string; url: string } | null;
   createdAt: string;
