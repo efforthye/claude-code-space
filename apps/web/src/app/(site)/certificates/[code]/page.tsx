@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/container";
 import { SealIcon } from "@/components/ui/verified-badge";
 import { maskName } from "@/features/certificates/build";
 import { findCertificate } from "@/features/certificates/queries";
+import { ShareActions } from "@/features/share/share-actions";
 import { formatDate, formatPrice } from "@/lib/format";
 import { siteConfig } from "@/lib/site";
 
@@ -103,7 +104,15 @@ async function CertificateView({ params }: { params: PageProps<"/certificates/[c
           </div>
         </footer>
       </article>
-      <p className="text-center text-xs text-ink-soft print:hidden">인쇄하면 이 보증서만 깔끔하게 나와요 (브라우저 인쇄, PDF로 저장).</p>
+      <ShareActions
+        url={url}
+        title={`작품 보증서 ${cert.code}`}
+        qrSrc={`/qr/certificate/${cert.code}`}
+        qrName={`보증서 ${cert.code}`}
+        printable
+        className="justify-center"
+      />
+      <p className="text-center text-xs text-ink-soft print:hidden">인쇄하면 이 보증서만 깔끔하게 나와요. PDF로 저장하려면 인쇄 창에서 PDF를 고르세요.</p>
     </Container>
   );
 }

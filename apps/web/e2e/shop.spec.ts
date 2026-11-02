@@ -92,3 +92,30 @@ test("a school chip on the home opens that school's works, shows and artists", a
   await expect(page.getByRole("heading", { name: "Exhibitions" })).toBeVisible();
   await expect(page.getByRole("link", { name: "김지은 회화과" })).toBeVisible();
 });
+
+test("a work can be shared, its QR saved and its caption label printed", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  // 공유 시트가 없는 브라우저(대부분의 데스크톱)처럼: 링크 복사로 넘어간다
+  await page.addInitScript(() => Object.defineProperty(navigator, "share", { value: undefined, configurable: true }));
+  await page.goto("/works/w-blue-afternoon");
+  await page.getByRole("button", { name: "공유하기" }).click();
+  await expect(page.getByRole("button", { name: "링크를 복사했어요" })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/\/works\/w-blue-afternoon$/);
+
+  await page.getByRole("button", { name: "QR 보기" }).click();
+  const dialog = page.getByRole("dialog", { name: /QR/ });
+  await expect(dialog.getByRole("img", { name: /QR 코드/ })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "PNG 저장" })).toHaveAttribute("href", "/qr/work/w-blue-afternoon?format=png&download=1");
+  await page.keyboard.press("Escape");
+
+  const png = await page.request.get("/qr/work/w-blue-afternoon?format=png");
+  expect(png.headers()["content-type"]).toBe("image/png");
+  expect((await page.request.get("/qr/work/does-not-exist")).status()).toBe(404); // 아무 주소나 QR로 만들지 않는다
+
+  await page.getByRole("link", { name: "캡션 라벨 인쇄" }).click();
+  await expect(page).toHaveURL(/\/label\/w-blue-afternoon$/);
+  const label = page.getByRole("article", { name: /캡션 라벨/ });
+  await expect(label).toContainText("김지은");
+  await expect(label).toContainText("320,000원");
+  await expect(label.getByRole("img", { name: /QR/ })).toBeVisible();
+});

@@ -12,6 +12,8 @@ import { MediaGallery } from "@/features/catalog/media-gallery";
 import { getCatalog, indexById } from "@/lib/data/catalog";
 import { artShippingIds, groupLabel, isDeceased, lifespan, categoryLabel, coverImage, KIND_LABEL, needsArtShipping, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
 import { formatPrice, formatSize } from "@/lib/format";
+import { ShareActions } from "@/features/share/share-actions";
+import { siteConfig } from "@/lib/site";
 import { MetaLine } from "@/components/ui/meta-line";
 import { StoryBlocks } from "@/features/catalog/story-blocks";
 
@@ -118,6 +120,14 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
           )}
 
           {work.description && <p className="leading-relaxed whitespace-pre-line">{work.description}</p>}
+
+          <ShareActions
+            url={`${siteConfig.url}/works/${work.id}`}
+            title={`「${work.title}」 ${artist?.name ?? ""}`}
+            qrSrc={`/qr/work/${work.id}`}
+            qrName={`「${work.title}」`}
+            labelHref={`/label/${work.id}`}
+          />
 
           <details className="text-xs text-ink-soft">
             <summary className="cursor-pointer font-semibold text-ink">청약철회(반품) 안내</summary>
