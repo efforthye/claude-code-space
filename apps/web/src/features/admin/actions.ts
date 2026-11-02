@@ -251,6 +251,12 @@ export async function saveExhibition(exhibitionId: string | null, _prev: FormSta
   if (!title || !startDate || !endDate) return { error: "전시명과 기간을 입력해 주세요" };
   if (endDate < startDate) return { error: "종료일이 시작일보다 빨라요" };
   const { place, venue } = readPlace(form, "venue");
+  const posterRaw = s(form, "poster");
+  const poster = posterRaw ? MediaSrc.safeParse(posterRaw) : null;
+  if (poster && !poster.success) return { error: "포스터 이미지 주소가 올바르지 않아요" };
+  const participantCount = num(s(form, "participantCount"));
+  if (participantCount != null && (!Number.isInteger(participantCount) || participantCount < 1 || participantCount > 2000)) return { error: "참여 인원은 숫자로 입력해 주세요" };
+  if (s(form, "instagram") && !/^@?[\w.]{1,30}$|^https?:\/\/(www\.)?instagram\.com\/[\w.]{1,30}\/?$/.test(s(form, "instagram"))) return { error: "인스타그램은 계정 이름이나 주소로 입력해 주세요" };
   let link: string | null;
   try {
     link = httpsOrNull(s(form, "link"));
@@ -269,6 +275,9 @@ export async function saveExhibition(exhibitionId: string | null, _prev: FormSta
     link,
     hours: optional(s(form, "hours")),
     opening: optional(s(form, "opening")),
+    instagram: optional(s(form, "instagram").replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/.*$/, "")),
+    poster: poster?.data ?? null,
+    participantCount: participantCount,
   };
   await store.update((db) => {
     if (exhibitionId) {

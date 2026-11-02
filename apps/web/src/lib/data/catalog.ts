@@ -67,6 +67,22 @@ export function exhibitionPhase(e: Exhibition, today: string): ExhibitionPhase {
   return "ongoing";
 }
 
+/** 날짜(YYYY-MM-DD) 사이 일수 */
+function daysBetween(from: string, to: string) {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+}
+
+/** "오늘 마지막 날", "3일 남았어요", "5일 뒤 시작", 끝난 전시는 null */
+export function exhibitionCountdown(e: Pick<Exhibition, "startDate" | "endDate">, today: string): string | null {
+  if (today < e.startDate) {
+    const d = daysBetween(today, e.startDate);
+    return d === 1 ? "내일 시작" : `${d}일 뒤 시작`;
+  }
+  if (today > e.endDate) return null;
+  const left = daysBetween(today, e.endDate);
+  return left === 0 ? "오늘 마지막 날" : left === 1 ? "내일까지" : `${left}일 남았어요`;
+}
+
 export const PHASE_LABEL: Record<ExhibitionPhase, string> = {
   ongoing: "진행 중",
   upcoming: "예정",

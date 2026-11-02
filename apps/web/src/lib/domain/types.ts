@@ -75,6 +75,9 @@ export type Exhibition = {
   hours?: string | null; // 관람 시간
   opening?: string | null; // 오프닝
   note?: string | null; // 출처끼리 다른 점 등 안내
+  instagram?: string | null; // 학과, 졸업준비위원회 공식 계정 (@ 없이)
+  poster?: string | null; // 포스터 이미지
+  participantCount?: number | null; // 참여 인원
   /** 공개 일정에서 가져온 전시의 출처. 신청, 직접 등록한 전시는 null. */
   source?: { label: string; url: string } | null;
   createdAt: string;

@@ -262,3 +262,18 @@ test("the logo mark is chosen in admin and the header, tab icon and manifest fol
   await page.getByRole("button", { name: /스테인드글라스/ }).click();
   await expect(page.getByRole("button", { name: /스테인드글라스/ })).toHaveAttribute("aria-pressed", "true");
 });
+
+test("an exhibition shows its countdown, official account, participants and related shows", async ({ page }) => {
+  await adminLogin(page);
+  await page.goto("/admin/exhibitions/exh-26f-hongik-wood");
+  await page.getByLabel("공식 인스타그램").fill("@hongik_wood_2026");
+  await page.getByLabel("참여 인원").fill("24");
+  await page.getByRole("button", { name: "변경 저장" }).click();
+  await expect(page).toHaveURL(/\/admin\/exhibitions$/);
+
+  await page.goto("/exhibitions/exh-26f-hongik-wood");
+  await expect(page.getByRole("link", { name: "@hongik_wood_2026" })).toHaveAttribute("href", "https://instagram.com/hongik_wood_2026");
+  await expect(page.getByText("24명 참여")).toBeVisible();
+  await expect(page.getByText(/일 뒤 시작|내일 시작|남았어요|오늘 마지막 날|내일까지/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "홍익대의 다른 전시" })).toBeVisible();
+});
