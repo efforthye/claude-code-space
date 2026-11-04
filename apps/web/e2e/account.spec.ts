@@ -106,7 +106,7 @@ test("changing the password signs out other devices", async ({ page, browser }) 
   await other.goto("/login");
   await fill(other, { email, password: PASSWORD });
   await other.getByRole("button", { name: "로그인" }).click();
-  await expect(other).toHaveURL(/\/account$/);
+  await expect(other).toHaveURL(/\/account$/, { timeout: 20_000 }); // 비밀번호 확인(scrypt)은 일부러 무겁다
 
   const next = "another long passphrase 2027";
   await page.goto("/account/settings");

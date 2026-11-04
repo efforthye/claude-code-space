@@ -102,6 +102,7 @@ export function ArtistList({ artists, schools, groups, workCounts }: { artists: 
                 </div>
                 <span className="text-sm text-ink-soft">{school || a.department ? <MetaLine>{school?.name}{a.department}</MetaLine> : "소속 없음"}</span>
                 <div className="flex flex-wrap items-center gap-2">
+                  {a.sample && <Badge>예시 작가</Badge>}
                   <Badge>{groupLabel(groups, a.status)}</Badge>
                   {a.acceptsCommission && <Badge tone="clay">주문제작</Badge>}
                   <VerifiedBadge method={a.verifiedBy} schoolName={school?.shortName} />

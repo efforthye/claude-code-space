@@ -34,6 +34,7 @@ async function ArtistDetail({ params }: { params: PageProps<"/artists/[id]">["pa
     <Container className="flex flex-col gap-10 py-10">
       <header className="flex flex-col gap-3 border-b border-ink pb-6">
         <div className="flex flex-wrap items-center gap-2">
+          {artist.sample && <Badge>예시 작가</Badge>}
           <Badge>{statusLabel}</Badge>
           {artist.acceptsCommission && <Badge tone="clay">주문제작 가능</Badge>}
         </div>

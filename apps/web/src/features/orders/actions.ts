@@ -5,7 +5,7 @@ import { z } from "zod";
 import { TAG } from "@/lib/data/catalog";
 import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
 import { allow, TOO_MANY } from "@/lib/security/rate-limit";
-import { artShippingIds, PARCEL_FEE, PAYMENT_DUE_HOURS, shippingOptions } from "@/lib/domain/rules";
+import { artShippingIds, PARCEL_FEE, PAYMENT_DUE_HOURS, shippingOptions, isOrderable } from "@/lib/domain/rules";
 import type { Order, OrderItem } from "@/lib/domain/types";
 import { newId, newOrderCode } from "@/lib/ids";
 import { currentUser } from "@/features/account/session";
@@ -65,7 +65,7 @@ export async function placeOrder(_prev: OrderFormState, form: FormData): Promise
     const unavailable: string[] = [];
     for (const line of input.lines) {
       const work = db.works.find((w) => w.id === line.workId);
-      if (!work || work.status !== "available") {
+      if (!work || !isOrderable(work)) {
         unavailable.push(work?.title ?? "삭제된 작품");
         continue;
       }

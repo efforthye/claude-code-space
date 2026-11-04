@@ -13,6 +13,7 @@ export function WorkCard({ work, artist, school, mediumLabel }: { work: Work; ar
       <div className="relative overflow-hidden rounded-[22px] bg-white/60 shadow-[0_24px_40px_-26px_rgb(60_30_120/0.55)] transition-[translate,rotate,scale,box-shadow] duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_30px_50px_-24px_rgb(60_30_120/0.6)]">
         {/* 작품 비율 그대로, 가로 가구는 가로로, 세로 회화는 세로로 */}
         <WorkImage src={coverImage(work)} alt={work.title} className="block h-auto w-full transition-[translate,rotate,scale,transform] duration-500 ease-out group-hover:scale-[1.04]" />
+        {work.sample && <span className="absolute top-3 right-3 rounded-full bg-ink/75 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">예시</span>}
         {(work.status === "reserved" || work.status === "sold") && (
           <span className="glass absolute top-3 left-3 rounded-full px-2.5 py-1">
             <RedDot status={work.status} />

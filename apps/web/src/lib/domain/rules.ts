@@ -159,6 +159,11 @@ export function coverImage(work: Pick<Work, "media">): string | undefined {
 }
 
 /** 작품이 공개 목록에 보이는가. */
+/** 지금 주문할 수 있는 작품: 판매 중이고 예시가 아닌 것 */
+export function isOrderable(work: Pick<Work, "status" | "sample">) {
+  return work.status === "available" && !work.sample;
+}
+
 export function isListed(work: Work) {
   return work.status !== "hidden";
 }

@@ -95,3 +95,17 @@ describe("migrate", () => {
     expect(out.works.at(-1)).toMatchObject({ story: [], consignor: null, provenance: null, appraisal: null });
   });
 });
+
+describe("예시 표시", () => {
+  it("marks sample artists and works loaded from older data, but never a member's artist page", async () => {
+    const { migrate } = await import("./store");
+    const db = buildBaseDatabase();
+    db.artists.push({ id: "art-jieun" } as never, { id: "art-hana", userId: "usr-1" } as never);
+    db.works.push({ id: "w-blue-afternoon", media: [] } as never, { id: "w-real", media: [] } as never);
+    const out = migrate(db);
+    expect(out.artists.find((a) => a.id === "art-jieun")?.sample).toBe(true);
+    expect(out.artists.find((a) => a.id === "art-hana")?.sample).toBeUndefined();
+    expect(out.works.find((w) => w.id === "w-blue-afternoon")?.sample).toBe(true);
+    expect(out.works.find((w) => w.id === "w-real")?.sample).toBeUndefined();
+  });
+});

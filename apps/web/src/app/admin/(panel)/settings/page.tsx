@@ -1,5 +1,5 @@
 import { Logo } from "@/components/brand/logo";
-import { setLogoMark } from "@/features/admin/actions";
+import { addSamples, removeSamples, setLogoMark } from "@/features/admin/actions";
 import { adminDb } from "@/features/admin/session";
 import { AdminHeading } from "@/features/admin/ui";
 import { cn } from "@/lib/cn";
@@ -13,6 +13,8 @@ const LABEL: Record<LogoMark, { title: string; desc: string }> = {
 export default async function AdminSettings() {
   const db = await adminDb();
   const current = db.settings.logoMark;
+  const sampleWorks = db.works.filter((w) => w.sample).length;
+  const sampleArtists = db.artists.filter((a) => a.sample).length;
   return (
     <>
       <AdminHeading title="사이트 설정" description="로고 마크를 바꾸면 헤더, 푸터, 브라우저 탭 아이콘, 홈 화면 아이콘이 함께 바뀌어요. 브라우저는 아이콘을 오래 기억해서 탭에는 늦게 보일 수 있어요." />
@@ -46,6 +48,18 @@ export default async function AdminSettings() {
             </button>
           </form>
         ))}
+      </div>
+
+      <h2 className="mt-10 mb-3 font-bold">예시 작품</h2>
+      <div className="glass flex flex-col gap-3 rounded-xl p-5 text-sm">
+        <p>
+          오픈 전 화면을 채우는 가상의 작가 {sampleArtists}명, 작품 {sampleWorks}점이 있어요. 모두 &ldquo;예시&rdquo; 딱지가 붙고 주문할 수 없어요.
+          실제 작품이 올라오면 한 번에 빼 주세요.
+        </p>
+        <div className="flex gap-2">
+          <form action={addSamples}><button type="submit" className="rounded-full bg-ink px-4 py-2 font-semibold text-white">예시 넣기</button></form>
+          <form action={removeSamples}><button type="submit" className="rounded-full border border-ink/15 px-4 py-2 font-semibold">예시 모두 빼기</button></form>
+        </div>
       </div>
     </>
   );

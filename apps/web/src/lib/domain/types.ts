@@ -32,6 +32,8 @@ export type Artist = {
   instagram: string | null; // handle without @
   portfolioUrl: string | null; // https only
   acceptsCommission: boolean; // 주문제작
+  /** 예시 데이터 (오픈 전 화면을 채우려고 넣은 가상 작가). 관리자 사이트 설정에서 한 번에 뺀다 */
+  sample?: boolean;
   /** 이 작가 페이지를 가진 회원 (입점 신청을 로그인한 채로 했거나 운영자가 연결) */
   userId?: ID | null;
   avatar: string | null; // 프로필 사진 (/media/… 또는 /samples/…)
@@ -161,6 +163,8 @@ export type Work = {
   provenance: string | null; // 소장 이력
   appraisal: string | null; // 감정, 보증서 정보 (기관, 번호)
   featured: boolean;
+  /** 예시 작품: "예시" 딱지가 붙고 주문할 수 없다 */
+  sample?: boolean;
   /** 작가가 마이페이지에서 올려 관리자 검수를 기다리는 작품 (검수 전엔 비공개) */
   pendingReview?: boolean;
   createdAt: string;

@@ -27,6 +27,7 @@ export default defineConfig({
     env: {
       MAYO_DATA_DIR: ".data-e2e",
       MAYO_MAIL_OUTBOX: ".data-e2e/outbox.jsonl",
+      MAYO_SAMPLE_FLAG: "off",
       NEXT_DIST_DIR: ".next-e2e",
       ADMIN_PASSWORD: "e2e-admin-password",
       ADMIN_SESSION_SECRET: "e2e-session-secret-0123456789abcdef0123456789",

@@ -86,3 +86,12 @@ describe("artist groups and late artists", () => {
     expect(isDeceased({ deathYear: null })).toBe(false);
   });
 });
+
+describe("예시 작품", () => {
+  it("only real, available works can be ordered", async () => {
+    const { isOrderable } = await import("./rules");
+    expect(isOrderable({ status: "available" })).toBe(true);
+    expect(isOrderable({ status: "available", sample: true })).toBe(false);
+    expect(isOrderable({ status: "reserved" })).toBe(false);
+  });
+});

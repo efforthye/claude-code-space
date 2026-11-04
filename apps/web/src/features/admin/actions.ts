@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { TAG } from "@/lib/data/catalog";
 import { store } from "@/lib/data/store";
+import { buildSampleDatabase } from "@/lib/data/sample";
 import { ORDER_NEXT, ORDER_STATUS_LABEL } from "@/lib/domain/rules";
 import { LOGO_MARKS, MEDIA_KINDS, WORK_KINDS, type Database, type OrderStatus } from "@/lib/domain/types";
 import { newCertificateCode, newId } from "@/lib/ids";
@@ -648,6 +649,33 @@ export async function decideVerification(verificationId: string, decision: "appr
     return document;
   });
   await deletePrivate(doc ?? null);
+  touchCatalog();
+  refresh();
+}
+
+/* ───────────────────────── 예시 데이터 ───────────────────────── */
+
+/** 오픈 전 화면을 채우는 예시 작가, 작품을 넣는다 (이미 있으면 건너뜀). 모두 "예시" 딱지, 주문 불가 */
+export async function addSamples() {
+  await requireAdmin();
+  const sample = buildSampleDatabase();
+  await store.update((db) => {
+    const haveArtists = new Set(db.artists.map((a) => a.id));
+    const haveWorks = new Set(db.works.map((w) => w.id));
+    db.artists.push(...sample.artists.filter((a) => !haveArtists.has(a.id)).map((a) => ({ ...a, sample: true })));
+    db.works.push(...sample.works.filter((w) => !haveWorks.has(w.id)).map((w) => ({ ...w, sample: true })));
+  });
+  touchCatalog();
+  refresh();
+}
+
+/** 예시 작가, 작품을 모두 뺀다 (회원과 연결된 작가는 남긴다) */
+export async function removeSamples() {
+  await requireAdmin();
+  await store.update((db) => {
+    db.works = db.works.filter((w) => !w.sample);
+    db.artists = db.artists.filter((a) => !a.sample || a.userId || db.works.some((w) => w.artistId === a.id));
+  });
   touchCatalog();
   refresh();
 }

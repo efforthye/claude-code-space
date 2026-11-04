@@ -102,8 +102,14 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
                 받습니다.
               </p>
             )}
-            <AddToCart workId={work.id} status={work.status} defaultShipping={options[0]} cover={coverImage(work)} />
-            <p className="text-xs text-ink-soft">로그인 없이 담고 주문 신청할 수 있어요. 결제는 무통장 입금으로 진행됩니다.</p>
+            {work.sample ? (
+              <p className="rounded-xl bg-ink/5 p-4 text-sm leading-relaxed">
+                <b>예시 작품이에요.</b> 오픈 전 화면을 보여 드리려고 넣은 가상의 작품이라 판매하지 않아요.
+              </p>
+            ) : (
+              <AddToCart workId={work.id} status={work.status} defaultShipping={options[0]} cover={coverImage(work)} />
+            )}
+            {!work.sample && <p className="text-xs text-ink-soft">로그인 없이 담고 주문 신청할 수 있어요. 결제는 무통장 입금으로 진행됩니다.</p>}
           </div>
 
           {(work.consignor || (artist && isDeceased(artist))) && (
