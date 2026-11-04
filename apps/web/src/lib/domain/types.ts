@@ -14,7 +14,8 @@ export type School = {
 export type ArtistStatus = "student" | "graduate" | "aspiring" | "general";
 
 /** How the operator confirmed the school affiliation (학교 인증 딱지). */
-export type VerifyMethod = "school_email" | "student_id" | "roster";
+export const VERIFY_METHODS = ["school_email", "student_id", "roster"] as const;
+export type VerifyMethod = (typeof VERIFY_METHODS)[number];
 
 export type Artist = {
   id: ID;
@@ -160,6 +161,8 @@ export type Work = {
   provenance: string | null; // 소장 이력
   appraisal: string | null; // 감정, 보증서 정보 (기관, 번호)
   featured: boolean;
+  /** 작가가 마이페이지에서 올려 관리자 검수를 기다리는 작품 (검수 전엔 비공개) */
+  pendingReview?: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -185,6 +188,8 @@ export type OrderItem = {
   seller: string | null;
   /** 구매자가 작품 보증서를 요청한 시각 */
   certificateRequestedAt: string | null;
+  /** 운영자가 작가에게 판매 대금을 보낸 시각 */
+  settledAt?: string | null;
 };
 
 export type Buyer = {

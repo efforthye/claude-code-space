@@ -44,7 +44,12 @@ export async function clearSessionCookie() {
   (await cookies()).delete(USER_COOKIE);
 }
 
-export type Me = Pick<User, "id" | "email" | "name" | "phone" | "birthYear" | "createdAt">;
+export type Me = Pick<User, "id" | "email" | "name" | "phone" | "birthYear" | "createdAt"> & {
+  avatar: string | null;
+  cover: string | null;
+  bio: string | null;
+  verification: User["verification"] | null;
+};
 
 /** 지금 로그인한 회원 (없으면 null). 화면에 넘길 때 비밀번호 해시는 빼고 준다. */
 export async function currentUser(): Promise<Me | null> {
@@ -66,7 +71,18 @@ export async function currentUser(): Promise<Me | null> {
       })
       .catch(() => undefined); // 읽기 전용 저장소에서도 로그인 판단은 계속한다
   }
-  return { id: user.id, email: user.email, name: user.name, phone: user.phone, birthYear: user.birthYear, createdAt: user.createdAt };
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    phone: user.phone,
+    birthYear: user.birthYear,
+    createdAt: user.createdAt,
+    avatar: user.avatar ?? null,
+    cover: user.cover ?? null,
+    bio: user.bio ?? null,
+    verification: user.verification ?? null,
+  };
 }
 
 /** 회원 전용 화면, 액션의 입구. 로그인이 안 돼 있으면 로그인 화면으로 (돌아올 주소와 함께). */

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { upload } from "./media-manager";
 
 /** 작가 프로필 사진: 올리면 hidden `avatar`에 주소가 실린다. 서버에서 다시 검증. */
-export function AvatarField({ initial, name }: { initial: string | null; name: string }) {
+export function AvatarField({ initial, name, endpoint, fieldName = "avatar", label = "프로필 사진" }: { initial: string | null; name: string; endpoint?: string; fieldName?: string; label?: string }) {
   const [src, setSrc] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export function AvatarField({ initial, name }: { initial: string | null; name: s
     setBusy(true);
     setError(null);
     try {
-      const item = await upload(file, () => {});
+      const item = await upload(file, () => {}, endpoint);
       if (item.kind !== "image") throw new Error("사진 파일만 올릴 수 있어요");
       setSrc(item.src);
     } catch (e) {
@@ -27,10 +27,10 @@ export function AvatarField({ initial, name }: { initial: string | null; name: s
 
   return (
     <div className="flex items-center gap-4 md:col-span-2">
-      <input type="hidden" name="avatar" value={src ?? ""} />
+      <input type="hidden" name={fieldName} value={src ?? ""} />
       <Avatar src={src} name={name || "작가"} className="size-20 text-[48px]" />
       <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-semibold">프로필 사진</span>
+        <span className="text-sm font-semibold">{label}</span>
         <div className="flex gap-2">
           <label className="inline-flex h-9 cursor-pointer items-center rounded-full border border-ink/15 bg-white px-4 text-sm font-semibold transition-colors hover:bg-mist">
             {busy ? "올리는 중…" : src ? "바꾸기" : "올리기"}

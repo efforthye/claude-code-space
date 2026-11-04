@@ -131,24 +131,6 @@ export async function claimCodeForm(_prev: AccountFormState, form: FormData): Pr
   return linked ? null : { error: "연결할 수 있는 번호가 아니에요. 이미 연결됐거나 번호가 다를 수 있어요" };
 }
 
-const ProfileInput = z.object({
-  name: z.string().trim().min(1, "이름을 입력해 주세요").max(40),
-  phone: z.string().trim().max(20).regex(/^[0-9+\-\s()]*$/, "연락처는 숫자와 +, - 만 써 주세요"),
-});
-
-export async function updateProfile(_prev: AccountFormState, form: FormData): Promise<AccountFormState> {
-  const me = await requireUser();
-  if (STORE_READONLY) return { error: READONLY_MESSAGE };
-  const parsed = ProfileInput.safeParse({ name: get(form, "name"), phone: get(form, "phone") });
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
-  await store.update((db) => {
-    const u = db.users.find((x) => x.id === me.id);
-    if (u) Object.assign(u, { name: parsed.data.name, phone: parsed.data.phone || null });
-  });
-  refresh();
-  return null;
-}
-
 export async function changePassword(_prev: AccountFormState, form: FormData): Promise<AccountFormState> {
   const me = await requireUser();
   if (STORE_READONLY) return { error: READONLY_MESSAGE };

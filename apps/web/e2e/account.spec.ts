@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { fill, placeOrder } from "./helpers";
+import { adminLogin, fill, placeOrder } from "./helpers";
 
 const PASSWORD = "a long sentence passphrase 2026";
 
@@ -21,7 +21,7 @@ test("signing up puts 마이페이지 top right, and an order lands on it with i
   await page.goto("/");
   await expect(page.getByRole("banner").getByRole("link", { name: "로그인" })).toBeVisible();
   await signup(page, `member-${Date.now()}@example.com`);
-  await expect(page.getByRole("heading", { name: "테스트회원님" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^테스트회원/, level: 1 })).toBeVisible();
   await expect(page.getByRole("banner").getByRole("link", { name: "마이페이지" })).toBeVisible();
 
   const code = await placeOrder(page, "w-late-summer");
@@ -45,6 +45,7 @@ test("a guest order can be linked to an account by its number, once", async ({ p
   await page.reload();
   await expect(page.getByRole("link", { name: code })).toBeVisible();
   // 이미 연결된 번호는 다시 연결되지 않는다
+  await page.goto("/account/requests");
   await page.getByLabel("연결할 번호").fill(code);
   await page.getByRole("button", { name: "연결", exact: true }).click();
   await expect(page.getByText(/연결할 수 있는 번호가 아니에요/)).toBeVisible();
@@ -108,11 +109,12 @@ test("changing the password signs out other devices", async ({ page, browser }) 
   await expect(other).toHaveURL(/\/account$/);
 
   const next = "another long passphrase 2027";
+  await page.goto("/account/settings");
   await fill(page, { currentPassword: PASSWORD, newPassword: next, newPasswordConfirm: next });
   await page.getByRole("button", { name: "비밀번호 바꾸기" }).click();
   await expect(page.getByText(/다른 기기에서는 다시 로그인/)).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("heading", { name: "테스트회원님" })).toBeVisible(); // 이 기기는 그대로
+  await expect(page.getByRole("heading", { name: /^테스트회원/, level: 1 })).toBeVisible(); // 이 기기는 그대로
 
   await other.goto("/account");
   await expect(other).toHaveURL(/\/login/); // 다른 기기는 끊겼다
@@ -135,4 +137,81 @@ test("artists can be searched, filtered by school and sorted; profiles show a st
   await expect(page.getByRole("heading", { name: "작업실" })).toBeVisible();
   await expect(page.getByText("서향 창이 있는 자취방 한쪽이 작업실이에요.")).toBeVisible();
   await expect(page.getByRole("img", { name: "김지은 프로필 사진" })).toBeVisible();
+});
+
+test("a member linked to an artist page sells from 마이페이지: work goes through review, profile shows publicly", async ({ page, browser }) => {
+  const email = `seller-${Date.now()}@example.com`;
+  await signup(page, email);
+  await page.getByRole("tab", { name: "판매" }).click();
+  await expect(page.getByText("아직 이 계정에 연결된 작가 페이지가 없어요")).toBeVisible();
+
+  // 운영자가 작가 페이지에 이 회원을 연결한다
+  const admin = await browser.newPage();
+  await admin.setExtraHTTPHeaders({ "x-real-ip": "10.77.0.1" });
+  await adminLogin(admin);
+  await admin.goto("/admin/artists/art-doyun");
+  await admin.getByLabel("연결된 회원 이메일").fill(email);
+  await admin.getByRole("button", { name: "변경 저장" }).click();
+  await expect(admin.getByLabel("연결된 회원 이메일")).toHaveValue(email);
+
+  await page.goto("/account/sell");
+  await expect(page.getByText("판매 중", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "작품 올리기" }).first().click();
+  await fill(page, { title: "마이페이지에서 올린 그릇", materials: "백토", widthCm: "20", heightCm: "8", price: "88000" });
+  await page.getByLabel("미디어 파일").setInputFiles("e2e/fixtures/artwork.png");
+  await expect(page.getByRole("list", { name: "미디어 순서" }).locator("li")).toHaveCount(1);
+  await page.getByRole("button", { name: "검수 요청하고 등록" }).click();
+  await expect(page).toHaveURL(/\/account\/sell\/works\?saved=/);
+  const workId = new URL(page.url()).searchParams.get("saved")!;
+  await expect(page.getByText("검수 대기")).toBeVisible();
+  await page.goto(`/works/${workId}`);
+  await expect(page.getByText("찾는 페이지가 없어요")).toBeVisible(); // 검수 전엔 비공개
+  await page.goto("/account/sell/works");
+
+  await admin.goto("/admin/works");
+  await admin.locator("tr", { hasText: "마이페이지에서 올린 그릇" }).getByRole("button", { name: "승인하고 공개" }).click();
+  await expect(admin.locator("tr", { hasText: "마이페이지에서 올린 그릇" }).getByText("판매 중")).toBeVisible();
+  await page.goto(`/works/${workId}`);
+  await expect(page.getByRole("heading", { name: /마이페이지에서 올린 그릇/ })).toBeVisible();
+
+  // 작가 프로필은 바로 작가 페이지에 보인다
+  await page.goto("/account/sell/profile");
+  await page.locator('textarea[name="bio"]').fill("마이페이지에서 고친 작가 소개입니다.");
+  await page.getByRole("button", { name: "작가 프로필 저장" }).click();
+  await expect(page.getByText("저장했어요. 작가 페이지에 바로 보여요.")).toBeVisible();
+  await page.goto("/artists/art-doyun");
+  await expect(page.getByText("마이페이지에서 고친 작가 소개입니다.")).toBeVisible();
+  await admin.close();
+});
+
+test("school verification: a student ID photo is seen only by the operator and deleted on approval", async ({ page, browser }) => {
+  await signup(page, `verify-${Date.now()}@example.com`);
+  await page.goto("/account/verify");
+  await fill(page, { schoolName: "홍익대학교", department: "회화과" });
+  await page.getByRole("button", { name: /학생증, 증명서/ }).click();
+  await page.locator('[name="document"]').setInputFiles("e2e/fixtures/artwork.png");
+  await page.locator('[name="agree"]').check();
+  await page.getByRole("button", { name: "인증 신청" }).click();
+  await expect(page.getByText("확인 중이에요")).toBeVisible();
+
+  const admin = await browser.newPage();
+  await admin.setExtraHTTPHeaders({ "x-real-ip": "10.77.0.2" });
+  await adminLogin(admin);
+  await admin.goto("/admin/verifications");
+  const item = admin.locator("li", { hasText: "테스트회원" }).first();
+  const img = item.getByRole("img", { name: "제출한 학생증이나 증명서" });
+  const docUrl = await img.getAttribute("src");
+  expect((await admin.request.get(docUrl!)).status()).toBe(200);
+  // 회원(관리자 아님)은 못 본다: 로그인 화면으로 보내거나 거절하고, 사진은 오지 않는다
+  const asMember = await page.request.get(docUrl!, { maxRedirects: 0 });
+  expect([307, 401]).toContain(asMember.status());
+  expect(asMember.headers()["content-type"] ?? "").not.toMatch(/^image\//);
+  await item.getByRole("button", { name: "승인" }).click();
+  await expect(item.getByRole("button", { name: "승인" })).toHaveCount(0); // 결정이 끝났다
+  expect((await admin.request.get(docUrl!)).status()).toBe(404); // 승인과 함께 지워졌다
+
+  await page.goto("/account/verify");
+  await expect(page.getByText("MAYO 학교 인증")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("홍익대 인증");
+  await admin.close();
 });

@@ -13,6 +13,7 @@ import { LOGO_MARKS, MEDIA_KINDS, WORK_KINDS, type Database, type OrderStatus } 
 import { newCertificateCode, newId } from "@/lib/ids";
 import { readPlace } from "@/features/places/parse";
 import { requireAdmin } from "./session";
+import { deletePrivate } from "@/lib/data/uploads";
 
 export type FormState = { error: string } | null;
 
@@ -202,6 +203,7 @@ export async function saveArtist(artistId: string | null, _prev: FormState, form
   const avatarRaw = s(form, "avatar");
   const avatar = avatarRaw ? MediaSrc.safeParse(avatarRaw) : null;
   if (avatar && !avatar.success) return { error: "프로필 사진 주소가 올바르지 않아요" };
+  const memberEmail = s(form, "memberEmail").toLowerCase();
   const fields = {
     name,
     realName: optional(s(form, "realName")),
@@ -224,6 +226,15 @@ export async function saveArtist(artistId: string | null, _prev: FormState, form
   };
   const id = await store.update((db) => {
     if (!db.artistGroups.some((g) => g.id === fields.status)) return "bad-group" as const;
+    // 회원 연결: 이메일로 찾는다. 다른 작가에 이미 연결된 회원은 안 된다.
+    let userId: string | null = null;
+    if (memberEmail) {
+      const user = db.users.find((u) => u.email === memberEmail);
+      if (!user) return "no-member" as const;
+      if (db.artists.some((a) => a.userId === user.id && a.id !== artistId)) return "taken" as const;
+      userId = user.id;
+    }
+    Object.assign(fields, { userId });
     const prev = artistId ? db.artists.find((x) => x.id === artistId) : undefined;
     // 인증 방법이 새로 붙거나 바뀔 때만 확인 시각을 갱신한다.
     fields.verifiedAt = !fields.verifiedBy ? null : prev?.verifiedBy === fields.verifiedBy ? prev.verifiedAt : new Date().toISOString();
@@ -238,6 +249,8 @@ export async function saveArtist(artistId: string | null, _prev: FormState, form
     return created.id;
   });
   if (id === "bad-group") return { error: "작가 구분을 다시 골라 주세요" };
+  if (id === "no-member") return { error: "그 이메일로 가입한 회원이 없어요" };
+  if (id === "taken") return { error: "그 회원은 이미 다른 작가 페이지와 연결돼 있어요" };
   if (!id) return { error: "작가를 찾을 수 없어요" };
   touchCatalog();
   redirect(`/admin/artists/${id}?saved=1`);
@@ -575,5 +588,63 @@ export async function setLogoMark(mark: string) {
     db.settings.logoMark = mark as (typeof LOGO_MARKS)[number];
   });
   touchCatalog(); // 헤더, 아이콘, 매니페스트가 같은 캐시 태그를 쓴다
+  refresh();
+}
+
+/* ───────────────────────── 작가가 올린 작품 검수 ───────────────────────── */
+
+export async function approveWork(workId: string) {
+  await requireAdmin();
+  await store.update((db) => {
+    const w = db.works.find((x) => x.id === workId);
+    if (!w || !w.pendingReview) return;
+    w.pendingReview = false;
+    w.status = "available";
+    w.updatedAt = new Date().toISOString();
+  });
+  touchCatalog();
+  refresh();
+}
+
+/* ───────────────────────── 정산 ───────────────────────── */
+
+export async function settleItem(orderId: string, workId: string) {
+  await requireAdmin();
+  await store.update((db) => {
+    const o = db.orders.find((x) => x.id === orderId);
+    const i = o?.items.find((x) => x.workId === workId);
+    if (!o || !i || !o.paidAt || o.status === "cancelled" || i.settledAt) return;
+    i.settledAt = new Date().toISOString();
+    o.history.push({ at: i.settledAt, status: o.status, note: `작가 정산 완료「${i.title}」` });
+  });
+  refresh();
+}
+
+/* ───────────────────────── 학교 인증 심사 ───────────────────────── */
+
+export async function decideVerification(verificationId: string, decision: "approved" | "rejected", form: FormData) {
+  await requireAdmin();
+  const reason = s(form, "reason").slice(0, 200) || null;
+  const doc = await store.update((db) => {
+    const v = db.verifications.find((x) => x.id === verificationId);
+    if (!v || v.state !== "new") return null;
+    const now = new Date().toISOString();
+    v.state = decision;
+    v.decidedAt = now;
+    v.reason = decision === "rejected" ? reason : null;
+    const document = v.document;
+    v.document = null; // 서류는 결정과 함께 지운다
+    if (decision === "approved") {
+      const schoolId = findOrCreateSchool(db, v.schoolName);
+      const user = db.users.find((u) => u.id === v.userId);
+      if (user && schoolId) user.verification = { schoolId, department: v.department, status: v.status, method: v.method, verifiedAt: now };
+      // 이 회원과 연결된 작가 페이지에도 같은 인증을 붙인다
+      const artist = db.artists.find((a) => a.userId === v.userId);
+      if (artist && schoolId) Object.assign(artist, { schoolId, department: v.department, verifiedBy: v.method, verifiedAt: now });
+    }
+    return document;
+  });
+  await deletePrivate(doc ?? null);
+  touchCatalog();
   refresh();
 }

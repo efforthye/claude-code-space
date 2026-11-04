@@ -45,6 +45,8 @@ export default async function AdminDashboard() {
           value={db.orders.flatMap((o) => o.items.filter((i) => i.certificateRequestedAt && !db.certificates.some((c) => c.orderId === o.id && c.workId === i.workId && !c.revokedAt))).length}
           href="/admin/orders"
         />
+        <Stat label="작품 검수 대기" value={db.works.filter((w) => w.pendingReview).length} href="/admin/works" tone={db.works.some((w) => w.pendingReview) ? "warn" : undefined} />
+        <Stat label="학교 인증 대기" value={db.verifications.filter((v) => v.state === "new").length} href="/admin/verifications" tone={db.verifications.some((v) => v.state === "new") ? "warn" : undefined} />
         <Stat label="판매 중 작품" value={db.works.filter((w) => w.status === "available").length} href="/admin/works" />
         <Stat label="미인증 작가" value={db.artists.filter((a) => !a.verifiedBy).length} href="/admin/artists" />
         <Stat label="이번 달 거래액(입금 확인)" value={formatPrice(monthSales)} href="/admin/ledger" />

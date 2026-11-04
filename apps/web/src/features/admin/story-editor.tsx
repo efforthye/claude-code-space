@@ -16,11 +16,13 @@ export function StoryEditor({
   name = "story",
   legend = "작품 이야기 (작품 페이지 아래, 글과 사진을 순서대로)",
   empty = "작업 과정, 영감, 설치 모습처럼 더 들려주고 싶은 이야기를 넣어 보세요.",
+  endpoint,
 }: {
   initial: StoryBlock[];
   name?: string;
   legend?: string;
   empty?: string;
+  endpoint?: string;
 }) {
   const [blocks, setBlocks] = useState<StoryBlock[]>(initial);
   const [busy, setBusy] = useState(false);
@@ -41,7 +43,7 @@ export function StoryEditor({
     setBusy(true);
     for (const file of Array.from(files ?? [])) {
       try {
-        const item = await upload(file, () => {});
+        const item = await upload(file, () => {}, endpoint);
         if (item.kind !== "image") throw new Error("작품 이야기에는 사진만 넣을 수 있어요");
         setBlocks((xs) => [...xs, { kind: "image", src: item.src, caption: null }]);
       } catch (e) {

@@ -14,7 +14,7 @@ export default async function EditArtist(props: PageProps<"/admin/artists/[id]">
     <>
       <AdminHeading title={artist.name} action={<Link href={`/artists/${artist.id}`} target="_blank" className="text-sm underline">사이트에서 보기 ↗</Link>} />
       <Saved show={sp.saved === "1"} />
-      <ArtistForm key={artist.verifiedAt ?? artist.id} artist={artist} schools={db.schools} groups={[...db.artistGroups].sort((a, b) => a.order - b.order)} />
+      <ArtistForm key={artist.verifiedAt ?? artist.id} artist={artist} memberEmail={db.users.find((u) => u.id === artist.userId)?.email} schools={db.schools} groups={[...db.artistGroups].sort((a, b) => a.order - b.order)} />
     </>
   );
 }

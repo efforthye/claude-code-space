@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
-import { changeOrderStatus, issueCertificate, revokeCertificate, updateOrderDetails } from "@/features/admin/actions";
+import { changeOrderStatus, issueCertificate, revokeCertificate, settleItem, updateOrderDetails } from "@/features/admin/actions";
 import { AdminHeading } from "@/features/admin/ui";
 import { adminDb } from "@/features/admin/session";
 import { ORDER_NEXT, ORDER_STATUS_LABEL, SHIPPING_LABEL } from "@/lib/domain/rules";
@@ -46,6 +46,15 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
                       <span><Link href={`/admin/works/${i.workId}`} className="underline">「{i.title}」</Link>, {i.artistName}{i.edition && `, ed. ${i.edition}`}, {SHIPPING_LABEL[i.shipping]}{i.seller && <b>, 판매자 {i.seller}</b>}</span>
                       <span className="font-semibold">{formatPrice(i.price)}</span>
                     </div>
+                    {order.paidAt && order.status !== "cancelled" && (
+                      i.settledAt ? (
+                        <span className="text-xs text-ink-soft">작가 정산 완료 {formatDateTime(i.settledAt)}</span>
+                      ) : (
+                        <form action={settleItem.bind(null, order.id, i.workId)}>
+                          <button type="submit" className="rounded-full border border-ink/15 px-3 py-1 text-xs font-semibold">작가 정산 완료로 표시</button>
+                        </form>
+                      )
+                    )}
                     {cert ? (
                       <div className="flex flex-wrap items-center gap-2 text-xs">
                         <Badge tone="ok">보증서 {cert.code}</Badge>

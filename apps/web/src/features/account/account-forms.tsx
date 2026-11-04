@@ -5,7 +5,7 @@ import { ActionForm } from "@/components/ui/action-form";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { readMine } from "@/features/my/my-store";
-import { changePassword, claimCodeForm, claimCodes, deleteAccount, updateProfile, type AccountFormState } from "./actions";
+import { changePassword, claimCodeForm, claimCodes, deleteAccount, type AccountFormState } from "./actions";
 
 function Result({ state, ok }: { state: AccountFormState; ok?: string }) {
   if (state?.error) return <p role="alert" className="text-sm font-medium text-dot">{state.error}</p>;
@@ -48,22 +48,6 @@ export function DeviceClaim() {
         {pending ? "연결하는 중…" : "가져오기"}
       </Button>
     </div>
-  );
-}
-
-export function ProfileForm({ name, phone }: { name: string; phone: string | null }) {
-  const [state, action, pending] = useActionState<AccountFormState, FormData>(updateProfile, undefined);
-  return (
-    <ActionForm action={action} className="flex flex-col gap-3">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="이름"><Input name="name" defaultValue={name} autoComplete="name" /></Field>
-        <Field label="휴대폰"><Input name="phone" defaultValue={phone ?? ""} type="tel" autoComplete="tel" /></Field>
-      </div>
-      <div className="flex items-center gap-3">
-        <Button type="submit" variant="secondary" disabled={pending}>저장</Button>
-        <Result state={state} ok="저장했어요." />
-      </div>
-    </ActionForm>
   );
 }
 

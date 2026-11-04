@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { upload } from "./media-manager";
 
 /** 사진 한 장 필드 (전시 포스터 등). 올리면 hidden 입력에 주소가 실리고, 서버에서 다시 검증한다. */
-export function ImageField({ name, label, initial, className }: { name: string; label: string; initial: string | null; className?: string }) {
+export function ImageField({ name, label, initial, className, endpoint }: { name: string; label: string; initial: string | null; className?: string; endpoint?: string }) {
   const [src, setSrc] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +15,7 @@ export function ImageField({ name, label, initial, className }: { name: string; 
     setBusy(true);
     setError(null);
     try {
-      const item = await upload(file, () => {});
+      const item = await upload(file, () => {}, endpoint);
       if (item.kind !== "image") throw new Error("사진 파일만 올릴 수 있어요");
       setSrc(item.src);
     } catch (e) {

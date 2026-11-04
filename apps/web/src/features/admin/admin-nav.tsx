@@ -14,6 +14,7 @@ const ITEMS = [
   { href: "/admin/settings", label: "사이트 설정" },
   { href: "/admin/artists", label: "작가" },
   { href: "/admin/applications", label: "입점 신청" },
+  { href: "/admin/verifications", label: "학교 인증 심사" },
   { href: "/admin/exhibitions", label: "전시" },
   { href: "/admin/exhibition-requests", label: "전시 등록 신청" },
   { href: "/admin/schools", label: "학교" },
