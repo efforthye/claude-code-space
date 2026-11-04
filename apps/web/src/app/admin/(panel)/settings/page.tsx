@@ -40,7 +40,7 @@ export default async function AdminSettings() {
                 <img src={`/brand/${mark}/icon.svg`} alt="" className="size-6" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`/brand/${mark}/icon.svg`} alt="" className="size-4" />
-                <span className="rounded-md bg-ink px-3 py-2"><Logo mark={mark} inverted className="text-[22px]" /></span>
+                <span className="rounded-md bg-white px-3 py-2"><Logo mark={mark} className="text-[22px]" /></span>
               </div>
               <span className="text-sm text-ink-soft">{LABEL[mark].desc}</span>
             </button>

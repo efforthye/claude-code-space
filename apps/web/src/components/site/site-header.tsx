@@ -12,7 +12,7 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b print:hidden border-white/60 bg-wall/70 py-1.5 backdrop-blur-xl backdrop-saturate-150">
       <Container className="flex h-14 items-center justify-between gap-3">
-        <Link href="/" aria-label="MAYO 홈" className="text-[34px] transition-opacity hover:opacity-75">
+        <Link href="/" aria-label="MAYO 홈" className="text-[27px] transition-opacity hover:opacity-75">
           <Logo mark={logoMark} />
         </Link>
         <Suspense fallback={<NavList path={null} />}>

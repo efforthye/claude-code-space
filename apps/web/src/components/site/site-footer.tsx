@@ -13,7 +13,7 @@ export async function SiteFooter() {
       <Container className="flex flex-col gap-6">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <p className="flex items-baseline gap-3 leading-none">
-            <Logo mark={logoMark} className="text-[30px]" />
+            <Logo mark={logoMark} className="text-[24px]" />
             <i className="font-display text-lg text-ink-soft">{siteConfig.tagline}</i>
           </p>
           <nav className="flex flex-wrap gap-x-4 gap-y-2 font-semibold whitespace-nowrap text-ink">
