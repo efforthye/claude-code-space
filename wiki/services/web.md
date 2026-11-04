@@ -50,3 +50,7 @@ cd apps/web && npm install && npm run dev   # http://localhost:3000
 ## Changelog
 - 2026-11-01: scaffolded (Next.js 16.4.3 + TS + Tailwind), placeholder page, API helper.
 - 2026-11-01: first production deploy to mayo.im (`f49bff6`, deployment `dpl_3nRh8f7D…`, READY).
+
+## Data store (2026-11-04)
+
+MongoDB Atlas behind the `Store` seam, see [[0029-mongodb-atlas-store]]. Local dev uses `mayo-dev`, tests use a JSON file.

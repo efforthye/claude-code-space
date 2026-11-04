@@ -526,3 +526,6 @@ ADMIN_SESSION_SECRET·ADMIN_PASSWORD는 오너가 Vercel에 직접 넣어야 관
 
 ## [2026-11-01] service | web — art-law certificates, late artists, managed artist groups, gallery rework
 Certificates of authenticity (request, issue, revoke, public verify with QR), ledger seller snapshot and 2차 판매 marking, admin 미술서비스업 checklist from the 강남구 notice (강남구보건소 5층 문화도시과, 계도기간 to 2027-07-25). Artist groups and categories admin-managed; late artists with estate, provenance, appraisal; work story blocks. Commits 095a0a6 and the follow-up home/footer/map commit. Jira connector not authorized this session: issues to reconcile.
+
+## [2026-11-04] decision | web store moves to MongoDB Atlas
+[[0029-mongodb-atlas-store]]: MongoStore with optimistic versioned writes behind the Store seam. Local `.env.local` carries the URI (git-ignored); Vercel env vars still to be set by the owner (secret-store write blocked from this session). Production branch in Vercel is `claude/claude-md-docs-adlc4w`; owner to switch it to `main`. Jira connector not authorized: issues to reconcile.

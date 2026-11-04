@@ -6,6 +6,7 @@ import type { Database } from "@/lib/domain/types";
 import { DEFAULT_ARTIST_GROUPS, DEFAULT_CATEGORIES } from "@/lib/domain/rules";
 import { LOGO_MARKS } from "@/lib/domain/types";
 import { buildBaseDatabase } from "./base";
+import { MongoStore, mongoCollection } from "./mongo-store";
 import { buildSampleDatabase } from "./sample";
 
 /**
@@ -130,14 +131,19 @@ function defaultSeed(): Database {
   return buildSampleDatabase();
 }
 
+/** 테스트는 언제나 파일 저장소 (MAYO_DATA_DIR) — 실제 DB를 건드리지 않는다 */
+const USE_MONGO = Boolean(process.env.MONGODB_URI) && !process.env.MAYO_DATA_DIR;
+
 /**
- * Vercel 같은 서버리스에서는 파일시스템이 읽기 전용이라 로컬 JSON 저장소에 쓸 수 없다.
- * 실서비스 저장소(mayo-api 또는 DB)를 붙이기 전까지는 신청, 주문을 받지 않는다.
+ * Vercel 같은 서버리스에서는 파일시스템이 읽기 전용이라 파일 저장소에 쓸 수 없다.
+ * MongoDB가 연결되면 열린다.
  */
-export const STORE_READONLY = Boolean(process.env.VERCEL) && !process.env.MAYO_STORE_WRITABLE;
+export const STORE_READONLY = Boolean(process.env.VERCEL) && !USE_MONGO && !process.env.MAYO_STORE_WRITABLE;
 export const READONLY_MESSAGE = "정식 오픈 준비 중이라 지금은 온라인으로 신청을 받지 않아요. 문의는 이메일로 부탁드려요.";
 
 /** 데이터 폴더. 테스트는 MAYO_DATA_DIR로 따로 쓴다. */
 export const DATA_DIR = path.resolve(/* turbopackIgnore: true */ process.cwd(), process.env.MAYO_DATA_DIR ?? ".data");
 
-export const store: Store = new LocalJsonStore(path.join(DATA_DIR, "db.json"));
+export const store: Store = USE_MONGO
+  ? new MongoStore(mongoCollection(process.env.MONGODB_URI!, process.env.MONGODB_DB ?? "mayo"), defaultSeed, migrate)
+  : new LocalJsonStore(path.join(DATA_DIR, "db.json"));

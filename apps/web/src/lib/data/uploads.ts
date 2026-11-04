@@ -17,8 +17,13 @@ const NAME = /^[0-9a-f-]{36}\.(jpg|png|webp|avif|mp4|webm|glb)$/;
 
 export class UploadError extends Error {}
 
+/** Vercel은 디스크가 읽기 전용이라, 파일 저장소(Vercel Blob 등)를 붙이기 전까지 업로드를 받지 않는다 */
+const UPLOADS_OFF = Boolean(process.env.VERCEL);
+const UPLOADS_OFF_MESSAGE = "사진 저장소를 준비하고 있어요. 사진은 문의하기로 보내 주시면 운영자가 올려 드려요.";
+
 /** 바이트로 형식을 판별하고 종류별 용량 상한을 지킨 뒤 저장한다. 같은 이름 덮어쓰기 금지(wx). */
 export async function saveMedia(file: File): Promise<MediaItem> {
+  if (UPLOADS_OFF) throw new UploadError(UPLOADS_OFF_MESSAGE);
   // 가장 큰 상한보다 크면 읽기 전에 거절 (메모리 보호)
   if (file.size > MAX_BYTES.video) throw new UploadError("파일이 너무 커요 (영상 80MB, 3D 30MB, 사진 10MB까지)");
   const data = new Uint8Array(await file.arrayBuffer());
@@ -49,6 +54,7 @@ export const MAX_UPLOAD_BYTES = MAX_BYTES.image;
 const PRIVATE_DIR = path.join(DATA_DIR, "private");
 
 export async function savePrivateImage(file: File): Promise<string> {
+  if (UPLOADS_OFF) throw new UploadError(UPLOADS_OFF_MESSAGE);
   if (file.size > MAX_BYTES.image) throw new UploadError("사진은 10MB 이하로 올려 주세요");
   const data = new Uint8Array(await file.arrayBuffer());
   const sniffed = sniffMedia(data);
