@@ -119,3 +119,17 @@ test("a work can be shared, its QR saved and its caption label printed", async (
   await expect(label).toContainText("320,000원");
   await expect(label.getByRole("img", { name: /QR/ })).toBeVisible();
 });
+
+test("placing an order mails the buyer the order number and how to pay", async ({ page }) => {
+  const code = await placeOrder(page, "w-sea-grain");
+  const { readFile } = await import("node:fs/promises");
+  let mail: { to: string; subject: string; text: string } | undefined;
+  for (let i = 0; i < 20 && !mail; i++) {
+    const lines = (await readFile(".data-e2e/outbox.jsonl", "utf8").catch(() => "")).trim().split("\n").filter(Boolean);
+    mail = lines.map((l) => JSON.parse(l)).find((m) => m.subject.includes(code));
+    if (!mail) await new Promise((r) => setTimeout(r, 300));
+  }
+  expect(mail?.to).toBe("buyer@example.com");
+  expect(mail?.text).toContain("「바다의 결」");
+  expect(mail?.text).toMatch(/입금 금액/);
+});

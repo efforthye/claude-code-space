@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 import { requestVerification, type SellerFormState } from "./seller-actions";
 
 const METHODS = [
-  { id: "school_email", title: "학교 이메일", desc: "ac.kr, edu로 끝나는 학교 메일 주소. 운영자가 확인 메일을 보내요" },
+  { id: "school_email", title: "학교 이메일", desc: "ac.kr, edu로 끝나는 학교 메일 주소로 확인 메일이 가요" },
   { id: "student_id", title: "학생증, 증명서", desc: "사진을 올리면 운영자만 보고, 확인이 끝나면 바로 지워요" },
   { id: "roster", title: "졸업전시 명단", desc: "이름이 실린 졸업전시를 알려 주시면 명단에서 찾아요" },
 ] as const;

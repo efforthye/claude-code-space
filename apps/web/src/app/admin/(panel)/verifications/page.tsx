@@ -27,7 +27,12 @@ export default async function AdminVerifications() {
                 <Badge tone={v.state === "new" ? "warn" : v.state === "approved" ? "ok" : "neutral"}>{v.state === "new" ? "확인 대기" : v.state === "approved" ? "승인" : "반려"}</Badge>
               </div>
               <p>{v.schoolName} {v.department}, {v.status === "student" ? "재학생" : "졸업생"}, {VERIFY_LABEL[v.method]}로 확인 요청 ({formatDateTime(v.createdAt)})</p>
-              {v.schoolEmail && <p>학교 이메일: <b>{v.schoolEmail}</b></p>}
+              {v.schoolEmail && (
+                <p>
+                  학교 이메일: <b>{v.schoolEmail}</b>{" "}
+                  {v.emailConfirmedAt ? <Badge tone="ok">메일 확인됨 {formatDateTime(v.emailConfirmedAt)}</Badge> : <Badge tone="neutral">메일 확인 전</Badge>}
+                </p>
+              )}
               {v.rosterNote && <p>졸업전시: <b>{v.rosterNote}</b></p>}
               {v.document && (
                 // eslint-disable-next-line @next/next/no-img-element

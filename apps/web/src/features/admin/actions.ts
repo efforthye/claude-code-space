@@ -14,6 +14,7 @@ import { newCertificateCode, newId } from "@/lib/ids";
 import { readPlace } from "@/features/places/parse";
 import { requireAdmin } from "./session";
 import { deletePrivate } from "@/lib/data/uploads";
+import { notifyInquiryAnswered, notifyOrderStatus } from "@/features/mail/notify";
 
 export type FormState = { error: string } | null;
 
@@ -52,6 +53,7 @@ export async function changeOrderStatus(orderId: string, next: OrderStatus, form
     order.status = next;
     order.history.push({ at: now, status: next, note: note || ORDER_STATUS_LABEL[next] });
   });
+  notifyOrderStatus(orderId, next, note);
   touchCatalog();
   refresh();
 }
@@ -420,6 +422,7 @@ export async function answerInquiry(inquiryId: string, form: FormData) {
     }
     if (close) q.state = "closed";
   });
+  if (answer) notifyInquiryAnswered(inquiryId);
   refresh();
 }
 

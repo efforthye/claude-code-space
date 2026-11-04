@@ -529,3 +529,6 @@ Certificates of authenticity (request, issue, revoke, public verify with QR), le
 
 ## [2026-11-04] decision | web store moves to MongoDB Atlas
 [[0029-mongodb-atlas-store]]: MongoStore with optimistic versioned writes behind the Store seam. Local `.env.local` carries the URI (git-ignored); Vercel env vars still to be set by the owner (secret-store write blocked from this session). Production branch in Vercel is `claude/claude-md-docs-adlc4w`; owner to switch it to `main`. Jira connector not authorized: issues to reconcile.
+
+## [2026-11-04] service | web — real uploads, shared rate limits, email, password reset
+Public files go to Vercel Blob (browser uploads directly with a server-issued token, so large videos fit; 4.5MB function limit avoided); private student-ID photos live in MongoDB `private_files` (admin-only, deleted on decision, 30-day TTL). Rate limits count in MongoDB `rate_limits` (TTL) so all serverless instances share them. Email via Resend (order placed/paid/shipped, request and inquiry receipts, operator alerts, inquiry answers, password reset, school email confirmation); skipped when RESEND_API_KEY is absent. Owner actions: create the Blob store, Resend account + mayo.im DNS + key, ADMIN_*, BANK_*, KAKAO key, BUSINESS_PHONE/EMAIL. Jira connector not authorized: to reconcile.

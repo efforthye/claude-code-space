@@ -9,6 +9,7 @@ import { artShippingIds, PARCEL_FEE, PAYMENT_DUE_HOURS, shippingOptions } from "
 import type { Order, OrderItem } from "@/lib/domain/types";
 import { newId, newOrderCode } from "@/lib/ids";
 import { currentUser } from "@/features/account/session";
+import { notifyOrderPlaced } from "@/features/mail/notify";
 
 const phone = z.string().trim().regex(/^0\d{1,2}-?\d{3,4}-?\d{4}$/, "휴대폰 번호를 확인해 주세요");
 
@@ -106,6 +107,9 @@ export async function placeOrder(_prev: OrderFormState, form: FormData): Promise
     return { ok: true, code: order.code };
   });
 
-  if (result?.ok) updateTag(TAG.catalog);
+  if (result?.ok) {
+    updateTag(TAG.catalog);
+    notifyOrderPlaced(result.code);
+  }
   return result;
 }

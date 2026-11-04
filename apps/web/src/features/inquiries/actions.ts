@@ -6,6 +6,7 @@ import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { INQUIRY_TOPICS } from "@/lib/domain/types";
 import { newId, newTrackingCode } from "@/lib/ids";
 import { currentUser } from "@/features/account/session";
+import { notifyReceived } from "@/features/mail/notify";
 
 const InquiryInput = z.object({
   topic: z.enum(INQUIRY_TOPICS),
@@ -60,5 +61,6 @@ export async function submitInquiry(_prev: InquiryFormState, form: FormData): Pr
       createdAt: new Date().toISOString(),
     });
   });
+  notifyReceived(v.email, "문의", code, "/admin/inquiries", [v.subject, v.message.slice(0, 300)]);
   return { ok: true, code, title: `문의: ${v.subject}` };
 }

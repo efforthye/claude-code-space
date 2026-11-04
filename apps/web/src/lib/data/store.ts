@@ -6,6 +6,7 @@ import type { Database } from "@/lib/domain/types";
 import { DEFAULT_ARTIST_GROUPS, DEFAULT_CATEGORIES } from "@/lib/domain/rules";
 import { LOGO_MARKS } from "@/lib/domain/types";
 import { buildBaseDatabase } from "./base";
+import { USE_MONGO } from "./mongo";
 import { MongoStore, mongoCollection } from "./mongo-store";
 import { buildSampleDatabase } from "./sample";
 
@@ -131,8 +132,6 @@ function defaultSeed(): Database {
   return buildSampleDatabase();
 }
 
-/** 테스트는 언제나 파일 저장소 (MAYO_DATA_DIR) — 실제 DB를 건드리지 않는다 */
-const USE_MONGO = Boolean(process.env.MONGODB_URI) && !process.env.MAYO_DATA_DIR;
 
 /**
  * Vercel 같은 서버리스에서는 파일시스템이 읽기 전용이라 파일 저장소에 쓸 수 없다.
@@ -145,5 +144,5 @@ export const READONLY_MESSAGE = "정식 오픈 준비 중이라 지금은 온라
 export const DATA_DIR = path.resolve(/* turbopackIgnore: true */ process.cwd(), process.env.MAYO_DATA_DIR ?? ".data");
 
 export const store: Store = USE_MONGO
-  ? new MongoStore(mongoCollection(process.env.MONGODB_URI!, process.env.MONGODB_DB ?? "mayo"), defaultSeed, migrate)
+  ? new MongoStore(mongoCollection(), defaultSeed, migrate)
   : new LocalJsonStore(path.join(DATA_DIR, "db.json"));

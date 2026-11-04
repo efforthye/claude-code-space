@@ -6,7 +6,7 @@ import { useActionState } from "react";
 import { ActionForm } from "@/components/ui/action-form";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input } from "@/components/ui/field";
-import { login, signup, type AccountFormState } from "./actions";
+import { login, requestPasswordReset, resetPassword, signup, type AccountFormState } from "./actions";
 
 function FormError({ state }: { state: AccountFormState }) {
   if (!state?.error) return null;
@@ -14,15 +14,19 @@ function FormError({ state }: { state: AccountFormState }) {
 }
 
 export function LoginForm() {
-  const next = useSearchParams().get("next") ?? "";
+  const params = useSearchParams();
+  const next = params.get("next") ?? "";
+  const justReset = params.get("reset") === "1";
   const [state, action, pending] = useActionState<AccountFormState, FormData>(login, null);
   return (
     <ActionForm action={action} className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next} />
+      {justReset && !state && <p className="rounded-lg bg-violet/8 p-3 text-sm">비밀번호를 바꿨어요. 새 비밀번호로 로그인해 주세요.</p>}
       <FormError state={state} />
       <Field label="이메일"><Input name="email" type="email" autoComplete="email" required defaultValue={state?.fields?.email} /></Field>
       <Field label="비밀번호"><Input name="password" type="password" autoComplete="current-password" required /></Field>
       <Button type="submit" size="lg" disabled={pending}>{pending ? "확인하는 중…" : "로그인"}</Button>
+      <Link href="/forgot-password" className="link-sweep self-center text-sm text-ink-soft">비밀번호를 잊었나요?</Link>
       <p className="text-center text-sm text-ink-soft">
         처음이신가요? <Link href={`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`} className="link-sweep font-semibold text-violet">회원가입</Link>
       </p>
@@ -59,6 +63,35 @@ export function SignupForm() {
       <p className="text-center text-sm text-ink-soft">
         이미 계정이 있나요? <Link href={`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`} className="link-sweep font-semibold text-violet">로그인</Link>
       </p>
+    </ActionForm>
+  );
+}
+
+export function ForgotPasswordForm() {
+  const [state, action, pending] = useActionState<AccountFormState, FormData>(requestPasswordReset, undefined);
+  if (state === null) {
+    return <p className="rounded-lg bg-violet/8 p-4 text-sm leading-relaxed">가입된 이메일이면 재설정 링크를 보냈어요. 메일함과 스팸함을 확인해 주세요. 링크는 30분 동안 쓸 수 있어요.</p>;
+  }
+  return (
+    <ActionForm action={action} className="flex flex-col gap-4">
+      <FormError state={state} />
+      <Field label="가입한 이메일"><Input name="email" type="email" autoComplete="email" required /></Field>
+      <Button type="submit" size="lg" disabled={pending}>{pending ? "보내는 중…" : "재설정 링크 받기"}</Button>
+    </ActionForm>
+  );
+}
+
+export function ResetPasswordForm() {
+  const token = useSearchParams().get("token") ?? "";
+  const [state, action, pending] = useActionState<AccountFormState, FormData>(resetPassword, undefined);
+  return (
+    <ActionForm action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="token" value={token} />
+      <FormError state={state} />
+      <Field label="새 비밀번호" hint="10자 이상"><Input name="password" type="password" autoComplete="new-password" required /></Field>
+      <Field label="새 비밀번호 확인"><Input name="passwordConfirm" type="password" autoComplete="new-password" required /></Field>
+      <Button type="submit" size="lg" disabled={pending || !token}>{pending ? "바꾸는 중…" : "비밀번호 바꾸기"}</Button>
+      {!token && <p className="text-sm text-dot">메일의 링크로 들어와 주세요.</p>}
     </ActionForm>
   );
 }

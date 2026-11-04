@@ -215,3 +215,77 @@ test("school verification: a student ID photo is seen only by the operator and d
   await expect(page.getByRole("heading", { level: 1 })).toContainText("홍익대 인증");
   await admin.close();
 });
+
+/** 테스트 서버가 남긴 메일 중 받는 사람과 제목으로 마지막 것 */
+async function lastMail(to: string, subject: RegExp) {
+  const { readFile } = await import("node:fs/promises");
+  for (let i = 0; i < 20; i++) {
+    const lines = (await readFile(".data-e2e/outbox.jsonl", "utf8").catch(() => "")).trim().split("\n").filter(Boolean);
+    const hit = lines.map((l) => JSON.parse(l) as { to: string; subject: string; text: string }).reverse().find((m) => m.to === to && subject.test(m.subject));
+    if (hit) return hit;
+    await new Promise((r) => setTimeout(r, 300));
+  }
+  throw new Error(`no mail to ${to} matching ${subject}`);
+}
+
+test("forgot password: a one-time link resets the password and signs out everywhere", async ({ page }) => {
+  const email = `reset-${Date.now()}@example.com`;
+  await signup(page, email);
+  await page.getByRole("button", { name: "로그아웃" }).click();
+  await expect(page.getByRole("banner").getByRole("link", { name: "로그인" })).toBeVisible();
+
+  await page.goto("/login");
+  await page.getByRole("link", { name: "비밀번호를 잊었나요?" }).click();
+  await page.getByLabel("가입한 이메일").fill(email);
+  await page.getByRole("button", { name: "재설정 링크 받기" }).click();
+  await expect(page.getByText(/가입된 이메일이면 재설정 링크를 보냈어요/)).toBeVisible();
+  // 없는 이메일에도 같은 답 (가입 여부를 알려 주지 않는다)
+  await page.goto("/forgot-password");
+  await page.getByLabel("가입한 이메일").fill(`nobody-${Date.now()}@example.com`);
+  await page.getByRole("button", { name: "재설정 링크 받기" }).click();
+  await expect(page.getByText(/가입된 이메일이면 재설정 링크를 보냈어요/)).toBeVisible();
+
+  const mail = await lastMail(email, /비밀번호 재설정/);
+  const link = mail.text.match(/https?:\/\/\S+reset-password\?token=[\w-]+/)![0];
+  const path = new URL(link).pathname + new URL(link).search;
+  const next = "a brand new passphrase 2028";
+  await page.goto(path);
+  await page.locator('input[name="password"]:visible').fill(next);
+  await page.locator('input[name="passwordConfirm"]:visible').fill(next);
+  await page.getByRole("button", { name: "비밀번호 바꾸기" }).click();
+  await expect(page).toHaveURL(/\/login\?reset=1/);
+  await expect(page.getByText("비밀번호를 바꿨어요")).toBeVisible();
+  await page.locator('input[name="email"]:visible').fill(email);
+  await page.locator('input[name="password"]:visible').fill(next);
+  await page.getByRole("button", { name: "로그인" }).click();
+  await expect(page).toHaveURL(/\/account$/);
+
+  // 같은 링크는 다시 쓸 수 없다
+  await page.getByRole("button", { name: "로그아웃" }).click();
+  await page.goto(path);
+  await page.locator('input[name="password"]:visible').fill("yet another passphrase 99");
+  await page.locator('input[name="passwordConfirm"]:visible').fill("yet another passphrase 99");
+  await page.getByRole("button", { name: "비밀번호 바꾸기" }).click();
+  await expect(page.locator("p[role=alert]")).toContainText("만료됐거나 이미 쓰였어요");
+});
+
+test("school email verification sends a confirmation link the operator can see was clicked", async ({ page, browser }) => {
+  await signup(page, `schoolmail-${Date.now()}@example.com`);
+  await page.goto("/account/verify");
+  await fill(page, { schoolName: "국민대학교", department: "금속공예학과", schoolEmail: "student@kookmin.ac.kr" });
+  await page.locator('[name="agree"]').check();
+  await page.getByRole("button", { name: "인증 신청" }).click();
+  await expect(page.getByText(/student@kookmin.ac.kr로 보낸 확인 메일/)).toBeVisible();
+
+  const mail = await lastMail("student@kookmin.ac.kr", /학교 이메일 확인/);
+  const link = mail.text.match(/https?:\/\/\S+verify-email\?token=[\w-]+/)![0];
+  await page.goto(new URL(link).pathname + new URL(link).search);
+  await expect(page.getByText("학교 이메일을 확인했어요")).toBeVisible();
+
+  const admin = await browser.newPage();
+  await admin.setExtraHTTPHeaders({ "x-real-ip": "10.77.0.3" });
+  await adminLogin(admin);
+  await admin.goto("/admin/verifications");
+  await expect(admin.locator("li", { hasText: "student@kookmin.ac.kr" }).getByText(/메일 확인됨/)).toBeVisible();
+  await admin.close();
+});

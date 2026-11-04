@@ -11,6 +11,11 @@ import { VERIFY_METHODS } from "@/lib/domain/types";
 import { newId } from "@/lib/ids";
 import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { requireUser } from "./session";
+import { createHash, randomBytes } from "node:crypto";
+import { after } from "next/server";
+import { sendMail } from "@/features/mail/send";
+import { schoolEmailConfirm } from "@/features/mail/templates";
+import { siteConfig } from "@/lib/site";
 
 export type SellerFormState = { error: string } | null | undefined;
 
@@ -176,11 +181,13 @@ export async function requestVerification(_prev: SellerFormState, form: FormData
   if (form.get("agree") !== "on") return { error: "확인용 개인정보 처리에 동의해 주세요" };
 
   let schoolEmail: string | null = null;
+  let emailToken: string | null = null;
   let document: string | null = null;
   let rosterNote: string | null = null;
   if (v.method === "school_email") {
     schoolEmail = s(form, "schoolEmail").toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.(ac\.kr|edu)$/.test(schoolEmail)) return { error: "학교 이메일(ac.kr 또는 edu로 끝나는 주소)을 입력해 주세요" };
+    emailToken = randomBytes(32).toString("base64url");
   } else if (v.method === "student_id") {
     const file = form.get("document");
     if (!(file instanceof File) || file.size === 0) return { error: "학생증이나 재학, 졸업 증명서 사진을 올려 주세요" };
@@ -204,6 +211,9 @@ export async function requestVerification(_prev: SellerFormState, form: FormData
       schoolEmail,
       document,
       rosterNote,
+      emailTokenHash: emailToken ? createHash("sha256").update(emailToken).digest("base64url") : null,
+      emailTokenExpiresAt: emailToken ? new Date(Date.now() + 3 * 24 * 3600_000).toISOString() : null,
+      emailConfirmedAt: null,
       state: "new",
       reason: null,
       createdAt: new Date().toISOString(),
@@ -214,6 +224,11 @@ export async function requestVerification(_prev: SellerFormState, form: FormData
   if (!ok) {
     await deletePrivate(document); // 올린 서류는 남기지 않는다
     return { error: "이미 확인 중인 신청이 있어요" };
+  }
+  if (emailToken && schoolEmail) {
+    const to = schoolEmail;
+    const link = `${siteConfig.url}/verify-email?token=${emailToken}`;
+    after(() => sendMail(schoolEmailConfirm(to, v.schoolName, link)));
   }
   refresh();
   return null;

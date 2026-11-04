@@ -1,12 +1,17 @@
 "use server";
 
+import { createHash, randomBytes } from "node:crypto";
 import { refresh } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
 import { isUnder14 } from "@/lib/domain/rules";
 import { newId } from "@/lib/ids";
-import { allow, blocked, clientIp, hit, TOO_MANY } from "@/lib/security/rate-limit";
+import { sendMail } from "@/features/mail/send";
+import { passwordReset as passwordResetMail } from "@/features/mail/templates";
+import { siteConfig } from "@/lib/site";
+import { allow, clientIp, count, isBlocked, TOO_MANY } from "@/lib/security/rate-limit";
 import { dummyHash, hashPassword, passwordProblem, PASSWORD_MAX, verifyPassword } from "./password";
 import { endSession, openSession, requireUser, safeNext, setSessionCookie } from "./session";
 
@@ -74,15 +79,15 @@ export async function login(_prev: AccountFormState, form: FormData): Promise<Ac
   const ipKey = `login-fail:${await clientIp()}`;
   const accountKey = `login-fail-account:${email}`;
   // 막혀 있어도 같은 문구 (잠긴 계정인지도 알려 주지 않는다)
-  if (blocked(ipKey, 20) || blocked(accountKey, ACCOUNT_FAILS)) return { error: `${LOGIN_FAILED}. 여러 번 틀리면 잠시 뒤에 다시 시도할 수 있어요`, fields };
+  if ((await isBlocked(ipKey, 20)) || (await isBlocked(accountKey, ACCOUNT_FAILS))) return { error: `${LOGIN_FAILED}. 여러 번 틀리면 잠시 뒤에 다시 시도할 수 있어요`, fields };
 
   const db = await store.read();
   const user = db.users.find((u) => u.email === email);
   // 계정이 없어도 같은 계산을 한다 (응답 시간으로 계정 유무를 알 수 없게)
   const ok = await verifyPassword(password, user?.passwordHash ?? (await dummyHash()));
   if (!user || !ok) {
-    hit(ipKey, 20, FAIL_WINDOW);
-    hit(accountKey, ACCOUNT_FAILS, FAIL_WINDOW);
+    await count(ipKey, 20, FAIL_WINDOW);
+    await count(accountKey, ACCOUNT_FAILS, FAIL_WINDOW);
     return { error: LOGIN_FAILED, fields };
   }
   const token = await store.update((d) => openSession(d, user.id));
@@ -175,4 +180,55 @@ export async function deleteAccount(_prev: AccountFormState, form: FormData): Pr
   });
   await endSession();
   redirect("/?bye=1");
+}
+
+/* ───────────────────────── 비밀번호 재설정 ───────────────────────── */
+
+const RESET_MS = 30 * 60_000;
+const sha = (t: string) => createHash("sha256").update(t).digest("base64url");
+
+/**
+ * 재설정 메일 요청. 가입 여부를 알려 주지 않도록 항상 같은 답을 한다.
+ * 링크는 30분, 한 번 쓰면 사라지고, 새로 요청하면 이전 링크는 무효.
+ */
+export async function requestPasswordReset(_prev: AccountFormState, form: FormData): Promise<AccountFormState> {
+  if (STORE_READONLY) return { error: READONLY_MESSAGE };
+  const email = normEmail(get(form, "email"));
+  if (!(await allow("password-reset", 5, 60 * 60_000)) || !(await count(`password-reset:${email}`, 3, 60 * 60_000))) return { error: TOO_MANY };
+  const token = randomBytes(32).toString("base64url");
+  const user = await store.update((db) => {
+    const u = db.users.find((x) => x.email === email);
+    if (!u) return null;
+    db.passwordResets = (db.passwordResets ?? []).filter((r) => r.userId !== u.id && Date.parse(r.expiresAt) > Date.now());
+    db.passwordResets.push({ tokenHash: sha(token), userId: u.id, expiresAt: new Date(Date.now() + RESET_MS).toISOString() });
+    return { email: u.email };
+  });
+  if (user) after(() => sendMail(passwordResetMail(user.email, `${siteConfig.url}/reset-password?token=${token}`)));
+  return null;
+}
+
+export async function resetPassword(_prev: AccountFormState, form: FormData): Promise<AccountFormState> {
+  if (STORE_READONLY) return { error: READONLY_MESSAGE };
+  if (!(await allow("password-reset-use", 20, 60 * 60_000))) return { error: TOO_MANY };
+  const token = get(form, "token");
+  const password = String(form.get("password") ?? "");
+  if (password !== String(form.get("passwordConfirm") ?? "")) return { error: "비밀번호 확인이 일치하지 않아요" };
+  const db0 = await store.read();
+  const entry = (db0.passwordResets ?? []).find((r) => r.tokenHash === sha(token) && Date.parse(r.expiresAt) > Date.now());
+  const user = entry && db0.users.find((u) => u.id === entry.userId);
+  if (!entry || !user) return { error: "링크가 만료됐거나 이미 쓰였어요. 다시 요청해 주세요" };
+  const problem = passwordProblem(password, user.email);
+  if (problem) return { error: problem };
+  const passwordHash = await hashPassword(password);
+  const ok = await store.update((db) => {
+    const still = (db.passwordResets ?? []).some((r) => r.tokenHash === entry.tokenHash);
+    const u = db.users.find((x) => x.id === entry.userId);
+    if (!still || !u) return false;
+    u.passwordHash = passwordHash;
+    db.passwordResets = (db.passwordResets ?? []).filter((r) => r.userId !== u.id);
+    db.sessions = db.sessions.filter((s) => s.userId !== u.id); // 모든 기기에서 로그아웃
+    return true;
+  });
+  if (!ok) return { error: "링크가 만료됐거나 이미 쓰였어요. 다시 요청해 주세요" };
+  redirect("/login?reset=1");
 }

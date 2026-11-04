@@ -6,6 +6,7 @@ import { allow, TOO_MANY } from "@/lib/security/rate-limit";
 import { isMinor, isUnder14 } from "@/lib/domain/rules";
 import { newId, newTrackingCode } from "@/lib/ids";
 import { currentUser } from "@/features/account/session";
+import { notifyReceived } from "@/features/mail/notify";
 
 const httpsUrl = z
   .string()
@@ -99,5 +100,6 @@ export async function submitApplication(_prev: ApplicationFormState, form: FormD
       createdAt: new Date().toISOString(),
     });
   });
+  notifyReceived(v.email, "작가 입점 신청", code, "/admin/applications", [`${v.artistName || v.name}, ${v.schoolName || "소속 없음"} ${v.department}`]);
   return { ok: true, code, title: `작가 입점 신청: ${v.name}` };
 }

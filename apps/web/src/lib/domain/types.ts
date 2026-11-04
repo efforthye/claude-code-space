@@ -312,6 +312,8 @@ export type Database = {
   users: User[];
   sessions: Session[];
   verifications: SchoolVerification[];
+  /** 비밀번호 재설정 링크 (토큰은 해시로만, 30분) */
+  passwordResets?: { tokenHash: string; userId: ID; expiresAt: string }[];
   settings: SiteSettings;
   schools: School[];
   artists: Artist[];
@@ -399,6 +401,10 @@ export type SchoolVerification = {
   schoolEmail: string | null; // 학교 이메일로 확인할 때
   document: string | null; // 비공개 파일 이름 (학생증, 증명서)
   rosterNote: string | null; // 졸업전시 명단으로 확인할 때: 전시 이름 등
+  /** 학교 이메일 확인 링크 (해시만 저장, 3일) */
+  emailTokenHash?: string | null;
+  emailTokenExpiresAt?: string | null;
+  emailConfirmedAt?: string | null;
   state: "new" | "approved" | "rejected";
   reason: string | null; // 반려 사유
   createdAt: string;

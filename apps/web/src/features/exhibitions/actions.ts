@@ -7,6 +7,7 @@ import { readPlace } from "@/features/places/parse";
 import { newId, newTrackingCode } from "@/lib/ids";
 import { currentUser } from "@/features/account/session";
 import { saveImage, UploadError } from "@/lib/data/uploads";
+import { notifyReceived } from "@/features/mail/notify";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "날짜를 골라 주세요");
 
@@ -107,5 +108,6 @@ export async function submitExhibitionRequest(_prev: RequestFormState, form: For
       createdAt: new Date().toISOString(),
     });
   });
+  notifyReceived(v.email, "전시 등록 신청", code, "/admin/exhibition-requests", [v.title, `${v.schoolName} ${v.department}, ${v.startDate} ~ ${v.endDate}`]);
   return { ok: true, code, title: `전시 등록 신청: ${v.title}` };
 }

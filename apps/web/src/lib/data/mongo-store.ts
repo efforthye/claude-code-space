@@ -1,5 +1,6 @@
 import "server-only";
-import { MongoClient, type Collection } from "mongodb";
+import type { Collection } from "mongodb";
+import { mongoDb } from "./mongo";
 import type { Database } from "@/lib/domain/types";
 import type { Store } from "./store";
 
@@ -69,11 +70,7 @@ export class MongoStore implements Store {
   }
 }
 
-/** 프로세스당 연결 하나 (서버리스에서 요청마다 새로 연결하지 않도록) */
-let client: Promise<MongoClient> | null = null;
-export function mongoCollection(uri: string, dbName: string) {
-  return async () => {
-    client ??= new MongoClient(uri, { maxPoolSize: 5, serverSelectionTimeoutMS: 8000 }).connect();
-    return (await client).db(dbName).collection<StateDoc>("state");
-  };
+/** 실제 MongoDB의 state 컬렉션 */
+export function mongoCollection() {
+  return async () => (await mongoDb()).collection<StateDoc>("state");
 }
