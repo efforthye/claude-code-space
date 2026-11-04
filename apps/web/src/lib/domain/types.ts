@@ -314,6 +314,8 @@ export type Database = {
   verifications: SchoolVerification[];
   /** 비밀번호 재설정 링크 (토큰은 해시로만, 30분) */
   passwordResets?: { tokenHash: string; userId: ID; expiresAt: string }[];
+  /** 구글로 처음 온 사람이 출생연도와 약관 동의를 마칠 때까지 (토큰 해시, 15분) */
+  oauthPending?: { tokenHash: string; sub: string; email: string; name: string; picture: string | null; expiresAt: string }[];
   settings: SiteSettings;
   schools: School[];
   artists: Artist[];
@@ -365,7 +367,9 @@ export type User = {
   name: string;
   phone: string | null;
   birthYear: number;
-  passwordHash: string;
+  passwordHash: string; // 구글로만 가입한 회원은 "" (비밀번호 로그인 불가)
+  /** 구글 계정 고유 번호 (sub). 구글 로그인으로 가입했거나 계정 설정에서 연결한 경우 */
+  googleSub?: string | null;
   avatar?: string | null; // 프로필 사진
   cover?: string | null; // 프로필 배경 이미지
   bio?: string | null; // 한 줄 소개

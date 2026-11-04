@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Container } from "@/components/ui/container";
-import { LoginForm } from "@/features/account/auth-forms";
+import { GoogleNotice, LoginForm } from "@/features/account/auth-forms";
 import { currentUser } from "@/features/account/session";
+import { GOOGLE_ENABLED } from "@/features/account/google";
+import { GoogleButton, OrDivider } from "@/features/account/google-button";
 
 export const metadata: Metadata = { title: "로그인", robots: { index: false } };
 
@@ -18,6 +20,13 @@ export default function Page() {
       <div className="glass rounded-xl p-6 sm:p-8">
         <Suspense fallback={<div className="h-72" />}>
           <AlreadyIn />
+          {GOOGLE_ENABLED && (
+            <div className="mb-5 flex flex-col gap-5">
+              <GoogleNotice />
+              <GoogleButton />
+              <OrDivider />
+            </div>
+          )}
           <LoginForm />
         </Suspense>
       </div>

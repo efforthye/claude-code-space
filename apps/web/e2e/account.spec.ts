@@ -289,3 +289,16 @@ test("school email verification sends a confirmation link the operator can see w
   await expect(admin.locator("li", { hasText: "student@kookmin.ac.kr" }).getByText(/메일 확인됨/)).toBeVisible();
   await admin.close();
 });
+
+test("Google login stays closed until its keys are set", async ({ page }) => {
+  const start = await page.request.get("/auth/google", { maxRedirects: 0 });
+  expect(start.status()).toBe(307);
+  expect(start.headers().location).toMatch(/\/login\?google=off$/);
+  const back = await page.request.get("/auth/google/callback?state=x&code=y", { maxRedirects: 0 });
+  expect(back.headers().location).toMatch(/\/login\?google=off$/);
+  await page.goto("/login");
+  await expect(page.getByRole("link", { name: "구글로 계속하기" })).toHaveCount(0);
+  // 구글 가입 마무리 화면은 진행 중인 가입이 없으면 로그인으로 돌려보낸다
+  await page.goto("/signup/google");
+  await expect(page).toHaveURL(/\/login\?google=expired/);
+});

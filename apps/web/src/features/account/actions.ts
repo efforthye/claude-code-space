@@ -2,6 +2,7 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import { refresh } from "next/cache";
+import { cookies } from "next/headers";
 import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -84,7 +85,8 @@ export async function login(_prev: AccountFormState, form: FormData): Promise<Ac
   const db = await store.read();
   const user = db.users.find((u) => u.email === email);
   // 계정이 없어도 같은 계산을 한다 (응답 시간으로 계정 유무를 알 수 없게)
-  const ok = await verifyPassword(password, user?.passwordHash ?? (await dummyHash()));
+  // 계정이 없거나 구글로만 가입해 비밀번호가 없어도 같은 계산을 한다 (응답 시간으로 알 수 없게)
+  const ok = (await verifyPassword(password, user?.passwordHash || (await dummyHash()))) && !!user?.passwordHash;
   if (!user || !ok) {
     await count(ipKey, 20, FAIL_WINDOW);
     await count(accountKey, ACCOUNT_FAILS, FAIL_WINDOW);
@@ -142,7 +144,8 @@ export async function changePassword(_prev: AccountFormState, form: FormData): P
   if (!(await allow("password-change", 10, 15 * 60_000))) return { error: TOO_MANY };
   const db = await store.read();
   const user = db.users.find((u) => u.id === me.id);
-  if (!user || !(await verifyPassword(String(form.get("currentPassword") ?? ""), user.passwordHash))) return { error: "지금 비밀번호가 맞지 않아요" };
+  // 구글로만 가입한 회원은 지금 비밀번호가 없다: 처음 정하는 것
+  if (!user || (user.passwordHash && !(await verifyPassword(String(form.get("currentPassword") ?? ""), user.passwordHash)))) return { error: "지금 비밀번호가 맞지 않아요" };
   const next = String(form.get("newPassword") ?? "");
   const problem = passwordProblem(next, user.email);
   if (problem) return { error: problem };
@@ -170,7 +173,7 @@ export async function deleteAccount(_prev: AccountFormState, form: FormData): Pr
   if (get(form, "confirm") !== "탈퇴") return { error: "확인란에 탈퇴라고 적어 주세요" };
   const db = await store.read();
   const user = db.users.find((u) => u.id === me.id);
-  if (!user || !(await verifyPassword(String(form.get("password") ?? ""), user.passwordHash))) return { error: "비밀번호가 맞지 않아요" };
+  if (!user || (user.passwordHash && !(await verifyPassword(String(form.get("password") ?? ""), user.passwordHash)))) return { error: "비밀번호가 맞지 않아요" };
   await store.update((d) => {
     d.users = d.users.filter((u) => u.id !== me.id);
     d.sessions = d.sessions.filter((s) => s.userId !== me.id);
@@ -231,4 +234,36 @@ export async function resetPassword(_prev: AccountFormState, form: FormData): Pr
   });
   if (!ok) return { error: "링크가 만료됐거나 이미 쓰였어요. 다시 요청해 주세요" };
   redirect("/login?reset=1");
+}
+
+/* ───────────────────────── 구글로 처음 온 사람의 가입 마무리 ───────────────────────── */
+
+const GOOGLE_SIGNUP_COOKIE = "mayo_google_signup";
+
+/** 구글이 확인한 이메일과 이름에 출생연도(만 14세 확인)와 약관 동의를 더해 가입을 마친다 */
+export async function completeGoogleSignup(_prev: AccountFormState, form: FormData): Promise<AccountFormState> {
+  if (STORE_READONLY) return { error: READONLY_MESSAGE };
+  const jar = await cookies();
+  const token = jar.get(GOOGLE_SIGNUP_COOKIE)?.value ?? "";
+  const birthYear = Number(get(form, "birthYear"));
+  if (!Number.isInteger(birthYear) || birthYear < 1900 || birthYear > new Date().getFullYear()) return { error: "출생연도를 확인해 주세요" };
+  if (isUnder14(birthYear)) return { error: "만 14세 미만은 보호자와 함께 문의하기로 연락해 주세요" };
+  if (form.get("agreeTerms") !== "on") return { error: "이용약관에 동의해 주세요" };
+  if (form.get("agreePrivacy") !== "on") return { error: "개인정보 수집 및 이용에 동의해 주세요" };
+  const tokenHash = sha(token);
+  const now = new Date().toISOString();
+  const result = await store.update((db) => {
+    const p = (db.oauthPending ?? []).find((x) => x.tokenHash === tokenHash && Date.parse(x.expiresAt) > Date.now());
+    if (!p) return "expired" as const;
+    db.oauthPending = (db.oauthPending ?? []).filter((x) => x.tokenHash !== tokenHash);
+    if (db.users.some((u) => u.googleSub === p.sub || u.email === p.email)) return "exists" as const;
+    const id = newId("usr");
+    db.users.push({ id, email: p.email, name: p.name, phone: null, birthYear, passwordHash: "", googleSub: p.sub, createdAt: now, agreedAt: now });
+    return { token: openSession(db, id) };
+  });
+  jar.delete(GOOGLE_SIGNUP_COOKIE);
+  if (result === "expired") return { error: "시간이 지났어요. 구글로 다시 시작해 주세요" };
+  if (result === "exists") return { error: "이미 가입된 이메일이에요. 로그인해 주세요" };
+  await setSessionCookie(result.token);
+  redirect(safeNext(get(form, "next")));
 }

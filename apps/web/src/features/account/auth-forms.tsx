@@ -6,7 +6,7 @@ import { useActionState } from "react";
 import { ActionForm } from "@/components/ui/action-form";
 import { Button } from "@/components/ui/button";
 import { Checkbox, Field, Input } from "@/components/ui/field";
-import { login, requestPasswordReset, resetPassword, signup, type AccountFormState } from "./actions";
+import { completeGoogleSignup, login, requestPasswordReset, resetPassword, signup, type AccountFormState } from "./actions";
 
 function FormError({ state }: { state: AccountFormState }) {
   if (!state?.error) return null;
@@ -92,6 +92,41 @@ export function ResetPasswordForm() {
       <Field label="새 비밀번호 확인"><Input name="passwordConfirm" type="password" autoComplete="new-password" required /></Field>
       <Button type="submit" size="lg" disabled={pending || !token}>{pending ? "바꾸는 중…" : "비밀번호 바꾸기"}</Button>
       {!token && <p className="text-sm text-dot">메일의 링크로 들어와 주세요.</p>}
+    </ActionForm>
+  );
+}
+
+const GOOGLE_MESSAGES: Record<string, string> = {
+  "use-password": "이 이메일로 가입한 계정이 이미 있어요. 비밀번호로 로그인한 뒤 계정 설정에서 구글을 연결하세요.",
+  cancel: "구글 로그인을 취소했어요.",
+  expired: "시간이 지났어요. 구글로 다시 시작해 주세요.",
+  failed: "구글에서 이메일 확인이 되지 않았어요. 다른 계정으로 해 보세요.",
+  off: "구글 로그인을 준비하고 있어요.",
+  busy: "잠시 후 다시 시도해 주세요.",
+  readonly: "정식 오픈 준비 중이에요.",
+};
+
+/** 로그인 화면 위에 구글 로그인 결과 안내 */
+export function GoogleNotice() {
+  const key = useSearchParams().get("google");
+  const text = key ? GOOGLE_MESSAGES[key] : null;
+  return text ? <p className="rounded-lg bg-violet/8 p-3 text-sm leading-relaxed">{text}</p> : null;
+}
+
+export function GoogleSignupForm({ email, name }: { email: string; name: string }) {
+  const next = useSearchParams().get("next") ?? "";
+  const [state, action, pending] = useActionState<AccountFormState, FormData>(completeGoogleSignup, undefined);
+  return (
+    <ActionForm action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="next" value={next} />
+      <p className="rounded-lg bg-white/70 p-3 text-sm"><b>{name}</b> ({email})</p>
+      <FormError state={state} />
+      <Field label="출생연도" required hint="만 14세 이상 가입 가능"><Input name="birthYear" inputMode="numeric" placeholder="2001" required /></Field>
+      <div className="flex flex-col gap-2 rounded-md bg-white/60 p-4">
+        <Checkbox name="agreeTerms" label={<><Link href="/legal/terms" className="underline underline-offset-2" target="_blank">이용약관</Link>에 동의해요 (필수)</>} />
+        <Checkbox name="agreePrivacy" label={<><Link href="/legal/privacy" className="underline underline-offset-2" target="_blank">개인정보 수집 및 이용</Link>에 동의해요 (필수)</>} />
+      </div>
+      <Button type="submit" size="lg" disabled={pending}>{pending ? "가입하는 중…" : "가입 마치기"}</Button>
     </ActionForm>
   );
 }
