@@ -532,3 +532,8 @@ Certificates of authenticity (request, issue, revoke, public verify with QR), le
 
 ## [2026-11-04] service | web — real uploads, shared rate limits, email, password reset
 Public files go to Vercel Blob (browser uploads directly with a server-issued token, so large videos fit; 4.5MB function limit avoided); private student-ID photos live in MongoDB `private_files` (admin-only, deleted on decision, 30-day TTL). Rate limits count in MongoDB `rate_limits` (TTL) so all serverless instances share them. Email via Resend (order placed/paid/shipped, request and inquiry receipts, operator alerts, inquiry answers, password reset, school email confirmation); skipped when RESEND_API_KEY is absent. Owner actions: create the Blob store, Resend account + mayo.im DNS + key, ADMIN_*, BANK_*, KAKAO key, BUSINESS_PHONE/EMAIL. Jira connector not authorized: to reconcile.
+
+## [2026-11-07] deploy | web — 운영 DB에 예시 작가 7명, 작품 15점 추가
+오너 요청("마요에 더미데이터좀 넣어줘 로컬처럼"). 관리자 "예시 넣기"와 같은 방식으로 운영 DB(`mayo`)에
+없는 ID만 추가하고 모두 `sample: true`(예시 딱지, 주문 불가). 카탈로그 캐시를 비우려고 재배포.
+관리자 > 사이트 설정 > "예시 모두 빼기"로 정리 가능. Jira 커넥터 미인증으로 티켓 없음.
