@@ -35,6 +35,7 @@ export const ArtistWorkInput = z.object({
   price: z.number().int().min(1000, "가격은 1,000원 이상으로 정해 주세요").max(1_000_000_000),
   description: z.string().trim().max(3000),
   allowsPickup: z.boolean(),
+  rentable: z.boolean(),
 });
 
 /** JSON 문자열 필드를 스키마로 읽는다 (실패하면 null) */

@@ -36,6 +36,7 @@ export function MyWorkForm({ work, categories }: { work?: Work; categories: Cate
       <Field label="에디션" hint="판화, 사진만. 예: 3/10"><Input name="edition" defaultValue={work?.edition ?? ""} /></Field>
       <Field label="판매 가격 (원)" required hint="이번 시즌 수수료 0%"><Input name="price" inputMode="numeric" defaultValue={work?.price} /></Field>
       <Checkbox name="allowsPickup" defaultChecked={work?.allowsPickup ?? true} label="직접 수령(직거래)도 받을게요" className="self-end pb-2" />
+      <Checkbox name="rentable" defaultChecked={work?.rentable ?? false} label="렌탈도 받을게요 (월 렌탈료는 작품가의 3%, 렌탈하다 사면 낸 렌탈료 절반을 빼 드려요)" className="self-end pb-2" />
       <Field label="작품 설명" className="md:col-span-2"><Textarea name="description" defaultValue={work?.description} /></Field>
       <MediaManager initial={work?.media ?? []} endpoint="/api/media" imagesOnly />
       <StoryEditor initial={work?.story ?? []} endpoint="/api/media" />

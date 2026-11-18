@@ -167,6 +167,10 @@ export type Work = {
   sample?: boolean;
   /** 작가가 마이페이지에서 올려 관리자 검수를 기다리는 작품 (검수 전엔 비공개) */
   pendingReview?: boolean;
+  /** 경매에 올라가 있는 동안 그 경매 (이 동안은 장바구니로 살 수 없다). 유찰, 취소되면 비운다 */
+  auctionId?: ID | null;
+  /** 작가가 렌탈을 허락한 작품. 월 렌탈료는 rules.rentalMonthly(price) */
+  rentable?: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -225,6 +229,130 @@ export type Order = {
   paidAt: string | null;
   adminMemo: string;
   history: OrderEvent[];
+  createdAt: string;
+  /** 경매 낙찰로 생긴 주문 */
+  auctionId?: ID | null;
+  /** 구매 수수료 (경매 낙찰). 주문 합계에 더한다 */
+  buyerFee?: number;
+  /** 포장 선택 (기본 포장은 무료) */
+  packaging?: Packaging;
+  packagingFee?: number;
+  /** 선물하기: 받는 사람이 주문자와 다를 때 */
+  gift?: Gift | null;
+};
+
+export const PACKAGINGS = ["basic", "gift", "art"] as const;
+export type Packaging = (typeof PACKAGINGS)[number];
+
+export type Gift = {
+  recipientName: string;
+  recipientPhone: string;
+  message: string; // 카드에 적어 보낼 말
+  hidePrice: boolean; // 거래명세서에서 가격을 뺀다
+};
+
+/* ───────────── 경매 (미술진흥법 제15조⑤: 낙찰가와 완납 여부 공시, 자기 경매 응찰 금지, 본인·친족 소유 고지) ───────────── */
+
+/** 화면에 보이는 입찰 한 줄. 대리 입찰(자동입찰)로 시스템이 올린 것은 auto */
+export type AuctionBid = { id: ID; userId: ID; amount: number; at: string; auto: boolean };
+
+/** 입찰자가 정한 최대 금액. 본인과 운영자만 본다 (다른 사람에게 새면 대리 입찰이 무너진다) */
+export type AuctionMax = { userId: ID; max: number; at: string };
+
+export type AuctionResult =
+  | { kind: "no_sale"; at: string }
+  | {
+      kind: "sold";
+      via: "bid" | "buy_now" | "second_chance";
+      userId: ID;
+      hammer: number; // 낙찰가 (수수료 전)
+      at: string;
+      orderId: ID;
+      /** 완납 여부 공시: pending 결제 기다림, paid 완납, failed 미납 */
+      payment: "pending" | "paid" | "failed";
+    };
+
+/**
+ * requested: 작가가 경매로 내고 싶다고 신청, 운영자가 일정을 정하면 scheduled.
+ * scheduled 안에서 시작 전, 진행 중은 시각으로 가른다. 마감되면 closed.
+ */
+export type AuctionState = "requested" | "scheduled" | "closed" | "cancelled";
+
+export type Auction = {
+  id: ID;
+  workId: ID;
+  exhibitionId: ID | null;
+  startPrice: number;
+  increment: number; // 입찰 단위
+  buyNowPrice: number | null; // 즉시구매가
+  startsAt: string;
+  endsAt: string; // 마지막 1분 입찰로 늘어날 수 있다
+  originalEndsAt: string;
+  state: AuctionState;
+  requestedBy: "admin" | "artist";
+  bids: AuctionBid[];
+  maxes: AuctionMax[];
+  result: AuctionResult | null;
+  /** 낙찰 후 결제하지 않은 사람 (차순위 제안에서 뺀다) */
+  failedUserIds: ID[];
+  /** 차순위 입찰자에게 보낸 구매 제안 */
+  offer: { userId: ID; amount: number; expiresAt: string } | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/* ───────────── 렌탈, 기업전용관 ───────────── */
+
+export const RENTAL_MONTHS = [1, 3, 6, 12] as const;
+
+export type RentalState = "requested" | "confirmed" | "active" | "returned" | "purchased" | "cancelled";
+
+export type Rental = {
+  id: ID;
+  code: string; // R-XXXXXXXX
+  userId?: ID | null;
+  audience: "personal" | "business";
+  workIds: ID[];
+  months: number;
+  startDate: string; // 희망 시작일 YYYY-MM-DD
+  monthlyTotal: number; // 신청 시점 월 렌탈료 합
+  deposit: number; // 신청 시점 보증금 합
+  name: string;
+  company: string | null;
+  bizNumber: string | null; // 사업자등록번호 (세금계산서)
+  email: string;
+  phone: string;
+  address: string;
+  spaceNote: string; // 공간 설명 (층, 벽 크기, 조명)
+  state: RentalState;
+  adminMemo: string;
+  history: { at: string; state: RentalState; note: string }[];
+  createdAt: string;
+};
+
+export const CONSULT_KINDS = ["curation", "rental", "exhibition", "purchase", "commission", "hire"] as const;
+export type ConsultKind = (typeof CONSULT_KINDS)[number];
+
+/** 기업전용관 상담과 작품 추천 요청 (공간 전시, 대량 렌탈, 기업 구매, 커미션, 작가 섭외) */
+export type Consultation = {
+  id: ID;
+  code: string; // B-XXXXXXXX
+  userId?: ID | null;
+  audience: "personal" | "business";
+  kind: ConsultKind;
+  company: string | null;
+  bizNumber: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  space: string; // 공간 종류, 크기
+  budget: string;
+  period: string;
+  mood: string; // 원하는 분위기
+  workIds: ID[]; // 관심 작품
+  message: string;
+  state: "new" | "proposed" | "contracted" | "closed";
+  answer: string | null; // 운영자 제안 (신청 현황에서 본인이 본다)
   createdAt: string;
 };
 
@@ -329,6 +457,9 @@ export type Database = {
   applications: Application[];
   exhibitionRequests: ExhibitionRequest[];
   inquiries: Inquiry[];
+  auctions: Auction[];
+  rentals: Rental[];
+  consultations: Consultation[];
 };
 
 /**
@@ -381,6 +512,10 @@ export type User = {
   verification?: { schoolId: ID; department: string | null; status: "student" | "graduate"; method: VerifyMethod; verifiedAt: string } | null;
   createdAt: string;
   agreedAt: string; // 약관, 개인정보 동의 시각
+  /** 경매 이용 약관 동의 시각 (처음 입찰할 때) */
+  auctionAgreedAt?: string | null;
+  /** 낙찰 후 결제하지 않은 횟수. 2번이면 입찰할 수 없다 */
+  auctionStrikes?: number;
 };
 
 /**
@@ -426,4 +561,6 @@ export type LogoMark = (typeof LOGO_MARKS)[number];
 /** 운영자가 관리자 화면에서 바꾸는 사이트 설정 */
 export type SiteSettings = {
   logoMark: LogoMark;
+  /** 경매 구매 수수료율 (0.1 = 10%). 입찰 전에 총액으로 보여 준다 */
+  auctionBuyerFeeRate?: number;
 };

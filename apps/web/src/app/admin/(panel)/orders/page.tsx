@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { AdminHeading, Table, Td } from "@/features/admin/ui";
 import { adminDb } from "@/features/admin/session";
-import { isPaymentOverdue, ORDER_STATUS_LABEL } from "@/lib/domain/rules";
+import { isPaymentOverdue, ORDER_STATUS_LABEL, orderTotal } from "@/lib/domain/rules";
 import type { OrderStatus } from "@/lib/domain/types";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatPrice } from "@/lib/format";
@@ -44,7 +44,7 @@ export default async function AdminOrders(props: PageProps<"/admin/orders">) {
               </Td>
               <Td>{o.depositorName}</Td>
               <Td>{o.items.map((i) => i.title).join(", ")}</Td>
-              <Td className="font-semibold">{formatPrice(o.subtotal + o.parcelFee + (o.shippingQuote ?? 0))}</Td>
+              <Td className="font-semibold">{formatPrice(orderTotal(o))}</Td>
               <Td className={late ? "text-dot" : ""}>{formatDateTime(o.paymentDueAt)}</Td>
               <Td className="text-ink-soft">{formatDateTime(o.createdAt)}</Td>
             </tr>

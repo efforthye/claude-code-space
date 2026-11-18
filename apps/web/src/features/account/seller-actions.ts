@@ -57,6 +57,7 @@ export async function saveMyWork(workId: string | null, _prev: SellerFormState, 
     price: Number(s(form, "price").replaceAll(",", "")),
     description: s(form, "description"),
     allowsPickup: form.get("allowsPickup") === "on",
+    rentable: form.get("rentable") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const media = parseJson(MediaList, s(form, "media"));

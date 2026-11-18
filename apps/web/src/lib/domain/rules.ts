@@ -4,6 +4,7 @@ import type {
   ArtistStatus,
   Category,
   Order,
+  Packaging,
   OrderStatus,
   ShippingMethod,
   VerifyMethod,
@@ -120,6 +121,11 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
 /** 일반 택배비 (가설값, 운영하며 조정). */
 export const PARCEL_FEE = 5_000;
 
+/** 주문 합계: 작품가 + 택배비 + 운송 견적 + 경매 구매 수수료 + 포장비 */
+export function orderTotal(o: Pick<Order, "subtotal" | "parcelFee" | "shippingQuote" | "buyerFee" | "packagingFee">) {
+  return o.subtotal + o.parcelFee + (o.shippingQuote ?? 0) + (o.buyerFee ?? 0) + (o.packagingFee ?? 0);
+}
+
 /** 주문 후 입금 기한. 경매 낙찰 결제 기한(48시간)과 맞춘다. */
 export const PAYMENT_DUE_HOURS = 48;
 
@@ -158,11 +164,62 @@ export function coverImage(work: Pick<Work, "media">): string | undefined {
   return work.media.find((m) => m.kind === "image")?.src ?? work.media.find((m) => m.poster)?.poster ?? undefined;
 }
 
-/** 작품이 공개 목록에 보이는가. */
-/** 지금 주문할 수 있는 작품: 판매 중이고 예시가 아닌 것 */
-export function isOrderable(work: Pick<Work, "status" | "sample">) {
-  return work.status === "available" && !work.sample;
+/** 지금 장바구니로 주문할 수 있는 작품: 판매 중이고, 예시가 아니고, 경매에 올라가 있지 않은 것 */
+export function isOrderable(work: Pick<Work, "status" | "sample" | "auctionId">) {
+  return work.status === "available" && !work.sample && !work.auctionId;
 }
+
+/* ───────── 렌탈 (가설값, 운영하며 조정) ───────── */
+
+/** 월 렌탈료: 작품가의 3%, 최소 1만 원, 천 원 단위 */
+export function rentalMonthly(price: number) {
+  return Math.max(10_000, Math.round((price * 0.03) / 1000) * 1000);
+}
+
+/** 보증금: 작품가의 30%, 반납 확인 후 돌려준다 */
+export function rentalDeposit(price: number) {
+  return Math.round((price * 0.3) / 1000) * 1000;
+}
+
+/** 렌탈하다 사기로 하면 낸 렌탈료의 이만큼을 작품가에서 빼 준다 */
+export const RENT_TO_OWN_CREDIT = 0.5;
+
+/** 렌탈할 수 있는 작품: 작가가 허락했고 판매 중이며 경매 중이 아닌 것 */
+export function isRentable(work: Pick<Work, "status" | "sample" | "auctionId" | "rentable">) {
+  return Boolean(work.rentable) && isOrderable(work);
+}
+
+/** 가볍게 사기 좋은 가격대 (첫 구매, 선물). 목록 필터와 홈 섹션 */
+export const EASY_PRICE = 500_000;
+
+export const PACKAGING_LABEL: Record<Packaging, string> = {
+  basic: "기본 포장",
+  gift: "선물 포장 (리본, 카드)",
+  art: "미술품 전문 포장 (에어캡, 코너 보호, 나무 상자)",
+};
+
+/** 포장비. 기본 포장은 무료, 전문 포장은 작품 크기와 상관없이 한 점당 */
+export const PACKAGING_FEE: Record<Packaging, number> = { basic: 0, gift: 5_000, art: 30_000 };
+
+export const RENTAL_STATE_LABEL = {
+  requested: "신청 접수",
+  confirmed: "계약 확정, 설치 준비",
+  active: "렌탈 중",
+  returned: "반납 완료",
+  purchased: "구매로 전환",
+  cancelled: "취소",
+} as const;
+
+export const CONSULT_KIND_LABEL = {
+  curation: "작품 추천 받기",
+  rental: "공간 렌탈 (매장, 사무실)",
+  exhibition: "기업 공간 전시",
+  purchase: "기업 구매, 선물",
+  commission: "커미션, 협업 제작",
+  hire: "작가 섭외, 채용",
+} as const;
+
+export const CONSULT_STATE_LABEL = { new: "접수", proposed: "제안 드림", contracted: "계약", closed: "종료" } as const;
 
 export function isListed(work: Work) {
   return work.status !== "hidden";

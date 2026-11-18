@@ -1,4 +1,5 @@
 import "server-only";
+import { orderTotal } from "@/lib/domain/rules";
 import { getBankAccount } from "@/features/orders/payment";
 import type { Order } from "@/lib/domain/types";
 import { formatDateTime, formatPrice } from "@/lib/format";
@@ -21,7 +22,7 @@ function layout(title: string, paragraphs: string[], button?: { label: string; h
   return { html, text };
 }
 
-const total = (o: Order) => o.subtotal + o.parcelFee + (o.shippingQuote ?? 0);
+const total = (o: Order) => orderTotal(o);
 const items = (o: Order) => o.items.map((i) => `「${i.title}」 ${i.artistName}, ${formatPrice(i.price)}`).join("\n");
 
 export function orderPlaced(o: Order): Mail {
@@ -84,4 +85,10 @@ export function schoolEmailConfirm(to: string, schoolName: string, link: string)
     href: link,
   });
   return { to, subject: "[MAYO] 학교 이메일 확인", html, text };
+}
+
+/** 경매 알림 (더 높은 입찰, 낙찰, 차순위 제안): 제목, 문단, 버튼 하나 */
+export function auctionNotice(to: string, subject: string, title: string, lines: string[], button: { label: string; path: string }): Mail {
+  const { html, text } = layout(title, lines, { label: button.label, href: `${siteConfig.url}${button.path}` });
+  return { to, subject: `[MAYO 경매] ${subject}`, html, text };
 }

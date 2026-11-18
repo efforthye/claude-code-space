@@ -17,10 +17,13 @@ export async function AccountShell({ me, mode, children }: { me: Me; mode: "buy"
   const db = await store.read();
   const artist = db.artists.find((a) => a.userId === me.id) ?? null;
   const school = me.verification ? db.schools.find((s) => s.id === me.verification!.schoolId) : undefined;
+  const offers = db.auctions.filter((a) => a.offer?.userId === me.id).length;
   const pendingWorks = artist ? db.works.filter((w) => w.artistId === artist.id && w.pendingReview).length : 0;
 
   const buy: NavItem[] = [
     { href: "/account", label: "주문과 보증서" },
+    { href: "/account/bids", label: "내 경매", badge: offers || undefined },
+    { href: "/account/rentals", label: "렌탈" },
     { href: "/account/requests", label: "신청과 문의" },
     { href: "/account/verify", label: "학교 인증" },
     { href: "/account/settings", label: "계정 설정" },

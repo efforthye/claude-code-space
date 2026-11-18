@@ -16,6 +16,7 @@ import { ShareActions } from "@/features/share/share-actions";
 import { siteConfig } from "@/lib/site";
 import { MetaLine } from "@/components/ui/meta-line";
 import { StoryBlocks } from "@/features/catalog/story-blocks";
+import { WorkAuction } from "@/features/auction/work-auction";
 
 export default function WorkPage(props: PageProps<"/works/[id]">) {
   return (
@@ -91,6 +92,18 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
             <dd>{options.map((o) => SHIPPING_LABEL[o]).join(" / ")}</dd>
           </dl>
 
+          {work.auctionId ? (
+            <div className="border-y border-line py-5">
+              {work.operatorOwned && (
+                <p className="mb-4 rounded-sm border border-clay bg-clay-soft p-3 text-xs text-ink">
+                  경매 전 고지 (미술진흥법 제15조⑤4): 이 작품은 MAYO 운영자 본인 또는 친족이 소유한 작품입니다.
+                </p>
+              )}
+              <Suspense fallback={<p className="text-sm text-ink-soft">경매 정보를 불러오는 중…</p>}>
+                <WorkAuction workId={work.id} />
+              </Suspense>
+            </div>
+          ) : (
           <div className="flex flex-col gap-3 border-y border-line py-5">
             <div className="flex items-baseline justify-between">
               <span className="text-2xl font-bold">{formatPrice(work.price)}</span>
@@ -111,6 +124,7 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
             )}
             {!work.sample && <p className="text-xs text-ink-soft">로그인 없이 담고 주문 신청할 수 있어요. 결제는 무통장 입금으로 진행됩니다.</p>}
           </div>
+          )}
 
           {(work.consignor || (artist && isDeceased(artist))) && (
             <p className="glass rounded-md p-3 text-xs leading-relaxed">

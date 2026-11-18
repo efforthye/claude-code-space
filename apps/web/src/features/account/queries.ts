@@ -1,6 +1,6 @@
 import "server-only";
 import { store } from "@/lib/data/store";
-import { ORDER_STATUS_LABEL } from "@/lib/domain/rules";
+import { ORDER_STATUS_LABEL, orderTotal } from "@/lib/domain/rules";
 
 export type MyRow = {
   code: string;
@@ -23,7 +23,7 @@ export async function myAccountData(userId: string) {
       createdAt: o.createdAt,
       status: o.status,
       statusLabel: ORDER_STATUS_LABEL[o.status],
-      total: o.subtotal + o.parcelFee + (o.shippingQuote ?? 0),
+      total: orderTotal(o),
       items: o.items.map((i) => ({
         workId: i.workId,
         title: i.title,

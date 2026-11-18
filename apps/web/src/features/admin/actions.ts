@@ -51,6 +51,18 @@ export async function changeOrderStatus(orderId: string, next: OrderStatus, form
       work.updatedAt = now;
     }
     if (next === "paid") order.paidAt = now;
+    // 경매 낙찰 주문이면 결과 공시(완납 여부)도 같이 바꾼다
+    const auction = order.auctionId ? db.auctions.find((a) => a.id === order.auctionId) : undefined;
+    if (auction?.result?.kind === "sold" && auction.result.orderId === order.id) {
+      if (next === "paid") auction.result.payment = "paid";
+      if (next === "cancelled" && order.status === "pending_payment") {
+        auction.result.payment = "failed";
+        for (const item of order.items) {
+          const work = db.works.find((w) => w.id === item.workId);
+          if (work?.auctionId === auction.id) work.auctionId = null;
+        }
+      }
+    }
     order.status = next;
     order.history.push({ at: now, status: next, note: note || ORDER_STATUS_LABEL[next] });
   });
@@ -105,6 +117,7 @@ const WorkInput = z.object({
   status: z.enum(["available", "reserved", "sold", "hidden"]),
   description: z.string(),
   allowsPickup: z.boolean(),
+  rentable: z.boolean(),
   operatorOwned: z.boolean(),
   consignor: z.string().max(60, "판매자 표시는 60자까지예요").nullable(),
   provenance: z.string().max(500, "소장 이력은 500자까지예요").nullable(),
@@ -131,6 +144,7 @@ export async function saveWork(workId: string | null, _prev: FormState, form: Fo
     status: s(form, "status"),
     description: s(form, "description"),
     allowsPickup: form.get("allowsPickup") === "on",
+    rentable: form.get("rentable") === "on",
     operatorOwned: form.get("operatorOwned") === "on",
     consignor: optional(s(form, "consignor")),
     provenance: optional(s(form, "provenance")),

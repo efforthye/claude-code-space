@@ -6,7 +6,7 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { changeOrderStatus, issueCertificate, revokeCertificate, settleItem, updateOrderDetails } from "@/features/admin/actions";
 import { AdminHeading } from "@/features/admin/ui";
 import { adminDb } from "@/features/admin/session";
-import { ORDER_NEXT, ORDER_STATUS_LABEL, SHIPPING_LABEL } from "@/lib/domain/rules";
+import { ORDER_NEXT, ORDER_STATUS_LABEL, SHIPPING_LABEL, orderTotal } from "@/lib/domain/rules";
 import { formatDateTime, formatPrice } from "@/lib/format";
 
 const ACTION_LABEL: Record<string, string> = {
@@ -22,7 +22,7 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
   const db = await adminDb();
   const order = db.orders.find((o) => o.id === id);
   if (!order) notFound();
-  const total = order.subtotal + order.parcelFee + (order.shippingQuote ?? 0);
+  const total = orderTotal(order);
   const hasArt = order.items.some((i) => i.shipping === "art_shipping");
   const certs = db.certificates.filter((c) => c.orderId === order.id);
 

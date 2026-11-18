@@ -67,6 +67,7 @@ export function WorkForm({ work, artists, exhibitions, categories }: { work?: Wo
 
       <div className="flex flex-col gap-2 md:col-span-2">
         <Checkbox name="allowsPickup" defaultChecked={work?.allowsPickup ?? true} label="직거래(직접 수령) 허용" />
+        <Checkbox name="rentable" defaultChecked={work?.rentable ?? false} label="렌탈 허용 (작가 동의)" />
         <Checkbox name="featured" defaultChecked={work?.featured} label="홈 대표 작품으로 노출" />
         <Checkbox name="operatorOwned" defaultChecked={work?.operatorOwned} label="운영자 본인이나 친족 소유 작품 (작품 페이지에 고지 문구가 붙어요)" />
       </div>

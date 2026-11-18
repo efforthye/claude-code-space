@@ -37,6 +37,9 @@ const EMPTY: Database = {
   applications: [],
   exhibitionRequests: [],
   inquiries: [],
+  auctions: [],
+  rentals: [],
+  consultations: [],
 };
 
 /** Local development store: one JSON file under `.data/` (git-ignored). */
@@ -104,6 +107,9 @@ export function migrate(db: Database): Database {
     for (const w of db.works) if (SAMPLE_WORK_IDS.has(w.id)) w.sample = true;
   }
   if (!LOGO_MARKS.includes(db.settings.logoMark)) db.settings.logoMark = "glass";
+  db.auctions ??= [];
+  db.rentals ??= [];
+  db.consultations ??= [];
   if (db.artistGroups.length === 0) db.artistGroups = structuredClone(DEFAULT_ARTIST_GROUPS);
   for (const a of db.artists) {
     a.avatar ??= null;

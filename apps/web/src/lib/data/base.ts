@@ -23,5 +23,8 @@ export function buildBaseDatabase(): Database {
     applications: [],
     exhibitionRequests: [],
     inquiries: [],
+    auctions: [],
+    rentals: [],
+    consultations: [],
   };
 }

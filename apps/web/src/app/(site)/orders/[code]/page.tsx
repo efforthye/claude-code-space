@@ -9,7 +9,7 @@ import { OrderPlaced } from "@/features/orders/order-placed";
 import { findOrderByCode } from "@/features/orders/queries";
 import { requestCertificate } from "@/features/certificates/actions";
 import { certificatesForOrder } from "@/features/certificates/queries";
-import { ORDER_STATUS_LABEL, SHIPPING_LABEL } from "@/lib/domain/rules";
+import { ORDER_STATUS_LABEL, SHIPPING_LABEL, orderTotal } from "@/lib/domain/rules";
 import { formatDateTime, formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = { title: "주문 확인", robots: { index: false } };
@@ -31,7 +31,7 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
   const certOf = (workId: string) => certs.find((c) => c.workId === workId && !c.revokedAt);
   const settled = order.paidAt != null && order.status !== "cancelled";
   const bank = getBankAccount();
-  const amount = order.subtotal + order.parcelFee + (order.shippingQuote ?? 0);
+  const amount = orderTotal(order);
   const awaitingQuote = order.items.some((i) => i.shipping === "art_shipping") && order.shippingQuote == null;
 
   return (
