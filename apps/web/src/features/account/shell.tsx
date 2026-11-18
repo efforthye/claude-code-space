@@ -31,6 +31,7 @@ export async function AccountShell({ me, mode, children }: { me: Me; mode: "buy"
       ? [
           { href: "/account/sell/works", label: "내 작품", badge: pendingWorks || undefined },
           { href: "/account/sell/orders", label: "판매 주문" },
+          { href: "/account/sell/insights", label: "성과 리포트" },
           { href: "/account/sell/profile", label: "작가 프로필" },
         ]
       : []),
