@@ -21,7 +21,30 @@
       "Bash(node --check /tmp/mj.js)",
       "Bash(python3 -c ' *)",
       "Bash(node --check /tmp/mj2.js)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(sw_vers)",
+      "Bash(/usr/libexec/PlistBuddy -c \"Print :CFBundleShortVersionString\" \"/Applications/Android Studio.app/Contents/Info.plist\")",
+      "Bash(/usr/libexec/PlistBuddy -c \"Print :CFBundleVersion\" \"/Applications/Android Studio.app/Contents/Info.plist\")",
+      "Bash(\"/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/java\" -version)",
+      "Bash(/usr/libexec/java_home -V)",
+      "Bash(java -version)",
+      "Bash(pod --version)",
+      "Bash(ruby -v)",
+      "Bash(brew info *)",
+      "Bash(set -o pipefail)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\")",
+      "Bash(yes)",
+      "Bash(/opt/homebrew/bin/sdkmanager --sdk_root=/Users/efforthye/Library/Android/sdk 'cmdline-tools;latest')",
+      "Bash('/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code' --install-extension dart-code.flutter --force)",
+      "Bash(xcodebuild -downloadPlatform iOS)",
+      "Bash(xcrun simctl *)",
+      "Read(//Applications/**)",
+      "Read(//Applications/Xcode.app/Contents/_MASReceipt/**)",
+      "Bash(brew outdated *)",
+      "Bash(mas outdated *)",
+      "Bash(mas list *)",
+      "Bash(git status *)"
     ]
   }
 }
