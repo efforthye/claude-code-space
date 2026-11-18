@@ -85,6 +85,8 @@ Updated whenever pages are added/renamed or a service's status changes.
 - [[0019-centralised-logging-elk]] — Elasticsearch + Kibana + Filebeat (no Logstash), sized to
   fit the mini's Docker VM because ComfyUI needs the host RAM; loopback-only + SSH tunnel.
 
+- [[0030-mayo-auction-rental-business]] — 졸전 경매(자동입찰, 마감 연장, 순차 마감, 낙찰가 공시),
+  작품 렌탈, 기업전용관, 선물하기와 포장. 미술진흥법 제15조⑤ 반영.
 - [[0027-pause-mayo-reuse-domain]] — mayo 보류: 앱은 `archive/mayo/`로(태그 `archive/mayo-2026-11-01`), mayo.im은
   새 Next.js 사이트 [[web]]이 사용, [[mayo-api]]는 그대로 가동하며 재사용.
 
@@ -97,6 +99,7 @@ Updated whenever pages are added/renamed or a service's status changes.
   캐릭터 일관성) — mayo 감독 프롬프트에 반영할 기준.
 - [[expo-go-vs-dev-build]] — Expo Go (generic container, SDK-locked) vs a development build
   (your own compiled app); why mayo will need a dev build.
+- [[online-auction-mechanics]] — 대리 입찰, 소프트 클로즈, 순차 마감, 차순위 제안, 관련 국내법.
 - [[mayo-web-target]] — running the same Expo app on the **web** (react-native-web, `web.output:
   single`, Vercel) for mayo.im; native-module web guards + the shared-key leak caveat.
 - [[flame-game-template]] — 새 Flutter+Flame 게임의 재사용 구조와 `scripts/new-flame-game.sh`

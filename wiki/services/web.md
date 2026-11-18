@@ -4,7 +4,7 @@ type: service
 status: building
 tags: [service, web, nextjs, vercel]
 created: 2026-11-01
-updated: 2026-11-01
+updated: 2026-11-18
 ---
 
 # Web — new website on mayo.im
@@ -54,3 +54,23 @@ cd apps/web && npm install && npm run dev   # http://localhost:3000
 ## Data store (2026-11-04)
 
 MongoDB Atlas behind the `Store` seam, see [[0029-mongodb-atlas-store]]. Local dev uses `mayo-dev`, tests use a JSON file.
+
+## Auction, rental, 기업전용관 (2026-11-18)
+
+See [[0030-mayo-auction-rental-business]] and [[online-auction-mechanics]].
+
+**Public pages:**
+- `/auctions`: live and upcoming auctions.
+- `/auctions/results`: 공시 of hammer prices and payment status.
+- `/legal/auction`: auction terms.
+- `/rental` and `/rental/apply`: rental.
+- `/business`: 기업전용관, linked from the header top right.
+- `/works?price=u50|mode=auction|mode=rental`: works list filters.
+
+**Member pages:**
+- `/account/bids`: 내 경매, with won orders, the payment form and second-chance offers.
+- Rentals and consultations appear under 신청, 렌탈, 상담.
+
+**Admin pages:** `/admin/auctions`, `/admin/rentals`, `/admin/consultations`.
+
+**Env:** `MAYO_STAFF_EMAILS` (comma list). Staff accounts are blocked from bidding (미술진흥법 제15조⑤3).
