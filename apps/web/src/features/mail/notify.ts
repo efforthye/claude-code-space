@@ -59,3 +59,10 @@ export function notifyAuction(userId: string, workId: string, kind: "outbid" | "
     await sendMail(mail);
   });
 }
+
+/** 기업, 추천 상담에 운영자가 제안을 적었을 때 */
+export function notifyConsultAnswered(to: string, subject: string, answer: string) {
+  after(async () => {
+    await sendMail(T.inquiryAnswered(to, subject, answer));
+  });
+}

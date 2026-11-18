@@ -4,13 +4,14 @@ import { Suspense } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
+import { ButtonLink } from "@/components/ui/button";
 import { RedDot } from "@/components/ui/red-dot";
 import { VerificationCard } from "@/components/ui/verified-badge";
 import { AddToCart } from "@/features/cart/add-to-cart";
 import { WorkCard } from "@/features/catalog/work-card";
 import { MediaGallery } from "@/features/catalog/media-gallery";
 import { getCatalog, indexById } from "@/lib/data/catalog";
-import { artShippingIds, groupLabel, isDeceased, lifespan, categoryLabel, coverImage, KIND_LABEL, needsArtShipping, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
+import { artShippingIds, groupLabel, isDeceased, lifespan, categoryLabel, coverImage, KIND_LABEL, needsArtShipping, SHIPPING_LABEL, shippingOptions, isRentable, showsRental, rentalMonthly, rentalDeposit } from "@/lib/domain/rules";
 import { formatPrice, formatSize } from "@/lib/format";
 import { ShareActions } from "@/features/share/share-actions";
 import { siteConfig } from "@/lib/site";
@@ -123,6 +124,15 @@ async function WorkDetail({ params }: { params: PageProps<"/works/[id]">["params
               <AddToCart workId={work.id} status={work.status} defaultShipping={options[0]} cover={coverImage(work)} />
             )}
             {!work.sample && <p className="text-xs text-ink-soft">로그인 없이 담고 주문 신청할 수 있어요. 결제는 무통장 입금으로 진행됩니다.</p>}
+            {showsRental(work) && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-violet/8 p-4 text-sm">
+                <span>
+                  렌탈도 할 수 있어요. 월 <b>{formatPrice(rentalMonthly(work.price))}</b>, 보증금 {formatPrice(rentalDeposit(work.price))}
+                  <span className="block text-xs text-ink-soft">걸어 보고 사면 낸 렌탈료 절반을 빼 드려요</span>
+                </span>
+                {isRentable(work) ? <ButtonLink href={`/rental/apply?work=${work.id}`} size="sm" variant="secondary">렌탈 신청</ButtonLink> : <span className="text-xs text-ink-soft">예시 작품이라 신청은 받지 않아요</span>}
+              </div>
+            )}
           </div>
           )}
 

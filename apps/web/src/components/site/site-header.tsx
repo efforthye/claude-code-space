@@ -19,6 +19,9 @@ export async function SiteHeader() {
           <NavLinks />
         </Suspense>
         <div className="flex items-center gap-1.5">
+          <Link href="/business" className="hidden rounded-full border border-ink/15 px-3.5 py-2 text-sm font-semibold transition-colors hover:bg-white/70 lg:inline">
+            기업전용관
+          </Link>
           <Suspense fallback={<AccountLinkFallback />}>
             <AccountLink />
           </Suspense>

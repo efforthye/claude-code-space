@@ -9,7 +9,7 @@ import { OrderPlaced } from "@/features/orders/order-placed";
 import { findOrderByCode } from "@/features/orders/queries";
 import { requestCertificate } from "@/features/certificates/actions";
 import { certificatesForOrder } from "@/features/certificates/queries";
-import { ORDER_STATUS_LABEL, SHIPPING_LABEL, orderTotal } from "@/lib/domain/rules";
+import { ORDER_STATUS_LABEL, SHIPPING_LABEL, orderTotal, PACKAGING_LABEL } from "@/lib/domain/rules";
 import { formatDateTime, formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = { title: "주문 확인", robots: { index: false } };
@@ -92,6 +92,8 @@ async function OrderDetail({ params, searchParams }: Pick<PageProps<"/orders/[co
         </ul>
         <dl className="flex flex-col gap-1 text-sm">
           <div className="flex justify-between"><dt>일반 택배비</dt><dd>{formatPrice(order.parcelFee)}</dd></div>
+          {(order.buyerFee ?? 0) > 0 && <div className="flex justify-between"><dt>경매 구매 수수료</dt><dd>{formatPrice(order.buyerFee ?? 0)}</dd></div>}
+          {(order.packagingFee ?? 0) > 0 && <div className="flex justify-between"><dt>포장 ({PACKAGING_LABEL[order.packaging ?? "basic"]})</dt><dd>{formatPrice(order.packagingFee ?? 0)}</dd></div>}
           {order.shippingQuote != null && <div className="flex justify-between"><dt>미술품 전문 운송비</dt><dd>{formatPrice(order.shippingQuote)}</dd></div>}
           <div className="flex justify-between text-base font-bold"><dt>합계</dt><dd>{formatPrice(amount)}{awaitingQuote && " + 운송비"}</dd></div>
         </dl>

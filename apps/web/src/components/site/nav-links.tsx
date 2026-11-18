@@ -6,13 +6,15 @@ import { cn } from "@/lib/cn";
 
 export const NAV = [
   { href: "/works", label: "작품", match: (p: string) => p.startsWith("/works") },
+  { href: "/auctions", label: "경매", match: (p: string) => p.startsWith("/auctions") },
+  { href: "/rental", label: "렌탈", match: (p: string) => p.startsWith("/rental") },
   { href: "/exhibitions", label: "전시", match: (p: string) => p.startsWith("/exhibitions") },
   { href: "/artists", label: "작가", match: (p: string) => p.startsWith("/artists") },
   { href: "/schools", label: "학교", match: (p: string) => p.startsWith("/schools") },
   { href: "/join", label: "입점", match: (p: string) => p.startsWith("/join") },
 ];
 
-/** 유리 알약 내비게이션(태블릿 이상), 지금 있는 곳이 채워진다. 휴대폰은 MobileMenu. */
+/** 유리 알약 내비게이션(넓은 화면), 지금 있는 곳이 채워진다. 휴대폰은 MobileMenu. */
 export function NavLinks() {
   return <NavList path={usePathname()} />;
 }
@@ -20,7 +22,7 @@ export function NavLinks() {
 /** 경로를 모를 때(정적 셸) 쓰는 같은 모양의 메뉴. NavLinks를 Suspense로 감쌀 때 fallback. */
 export function NavList({ path }: { path: string | null }) {
   return (
-    <nav className="glass hidden gap-1 rounded-full p-1.5 text-sm font-medium md:flex">
+    <nav className="glass hidden gap-1 rounded-full p-1.5 text-sm font-medium lg:flex">
       {NAV.map((n) => {
         const active = path !== null && n.match(path);
         return (

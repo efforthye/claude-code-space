@@ -3,16 +3,17 @@
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/container";
-import { KIND_LABEL } from "@/lib/domain/rules";
+import { EASY_PRICE, KIND_LABEL, showsRental } from "@/lib/domain/rules";
 import { WORK_KINDS, type Artist, type Category, type School, type Work, type WorkKind } from "@/lib/domain/types";
 import { cn } from "@/lib/cn";
 import { WorkCard } from "./work-card";
 
 const PRICE_BANDS = [
   { id: "all", label: "전체 가격", min: 0, max: Infinity },
+  { id: "u50", label: "50만 원 이하", min: 0, max: EASY_PRICE + 1 },
   { id: "u10", label: "10만 원 미만", min: 0, max: 100_000 },
-  { id: "10-30", label: "10–30만 원", min: 100_000, max: 300_000 },
-  { id: "30-50", label: "30–50만 원", min: 300_000, max: 500_000 },
+  { id: "10-30", label: "10~30만 원", min: 100_000, max: 300_000 },
+  { id: "30-50", label: "30~50만 원", min: 300_000, max: 500_000 },
   { id: "o50", label: "50만 원 이상", min: 500_000, max: Infinity },
 ] as const;
 
@@ -22,17 +23,23 @@ type Filters = {
   kind: WorkKind | "all";
   price: (typeof PRICE_BANDS)[number]["id"];
   availableOnly: boolean;
+  /** 사는 방법: 경매 중, 렌탈 가능 */
+  mode: "all" | "auction" | "rental";
 };
 
 export function CollectionBrowser({ works, artists, schools, categories }: { works: Work[]; artists: Artist[]; schools: School[]; categories: Category[] }) {
   // 홈의 매체 타일에서 /works?medium=painting 처럼 들어오면 그 분류로 시작한다
-  const fromLink = useSearchParams().get("medium");
+  const params = useSearchParams();
+  const fromLink = params.get("medium");
+  const priceLink = params.get("price");
+  const modeLink = params.get("mode");
   const [f, setF] = useState<Filters>({
     medium: fromLink && categories.some((c) => c.id === fromLink) ? fromLink : "all",
     school: "all",
     kind: "all",
-    price: "all",
+    price: PRICE_BANDS.find((b) => b.id === priceLink)?.id ?? "all",
     availableOnly: false,
+    mode: modeLink === "auction" || modeLink === "rental" ? modeLink : "all",
   });
   const artistById = useMemo(() => new Map(artists.map((a) => [a.id, a])), [artists]);
   const schoolById = useMemo(() => new Map(schools.map((s) => [s.id, s])), [schools]);
@@ -49,12 +56,18 @@ export function CollectionBrowser({ works, artists, schools, categories }: { wor
       (f.school === "all" || artist?.schoolId === f.school) &&
       w.price >= band.min &&
       w.price < band.max &&
-      (!f.availableOnly || w.status === "available")
+      (!f.availableOnly || w.status === "available") &&
+      (f.mode === "all" || (f.mode === "auction" ? Boolean(w.auctionId) : showsRental(w)))
     );
   });
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap gap-1.5" aria-label="빠른 찾기">
+        <Chip active={f.price === "u50"} onClick={() => setF({ ...f, price: f.price === "u50" ? "all" : "u50" })}>50만 원 이하</Chip>
+        <Chip active={f.mode === "auction"} onClick={() => setF({ ...f, mode: f.mode === "auction" ? "all" : "auction" })}>경매 중</Chip>
+        <Chip active={f.mode === "rental"} onClick={() => setF({ ...f, mode: f.mode === "rental" ? "all" : "rental" })}>렌탈 가능</Chip>
+      </div>
       <div className="flex flex-wrap gap-1.5">
         <Chip active={f.medium === "all"} onClick={() => setF({ ...f, medium: "all" })}>전체</Chip>
         {presentMedia.map((c) => (

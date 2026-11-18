@@ -1,6 +1,7 @@
 import "server-only";
 import { store } from "@/lib/data/store";
-import { ORDER_STATUS_LABEL, orderTotal } from "@/lib/domain/rules";
+import { CONSULT_KIND_LABEL, CONSULT_STATE_LABEL, ORDER_STATUS_LABEL, orderTotal, RENTAL_STATE_LABEL } from "@/lib/domain/rules";
+import { formatPrice } from "@/lib/format";
 
 export type MyRow = {
   code: string;
@@ -51,6 +52,21 @@ export async function myAccountData(userId: string) {
       state: q.state === "new" ? "답변 준비 중" : q.state === "answered" ? "답변 완료" : "닫힘",
       tone: q.state === "new" ? "warn" : q.state === "answered" ? "ok" : "neutral",
       href: null, detail: q.answer,
+    })),
+    ...db.rentals.filter((r) => r.userId === userId).map((r): MyRow => ({
+      code: r.code,
+      title: `렌탈: ${r.workIds.map((id) => `「${db.works.find((w) => w.id === id)?.title ?? "삭제된 작품"}」`).join(", ")}`,
+      createdAt: r.createdAt,
+      state: RENTAL_STATE_LABEL[r.state],
+      tone: r.state === "requested" ? "warn" : r.state === "cancelled" ? "neutral" : "ok",
+      href: null,
+      detail: `${r.months}개월, 월 ${formatPrice(r.monthlyTotal)}, 보증금 ${formatPrice(r.deposit)}${r.history.length > 1 ? `\n${r.history[r.history.length - 1].note}` : ""}`,
+    })),
+    ...db.consultations.filter((c) => c.userId === userId).map((c): MyRow => ({
+      code: c.code, title: `${c.audience === "business" ? "기업 상담" : "작품 추천"}: ${CONSULT_KIND_LABEL[c.kind]}`, createdAt: c.createdAt,
+      state: CONSULT_STATE_LABEL[c.state],
+      tone: c.state === "new" ? "warn" : c.state === "closed" ? "neutral" : "ok",
+      href: null, detail: c.answer,
     })),
   ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 

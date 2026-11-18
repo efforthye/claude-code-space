@@ -5,8 +5,8 @@ import { z } from "zod";
 import { TAG } from "@/lib/data/catalog";
 import { READONLY_MESSAGE, store, STORE_READONLY } from "@/lib/data/store";
 import { allow, TOO_MANY } from "@/lib/security/rate-limit";
-import { artShippingIds, PARCEL_FEE, PAYMENT_DUE_HOURS, shippingOptions, isOrderable } from "@/lib/domain/rules";
-import type { Order, OrderItem } from "@/lib/domain/types";
+import { artShippingIds, PACKAGING_FEE, PARCEL_FEE, PAYMENT_DUE_HOURS, shippingOptions, isOrderable } from "@/lib/domain/rules";
+import { PACKAGINGS, type Order, type OrderItem } from "@/lib/domain/types";
 import { newId, newOrderCode } from "@/lib/ids";
 import { currentUser } from "@/features/account/session";
 import { notifyOrderPlaced } from "@/features/mail/notify";
@@ -27,6 +27,15 @@ const OrderInput = z.object({
   agreeTerms: z.literal(true, { error: "이용약관에 동의해 주세요" }),
   agreePrivacy: z.literal(true, { error: "개인정보 수집 및 이용에 동의해 주세요" }),
   agreeAge: z.literal(true, { error: "만 19세 이상이거나 보호자 동의를 받았는지 확인해 주세요" }),
+  packaging: z.enum(PACKAGINGS),
+  gift: z
+    .object({
+      recipientName: z.string().trim().min(1, "받는 분 이름을 입력해 주세요").max(40),
+      recipientPhone: phone,
+      message: z.string().trim().max(200),
+      hidePrice: z.boolean(),
+    })
+    .nullable(),
 });
 
 export type OrderFormState =
@@ -48,10 +57,15 @@ export async function placeOrder(_prev: OrderFormState, form: FormData): Promise
     agreeTerms: form.get("agreeTerms") === "on",
     agreePrivacy: form.get("agreePrivacy") === "on",
     agreeAge: form.get("agreeAge") === "on",
+    packaging: String(form.get("packaging") || "basic"),
+    gift:
+      form.get("gift") === "on"
+        ? { recipientName: form.get("recipientName"), recipientPhone: form.get("recipientPhone"), message: form.get("giftMessage") ?? "", hidePrice: form.get("hidePrice") === "on" }
+        : null,
   });
   if (!parsed.success) {
     const errors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) errors[String(issue.path[0])] ??= issue.message;
+    for (const issue of parsed.error.issues) errors[String(issue.path[0] === "gift" ? issue.path[1] : issue.path[0])] ??= issue.message;
     return { ok: false, errors };
   }
   const input = parsed.data;
@@ -96,6 +110,9 @@ export async function placeOrder(_prev: OrderFormState, form: FormData): Promise
       adminMemo: "",
       history: [{ at: now.toISOString(), status: "pending_payment", note: "주문 신청" }],
       createdAt: now.toISOString(),
+      packaging: input.packaging,
+      packagingFee: PACKAGING_FEE[input.packaging] * items.length,
+      gift: input.gift,
     };
     // 같은 작품이 두 번 팔리지 않도록 신청 즉시 예약으로 묶는다.
     for (const item of items) {

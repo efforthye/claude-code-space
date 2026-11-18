@@ -9,7 +9,7 @@ import { requireUser } from "@/features/account/session";
 import { AccountShell, Empty, Section } from "@/features/account/shell";
 import { formatDate } from "@/lib/format";
 
-export const metadata: Metadata = { title: "신청과 문의", robots: { index: false } };
+export const metadata: Metadata = { title: "신청, 렌탈, 상담", robots: { index: false } };
 
 export default function RequestsPage() {
   return (
@@ -24,9 +24,9 @@ async function Requests() {
   const { requests } = await myAccountData(me.id);
   return (
     <AccountShell me={me} mode="buy">
-      <Section title="신청과 문의" count={requests.length}>
+      <Section title="신청, 렌탈, 상담" count={requests.length}>
         {requests.length === 0 ? (
-          <Empty>작가 입점, 전시 등록, 문의를 하면 여기서 진행 상황을 볼 수 있어요.</Empty>
+          <Empty>작가 입점, 전시 등록, 렌탈, 상담, 문의를 하면 여기서 진행 상황을 볼 수 있어요.</Empty>
         ) : (
           <ul className="flex flex-col gap-2">
             {requests.map((r) => (

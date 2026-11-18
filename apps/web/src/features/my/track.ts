@@ -2,11 +2,11 @@
 
 import { store } from "@/lib/data/store";
 import { allow } from "@/lib/security/rate-limit";
-import { ORDER_STATUS_LABEL } from "@/lib/domain/rules";
+import { CONSULT_KIND_LABEL, CONSULT_STATE_LABEL, ORDER_STATUS_LABEL, RENTAL_STATE_LABEL } from "@/lib/domain/rules";
 
 export type TrackedStatus = {
   code: string;
-  kind: "order" | "artist" | "exhibition" | "inquiry";
+  kind: "order" | "artist" | "exhibition" | "inquiry" | "rental" | "consultation";
   title: string;
   state: string; // 화면 표시용
   tone: "warn" | "ok" | "neutral" | "dot";
@@ -15,7 +15,7 @@ export type TrackedStatus = {
   href: string | null;
 };
 
-const CODE = /^(MAYO|J|E|Q)-[2-9A-HJ-NP-Z]{8}$/;
+const CODE = /^(MAYO|J|E|Q|R|B)-[2-9A-HJ-NP-Z]{8}$/;
 
 /** 번호로 진행 상황을 돌려준다. 개인정보(연락처, 주소)는 담지 않는다. */
 export async function lookupStatuses(codes: string[]): Promise<TrackedStatus[]> {
@@ -68,6 +68,26 @@ export async function lookupStatuses(codes: string[]): Promise<TrackedStatus[]> 
         state: q.state === "new" ? "답변 대기 중" : q.state === "answered" ? "답변 완료" : "종료",
         tone: q.state === "new" ? "warn" : "ok",
         createdAt: q.createdAt, detail: q.answer, href: null,
+      });
+      continue;
+    }
+    const r = db.rentals.find((x) => x.code === code);
+    if (r) {
+      out.push({
+        code, kind: "rental", title: `렌탈 신청: 작품 ${r.workIds.length}점, ${r.months}개월`,
+        state: RENTAL_STATE_LABEL[r.state],
+        tone: r.state === "requested" ? "warn" : r.state === "cancelled" ? "neutral" : "ok",
+        createdAt: r.createdAt, detail: null, href: null,
+      });
+      continue;
+    }
+    const c = db.consultations.find((x) => x.code === code);
+    if (c) {
+      out.push({
+        code, kind: "consultation", title: `${c.audience === "business" ? "기업 상담" : "작품 추천"}: ${CONSULT_KIND_LABEL[c.kind]}`,
+        state: CONSULT_STATE_LABEL[c.state],
+        tone: c.state === "new" ? "warn" : "ok",
+        createdAt: c.createdAt, detail: c.answer, href: null,
       });
     }
   }

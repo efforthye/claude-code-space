@@ -4,7 +4,7 @@ import { Container } from "@/components/ui/container";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { WorkTile } from "@/features/catalog/work-card";
 import { HeroVisual } from "@/features/catalog/hero-visual";
-import { categoryLabel, coverImage } from "@/lib/domain/rules";
+import { categoryLabel, coverImage, EASY_PRICE, showsRental } from "@/lib/domain/rules";
 import { exhibitionPhase, getCatalog, indexById } from "@/lib/data/catalog";
 import { formatPeriod } from "@/lib/format";
 import { MetaLine } from "@/components/ui/meta-line";
@@ -56,6 +56,25 @@ export default async function HomePage() {
         </div>
 
         <HeroVisual shows={upcomingCount} schools={schoolsWithShows} artists={artists.filter((a) => a.verifiedBy).length} />
+      </Container>
+
+      <Container className="pb-16">
+        <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="사는 방법">
+          {[
+            { href: "/works?price=u50", tag: `${works.filter((w) => w.price <= EASY_PRICE && w.status === "available").length}점`, title: "50만 원 이하", desc: "첫 원화, 집들이 선물로" },
+            { href: "/auctions", tag: `${works.filter((w) => w.auctionId).length}점`, title: "졸전 경매", desc: "전시 기간에만 열리는 입찰" },
+            { href: "/rental", tag: `${works.filter((w) => showsRental(w)).length}점`, title: "작품 렌탈", desc: "걸어 보고 마음에 들면 구매" },
+            { href: "/business", tag: "B2B", title: "기업전용관", desc: "매장, 사무실 렌탈과 전시" },
+          ].map((c) => (
+            <li key={c.href}>
+              <Link href={c.href} className="glass flex h-full flex-col gap-1.5 rounded-[22px] p-5 transition-[translate,background-color] duration-300 hover:-translate-y-0.5 hover:bg-white/80">
+                <span className="text-xs font-semibold text-violet">{c.tag}</span>
+                <span className="text-lg font-bold">{c.title}</span>
+                <span className="text-[13px] text-ink-soft">{c.desc}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </Container>
 
       {shows.length > 0 && (

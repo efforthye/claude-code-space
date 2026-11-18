@@ -23,8 +23,7 @@ export async function AccountShell({ me, mode, children }: { me: Me; mode: "buy"
   const buy: NavItem[] = [
     { href: "/account", label: "주문과 보증서" },
     { href: "/account/bids", label: "내 경매", badge: offers || undefined },
-    { href: "/account/rentals", label: "렌탈" },
-    { href: "/account/requests", label: "신청과 문의" },
+    { href: "/account/requests", label: "신청, 렌탈, 상담" },
     { href: "/account/verify", label: "학교 인증" },
     { href: "/account/settings", label: "계정 설정" },
   ];

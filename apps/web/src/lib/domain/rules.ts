@@ -5,6 +5,7 @@ import type {
   Category,
   Order,
   Packaging,
+  RentalState,
   OrderStatus,
   ShippingMethod,
   VerifyMethod,
@@ -189,6 +190,11 @@ export function isRentable(work: Pick<Work, "status" | "sample" | "auctionId" | 
   return Boolean(work.rentable) && isOrderable(work);
 }
 
+/** 렌탈 목록에 보일 작품 (예시도 보이지만 신청은 isRentable만 받는다) */
+export function showsRental(work: Pick<Work, "status" | "auctionId" | "rentable">) {
+  return Boolean(work.rentable) && work.status === "available" && !work.auctionId;
+}
+
 /** 가볍게 사기 좋은 가격대 (첫 구매, 선물). 목록 필터와 홈 섹션 */
 export const EASY_PRICE = 500_000;
 
@@ -209,6 +215,16 @@ export const RENTAL_STATE_LABEL = {
   purchased: "구매로 전환",
   cancelled: "취소",
 } as const;
+
+/** 렌탈 상태 흐름. 확정되면 작품을 묶고(예약), 반납이나 취소되면 푼다 */
+export const RENTAL_NEXT: Record<RentalState, RentalState[]> = {
+  requested: ["confirmed", "cancelled"],
+  confirmed: ["active", "cancelled"],
+  active: ["returned", "purchased"],
+  returned: [],
+  purchased: [],
+  cancelled: [],
+};
 
 export const CONSULT_KIND_LABEL = {
   curation: "작품 추천 받기",

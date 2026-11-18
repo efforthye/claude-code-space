@@ -422,8 +422,12 @@ export function buildSampleDatabase(): Database {
     },
   ];
 
+  for (const w of works) w.rentable = SAMPLE_RENTABLE_IDS.has(w.id);
   return { ...buildBaseDatabase(), artists, works };
 }
+
+/** 렌탈 화면을 채우려고 렌탈 가능으로 둔 예시 작품 (벽에 거는 것, 놓는 가구) */
+export const SAMPLE_RENTABLE_IDS: ReadonlySet<string> = new Set(["w-blue-afternoon", "w-night-garden", "w-red-roofs", "w-sea-grain", "w-study-window", "w-curly-shelf", "w-plaster-form"]);
 
 /** 예시 데이터의 id (예전에 넣은 예시에도 "예시" 표시를 붙이려고) */
 export const SAMPLE_ARTIST_IDS: ReadonlySet<string> = new Set([

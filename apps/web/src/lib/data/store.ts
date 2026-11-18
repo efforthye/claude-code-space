@@ -8,7 +8,7 @@ import { LOGO_MARKS } from "@/lib/domain/types";
 import { buildBaseDatabase } from "./base";
 import { USE_MONGO } from "./mongo";
 import { MongoStore, mongoCollection } from "./mongo-store";
-import { buildSampleDatabase, SAMPLE_ARTIST_IDS, SAMPLE_FLAG, SAMPLE_WORK_IDS } from "./sample";
+import { buildSampleDatabase, SAMPLE_ARTIST_IDS, SAMPLE_FLAG, SAMPLE_RENTABLE_IDS, SAMPLE_WORK_IDS } from "./sample";
 
 /**
  * Storage seam. Pages and actions only talk to `store`; swapping the local JSON
@@ -104,7 +104,11 @@ export function migrate(db: Database): Database {
   // 예시 표시가 생기기 전에 넣은 예시 작가, 작품에도 표시를 붙인다 (주문 불가, "예시" 딱지)
   if (SAMPLE_FLAG) {
     for (const a of db.artists) if (SAMPLE_ARTIST_IDS.has(a.id) && !a.userId) a.sample = true;
-    for (const w of db.works) if (SAMPLE_WORK_IDS.has(w.id)) w.sample = true;
+    for (const w of db.works) {
+      if (!SAMPLE_WORK_IDS.has(w.id)) continue;
+      w.sample = true;
+      w.rentable ??= SAMPLE_RENTABLE_IDS.has(w.id); // 렌탈이 생기기 전에 넣은 예시에도
+    }
   }
   if (!LOGO_MARKS.includes(db.settings.logoMark)) db.settings.logoMark = "glass";
   db.auctions ??= [];

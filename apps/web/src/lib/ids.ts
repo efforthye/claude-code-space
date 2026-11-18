@@ -16,5 +16,5 @@ export const newOrderCode = () => `MAYO-${randomCode()}`;
 /** 작품 보증서 확인 코드 */
 export const newCertificateCode = () => `C-${randomCode(10)}`;
 
-/** 신청 현황 조회 코드: J = 작가 입점, E = 전시 등록, Q = 문의 */
-export const newTrackingCode = (kind: "J" | "E" | "Q") => `${kind}-${randomCode()}`;
+/** 신청 현황 조회 코드: J = 작가 입점, E = 전시 등록, Q = 문의, R = 렌탈, B = 기업, 추천 상담 */
+export const newTrackingCode = (kind: "J" | "E" | "Q" | "R" | "B") => `${kind}-${randomCode()}`;

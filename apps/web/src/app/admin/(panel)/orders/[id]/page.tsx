@@ -6,7 +6,7 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { changeOrderStatus, issueCertificate, revokeCertificate, settleItem, updateOrderDetails } from "@/features/admin/actions";
 import { AdminHeading } from "@/features/admin/ui";
 import { adminDb } from "@/features/admin/session";
-import { ORDER_NEXT, ORDER_STATUS_LABEL, SHIPPING_LABEL, orderTotal } from "@/lib/domain/rules";
+import { ORDER_NEXT, ORDER_STATUS_LABEL, SHIPPING_LABEL, orderTotal, PACKAGING_LABEL } from "@/lib/domain/rules";
 import { formatDateTime, formatPrice } from "@/lib/format";
 
 const ACTION_LABEL: Record<string, string> = {
@@ -77,6 +77,8 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
             <dl className="mt-3 flex flex-col gap-1 border-t border-line pt-3 text-sm">
               <div className="flex justify-between"><dt>작품 합계</dt><dd>{formatPrice(order.subtotal)}</dd></div>
               <div className="flex justify-between"><dt>일반 택배비</dt><dd>{formatPrice(order.parcelFee)}</dd></div>
+              {(order.buyerFee ?? 0) > 0 && <div className="flex justify-between"><dt>경매 구매 수수료</dt><dd>{formatPrice(order.buyerFee ?? 0)}</dd></div>}
+              {(order.packagingFee ?? 0) > 0 && <div className="flex justify-between"><dt>포장 ({PACKAGING_LABEL[order.packaging ?? "basic"]})</dt><dd>{formatPrice(order.packagingFee ?? 0)}</dd></div>}
               {hasArt && <div className="flex justify-between"><dt>전문 운송비</dt><dd>{order.shippingQuote == null ? "견적 전" : formatPrice(order.shippingQuote)}</dd></div>}
               <div className="flex justify-between font-bold"><dt>입금받을 금액</dt><dd>{formatPrice(total)}</dd></div>
             </dl>
@@ -91,6 +93,7 @@ export default async function AdminOrder(props: PageProps<"/admin/orders/[id]">)
               <dt className="text-ink-soft">이메일</dt><dd>{order.buyer.email}</dd>
               <dt className="text-ink-soft">주소</dt><dd>{order.buyer.address || "없음 (직거래)"}</dd>
               {order.buyer.deliveryNote && (<><dt className="text-ink-soft">운송 참고</dt><dd className="whitespace-pre-line">{order.buyer.deliveryNote}</dd></>)}
+              {order.gift && (<><dt className="text-ink-soft">선물</dt><dd className="whitespace-pre-line">받는 분 {order.gift.recipientName}, {order.gift.recipientPhone}{order.gift.hidePrice ? ", 가격 숨김" : ""}{order.gift.message && `\n카드: ${order.gift.message}`}</dd></>)}
             </dl>
           </section>
 

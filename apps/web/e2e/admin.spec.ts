@@ -236,7 +236,7 @@ test("a buyer requests a certificate, the operator issues and revokes it, anyone
 
 test("the compliance checklist is one click from the dashboard", async ({ page }) => {
   await adminLogin(page);
-  await page.getByRole("link", { name: /미술서비스업 신고가 아직이에요/ }).click();
+  await page.getByRole("link", { name: /사업자 할 일: 미술서비스업 신고/ }).click();
   await expect(page.getByRole("heading", { name: "미술서비스업 신고" })).toBeVisible();
   await expect(page.getByText(/강남구보건소 5층 문화도시과/).first()).toBeVisible();
 });

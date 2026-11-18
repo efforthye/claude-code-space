@@ -36,6 +36,7 @@ export function MobileMenu({ signedIn }: { signedIn: boolean }) {
   const secondary = [
     signedIn ? { href: "/account", label: "마이페이지" } : { href: "/login", label: "로그인" },
     ...(signedIn ? [] : [{ href: "/signup", label: "회원가입" }]),
+    { href: "/business", label: "기업전용관" },
     { href: "/my", label: "비회원 주문 조회" },
     { href: "/contact", label: "문의하기" },
   ];
@@ -48,7 +49,7 @@ export function MobileMenu({ signedIn }: { signedIn: boolean }) {
         aria-expanded={open}
         aria-controls="mobile-menu"
         aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
-        className="glass order-last flex size-10 items-center justify-center rounded-full md:hidden"
+        className="glass order-last flex size-10 items-center justify-center rounded-full lg:hidden"
       >
         <svg viewBox="0 0 20 20" className="size-5" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
           <path d={open ? "M5 5l10 10M15 5 5 15" : "M3.5 6h13M3.5 10h13M3.5 14h13"} className="transition-[d] duration-200" />
@@ -56,7 +57,7 @@ export function MobileMenu({ signedIn }: { signedIn: boolean }) {
       </button>
       {open &&
         createPortal(
-          <div id="mobile-menu" role="dialog" aria-modal="true" aria-label="메뉴" className="fixed inset-x-0 top-[69px] bottom-0 z-[60] flex flex-col overflow-y-auto bg-wall/96 px-5 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden">
+          <div id="mobile-menu" role="dialog" aria-modal="true" aria-label="메뉴" className="fixed inset-x-0 top-[69px] bottom-0 z-[60] flex flex-col overflow-y-auto bg-wall/96 px-5 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
             <nav className="flex flex-col">
               {NAV.map((n, i) => (
                 <Link

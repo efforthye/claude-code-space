@@ -3,14 +3,14 @@
 import { ActionForm } from "@/components/ui/action-form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/container";
-import { Checkbox, Field, Input, Textarea } from "@/components/ui/field";
+import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { placeOrder, type OrderFormState } from "@/features/orders/actions";
 import { WorkImage } from "@/features/catalog/work-image";
-import { coverImage, PARCEL_FEE, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
-import type { Artist, ShippingMethod, Work } from "@/lib/domain/types";
+import { coverImage, PACKAGING_FEE, PACKAGING_LABEL, PARCEL_FEE, SHIPPING_LABEL, shippingOptions } from "@/lib/domain/rules";
+import { PACKAGINGS, type Artist, type Packaging, type ShippingMethod, type Work } from "@/lib/domain/types";
 import { formatPrice, formatSize } from "@/lib/format";
 import { cart, useCart } from "./cart-store";
 
@@ -36,6 +36,9 @@ export function CartView({ works, artists, artShipping }: { works: Work[]; artis
   const hasArtShipping = orderable.some((r) => r.line.shipping === "art_shipping");
   const needsAddress = orderable.some((r) => r.line.shipping !== "pickup");
   const errors = state && !state.ok ? state.errors : {};
+  const [packaging, setPackaging] = useState<Packaging>("basic");
+  const [gift, setGift] = useState(false);
+  const packagingFee = PACKAGING_FEE[packaging] * orderable.length;
 
   if (lines.length === 0 && !state?.ok)
     return (
@@ -97,14 +100,31 @@ export function CartView({ works, artists, artShipping }: { works: Work[]; artis
           <div className="flex justify-between"><dt>작품 {orderable.length}점</dt><dd>{formatPrice(subtotal)}</dd></div>
           <div className="flex justify-between"><dt>일반 택배비</dt><dd>{formatPrice(parcel)}</dd></div>
           {hasArtShipping && <div className="flex justify-between text-warn"><dt>미술품 전문 운송</dt><dd>견적 후 별도 안내</dd></div>}
-          <div className="mt-2 flex justify-between text-base font-bold"><dt>입금하실 금액</dt><dd>{formatPrice(subtotal + parcel)}</dd></div>
+          {packagingFee > 0 && <div className="flex justify-between"><dt>포장</dt><dd>{formatPrice(packagingFee)}</dd></div>}
+          <div className="mt-2 flex justify-between text-base font-bold"><dt>입금하실 금액</dt><dd>{formatPrice(subtotal + parcel + packagingFee)}</dd></div>
         </dl>
 
-        <Field label="받는 분 이름" required error={errors.name}><Input name="name" autoComplete="name" /></Field>
+        <Field label="포장" hint="한 점마다. 기본 포장도 에어캡으로 꼼꼼히 싸요">
+          <Select name="packaging" value={packaging} onChange={(e) => setPackaging(e.target.value as Packaging)}>
+            {PACKAGINGS.map((p) => <option key={p} value={p}>{PACKAGING_LABEL[p]}{PACKAGING_FEE[p] ? ` +${formatPrice(PACKAGING_FEE[p])}` : ""}</option>)}
+          </Select>
+        </Field>
+
+        <Checkbox name="gift" checked={gift} onChange={(e) => setGift(e.target.checked)} label="선물하기 (받는 분에게 바로 보내요)" />
+        {gift && (
+          <div className="flex flex-col gap-4 rounded-xl bg-violet/8 p-4">
+            <Field label="받는 분 이름" required error={errors.recipientName}><Input name="recipientName" /></Field>
+            <Field label="받는 분 휴대폰" required error={errors.recipientPhone} hint="배송 연락에만 써요"><Input name="recipientPhone" inputMode="tel" /></Field>
+            <Field label="카드에 적을 말" hint="200자까지, 손글씨 카드로 넣어 드려요"><Textarea name="giftMessage" maxLength={200} className="min-h-16" /></Field>
+            <Checkbox name="hidePrice" defaultChecked label="받는 분에게 가격이 보이지 않게 해 주세요" />
+          </div>
+        )}
+
+        <Field label={gift ? "보내는 분 이름" : "받는 분 이름"} required error={errors.name}><Input name="name" autoComplete="name" /></Field>
         <Field label="휴대폰" required error={errors.phone}><Input name="phone" inputMode="tel" autoComplete="tel" placeholder="010-0000-0000" /></Field>
         <Field label="이메일" required error={errors.email} hint="주문 안내를 보내드려요"><Input name="email" type="email" autoComplete="email" /></Field>
         {needsAddress && (
-          <Field label="배송 주소" required error={errors.address}><Input name="address" autoComplete="street-address" /></Field>
+          <Field label={gift ? "받는 분 주소" : "배송 주소"} required error={errors.address}><Input name="address" autoComplete={gift ? "off" : "street-address"} /></Field>
         )}
         {hasArtShipping && (
           <Field label="운송 참고 사항" hint="층수, 엘리베이터 유무, 희망 시기, 진입로처럼 운송 견적에 필요한 정보">

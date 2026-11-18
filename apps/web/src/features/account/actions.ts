@@ -104,7 +104,7 @@ export async function logout() {
 
 /* ───────────────────────── 마이페이지 ───────────────────────── */
 
-const CODE = /^(MAYO|J|E|Q)-[2-9A-HJ-NP-Z]{8}$/;
+const CODE = /^(MAYO|J|E|Q|R|B)-[2-9A-HJ-NP-Z]{8}$/;
 
 /**
  * 번호로 내 계정에 연결. 번호를 가진 사람 = 그 주문, 신청을 넣은 사람이라는 기존 원칙 그대로.
@@ -117,7 +117,7 @@ export async function claimCodes(codes: string[]) {
   const wanted = [...new Set(codes.map((c) => c.trim().toUpperCase()))].filter((c) => CODE.test(c)).slice(0, 50);
   const linked = await store.update((db) => {
     let n = 0;
-    for (const rows of [db.orders, db.applications, db.exhibitionRequests, db.inquiries] as Array<Array<{ code: string; userId?: string | null }>>) {
+    for (const rows of [db.orders, db.applications, db.exhibitionRequests, db.inquiries, db.rentals, db.consultations] as Array<Array<{ code: string; userId?: string | null }>>) {
       for (const row of rows) {
         if (wanted.includes(row.code) && !row.userId) {
           row.userId = me.id;
