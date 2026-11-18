@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ const PHASE = { requested: "신청", upcoming: "시작 전", live: "진행 중",
 const PAYMENT = { pending: "입금 대기", paid: "완납", failed: "미납" } as const;
 
 export default async function AdminAuctions() {
+  await connection();
   await settleDueAuctions();
   const db = await adminDb();
   const now = requestNow();
